@@ -1,6 +1,6 @@
 ## Interface: 100107
 ## Title: AlterEgo
-## Notes: Mythic Plus tracker for all your characters
+## Notes: Mythic Plus tracker for all of your characters
 ## Version: 0.1.0
 
 AlterEgo.lua
