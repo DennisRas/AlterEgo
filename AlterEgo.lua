@@ -239,6 +239,14 @@ function AlterEgo:CreateFrames()
 
     local previousFrame = 0
     for playerGUID,character in pairs(characters) do
+
+        local ratingColor = "|cffffffff"
+        if character.rating > 0 then
+            local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.rating)
+            if color ~= nil then
+                ratingColor = "|c" .. color.GenerateHexColor(color)
+            end
+        end
         rowRating.columns[playerGUID] = CreateFrame("Frame", rowRating:GetName() .. "COL" .. playerGUID, rowRating, "BackdropTemplate")
         rowRating.columns[playerGUID]:SetSize(colWidth, rowHeight)
         rowRating.columns[playerGUID]:SetPoint("TOPLEFT", rowRating.columns[previousFrame], "TOPRIGHT")
@@ -247,7 +255,7 @@ function AlterEgo:CreateFrames()
         rowRating.columns[playerGUID].fontString = rowRating.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rowRating.columns[playerGUID].fontString:SetPoint("CENTER", rowRating.columns[playerGUID], "CENTER", cellPadding, 0)
         rowRating.columns[playerGUID].fontString:SetJustifyH("CENTER")
-        rowRating.columns[playerGUID].fontString:SetText(character.rating)
+        rowRating.columns[playerGUID].fontString:SetText(ratingColor .. character.rating .. "|r")
         previousFrame = playerGUID
     end
 
