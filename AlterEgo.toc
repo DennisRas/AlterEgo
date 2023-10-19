@@ -3,4 +3,6 @@
 ## Notes: Mythic Plus tracker for all of your characters
 ## Version: 0.1.0
 
+## SavedVariables: AlterEgoDB
+
 AlterEgo.lua
