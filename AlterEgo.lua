@@ -67,24 +67,28 @@ function f:ADDON_LOADED(event, addon)
 
         C_MythicPlus.RequestMapInfo()
 
-        -- if AlterEgoDB == nil then
-            AlterEgoDB = {
-                characters = {},
-                settings = {}
-            }
-        -- end
-
         local playerName, playerRealm = UnitName("player")
         local playerGUID = UnitGUID("player")
         local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
         local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
-        local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
-        print(currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel)
-        
-        -- weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
-            local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-            local mapID = C_MythicPlus.GetOwnedKeystoneMapID()
-        --     local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
+        local mapID = C_MythicPlus.GetOwnedKeystoneMapID()
+        local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+        -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
+        -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
+        -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
+        -- local history = C_MythicPlus.GetRunHistory(true)
+        -- C_ChallengeMode.GetMapUIInfo(mapid)
+
+        if keyStoneLevel == nil then
+            keyStoneLevel = 0
+        end
+
+        if AlterEgoDB == nil then
+            AlterEgoDB = {
+                characters = {},
+                settings = {}
+            }
+        end
 
         -- if AlterEgoDB.characters[playerGUID] == nil then
             AlterEgoDB.characters[playerGUID] = {
@@ -94,41 +98,45 @@ function f:ADDON_LOADED(event, addon)
                 ilvl = avgItemLevel,
                 vault = {},
                 key = {
-                    map = mapID,
-                    level = keyStoneLevel
+                    map = mapID or "",
+                    level = keyStoneLevel or 0
                 },
-                dungeons = {
-                    -- [657] = {0, 0},
-                }
+                dungeons = {}
             }
-
-            local history = C_MythicPlus.GetRunHistory(true)
-            -- dumpTable(history)
-
-            -- C_ChallengeMode.GetMapUIInfo(mapid)
-
-            for mid,shortName in pairs(Maps) do
-                local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mid)
-                if affixScores ~= nil then
-                    -- dumpTable(affixScores)
-                    -- print(bestOverAllScore)
-                    AlterEgoDB.characters[playerGUID].dungeons[mid] = {
-                        [1] = affixScores[1].level,
-                        [2] = affixScores[2].level,
-                    }
-                end
-            end
-            
         -- end
 
-        local activities = C_WeeklyRewards.GetActivities(1)
-        for i, activity in pairs(activities) do
-            AlterEgoDB.characters[playerGUID].vault[activity.index] = activity.level
+        for mid,_ in pairs(Maps) do
+            local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mid)
+            if affixScores ~= nil then
+                dumpTable(affixScores)
 
-            -- PrintTable(v.rewards)
+                local fortified = 0
+                local tyrannical = 0
+                for i,affixScore in pairs(affixScores) do
+                    if affixScore.name == "Fortified" then
+                        fortified = affixScore.level
+                    end
+                    if affixScore.name == "Tyrannical" then
+                        tyrannical = affixScore.level
+                    end
+                end
+
+                AlterEgoDB.characters[playerGUID].dungeons[mid] = {
+                    [1] = tyrannical,
+                    [2] = fortified,
+                }
+            else
+                AlterEgoDB.characters[playerGUID].dungeons[mid] = {
+                    [1] = 0,
+                    [2] = 0,
+                }
+            end
         end
-        -- dumpTable(activities)
-        
+
+        local activities = C_WeeklyRewards.GetActivities(1)
+        for _, activity in pairs(activities) do
+            AlterEgoDB.characters[playerGUID].vault[activity.index] = activity.level
+        end
 
         AlterEgo:CreateFrames()
     end
@@ -136,7 +144,7 @@ end
 
 function AlterEgo:GetCharacters()
     local characters = AlterEgoDB.characters
-    
+
     -- Filters
     -- Sorting
 
@@ -375,6 +383,14 @@ end
 
 function AlterEgo:UpdateFrames()
     local characters = AlterEgo:GetCharacters()
+
+    local frameWidth = colWidth
+    
+    for playerGUID, character in pairs(characters) do
+        frameWidth = frameWidth + colWidth
+    end
+
+    f:SetSize(frameWidth, rowHeight * 16)
 
     -- for playerGUID, character in pairs(characters) do
     --     print(character.name)
