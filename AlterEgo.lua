@@ -283,7 +283,7 @@ function AlterEgo:CreateFrames()
         rowItemLevel.columns[playerGUID].fontString = rowItemLevel.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rowItemLevel.columns[playerGUID].fontString:SetPoint("CENTER", rowItemLevel.columns[playerGUID], "CENTER", cellPadding, 0)
         rowItemLevel.columns[playerGUID].fontString:SetJustifyH("CENTER")
-        rowItemLevel.columns[playerGUID].fontString:SetText(character.ilvl)
+        rowItemLevel.columns[playerGUID].fontString:SetText(math.floor(character.ilvl))
         previousFrame = playerGUID
     end
 
