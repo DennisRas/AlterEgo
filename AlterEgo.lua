@@ -26,16 +26,76 @@ local function dumpTable(table, depth)
     end
   end
 
+  local function MaxLength(str, len)
+    if len == nil then
+        return str
+    end
+    if string.len(str) > len then
+        return str:sub(1, len) .. "..."
+    end
+    return str
+  end
+
 local Maps = {
-    [206] = "NL",
-    [245] = "FH",
-    [251] = "UR",
-    [403] = "UL",
-    [404] = "NE",
-    [405] = "BH",
-    [406] = "HOI",
-    [438] = "VP",
+    [1] = {
+        id = 206,
+        mapId = 1458,
+        name = "Neltharion's Lair",
+        abbr = "NL"
+    },
+    [2] = {
+        id = 245,
+        mapId = 1754,
+        name = "Freehold",
+        abbr = "FH"
+    },
+    [3] = {
+        id = 251,
+        mapId = 1841,
+        name = "The Underrot",
+        abbr = "UR"
+    },
+    [4] = {
+        id = 403,
+        mapId = 2451,
+        name = "Uldaman: Legacy of Tyr",
+        abbr = "UL"
+    },
+    [5] = {
+        id = 404,
+        mapId = 2519,
+        name = "Neltharus",
+        abbr = "NEL"
+    },
+    [6] = {
+        id = 405,
+        mapId = 2520,
+        name = "Brackenhide Hollow",
+        abbr = "BH"
+    },
+    [7] = {
+        id = 406,
+        mapId = 2527,
+        name = "Halls of Infusion",
+        abbr = "HOI"
+    },
+    [8] = {
+        id = 438,
+        mapId = 657,
+        name = "The Vortex Pinnacle",
+        abbr = "VP"
+    },
 }
+
+local function GetMapShortName(mapId)
+    local map = "??"
+    for i, mapInfo in pairs(Maps) do
+        if mapInfo.mapId == mapId then
+            return mapInfo.abbr
+        end
+    end
+    return map
+end
 
 local rowHeight = 20
 local colWidth = 120
@@ -102,19 +162,19 @@ function f:ADDON_LOADED(event, addon)
                 ilvl = avgItemLevel,
                 vault = {},
                 key = {
-                    map = mapID or "",
+                    map = mapID,
                     level = keyStoneLevel or 0
                 },
                 dungeons = {}
             }
         -- end
 
-        for mid,_ in pairs(Maps) do
-            local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mid)
+        for i, mapInfo in pairs(Maps) do
+            local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mapInfo.id)
             if affixScores ~= nil then
                 local fortified = 0
                 local tyrannical = 0
-                for i,affixScore in pairs(affixScores) do
+                for _, affixScore in pairs(affixScores) do
                     if affixScore.name == "Fortified" then
                         fortified = affixScore.level
                     end
@@ -123,12 +183,12 @@ function f:ADDON_LOADED(event, addon)
                     end
                 end
 
-                AlterEgoDB.characters[playerGUID].dungeons[mid] = {
+                AlterEgoDB.characters[playerGUID].dungeons[mapInfo.id] = {
                     [1] = tyrannical,
                     [2] = fortified,
                 }
             else
-                AlterEgoDB.characters[playerGUID].dungeons[mid] = {
+                AlterEgoDB.characters[playerGUID].dungeons[mapInfo.id] = {
                     [1] = 0,
                     [2] = 0,
                 }
@@ -178,7 +238,6 @@ function AlterEgo:CreateFrames()
         if character.class ~= nil then
             local classColor = C_ClassColor.GetClassColor(character.class)
             if classColor ~= nil then
-                -- dumpTable(classColor)
                 characterColor = "|c" .. classColor.GenerateHexColor(classColor)
             end
         end
@@ -346,7 +405,11 @@ function AlterEgo:CreateFrames()
         rowCurrentKey.columns[playerGUID].fontString = rowCurrentKey.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rowCurrentKey.columns[playerGUID].fontString:SetPoint("CENTER", rowCurrentKey.columns[playerGUID], "CENTER", cellPadding, 0)
         rowCurrentKey.columns[playerGUID].fontString:SetJustifyH("CENTER")
-        rowCurrentKey.columns[playerGUID].fontString:SetText(character.key.map .. " " .. character.key.level)
+        if character.key.map == nil or character.key.map == "" then
+            rowCurrentKey.columns[playerGUID].fontString:SetText("-")
+        else
+            rowCurrentKey.columns[playerGUID].fontString:SetText(GetMapShortName(character.key.map) .. " " .. character.key.level)
+        end
         previousFrame = playerGUID
     end
     
@@ -389,8 +452,7 @@ function AlterEgo:CreateFrames()
         previousFrame = playerGUID .. "T"
     end
 
-    local i = 1
-    for mapId,shortName in pairs(Maps) do
+    for i, mapInfo in pairs(Maps) do
         local rowDungeon = CreateFrame("Frame", f:GetName() .. "Dungeon" .. i, f, "BackdropTemplate")
         rowDungeon:SetSize(f:GetWidth(), rowHeight)
         rowDungeon:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (8 + i))
@@ -406,8 +468,9 @@ function AlterEgo:CreateFrames()
         end
         rowDungeon.columns[0].fontString = rowDungeon.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rowDungeon.columns[0].fontString:SetPoint("LEFT", rowDungeon.columns[0], "LEFT", cellPadding, 0)
+        rowDungeon.columns[0].fontString:SetWidth(colWidth - cellPadding * 2)
         rowDungeon.columns[0].fontString:SetJustifyH("LEFT")
-        rowDungeon.columns[0].fontString:SetText(shortName)
+        rowDungeon.columns[0].fontString:SetText(MaxLength(mapInfo.name, 13))
 
         local previousFrame = 0
         for playerGUID,character in pairs(characters) do
@@ -423,7 +486,7 @@ function AlterEgo:CreateFrames()
             rowDungeon.columns[playerGUID .. "F"].fontString = rowDungeon.columns[playerGUID .. "F"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             rowDungeon.columns[playerGUID .. "F"].fontString:SetPoint("CENTER", rowDungeon.columns[playerGUID .. "F"], "CENTER", cellPadding, 0)
             rowDungeon.columns[playerGUID .. "F"].fontString:SetJustifyH("CENTER")
-            rowDungeon.columns[playerGUID .. "F"].fontString:SetText(character.dungeons[mapId][2])
+            rowDungeon.columns[playerGUID .. "F"].fontString:SetText(character.dungeons[mapInfo.id][2])
             rowDungeon.columns[playerGUID .. "T"] = CreateFrame("Frame", rowDungeon:GetName() .. "COL" .. playerGUID .. "T", rowDungeon, "BackdropTemplate")
             rowDungeon.columns[playerGUID .. "T"]:SetSize(colWidth / 2, rowHeight)
             rowDungeon.columns[playerGUID .. "T"]:SetPoint("TOPLEFT", rowDungeon.columns[playerGUID .. "F"], "TOPRIGHT")
@@ -436,11 +499,9 @@ function AlterEgo:CreateFrames()
             rowDungeon.columns[playerGUID .. "T"].fontString = rowDungeon.columns[playerGUID .. "T"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             rowDungeon.columns[playerGUID .. "T"].fontString:SetPoint("CENTER", rowDungeon.columns[playerGUID .. "T"], "CENTER", cellPadding, 0)
             rowDungeon.columns[playerGUID .. "T"].fontString:SetJustifyH("CENTER")
-            rowDungeon.columns[playerGUID .. "T"].fontString:SetText(character.dungeons[mapId][1])
+            rowDungeon.columns[playerGUID .. "T"].fontString:SetText(character.dungeons[mapInfo.id][1])
             previousFrame = playerGUID .. "T"
         end
-
-        i = i + 1
     end
     
 
