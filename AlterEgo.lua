@@ -312,7 +312,11 @@ function AlterEgo:CreateFrames()
             rowVault.columns[playerGUID].fontString = rowVault.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             rowVault.columns[playerGUID].fontString:SetPoint("CENTER", rowVault.columns[playerGUID], "CENTER", cellPadding, 0)
             rowVault.columns[playerGUID].fontString:SetJustifyH("CENTER")
-            rowVault.columns[playerGUID].fontString:SetText(character.vault[i])
+            if character.vault[i] == 0 then
+                rowVault.columns[playerGUID].fontString:SetText("-")
+            else
+                rowVault.columns[playerGUID].fontString:SetText(character.vault[i])
+            end
             previousFrame = playerGUID
         end
     end
