@@ -486,7 +486,11 @@ function AlterEgo:CreateFrames()
             rowDungeon.columns[playerGUID .. "F"].fontString = rowDungeon.columns[playerGUID .. "F"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             rowDungeon.columns[playerGUID .. "F"].fontString:SetPoint("CENTER", rowDungeon.columns[playerGUID .. "F"], "CENTER", cellPadding, 0)
             rowDungeon.columns[playerGUID .. "F"].fontString:SetJustifyH("CENTER")
-            rowDungeon.columns[playerGUID .. "F"].fontString:SetText(character.dungeons[mapInfo.id][2])
+            local level = character.dungeons[mapInfo.id][2]
+            if level == 0 then
+                level = "-"
+            end
+            rowDungeon.columns[playerGUID .. "F"].fontString:SetText(level)
             rowDungeon.columns[playerGUID .. "T"] = CreateFrame("Frame", rowDungeon:GetName() .. "COL" .. playerGUID .. "T", rowDungeon, "BackdropTemplate")
             rowDungeon.columns[playerGUID .. "T"]:SetSize(colWidth / 2, rowHeight)
             rowDungeon.columns[playerGUID .. "T"]:SetPoint("TOPLEFT", rowDungeon.columns[playerGUID .. "F"], "TOPRIGHT")
@@ -499,7 +503,11 @@ function AlterEgo:CreateFrames()
             rowDungeon.columns[playerGUID .. "T"].fontString = rowDungeon.columns[playerGUID .. "T"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             rowDungeon.columns[playerGUID .. "T"].fontString:SetPoint("CENTER", rowDungeon.columns[playerGUID .. "T"], "CENTER", cellPadding, 0)
             rowDungeon.columns[playerGUID .. "T"].fontString:SetJustifyH("CENTER")
-            rowDungeon.columns[playerGUID .. "T"].fontString:SetText(character.dungeons[mapInfo.id][1])
+            local level = character.dungeons[mapInfo.id][1]
+            if level == 0 then
+                level = "-"
+            end
+            rowDungeon.columns[playerGUID .. "T"].fontString:SetText(level)
             previousFrame = playerGUID .. "T"
         end
     end
