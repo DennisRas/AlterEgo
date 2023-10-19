@@ -67,7 +67,10 @@ function f:ADDON_LOADED(event, addon)
 
         C_MythicPlus.RequestMapInfo()
 
-        local playerName, playerRealm = UnitName("player")
+        local playerName = UnitName("player")
+        local _, playerClass = UnitClass("player")
+        local playerRealm = GetRealmName()
+        -- local playerRealm = GetNormalizedRealmName()
         local playerGUID = UnitGUID("player")
         local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
         local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
@@ -94,6 +97,7 @@ function f:ADDON_LOADED(event, addon)
             AlterEgoDB.characters[playerGUID] = {
                 name = playerName,
                 realm = playerRealm,
+                class = playerClass,
                 rating = ratingSummary.currentSeasonScore,
                 ilvl = avgItemLevel,
                 vault = {},
@@ -108,8 +112,6 @@ function f:ADDON_LOADED(event, addon)
         for mid,_ in pairs(Maps) do
             local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mid)
             if affixScores ~= nil then
-                dumpTable(affixScores)
-
                 local fortified = 0
                 local tyrannical = 0
                 for i,affixScore in pairs(affixScores) do
@@ -154,10 +156,10 @@ end
 function AlterEgo:CreateFrames()
     local characters = AlterEgo:GetCharacters()
 
+    
     local rowCharacterName = CreateFrame("Frame", f:GetName() .. "HeaderRow", f, "BackdropTemplate")
     rowCharacterName:SetSize(f:GetWidth(), rowHeight)
     rowCharacterName:SetPoint("TOPLEFT", f, "TOPLEFT")
-
     rowCharacterName.columns = {}
     rowCharacterName.columns[0] = CreateFrame("Frame", rowCharacterName:GetName() .. "COL0", rowCharacterName, "BackdropTemplate")
     rowCharacterName.columns[0]:SetSize(colWidth, rowHeight)
@@ -168,9 +170,19 @@ function AlterEgo:CreateFrames()
     rowCharacterName.columns[0].fontString:SetPoint("LEFT", rowCharacterName.columns[0], "LEFT", cellPadding, 0)
     rowCharacterName.columns[0].fontString:SetText("Characters:")
     rowCharacterName.columns[0].fontString:SetJustifyH("LEFT")
-
+    
     local previousFrame = 0
     for playerGUID,character in pairs(characters) do
+
+        local characterColor = "|cffffffff"
+        if character.class ~= nil then
+            local classColor = C_ClassColor.GetClassColor(character.class)
+            if classColor ~= nil then
+                -- dumpTable(classColor)
+                characterColor = "|c" .. classColor.GenerateHexColor(classColor)
+            end
+        end
+
         rowCharacterName.columns[playerGUID] = CreateFrame("Frame", rowCharacterName:GetName() .. "COL" .. playerGUID, rowCharacterName, "BackdropTemplate")
         rowCharacterName.columns[playerGUID]:SetSize(colWidth, rowHeight)
         rowCharacterName.columns[playerGUID]:SetPoint("TOPLEFT", rowCharacterName.columns[previousFrame], "TOPRIGHT")
@@ -179,13 +191,41 @@ function AlterEgo:CreateFrames()
         rowCharacterName.columns[playerGUID].fontString = rowCharacterName.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rowCharacterName.columns[playerGUID].fontString:SetPoint("CENTER", rowCharacterName.columns[playerGUID], "CENTER", cellPadding, 0)
         rowCharacterName.columns[playerGUID].fontString:SetJustifyH("CENTER")
-        rowCharacterName.columns[playerGUID].fontString:SetText(character.name)
+        rowCharacterName.columns[playerGUID].fontString:SetText(characterColor .. character.name .. "|r")
+        previousFrame = playerGUID
+    end
+
+    local rowRealmName = CreateFrame("Frame", f:GetName() .. "RowRealm", f, "BackdropTemplate")
+    rowRealmName:SetSize(f:GetWidth(), rowHeight)
+    rowRealmName:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight)
+    rowRealmName.columns = {}
+    rowRealmName.columns[0] = CreateFrame("Frame", rowRealmName:GetName() .. "COL0", rowRealmName, "BackdropTemplate")
+    rowRealmName.columns[0]:SetSize(colWidth, rowHeight)
+    rowRealmName.columns[0]:SetPoint("TOPLEFT", rowRealmName, "TOPLEFT")
+    rowRealmName.columns[0]:SetBackdrop(backdropinfo)
+    rowRealmName.columns[0]:SetBackdropColor(1, 0, 0, 1)
+    rowRealmName.columns[0].fontString = rowRealmName.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    rowRealmName.columns[0].fontString:SetPoint("LEFT", rowRealmName.columns[0], "LEFT", cellPadding, 0)
+    rowRealmName.columns[0].fontString:SetText("Realm:")
+    rowRealmName.columns[0].fontString:SetJustifyH("LEFT")
+
+    local previousFrame = 0
+    for playerGUID,character in pairs(characters) do
+        rowRealmName.columns[playerGUID] = CreateFrame("Frame", rowRealmName:GetName() .. "COL" .. playerGUID, rowRealmName, "BackdropTemplate")
+        rowRealmName.columns[playerGUID]:SetSize(colWidth, rowHeight)
+        rowRealmName.columns[playerGUID]:SetPoint("TOPLEFT", rowRealmName.columns[previousFrame], "TOPRIGHT")
+        rowRealmName.columns[playerGUID]:SetBackdrop(backdropinfo)
+        rowRealmName.columns[playerGUID]:SetBackdropColor(1, 0, 0, 1)
+        rowRealmName.columns[playerGUID].fontString = rowRealmName.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rowRealmName.columns[playerGUID].fontString:SetPoint("CENTER", rowRealmName.columns[playerGUID], "CENTER", cellPadding, 0)
+        rowRealmName.columns[playerGUID].fontString:SetJustifyH("CENTER")
+        rowRealmName.columns[playerGUID].fontString:SetText((character.realm or ""))
         previousFrame = playerGUID
     end
 
     local rowRating = CreateFrame("Frame", f:GetName() .. "Rating", f, "BackdropTemplate")
     rowRating:SetSize(f:GetWidth(), rowHeight)
-    rowRating:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight)
+    rowRating:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 2)
     rowRating.columns = {}
     rowRating.columns[0] = CreateFrame("Frame", rowRating:GetName() .. "COL0", rowRating, "BackdropTemplate")
     rowRating.columns[0]:SetSize(colWidth, rowHeight)
@@ -213,7 +253,7 @@ function AlterEgo:CreateFrames()
 
     local rowItemLevel = CreateFrame("Frame", f:GetName() .. "ItemLevel", f, "BackdropTemplate")
     rowItemLevel:SetSize(f:GetWidth(), rowHeight)
-    rowItemLevel:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 2)
+    rowItemLevel:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 3)
     rowItemLevel.columns = {}
     rowItemLevel.columns[0] = CreateFrame("Frame", rowItemLevel:GetName() .. "COL0", rowItemLevel, "BackdropTemplate")
     rowItemLevel.columns[0]:SetSize(colWidth, rowHeight)
@@ -242,7 +282,7 @@ function AlterEgo:CreateFrames()
     for i = 1, 3 do
         local rowVault = CreateFrame("Frame", f:GetName() .. "Vault" .. i, f, "BackdropTemplate")
         rowVault:SetSize(f:GetWidth(), rowHeight)
-        rowVault:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (2 + i))
+        rowVault:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (3 + i))
         rowVault.columns = {}
         rowVault.columns[0] = CreateFrame("Frame", rowVault:GetName() .. "COL0", rowVault, "BackdropTemplate")
         rowVault.columns[0]:SetSize(colWidth, rowHeight)
@@ -272,7 +312,7 @@ function AlterEgo:CreateFrames()
     
     local rowCurrentKey = CreateFrame("Frame", f:GetName() .. "CurrentKey", f, "BackdropTemplate")
     rowCurrentKey:SetSize(f:GetWidth(), rowHeight)
-    rowCurrentKey:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 6)
+    rowCurrentKey:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 7)
     rowCurrentKey.columns = {}
     rowCurrentKey.columns[0] = CreateFrame("Frame", rowCurrentKey:GetName() .. "COL0", rowCurrentKey, "BackdropTemplate")
     rowCurrentKey.columns[0]:SetSize(colWidth, rowHeight)
@@ -300,7 +340,7 @@ function AlterEgo:CreateFrames()
     
     local rowDungeonHeader = CreateFrame("Frame", f:GetName() .. "DungeonHeader", f, "BackdropTemplate")
     rowDungeonHeader:SetSize(f:GetWidth(), rowHeight)
-    rowDungeonHeader:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 7)
+    rowDungeonHeader:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 8)
     rowDungeonHeader.columns = {}
     rowDungeonHeader.columns[0] = CreateFrame("Frame", rowDungeonHeader:GetName() .. "COL0", rowDungeonHeader, "BackdropTemplate")
     rowDungeonHeader.columns[0]:SetSize(colWidth, rowHeight)
@@ -339,7 +379,7 @@ function AlterEgo:CreateFrames()
     for mapId,shortName in pairs(Maps) do
         local rowDungeon = CreateFrame("Frame", f:GetName() .. "Dungeon" .. i, f, "BackdropTemplate")
         rowDungeon:SetSize(f:GetWidth(), rowHeight)
-        rowDungeon:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (7 + i))
+        rowDungeon:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (8 + i))
         rowDungeon.columns = {}
         rowDungeon.columns[0] = CreateFrame("Frame", rowDungeon:GetName() .. "COL0", rowDungeon, "BackdropTemplate")
         rowDungeon.columns[0]:SetSize(colWidth, rowHeight)
