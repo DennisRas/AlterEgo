@@ -116,17 +116,29 @@ end
 local rowHeight = 20
 local colWidth = 120
 local cellPadding = 4
+local backdropinfo = {
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    -- edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true,
+    tileEdge = true,
+    tileSize = 8,
+    edgeSize = 0,
+    insets = { left = 0, right = 0, top = 0, bottom = 0 },
+}
 
+function AlterEgo:OnSlashCommand(message)
+    if self.frame:IsVisible() then
+        self.frame:Hide()
+    else
+        self.frame:Show()
+    end
+end
 
-function AlterEgo:OnInitialize()
-
-    self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
-
-    C_MythicPlus.RequestMapInfo()
-
+function AlterEgo:UpdateCharacter()
     local playerName = UnitName("player")
     local _, playerClass = UnitClass("player")
     local playerRealm = GetRealmName()
+    local activities = C_WeeklyRewards.GetActivities(1)
     -- local playerRealm = GetNormalizedRealmName()
     local playerGUID = UnitGUID("player")
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
@@ -138,17 +150,6 @@ function AlterEgo:OnInitialize()
     -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
     -- local history = C_MythicPlus.GetRunHistory(true)
     -- C_ChallengeMode.GetMapUIInfo(mapid)
-
-    if keyStoneLevel == nil then
-        keyStoneLevel = 0
-    end
-
-    -- if AlterEgoDB == nil then
-    --     AlterEgoDB = {
-    --         characters = {},
-    --         settings = {}
-    --     }
-    -- end
 
     self.db.global.characters[playerGUID] = {
         name = playerName,
@@ -190,11 +191,19 @@ function AlterEgo:OnInitialize()
         end
     end
 
-    local activities = C_WeeklyRewards.GetActivities(1)
     for _, activity in pairs(activities) do
         self.db.global.characters[playerGUID].vault[activity.index] = activity.level
     end
+end
 
+function AlterEgo:OnInitialize()
+    self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
+    self:RegisterChatCommand("alterego", "OnSlashCommand")
+    self:RegisterChatCommand("ae", "OnSlashCommand")
+
+    C_MythicPlus.RequestMapInfo()
+
+    AlterEgo:UpdateCharacter()
     AlterEgo:CreateFrames()
 end
 
@@ -210,23 +219,11 @@ end
 function AlterEgo:CreateFrames()
     local characters = AlterEgo:GetCharacters()
 
-    
     self.frame = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
-    local backdropinfo = {
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        -- edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true,
-        tileEdge = true,
-        tileSize = 8,
-        edgeSize = 0,
-        insets = { left = 0, right = 0, top = 0, bottom = 0 },
-    }
-
     self.frame:SetPoint("CENTER")
     self.frame:SetSize(600, 600)
     self.frame:SetBackdrop(backdropinfo)
     self.frame:SetBackdropColor(0, 0, 0, 1)
-
     
     local rowCharacterName = CreateFrame("Frame", self.frame:GetName() .. "HeaderRow", self.frame, "BackdropTemplate")
     rowCharacterName:SetSize(self.frame:GetWidth(), rowHeight)
