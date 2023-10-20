@@ -105,29 +105,29 @@ function AlterEgo:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
     self:RegisterChatCommand("alterego", "OnSlashCommand")
     self:RegisterChatCommand("ae", "OnSlashCommand")
-    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 1, "EQUIP_CHANGED")
 
+    -- TODO: Split these into different event handlers
+    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 1, "OnEvent")
+    self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "OnEvent")
+    self:RegisterEvent("CHALLENGE_MODE_RESET", "OnEvent")
+
+    -- TODO: Do this on event updates as well
     C_MythicPlus.RequestMapInfo()
-
-    self.ui = {}
 
     AlterEgo:UpdateCharacter()
     AlterEgo:CreateUI()
 end
 
 function AlterEgo:OnSlashCommand(message)
-    if self.frame:IsVisible() then
-        self.frame:Hide()
+    if self.tableFrame:IsVisible() then
+        self.tableFrame:Hide()
     else
-        self.frame:Show()
+        self.tableFrame:Show()
     end
 end
 
-function AlterEgo:EQUIP_CHANGED()
-    local playerGUID = UnitGUID("player")
-    local _, avgItemLevelEquipped = GetAverageItemLevel()
-    self.db.global.characters[playerGUID].ilvl = avgItemLevelEquipped
-
+function AlterEgo:OnEvent()
+    self:UpdateCharacter()
     self:UpdateUI()
 end
 
