@@ -1,4 +1,4 @@
-AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0")
+AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
 
 local options = {
     name = "AlterEgo",
@@ -16,33 +16,7 @@ local defaultDB = {
     }
 }
 
--- local function getTableSize(t)
---     local count = 0
---     for _, __ in pairs(t) do
---         count = count + 1
---     end
---     return count
--- end
-
-local function dumpTable(table, depth)
-    if depth == nil then
-        depth = 5
-    end
-    if (depth > 200) then
-      print("Error: Depth > 200 in dumpTable()")
-      return
-    end
-    for k,v in pairs(table) do
-      if (type(v) == "table") then
-        print(string.rep("  ", depth)..k..":")
-        dumpTable(v, depth+1)
-      else
-        print(string.rep("  ", depth)..k..": ",v)
-      end
-    end
-  end
-
-  local function MaxLength(str, len)
+local function MaxLength(str, len)
     if len == nil then
         len = 15
     end
@@ -50,7 +24,7 @@ local function dumpTable(table, depth)
         return str:sub(1, len) .. "..."
     end
     return str
-  end
+end
 
 local Maps = {
     [1] = {
@@ -131,6 +105,7 @@ function AlterEgo:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
     self:RegisterChatCommand("alterego", "OnSlashCommand")
     self:RegisterChatCommand("ae", "OnSlashCommand")
+    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 1, "EQUIP_CHANGED")
 
     C_MythicPlus.RequestMapInfo()
 
@@ -146,6 +121,14 @@ function AlterEgo:OnSlashCommand(message)
     else
         self.frame:Show()
     end
+end
+
+function AlterEgo:EQUIP_CHANGED()
+    local playerGUID = UnitGUID("player")
+    local _, avgItemLevelEquipped = GetAverageItemLevel()
+    self.db.global.characters[playerGUID].ilvl = avgItemLevelEquipped
+
+    self:UpdateUI()
 end
 
 function AlterEgo:UpdateCharacter()
@@ -170,7 +153,7 @@ function AlterEgo:UpdateCharacter()
         realm = playerRealm,
         class = playerClass,
         rating = ratingSummary.currentSeasonScore,
-        ilvl = avgItemLevel,
+        ilvl = avgItemLevelEquipped,
         vault = {},
         key = {
             map = mapID,
@@ -259,7 +242,13 @@ local UIData = {
         name = "ItemLevel",
         label = "Item Level:",
         value = function(self, character)
-            return floor(character.ilvl)
+            local r, g, b = GetItemLevelColor()
+            local itemLevelColorHex = "|cffffffff"
+            if r ~= nil then
+                local color = CreateColor(r, g, b, 1)
+                itemLevelColorHex = "|c" .. color:GenerateHexColor()
+            end
+            return itemLevelColorHex .. floor(character.ilvl) .. "|r"
         end
     },
     [5] = {
