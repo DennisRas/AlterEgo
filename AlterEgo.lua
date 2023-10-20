@@ -1,4 +1,20 @@
-AlterEgo = {}
+AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0")
+
+local options = {
+    name = "AlterEgo",
+    handler = AlterEgo,
+    type = "group",
+    args = {}
+}
+
+local defaultDB = {
+    global = {
+        characters = {},
+    },
+    profile = {
+        settings = {}
+    }
+}
 
 -- local function getTableSize(t)
 --     local count = 0
@@ -101,111 +117,89 @@ local rowHeight = 20
 local colWidth = 120
 local cellPadding = 4
 
-local f = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
-local backdropinfo = {
-	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
- 	-- edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
- 	tile = true,
- 	tileEdge = true,
- 	tileSize = 8,
- 	edgeSize = 0,
- 	insets = { left = 0, right = 0, top = 0, bottom = 0 },
-}
 
-f:SetPoint("CENTER")
-f:SetSize(600, 600)
-f:SetBackdrop(backdropinfo)
-f:SetBackdropColor(0, 0, 0, 1)
-f:RegisterEvent("ADDON_LOADED")
-f:SetScript("OnEvent", function(self, event, ...)
-    self[event](self, event, ...)
-end
-)
+function AlterEgo:OnInitialize()
 
-function f:ADDON_LOADED(event, addon)
-    if addon == "AlterEgo" then
+    self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
 
-        C_MythicPlus.RequestMapInfo()
+    C_MythicPlus.RequestMapInfo()
 
-        local playerName = UnitName("player")
-        local _, playerClass = UnitClass("player")
-        local playerRealm = GetRealmName()
-        -- local playerRealm = GetNormalizedRealmName()
-        local playerGUID = UnitGUID("player")
-        local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
-        local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
-        local mapID = C_MythicPlus.GetOwnedKeystoneMapID()
-        local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-        -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
-        -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
-        -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
-        -- local history = C_MythicPlus.GetRunHistory(true)
-        -- C_ChallengeMode.GetMapUIInfo(mapid)
+    local playerName = UnitName("player")
+    local _, playerClass = UnitClass("player")
+    local playerRealm = GetRealmName()
+    -- local playerRealm = GetNormalizedRealmName()
+    local playerGUID = UnitGUID("player")
+    local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
+    local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
+    local mapID = C_MythicPlus.GetOwnedKeystoneMapID()
+    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
+    -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
+    -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
+    -- local history = C_MythicPlus.GetRunHistory(true)
+    -- C_ChallengeMode.GetMapUIInfo(mapid)
 
-        if keyStoneLevel == nil then
-            keyStoneLevel = 0
-        end
-
-        if AlterEgoDB == nil then
-            AlterEgoDB = {
-                characters = {},
-                settings = {}
-            }
-        end
-
-        -- if AlterEgoDB.characters[playerGUID] == nil then
-            AlterEgoDB.characters[playerGUID] = {
-                name = playerName,
-                realm = playerRealm,
-                class = playerClass,
-                rating = ratingSummary.currentSeasonScore,
-                ilvl = avgItemLevel,
-                vault = {},
-                key = {
-                    map = mapID,
-                    level = keyStoneLevel or 0
-                },
-                dungeons = {}
-            }
-        -- end
-
-        for i, mapInfo in pairs(Maps) do
-            local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mapInfo.id)
-            if affixScores ~= nil then
-                local fortified = 0
-                local tyrannical = 0
-                for _, affixScore in pairs(affixScores) do
-                    if affixScore.name == "Fortified" then
-                        fortified = affixScore.level
-                    end
-                    if affixScore.name == "Tyrannical" then
-                        tyrannical = affixScore.level
-                    end
-                end
-
-                AlterEgoDB.characters[playerGUID].dungeons[mapInfo.id] = {
-                    [1] = tyrannical,
-                    [2] = fortified,
-                }
-            else
-                AlterEgoDB.characters[playerGUID].dungeons[mapInfo.id] = {
-                    [1] = 0,
-                    [2] = 0,
-                }
-            end
-        end
-
-        local activities = C_WeeklyRewards.GetActivities(1)
-        for _, activity in pairs(activities) do
-            AlterEgoDB.characters[playerGUID].vault[activity.index] = activity.level
-        end
-
-        AlterEgo:CreateFrames()
+    if keyStoneLevel == nil then
+        keyStoneLevel = 0
     end
+
+    -- if AlterEgoDB == nil then
+    --     AlterEgoDB = {
+    --         characters = {},
+    --         settings = {}
+    --     }
+    -- end
+
+    self.db.global.characters[playerGUID] = {
+        name = playerName,
+        realm = playerRealm,
+        class = playerClass,
+        rating = ratingSummary.currentSeasonScore,
+        ilvl = avgItemLevel,
+        vault = {},
+        key = {
+            map = mapID,
+            level = keyStoneLevel or 0
+        },
+        dungeons = {}
+    }
+
+    for i, mapInfo in pairs(Maps) do
+        local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mapInfo.id)
+        if affixScores ~= nil then
+            local fortified = 0
+            local tyrannical = 0
+            for _, affixScore in pairs(affixScores) do
+                if affixScore.name == "Fortified" then
+                    fortified = affixScore.level
+                end
+                if affixScore.name == "Tyrannical" then
+                    tyrannical = affixScore.level
+                end
+            end
+
+            self.db.global.characters[playerGUID].dungeons[mapInfo.id] = {
+                [1] = tyrannical,
+                [2] = fortified,
+            }
+        else
+            self.db.global.characters[playerGUID].dungeons[mapInfo.id] = {
+                [1] = 0,
+                [2] = 0,
+            }
+        end
+    end
+
+    local activities = C_WeeklyRewards.GetActivities(1)
+    for _, activity in pairs(activities) do
+        self.db.global.characters[playerGUID].vault[activity.index] = activity.level
+    end
+
+    AlterEgo:CreateFrames()
 end
 
 function AlterEgo:GetCharacters()
-    local characters = AlterEgoDB.characters
+    local characters = self.db.global.characters
 
     -- Filters
     -- Sorting
@@ -217,9 +211,26 @@ function AlterEgo:CreateFrames()
     local characters = AlterEgo:GetCharacters()
 
     
-    local rowCharacterName = CreateFrame("Frame", f:GetName() .. "HeaderRow", f, "BackdropTemplate")
-    rowCharacterName:SetSize(f:GetWidth(), rowHeight)
-    rowCharacterName:SetPoint("TOPLEFT", f, "TOPLEFT")
+    self.frame = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
+    local backdropinfo = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        -- edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileEdge = true,
+        tileSize = 8,
+        edgeSize = 0,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 },
+    }
+
+    self.frame:SetPoint("CENTER")
+    self.frame:SetSize(600, 600)
+    self.frame:SetBackdrop(backdropinfo)
+    self.frame:SetBackdropColor(0, 0, 0, 1)
+
+    
+    local rowCharacterName = CreateFrame("Frame", self.frame:GetName() .. "HeaderRow", self.frame, "BackdropTemplate")
+    rowCharacterName:SetSize(self.frame:GetWidth(), rowHeight)
+    rowCharacterName:SetPoint("TOPLEFT", self.frame, "TOPLEFT")
     rowCharacterName.columns = {}
     rowCharacterName.columns[0] = CreateFrame("Frame", rowCharacterName:GetName() .. "COL0", rowCharacterName, "BackdropTemplate")
     rowCharacterName.columns[0]:SetSize(colWidth, rowHeight)
@@ -254,9 +265,9 @@ function AlterEgo:CreateFrames()
         previousFrame = playerGUID
     end
 
-    local rowRealmName = CreateFrame("Frame", f:GetName() .. "RowRealm", f, "BackdropTemplate")
-    rowRealmName:SetSize(f:GetWidth(), rowHeight)
-    rowRealmName:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight)
+    local rowRealmName = CreateFrame("Frame", self.frame:GetName() .. "RowRealm", self.frame, "BackdropTemplate")
+    rowRealmName:SetSize(self.frame:GetWidth(), rowHeight)
+    rowRealmName:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight)
     rowRealmName.columns = {}
     rowRealmName.columns[0] = CreateFrame("Frame", rowRealmName:GetName() .. "COL0", rowRealmName, "BackdropTemplate")
     rowRealmName.columns[0]:SetSize(colWidth, rowHeight)
@@ -282,9 +293,9 @@ function AlterEgo:CreateFrames()
         previousFrame = playerGUID
     end
 
-    local rowRating = CreateFrame("Frame", f:GetName() .. "Rating", f, "BackdropTemplate")
-    rowRating:SetSize(f:GetWidth(), rowHeight)
-    rowRating:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 2)
+    local rowRating = CreateFrame("Frame", self.frame:GetName() .. "Rating", self.frame, "BackdropTemplate")
+    rowRating:SetSize(self.frame:GetWidth(), rowHeight)
+    rowRating:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 2)
     rowRating.columns = {}
     rowRating.columns[0] = CreateFrame("Frame", rowRating:GetName() .. "COL0", rowRating, "BackdropTemplate")
     rowRating.columns[0]:SetSize(colWidth, rowHeight)
@@ -318,9 +329,9 @@ function AlterEgo:CreateFrames()
         previousFrame = playerGUID
     end
 
-    local rowItemLevel = CreateFrame("Frame", f:GetName() .. "ItemLevel", f, "BackdropTemplate")
-    rowItemLevel:SetSize(f:GetWidth(), rowHeight)
-    rowItemLevel:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 3)
+    local rowItemLevel = CreateFrame("Frame", self.frame:GetName() .. "ItemLevel", self.frame, "BackdropTemplate")
+    rowItemLevel:SetSize(self.frame:GetWidth(), rowHeight)
+    rowItemLevel:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 3)
     rowItemLevel.columns = {}
     rowItemLevel.columns[0] = CreateFrame("Frame", rowItemLevel:GetName() .. "COL0", rowItemLevel, "BackdropTemplate")
     rowItemLevel.columns[0]:SetSize(colWidth, rowHeight)
@@ -347,9 +358,9 @@ function AlterEgo:CreateFrames()
     end
 
     for i = 1, 3 do
-        local rowVault = CreateFrame("Frame", f:GetName() .. "Vault" .. i, f, "BackdropTemplate")
-        rowVault:SetSize(f:GetWidth(), rowHeight)
-        rowVault:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (3 + i))
+        local rowVault = CreateFrame("Frame", self.frame:GetName() .. "Vault" .. i, self.frame, "BackdropTemplate")
+        rowVault:SetSize(self.frame:GetWidth(), rowHeight)
+        rowVault:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * (3 + i))
         rowVault.columns = {}
         rowVault.columns[0] = CreateFrame("Frame", rowVault:GetName() .. "COL0", rowVault, "BackdropTemplate")
         rowVault.columns[0]:SetSize(colWidth, rowHeight)
@@ -381,9 +392,9 @@ function AlterEgo:CreateFrames()
     end
 
     
-    local rowCurrentKey = CreateFrame("Frame", f:GetName() .. "CurrentKey", f, "BackdropTemplate")
-    rowCurrentKey:SetSize(f:GetWidth(), rowHeight)
-    rowCurrentKey:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 7)
+    local rowCurrentKey = CreateFrame("Frame", self.frame:GetName() .. "CurrentKey", self.frame, "BackdropTemplate")
+    rowCurrentKey:SetSize(self.frame:GetWidth(), rowHeight)
+    rowCurrentKey:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 7)
     rowCurrentKey.columns = {}
     rowCurrentKey.columns[0] = CreateFrame("Frame", rowCurrentKey:GetName() .. "COL0", rowCurrentKey, "BackdropTemplate")
     rowCurrentKey.columns[0]:SetSize(colWidth, rowHeight)
@@ -413,49 +424,49 @@ function AlterEgo:CreateFrames()
         previousFrame = playerGUID
     end
     
-    f.rowDungeonHeader = CreateFrame("Frame", f:GetName() .. "DungeonHeader", f, "BackdropTemplate")
-    f.rowDungeonHeader:SetSize(f:GetWidth(), rowHeight)
-    f.rowDungeonHeader:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * 8)
-    f.rowDungeonHeader:SetBackdrop(backdropinfo)
-    f.rowDungeonHeader:SetBackdropColor(0.2, 0.2, 0.2, 1)
-    f.rowDungeonHeader.columns = {}
-    f.rowDungeonHeader.columns[0] = CreateFrame("Frame", f.rowDungeonHeader:GetName() .. "COL0", f.rowDungeonHeader, "BackdropTemplate")
-    f.rowDungeonHeader.columns[0]:SetSize(colWidth, rowHeight)
-    f.rowDungeonHeader.columns[0]:SetPoint("TOPLEFT", f.rowDungeonHeader, "TOPLEFT")
-    f.rowDungeonHeader.columns[0]:SetBackdrop(backdropinfo)
-    f.rowDungeonHeader.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    f.rowDungeonHeader.columns[0].fontString = f.rowDungeonHeader.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    f.rowDungeonHeader.columns[0].fontString:SetPoint("LEFT", f.rowDungeonHeader.columns[0], "LEFT", cellPadding, 0)
-    f.rowDungeonHeader.columns[0].fontString:SetJustifyH("LEFT")
-    f.rowDungeonHeader.columns[0].fontString:SetText("Dungeons:")
+    self.frame.rowDungeonHeader = CreateFrame("Frame", self.frame:GetName() .. "DungeonHeader", self.frame, "BackdropTemplate")
+    self.frame.rowDungeonHeader:SetSize(self.frame:GetWidth(), rowHeight)
+    self.frame.rowDungeonHeader:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 8)
+    self.frame.rowDungeonHeader:SetBackdrop(backdropinfo)
+    self.frame.rowDungeonHeader:SetBackdropColor(0.2, 0.2, 0.2, 1)
+    self.frame.rowDungeonHeader.columns = {}
+    self.frame.rowDungeonHeader.columns[0] = CreateFrame("Frame", self.frame.rowDungeonHeader:GetName() .. "COL0", self.frame.rowDungeonHeader, "BackdropTemplate")
+    self.frame.rowDungeonHeader.columns[0]:SetSize(colWidth, rowHeight)
+    self.frame.rowDungeonHeader.columns[0]:SetPoint("TOPLEFT", self.frame.rowDungeonHeader, "TOPLEFT")
+    self.frame.rowDungeonHeader.columns[0]:SetBackdrop(backdropinfo)
+    self.frame.rowDungeonHeader.columns[0]:SetBackdropColor(0, 0, 0, 0)
+    self.frame.rowDungeonHeader.columns[0].fontString = self.frame.rowDungeonHeader.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    self.frame.rowDungeonHeader.columns[0].fontString:SetPoint("LEFT", self.frame.rowDungeonHeader.columns[0], "LEFT", cellPadding, 0)
+    self.frame.rowDungeonHeader.columns[0].fontString:SetJustifyH("LEFT")
+    self.frame.rowDungeonHeader.columns[0].fontString:SetText("Dungeons:")
 
     local previousFrame = 0
     for playerGUID,character in pairs(characters) do
-        f.rowDungeonHeader.columns[playerGUID .. "F"] = CreateFrame("Frame", f.rowDungeonHeader:GetName() .. "COL" .. playerGUID .. "F", f.rowDungeonHeader, "BackdropTemplate")
-        f.rowDungeonHeader.columns[playerGUID .. "F"]:SetSize(colWidth / 2, rowHeight)
-        f.rowDungeonHeader.columns[playerGUID .. "F"]:SetPoint("TOPLEFT", f.rowDungeonHeader.columns[previousFrame], "TOPRIGHT")
-        f.rowDungeonHeader.columns[playerGUID .. "F"]:SetBackdrop(backdropinfo)
-        f.rowDungeonHeader.columns[playerGUID .. "F"]:SetBackdropColor(0, 0, 0, 0)
-        f.rowDungeonHeader.columns[playerGUID .. "F"].fontString = f.rowDungeonHeader.columns[playerGUID .. "F"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        f.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetPoint("CENTER", f.rowDungeonHeader.columns[playerGUID .. "F"], "CENTER", cellPadding, 0)
-        f.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetJustifyH("CENTER")
-        f.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetText("F")
-        f.rowDungeonHeader.columns[playerGUID .. "T"] = CreateFrame("Frame", f.rowDungeonHeader:GetName() .. "COL" .. playerGUID .. "T", f.rowDungeonHeader, "BackdropTemplate")
-        f.rowDungeonHeader.columns[playerGUID .. "T"]:SetSize(colWidth / 2, rowHeight)
-        f.rowDungeonHeader.columns[playerGUID .. "T"]:SetPoint("TOPLEFT", f.rowDungeonHeader.columns[playerGUID .. "F"], "TOPRIGHT")
-        f.rowDungeonHeader.columns[playerGUID .. "T"]:SetBackdrop(backdropinfo)
-        f.rowDungeonHeader.columns[playerGUID .. "T"]:SetBackdropColor(0, 0, 0, 0)
-        f.rowDungeonHeader.columns[playerGUID .. "T"].fontString = f.rowDungeonHeader.columns[playerGUID .. "T"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        f.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetPoint("CENTER", f.rowDungeonHeader.columns[playerGUID .. "T"], "CENTER", cellPadding, 0)
-        f.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetJustifyH("CENTER")
-        f.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetText("T")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"] = CreateFrame("Frame", self.frame.rowDungeonHeader:GetName() .. "COL" .. playerGUID .. "F", self.frame.rowDungeonHeader, "BackdropTemplate")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetSize(colWidth / 2, rowHeight)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetPoint("TOPLEFT", self.frame.rowDungeonHeader.columns[previousFrame], "TOPRIGHT")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetBackdrop(backdropinfo)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetBackdropColor(0, 0, 0, 0)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString = self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetPoint("CENTER", self.frame.rowDungeonHeader.columns[playerGUID .. "F"], "CENTER", cellPadding, 0)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetJustifyH("CENTER")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetText("F")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"] = CreateFrame("Frame", self.frame.rowDungeonHeader:GetName() .. "COL" .. playerGUID .. "T", self.frame.rowDungeonHeader, "BackdropTemplate")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetSize(colWidth / 2, rowHeight)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetPoint("TOPLEFT", self.frame.rowDungeonHeader.columns[playerGUID .. "F"], "TOPRIGHT")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetBackdrop(backdropinfo)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetBackdropColor(0, 0, 0, 0)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString = self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetPoint("CENTER", self.frame.rowDungeonHeader.columns[playerGUID .. "T"], "CENTER", cellPadding, 0)
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetJustifyH("CENTER")
+        self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetText("T")
         previousFrame = playerGUID .. "T"
     end
 
     for i, mapInfo in pairs(Maps) do
-        local rowDungeon = CreateFrame("Frame", f:GetName() .. "Dungeon" .. i, f, "BackdropTemplate")
-        rowDungeon:SetSize(f:GetWidth(), rowHeight)
-        rowDungeon:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -rowHeight * (8 + i))
+        local rowDungeon = CreateFrame("Frame", self.frame:GetName() .. "Dungeon" .. i, self.frame, "BackdropTemplate")
+        rowDungeon:SetSize(self.frame:GetWidth(), rowHeight)
+        rowDungeon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * (8 + i))
         rowDungeon.columns = {}
         rowDungeon.columns[0] = CreateFrame("Frame", rowDungeon:GetName() .. "COL0", rowDungeon, "BackdropTemplate")
         rowDungeon.columns[0]:SetSize(colWidth, rowHeight)
@@ -525,8 +536,8 @@ function AlterEgo:UpdateFrames()
         frameWidth = frameWidth + colWidth
     end
 
-    f:SetSize(frameWidth, rowHeight * 17)
-    f.rowDungeonHeader:SetWidth(frameWidth)
+    self.frame:SetSize(frameWidth, rowHeight * 17)
+    self.frame.rowDungeonHeader:SetWidth(frameWidth)
 
     -- for playerGUID, character in pairs(characters) do
     --     print(character.name)
