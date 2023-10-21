@@ -464,9 +464,9 @@ function AlterEgo:CreateUI()
                 -- self.tableFrame[dungeonCellFrame]:SetBackdrop(self.static.backdrop)
                 -- self.tableFrame[dungeonCellFrame]:SetBackdropColor(0, 0, 0, 0)
                 self.frame[dungeonCellFrame].fontString = self.frame[dungeonCellFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                self.frame[dungeonCellFrame].fontString:SetPoint("CENTER", self.frame[dungeonCellFrame], "CENTER", 0, 0)
+                self.frame[dungeonCellFrame].fontString:SetPoint("LEFT", self.frame[dungeonCellFrame], "LEFT", 22, 0)
                 -- self.tableFrame[dungeonCellFrame].fontString:SetText(level)
-                self.frame[dungeonCellFrame].fontString:SetJustifyH("CENTER")
+                self.frame[dungeonCellFrame].fontString:SetJustifyH("LEFT")
                 lastCellFrame = self.frame[dungeonCellFrame]
                 columnIndex = columnIndex + 1
             end
