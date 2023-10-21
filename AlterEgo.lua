@@ -520,11 +520,13 @@ function AlterEgo:UpdateUI()
         for _, character in pairs(characters) do
             for affixIndex = 1, 2 do
                 local level = character.dungeons[dungeon.id][affixIndex]
+                local levelColor = "ffffffff"
                 if level == 0 then
                     level = "-"
+                    levelColor = "ffaaaaaa"
                 end
                 local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
-                self.frame[dungeonCellFrame].fontString:SetText(level)
+                self.frame[dungeonCellFrame].fontString:SetText("|c" .. levelColor .. level .. "|r")
                 columnIndex = columnIndex + 1
             end
         end
