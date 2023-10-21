@@ -163,36 +163,42 @@ AlterEgo.constants = {
             end
         },
         [5] = {
-            name = "Vault1",
-            label = "Vault 1:",
+            name = "Vault",
+            label = "Vault:",
             value = function(self, character)
-                if character.vault[1] == 0 then
-                    return "-"
+
+                local vaults = ""
+                for i,vault in ipairs(character.vault) do
+                    if vault == 0 then
+                        vault = "-"
+                    end
+                    vaults = vaults .. vault .. "  "
                 end
-                return character.vault[1]
+                
+                return vaults:trim()
             end
         },
+        -- [6] = {
+        --     name = "Vault2",
+        --     label = "Vault 2:",
+        --     value = function(self, character)
+        --         if character.vault[2] == 0 then
+        --             return "-"
+        --         end
+        --         return character.vault[2]
+        --     end
+        -- },
+        -- [7] = {
+        --     name = "Vault3",
+        --     label = "Vault 3:",
+        --     value = function(self, character)
+        --         if character.vault[3] == 0 then
+        --             return "-"
+        --         end
+        --         return character.vault[3]
+        --     end
+        -- },
         [6] = {
-            name = "Vault2",
-            label = "Vault 2:",
-            value = function(self, character)
-                if character.vault[2] == 0 then
-                    return "-"
-                end
-                return character.vault[2]
-            end
-        },
-        [7] = {
-            name = "Vault3",
-            label = "Vault 3:",
-            value = function(self, character)
-                if character.vault[3] == 0 then
-                    return "-"
-                end
-                return character.vault[3]
-            end
-        },
-        [8] = {
             name = "CurrentKey",
             label = "Current Key:",
             value = function(self, character)
