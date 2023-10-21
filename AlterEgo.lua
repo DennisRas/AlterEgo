@@ -50,49 +50,57 @@ AlterEgo.constants = {
             id = 206,
             mapId = 1458,
             name = "Neltharion's Lair",
-            abbr = "NL"
+            abbr = "NL",
+            time = 0
         },
         [2] = {
             id = 245,
             mapId = 1754,
             name = "Freehold",
-            abbr = "FH"
+            abbr = "FH",
+            time = 0
         },
         [3] = {
             id = 251,
             mapId = 1841,
             name = "The Underrot",
-            abbr = "UR"
+            abbr = "UR",
+            time = 0
         },
         [4] = {
             id = 403,
             mapId = 2451,
             name = "Uldaman: Legacy of Tyr",
-            abbr = "UL"
+            abbr = "UL",
+            time = 0
         },
         [5] = {
             id = 404,
             mapId = 2519,
             name = "Neltharus",
-            abbr = "NEL"
+            abbr = "NEL",
+            time = 0
         },
         [6] = {
             id = 405,
             mapId = 2520,
             name = "Brackenhide Hollow",
-            abbr = "BH"
+            abbr = "BH",
+            time = 0
         },
         [7] = {
             id = 406,
             mapId = 2527,
             name = "Halls of Infusion",
-            abbr = "HOI"
+            abbr = "HOI",
+            time = 0
         },
         [8] = {
             id = 438,
             mapId = 657,
             name = "The Vortex Pinnacle",
-            abbr = "VP"
+            abbr = "VP",
+            time = 0
         },
     },
     characterTable = {
@@ -223,6 +231,12 @@ function AlterEgo:OnInitialize()
     -- TODO: Do this on event updates as well
     C_MythicPlus.RequestMapInfo()
 
+    for i, dungeon in ipairs(self.constants.dungeons) do
+        local _, __, time = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+        self.constants.dungeons[i].time = time
+    end
+    
+
     AlterEgo:UpdateCharacter()
     AlterEgo:CreateUI()
 end
@@ -256,7 +270,7 @@ function AlterEgo:UpdateCharacter()
     -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
     -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
     -- local history = C_MythicPlus.GetRunHistory(true)
-    -- C_ChallengeMode.GetMapUIInfo(mapid)
+    -- C_ChallengeMode.GetMapUIInfo(2527)
 
     self.db.global.characters[playerGUID] = {
         name = playerName,
@@ -274,27 +288,35 @@ function AlterEgo:UpdateCharacter()
     }
 
     for i, dungeon in pairs(self.constants.dungeons) do
+        if self.db.global.characters[playerGUID].dungeons[dungeon.id] == nil then
+            self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
+                ["Fortified"] = {},
+                ["Tyrannical"] = {},
+            }
+        end
+
         local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
         if affixScores ~= nil then
             local fortified = 0
             local tyrannical = 0
             for _, affixScore in pairs(affixScores) do
-                if affixScore.name == "Fortified" then
-                    fortified = affixScore.level
-                end
-                if affixScore.name == "Tyrannical" then
-                    tyrannical = affixScore.level
-                end
+                self.db.global.characters[playerGUID].dungeons[dungeon.id][affixScore.name] = affixScore
+                -- if affixScore.name == "Fortified" then
+                --     fortified = affixScore.level
+                -- end
+                -- if affixScore.name == "Tyrannical" then
+                --     tyrannical = affixScore.level
+                -- end
             end
-
-            self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
-                [1] = tyrannical,
-                [2] = fortified,
-            }
+            -- self:Print("-------")
+            -- self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
+            --     [1] = tyrannical,
+            --     [2] = fortified,
+            -- }
         else
             self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
-                [1] = 0,
-                [2] = 0,
+                ["Fortified"] = {},
+                ["Tyrannical"] = {},
             }
         end
     end
@@ -455,19 +477,23 @@ function AlterEgo:CreateUI()
             for affixIndex = 1, 2 do
                 -- local level = character.dungeons[map.id][affixIndex]
                 -- if level == 0 then
-                --     level = "-"
+                --     level = " -"
                 -- end
-                local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
-                self.frame[dungeonCellFrame] = CreateFrame("Frame", dungeonCellFrame, lastCellFrame, "BackdropTemplate")
-                self.frame[dungeonCellFrame]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
-                self.frame[dungeonCellFrame]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
-                -- self.tableFrame[dungeonCellFrame]:SetBackdrop(self.static.backdrop)
-                -- self.tableFrame[dungeonCellFrame]:SetBackdropColor(0, 0, 0, 0)
-                self.frame[dungeonCellFrame].fontString = self.frame[dungeonCellFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                self.frame[dungeonCellFrame].fontString:SetPoint("LEFT", self.frame[dungeonCellFrame], "LEFT", 22, 0)
-                -- self.tableFrame[dungeonCellFrame].fontString:SetText(level)
-                self.frame[dungeonCellFrame].fontString:SetJustifyH("LEFT")
-                lastCellFrame = self.frame[dungeonCellFrame]
+                local dungeonCellFrameLeft = dungeonRowFrame .. "CELL" .. columnIndex .. "LEFT"
+                self.frame[dungeonCellFrameLeft] = CreateFrame("Frame", dungeonCellFrameLeft, lastCellFrame, "BackdropTemplate")
+                self.frame[dungeonCellFrameLeft]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
+                self.frame[dungeonCellFrameLeft]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
+                self.frame[dungeonCellFrameLeft].fontString = self.frame[dungeonCellFrameLeft]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                self.frame[dungeonCellFrameLeft].fontString:SetPoint("RIGHT", self.frame[dungeonCellFrameLeft], "RIGHT", -1, 0)
+                self.frame[dungeonCellFrameLeft].fontString:SetJustifyH("RIGHT")
+                local dungeonCellFrameRight = dungeonRowFrame .. "CELL" .. columnIndex .. "RIGHT"
+                self.frame[dungeonCellFrameRight] = CreateFrame("Frame", dungeonCellFrameRight, self.frame[dungeonCellFrameLeft], "BackdropTemplate")
+                self.frame[dungeonCellFrameRight]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
+                self.frame[dungeonCellFrameRight]:SetPoint("TOPLEFT", self.frame[dungeonCellFrameLeft], "TOPRIGHT")
+                self.frame[dungeonCellFrameRight].fontString = self.frame[dungeonCellFrameRight]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                self.frame[dungeonCellFrameRight].fontString:SetPoint("LEFT", self.frame[dungeonCellFrameRight], "LEFT", 1, 0)
+                self.frame[dungeonCellFrameRight].fontString:SetJustifyH("LEFT")
+                lastCellFrame = self.frame[dungeonCellFrameRight]
                 columnIndex = columnIndex + 1
             end
         end
@@ -520,16 +546,41 @@ function AlterEgo:UpdateUI()
         self.frame[dungeonHeaderFrame].fontString:SetText(MaxLength(dungeon.name))
 
         local columnIndex = 1
+        local affixes = {"Fortified", "Tyrannical"}
         for _, character in pairs(characters) do
-            for affixIndex = 1, 2 do
-                local level = character.dungeons[dungeon.id][affixIndex]
+            for affixIndex, affixName in ipairs(affixes) do
+                local characterAffix = character.dungeons[dungeon.id][affixName]
+                local level = ""
                 local levelColor = "ffffffff"
-                if level == 0 then
+                local tier = ""
+                if characterAffix == nil then
+                    level = "-"
+                end
+                if characterAffix == nil or characterAffix.score == nil then
                     level = "-"
                     levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                else
+                    level = characterAffix.level
+
+                    -- if level < 10 then
+                    --     level = "  " .. level
+                    -- end
+
+                    if characterAffix.durationSec <= dungeon.time * 0.6 then
+                        tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                    elseif characterAffix.durationSec <= dungeon.time * 0.8 then
+                        tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                    elseif characterAffix.durationSec <= dungeon.time then
+                        tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                    else
+                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                    end
                 end
-                local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
-                self.frame[dungeonCellFrame].fontString:SetText("|c" .. levelColor .. level .. "|r")
+
+                local dungeonCellFrameLeft = dungeonRowFrame .. "CELL" .. columnIndex .. "LEFT"
+                self.frame[dungeonCellFrameLeft].fontString:SetText("|c" .. levelColor .. level .. "|r")
+                local dungeonCellFrameRight = dungeonRowFrame .. "CELL" .. columnIndex .. "RIGHT"
+                self.frame[dungeonCellFrameRight].fontString:SetText(tier)
                 columnIndex = columnIndex + 1
             end
         end
