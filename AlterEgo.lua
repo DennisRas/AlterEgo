@@ -301,18 +301,7 @@ function AlterEgo:UpdateCharacter()
             local tyrannical = 0
             for _, affixScore in pairs(affixScores) do
                 self.db.global.characters[playerGUID].dungeons[dungeon.id][affixScore.name] = affixScore
-                -- if affixScore.name == "Fortified" then
-                --     fortified = affixScore.level
-                -- end
-                -- if affixScore.name == "Tyrannical" then
-                --     tyrannical = affixScore.level
-                -- end
             end
-            -- self:Print("-------")
-            -- self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
-            --     [1] = tyrannical,
-            --     [2] = fortified,
-            -- }
         else
             self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
                 ["Fortified"] = {},
@@ -482,10 +471,6 @@ function AlterEgo:CreateUI()
         local columnIndex = 1
         for _, character in pairs(characters) do
             for affixIndex = 1, 2 do
-                -- local level = character.dungeons[map.id][affixIndex]
-                -- if level == 0 then
-                --     level = " -"
-                -- end
                 local dungeonCellFrameLeft = dungeonRowFrame .. "CELL" .. columnIndex .. "LEFT"
                 self.frame[dungeonCellFrameLeft] = CreateFrame("Frame", dungeonCellFrameLeft, lastCellFrame, "BackdropTemplate")
                 self.frame[dungeonCellFrameLeft]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
