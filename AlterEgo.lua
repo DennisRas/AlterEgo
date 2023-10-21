@@ -18,11 +18,13 @@ AlterEgo.constants = {
         cellLength = 18
     },
     colors = {
-        primary = CreateColor(0.08235294117647059, 0.08627450980392157, 0.10196078431372549), -- #15161a
-        dark = CreateColor(0.058823529411764705, 0.058823529411764705, 0.07058823529411765), -- #0f0f12
-        light = CreateColor(0.10196078431372549, 0.10588235294117647, 0.12156862745098039), -- #1a1b1f
-        lighter = CreateColor(0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3), -- #373a47
-        highlight = CreateColor(0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3), -- #373a47
+        -- primary = CreateColorFromHexString("ff15161a"), -- 0.08235294117647059, 0.08627450980392157, 0.10196078431372549
+        primary = CreateColorFromHexString("FF21232C"), -- 0.1803921568627451, 0.19607843137254902, 0.2784313725490196
+        dark = CreateColorFromHexString("FF1B1C24"), -- 0.058823529411764705, 0.058823529411764705, 0.07058823529411765
+        light = CreateColorFromHexString("FF252833"), -- 0.10196078431372549, 0.10588235294117647, 0.12156862745098039
+        lighter = CreateColorFromHexString("FF222329"), -- 0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3
+        highlight = CreateColorFromHexString("FF2E313A"), -- 0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3
+        font = CreateColorFromHexString("FF9097BD"), -- 0.3254901960784314, 0.35294117647058826, 0.5137254901960784
     },
     backdrop = {
         bgFile = "Interface/BUTTONS/WHITE8X8",
@@ -444,6 +446,7 @@ function AlterEgo:CreateUI()
         self.frame[dungeonHeaderFrame].fontString = self.frame[dungeonHeaderFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         self.frame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.frame[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
         -- self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(map.name))
+        self.frame[dungeonHeaderFrame].fontString:SetVertexColor(1, 1, 1)
         self.frame[dungeonHeaderFrame].fontString:SetJustifyH("LEFT")
 
         local lastCellFrame = self.frame[dungeonHeaderFrame]
@@ -523,7 +526,7 @@ function AlterEgo:UpdateUI()
                 local levelColor = "ffffffff"
                 if level == 0 then
                     level = "-"
-                    levelColor = "ffaaaaaa"
+                    levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                 end
                 local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
                 self.frame[dungeonCellFrame].fontString:SetText("|c" .. levelColor .. level .. "|r")
