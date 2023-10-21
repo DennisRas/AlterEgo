@@ -115,7 +115,7 @@ AlterEgo.constants = {
                         characterColor = "|c" .. classColor.GenerateHexColor(classColor)
                     end
                 end
-                return characterColor .. MaxLength(character.name) .. "|r"
+                return characterColor .. character.name .. "|r"
             end
         },
         [2] = {
@@ -369,6 +369,7 @@ function AlterEgo:CreateUI()
             self.frame[frameCell]:SetBackdrop(self.constants.backdrop)
             self.frame[frameCell]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
             self.frame[frameCell].fontString = self.frame[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.frame[frameCell].fontString:SetSize(self.frame[frameCell]:GetSize())
             self.frame[frameCell].fontString:SetPoint("LEFT", self.frame[frameCell], "LEFT", self.constants.table.cellPadding, 0)
             self.frame[frameCell].fontString:SetJustifyH("LEFT")
         
@@ -379,11 +380,9 @@ function AlterEgo:CreateUI()
             self.frame[frameCell] = CreateFrame("Frame", frameCell, lastCellFrame, "BackdropTemplate")
             self.frame[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
             self.frame[frameCell]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
-            -- self.tableFrame[characterCellName]:SetBackdrop(self.static.backdrop)
-            -- self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
             self.frame[frameCell].fontString = self.frame[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.frame[frameCell].fontString:SetSize(self.frame[frameCell]:GetSize())
             self.frame[frameCell].fontString:SetPoint("CENTER", self.frame[frameCell], "CENTER", 0, 0)
-            -- self.tableFrame[characterCellName].fontString:SetText(row:value(character))
             self.frame[frameCell].fontString:SetJustifyH("CENTER")
             lastCellFrame = self.frame[frameCell]
             columnIndex = columnIndex + 1
@@ -404,11 +403,8 @@ function AlterEgo:CreateUI()
     self.frame[dungeonHeaderCellName] = CreateFrame("Frame", dungeonHeaderCellName, self.frame[dungeonHeaderRowName], "BackdropTemplate")
     self.frame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
     self.frame[dungeonHeaderCellName]:SetPoint("TOPLEFT", self.frame[dungeonHeaderRowName], "TOPLEFT")
-    -- self.frame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
-    -- self.frame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
-    -- self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
-    -- self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
     self.frame[dungeonHeaderCellName].fontString = self.frame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    self.frame[dungeonHeaderCellName].fontString:SetSize(self.frame[dungeonHeaderCellName]:GetSize())
     self.frame[dungeonHeaderCellName].fontString:SetPoint("LEFT", self.frame[dungeonHeaderCellName], "LEFT", self.constants.table.cellPadding, 0)
     self.frame[dungeonHeaderCellName].fontString:SetText("Dungeons:")
     self.frame[dungeonHeaderCellName].fontString:SetJustifyH("LEFT")
@@ -421,8 +417,6 @@ function AlterEgo:CreateUI()
             self.frame[dungeonHeaderCellName] = CreateFrame("Frame",  dungeonHeaderCellName, lastCellFrame, "BackdropTemplate")
             self.frame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
             self.frame[dungeonHeaderCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
-            -- self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
-            -- self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
             self.frame[dungeonHeaderCellName].iconFrame = self.frame[dungeonHeaderCellName]:CreateTexture(dungeonHeaderCellName .. "ICON", "BACKGROUND")
             self.frame[dungeonHeaderCellName].iconFrame:SetSize(16, 16)
             self.frame[dungeonHeaderCellName].iconFrame:SetPoint("CENTER", self.frame[dungeonHeaderCellName], "CENTER", 0, 0)
@@ -461,15 +455,28 @@ function AlterEgo:CreateUI()
         self.frame[dungeonHeaderFrame] = CreateFrame("Frame", dungeonHeaderFrame, self.frame[dungeonRowFrame], "BackdropTemplate")
         self.frame[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
         self.frame[dungeonHeaderFrame]:SetPoint("TOPLEFT", self.frame[dungeonRowFrame], "TOPLEFT")
-        -- self.tableFrame[dungeonHeaderFrame]:SetBackdrop(self.static.backdrop)
-        -- self.tableFrame[dungeonHeaderFrame]:SetBackdropColor(0, 0, 0, 0)
         self.frame[dungeonHeaderFrame]:SetBackdrop(self.constants.backdrop)
         self.frame[dungeonHeaderFrame]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
+        
+        local _, _, _, texture = C_ChallengeMode.GetMapUIInfo(dungeon.id);
+        local mapIconTexture = texture
+        if texture == 0 then
+            mapIconTexture = "Interface/Icons/achievement_bg_wineos_underxminutes"
+        end
+
+        self.frame[dungeonHeaderFrame].iconFrame = self.frame[dungeonHeaderFrame]:CreateTexture(dungeonHeaderFrame .. "ICON", "BACKGROUND")
+        self.frame[dungeonHeaderFrame].iconFrame:SetSize(16, 16)
+        self.frame[dungeonHeaderFrame].iconFrame:SetPoint("LEFT", self.frame[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
+        self.frame[dungeonHeaderFrame].iconFrame:SetTexture(mapIconTexture)
+
+
         self.frame[dungeonHeaderFrame].fontString = self.frame[dungeonHeaderFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        self.frame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.frame[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
-        -- self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(map.name))
+        self.frame[dungeonHeaderFrame].fontString:SetSize(self.constants.table.colWidth - 16 - self.constants.table.cellPadding * 3, 16)
+        self.frame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.frame[dungeonHeaderFrame].iconFrame, "LEFT", 16 + self.constants.table.cellPadding, 0)
         self.frame[dungeonHeaderFrame].fontString:SetVertexColor(1, 1, 1)
         self.frame[dungeonHeaderFrame].fontString:SetJustifyH("LEFT")
+        local font, size = self.frame[dungeonHeaderFrame].fontString:GetFont()
+        self.frame[dungeonHeaderFrame].fontString:SetFont(font, size - 1)
 
         local lastCellFrame = self.frame[dungeonHeaderFrame]
         local columnIndex = 1
@@ -484,6 +491,7 @@ function AlterEgo:CreateUI()
                 self.frame[dungeonCellFrameLeft]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
                 self.frame[dungeonCellFrameLeft]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
                 self.frame[dungeonCellFrameLeft].fontString = self.frame[dungeonCellFrameLeft]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                self.frame[dungeonCellFrameLeft].fontString:SetSize(self.frame[dungeonCellFrameLeft]:GetSize())
                 self.frame[dungeonCellFrameLeft].fontString:SetPoint("RIGHT", self.frame[dungeonCellFrameLeft], "RIGHT", -1, 0)
                 self.frame[dungeonCellFrameLeft].fontString:SetJustifyH("RIGHT")
                 local dungeonCellFrameRight = dungeonRowFrame .. "CELL" .. columnIndex .. "RIGHT"
@@ -491,6 +499,7 @@ function AlterEgo:CreateUI()
                 self.frame[dungeonCellFrameRight]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
                 self.frame[dungeonCellFrameRight]:SetPoint("TOPLEFT", self.frame[dungeonCellFrameLeft], "TOPRIGHT")
                 self.frame[dungeonCellFrameRight].fontString = self.frame[dungeonCellFrameRight]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                self.frame[dungeonCellFrameRight].fontString:SetSize(self.frame[dungeonCellFrameRight]:GetSize())
                 self.frame[dungeonCellFrameRight].fontString:SetPoint("LEFT", self.frame[dungeonCellFrameRight], "LEFT", 1, 0)
                 self.frame[dungeonCellFrameRight].fontString:SetJustifyH("LEFT")
                 lastCellFrame = self.frame[dungeonCellFrameRight]
@@ -543,7 +552,7 @@ function AlterEgo:UpdateUI()
         self.frame[dungeonRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
-        self.frame[dungeonHeaderFrame].fontString:SetText(MaxLength(dungeon.name))
+        self.frame[dungeonHeaderFrame].fontString:SetText(dungeon.name)
 
         local columnIndex = 1
         local affixes = {"Fortified", "Tyrannical"}
