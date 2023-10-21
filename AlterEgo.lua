@@ -119,27 +119,37 @@ AlterEgo.constants = {
             name = "Rating",
             label = "Rating:",
             value = function(self, character)
-                local ratingColor = "|cffffffff"
-                if character.rating > 0 then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.rating)
+                local rating = character.rating
+                local ratingColor = "ffffffff"
+                if rating > 0 then
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(rating)
                     if color ~= nil then
-                        ratingColor = "|c" .. color.GenerateHexColor(color)
+                        ratingColor = color.GenerateHexColor(color)
                     end
+                else
+                    rating = "-"
                 end
-                return ratingColor .. character.rating .. "|r"
+                return "|c" .. ratingColor .. rating .. "|r"
             end
         },
         [4] = {
             name = "ItemLevel",
             label = "Item Level:",
             value = function(self, character)
-                local r, g, b = GetItemLevelColor()
-                local itemLevelColorHex = "|cffffffff"
-                if r ~= nil then
-                    local color = CreateColor(r, g, b, 1)
-                    itemLevelColorHex = "|c" .. color:GenerateHexColor()
+                local itemLevel = character.itemLevel
+                local itemLevelColor = character.itemLevelColor
+
+                if itemLevel == nil then
+                    itemLevel = "-"
+                else
+                    itemLevel = floor(itemLevel)
                 end
-                return itemLevelColorHex .. floor(character.ilvl) .. "|r"
+
+                if character.itemLevelColor == nil then
+                    itemLevelColor = "ffffffff"
+                end
+
+                return "|c" .. itemLevelColor .. itemLevel .. "|r"
             end
         },
         [5] = {
@@ -216,10 +226,10 @@ function AlterEgo:OnInitialize()
 end
 
 function AlterEgo:OnSlashCommand(message)
-    if self.tableFrame:IsVisible() then
-        self.tableFrame:Hide()
+    if self.frame:IsVisible() then
+        self.frame:Hide()
     else
-        self.tableFrame:Show()
+        self.frame:Show()
     end
 end
 
@@ -237,6 +247,7 @@ function AlterEgo:UpdateCharacter()
     local playerGUID = UnitGUID("player")
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
     local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
+    local itemLevelColor = CreateColor(GetItemLevelColor()):GenerateHexColor()
     local mapID = C_MythicPlus.GetOwnedKeystoneMapID()
     local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
     -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
@@ -250,7 +261,8 @@ function AlterEgo:UpdateCharacter()
         realm = playerRealm,
         class = playerClass,
         rating = ratingSummary.currentSeasonScore,
-        ilvl = avgItemLevelEquipped,
+        itemLevel = avgItemLevelEquipped,
+        itemLevelColor = itemLevelColor,
         vault = {},
         key = {
             map = mapID,
@@ -303,56 +315,53 @@ end
 function AlterEgo:CreateUI()
     local characters = AlterEgo:GetCharacters()
 
-    self.tableFrame = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
-    self.tableFrame:SetPoint("CENTER")
-    self.tableFrame:SetSize(0, 0)
-    self.tableFrame:SetBackdrop(self.constants.backdrop)
-    self.tableFrame:SetBackdropColor(self.constants.colors.primary:GetRGBA())
+    self.frame = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
+    self.frame:SetPoint("CENTER")
+    self.frame:SetSize(0, 0)
+    self.frame:SetBackdrop(self.constants.backdrop)
+    self.frame:SetBackdropColor(self.constants.colors.primary:GetRGBA())
 
     local rowIndex = 0
 
     -- Character loop
     for i, row in ipairs(self.constants.characterTable) do
-        local characterRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
-        self.tableFrame[characterRowFrame] = CreateFrame("Frame", characterRowFrame, self.tableFrame, "BackdropTemplate")
-        self.tableFrame[characterRowFrame]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
-        self.tableFrame[characterRowFrame]:SetSize(self.tableFrame:GetWidth(), self.constants.table.rowHeight)
-        self.tableFrame[characterRowFrame]:SetBackdrop(self.constants.backdrop)
-        self.tableFrame[characterRowFrame]:SetBackdropColor(0,0,0,0)
-        self.tableFrame[characterRowFrame]:SetScript("OnEnter", function()
-            self.tableFrame[characterRowFrame]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
+        local frameRow = self.frame:GetName() .. "ROW" .. rowIndex
+        self.frame[frameRow] = CreateFrame("Frame", frameRow, self.frame, "BackdropTemplate")
+        self.frame[frameRow]:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
+        self.frame[frameRow]:SetSize(self.frame:GetWidth(), self.constants.table.rowHeight)
+        self.frame[frameRow]:SetBackdrop(self.constants.backdrop)
+        self.frame[frameRow]:SetBackdropColor(0,0,0,0)
+        self.frame[frameRow]:SetScript("OnEnter", function()
+            self.frame[frameRow]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
         end)
-        self.tableFrame[characterRowFrame]:SetScript("OnLeave", function()
-                self.tableFrame[characterRowFrame]:SetBackdropColor(0,0,0,0)
+        self.frame[frameRow]:SetScript("OnLeave", function()
+                self.frame[frameRow]:SetBackdropColor(0,0,0,0)
         end)
 
-        local characterCellName = characterRowFrame .. "CELL0"
-        self.tableFrame[characterCellName] = CreateFrame("Frame", characterCellName, self.tableFrame[characterRowFrame], "BackdropTemplate")
-        self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-        self.tableFrame[characterCellName]:SetPoint("TOPLEFT", self.tableFrame[characterRowFrame], "TOPLEFT")
-        -- self.tableFrame[characterCellName]:SetBackdrop(self.static.backdrop)
-        -- self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
-        self.tableFrame[characterCellName]:SetBackdrop(self.constants.backdrop)
-        self.tableFrame[characterCellName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
-        self.tableFrame[characterCellName].fontString = self.tableFrame[characterCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        self.tableFrame[characterCellName].fontString:SetPoint("LEFT", self.tableFrame[characterCellName], "LEFT", self.constants.table.cellPadding, 0)
-        -- self.tableFrame[characterCellName].fontString:SetText(MaxLength(row.label))
-        self.tableFrame[characterCellName].fontString:SetJustifyH("LEFT")
-
-        local lastCellFrame = self.tableFrame[characterCellName]
+            local frameCell = frameRow .. "CELL0"
+            self.frame[frameCell] = CreateFrame("Frame", frameCell, self.frame[frameRow], "BackdropTemplate")
+            self.frame[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+            self.frame[frameCell]:SetPoint("TOPLEFT", self.frame[frameRow], "TOPLEFT")
+            self.frame[frameCell]:SetBackdrop(self.constants.backdrop)
+            self.frame[frameCell]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
+            self.frame[frameCell].fontString = self.frame[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.frame[frameCell].fontString:SetPoint("LEFT", self.frame[frameCell], "LEFT", self.constants.table.cellPadding, 0)
+            self.frame[frameCell].fontString:SetJustifyH("LEFT")
+        
+        local lastCellFrame = self.frame[frameCell]
         local columnIndex = 1
         for _, character in pairs(characters) do
-            local characterCellName = characterRowFrame .. "CELL" .. columnIndex
-            self.tableFrame[characterCellName] = CreateFrame("Frame", characterCellName, lastCellFrame, "BackdropTemplate")
-            self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-            self.tableFrame[characterCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
+            local frameCell = frameRow .. "CELL" .. columnIndex
+            self.frame[frameCell] = CreateFrame("Frame", frameCell, lastCellFrame, "BackdropTemplate")
+            self.frame[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+            self.frame[frameCell]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
             -- self.tableFrame[characterCellName]:SetBackdrop(self.static.backdrop)
             -- self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
-            self.tableFrame[characterCellName].fontString = self.tableFrame[characterCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.tableFrame[characterCellName].fontString:SetPoint("CENTER", self.tableFrame[characterCellName], "CENTER", self.constants.table.cellPadding, 0)
+            self.frame[frameCell].fontString = self.frame[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.frame[frameCell].fontString:SetPoint("CENTER", self.frame[frameCell], "CENTER", self.constants.table.cellPadding, 0)
             -- self.tableFrame[characterCellName].fontString:SetText(row:value(character))
-            self.tableFrame[characterCellName].fontString:SetJustifyH("CENTER")
-            lastCellFrame = self.tableFrame[characterCellName]
+            self.frame[frameCell].fontString:SetJustifyH("CENTER")
+            lastCellFrame = self.frame[frameCell]
             columnIndex = columnIndex + 1
         end
 
@@ -360,41 +369,41 @@ function AlterEgo:CreateUI()
     end
 
     -- Dungeon Header
-    local dungeonHeaderRowName = self.tableFrame:GetName() .. "DUNGEONHEADERROW"
-    self.tableFrame[dungeonHeaderRowName] = CreateFrame("Frame", dungeonHeaderRowName, self.tableFrame, "BackdropTemplate")
-    self.tableFrame[dungeonHeaderRowName]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
-    self.tableFrame[dungeonHeaderRowName]:SetSize(self.tableFrame:GetWidth(), self.constants.table.rowHeight)
-    self.tableFrame[dungeonHeaderRowName]:SetBackdrop(self.constants.backdrop)
-    self.tableFrame[dungeonHeaderRowName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
+    local dungeonHeaderRowName = self.frame:GetName() .. "DUNGEONHEADERROW"
+    self.frame[dungeonHeaderRowName] = CreateFrame("Frame", dungeonHeaderRowName, self.frame, "BackdropTemplate")
+    self.frame[dungeonHeaderRowName]:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
+    self.frame[dungeonHeaderRowName]:SetSize(self.frame:GetWidth(), self.constants.table.rowHeight)
+    self.frame[dungeonHeaderRowName]:SetBackdrop(self.constants.backdrop)
+    self.frame[dungeonHeaderRowName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
 
     local dungeonHeaderCellName = dungeonHeaderRowName .. "CELL0"
-    self.tableFrame[dungeonHeaderCellName] = CreateFrame("Frame", dungeonHeaderCellName, self.tableFrame[dungeonHeaderRowName], "BackdropTemplate")
-    self.tableFrame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-    self.tableFrame[dungeonHeaderCellName]:SetPoint("TOPLEFT", self.tableFrame[dungeonHeaderRowName], "TOPLEFT")
-    self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
-    self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
+    self.frame[dungeonHeaderCellName] = CreateFrame("Frame", dungeonHeaderCellName, self.frame[dungeonHeaderRowName], "BackdropTemplate")
+    self.frame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+    self.frame[dungeonHeaderCellName]:SetPoint("TOPLEFT", self.frame[dungeonHeaderRowName], "TOPLEFT")
+    self.frame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
+    self.frame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
     -- self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
     -- self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
-    self.tableFrame[dungeonHeaderCellName].fontString = self.tableFrame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.tableFrame[dungeonHeaderCellName].fontString:SetPoint("LEFT", self.tableFrame[dungeonHeaderCellName], "LEFT", self.constants.table.cellPadding, 0)
-    self.tableFrame[dungeonHeaderCellName].fontString:SetText("Dungeons:")
-    self.tableFrame[dungeonHeaderCellName].fontString:SetJustifyH("LEFT")
+    self.frame[dungeonHeaderCellName].fontString = self.frame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    self.frame[dungeonHeaderCellName].fontString:SetPoint("LEFT", self.frame[dungeonHeaderCellName], "LEFT", self.constants.table.cellPadding, 0)
+    self.frame[dungeonHeaderCellName].fontString:SetText("Dungeons:")
+    self.frame[dungeonHeaderCellName].fontString:SetJustifyH("LEFT")
 
-    local lastCellFrame = self.tableFrame[dungeonHeaderCellName]
+    local lastCellFrame = self.frame[dungeonHeaderCellName]
     local columnIndex = 1
     for _, character in pairs(characters) do
         for affixIndex = 1, 2 do
             dungeonHeaderCellName = dungeonHeaderRowName .. "CELL" .. columnIndex
-            self.tableFrame[dungeonHeaderCellName] = CreateFrame("Frame",  dungeonHeaderCellName, lastCellFrame, "BackdropTemplate")
-            self.tableFrame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
-            self.tableFrame[dungeonHeaderCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
+            self.frame[dungeonHeaderCellName] = CreateFrame("Frame",  dungeonHeaderCellName, lastCellFrame, "BackdropTemplate")
+            self.frame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
+            self.frame[dungeonHeaderCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
             -- self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
             -- self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
-            self.tableFrame[dungeonHeaderCellName].fontString = self.tableFrame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.tableFrame[dungeonHeaderCellName].fontString:SetPoint("CENTER", self.tableFrame[dungeonHeaderCellName], "CENTER", self.constants.table.cellPadding, 0)
-            self.tableFrame[dungeonHeaderCellName].fontString:SetText("AFFIX")
-            self.tableFrame[dungeonHeaderCellName].fontString:SetJustifyH("CENTER")
-            lastCellFrame = self.tableFrame[dungeonHeaderCellName]
+            self.frame[dungeonHeaderCellName].fontString = self.frame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.frame[dungeonHeaderCellName].fontString:SetPoint("CENTER", self.frame[dungeonHeaderCellName], "CENTER", self.constants.table.cellPadding, 0)
+            self.frame[dungeonHeaderCellName].fontString:SetText("AFFIX")
+            self.frame[dungeonHeaderCellName].fontString:SetJustifyH("CENTER")
+            lastCellFrame = self.frame[dungeonHeaderCellName]
             columnIndex = columnIndex + 1
         end
     end
@@ -403,41 +412,41 @@ function AlterEgo:CreateUI()
 
     -- Dungeon Loop
     for i, dungeon in ipairs(self.constants.dungeons) do
-        local dungeonRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
-        self.tableFrame[dungeonRowFrame] = CreateFrame("Frame", dungeonRowFrame, self.tableFrame, "BackdropTemplate")
-        self.tableFrame[dungeonRowFrame]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
-        self.tableFrame[dungeonRowFrame]:SetSize(self.tableFrame:GetWidth(), self.constants.table.rowHeight)
-        self.tableFrame[dungeonRowFrame]:SetBackdrop(self.constants.backdrop)
+        local dungeonRowFrame = self.frame:GetName() .. "ROW" .. rowIndex
+        self.frame[dungeonRowFrame] = CreateFrame("Frame", dungeonRowFrame, self.frame, "BackdropTemplate")
+        self.frame[dungeonRowFrame]:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
+        self.frame[dungeonRowFrame]:SetSize(self.frame:GetWidth(), self.constants.table.rowHeight)
+        self.frame[dungeonRowFrame]:SetBackdrop(self.constants.backdrop)
         if i % 2 == 0 then
-            self.tableFrame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
+            self.frame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
         else
-            self.tableFrame[dungeonRowFrame]:SetBackdropColor(0,0,0,0)
+            self.frame[dungeonRowFrame]:SetBackdropColor(0,0,0,0)
         end
-        self.tableFrame[dungeonRowFrame]:SetScript("OnEnter", function()
-            self.tableFrame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
+        self.frame[dungeonRowFrame]:SetScript("OnEnter", function()
+            self.frame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
         end)
-        self.tableFrame[dungeonRowFrame]:SetScript("OnLeave", function()
+        self.frame[dungeonRowFrame]:SetScript("OnLeave", function()
             if i % 2 == 0 then
-                self.tableFrame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
+                self.frame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
             else
-                self.tableFrame[dungeonRowFrame]:SetBackdropColor(0,0,0,0)
+                self.frame[dungeonRowFrame]:SetBackdropColor(0,0,0,0)
             end
         end)
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
-        self.tableFrame[dungeonHeaderFrame] = CreateFrame("Frame", dungeonHeaderFrame, self.tableFrame[dungeonRowFrame], "BackdropTemplate")
-        self.tableFrame[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-        self.tableFrame[dungeonHeaderFrame]:SetPoint("TOPLEFT", self.tableFrame[dungeonRowFrame], "TOPLEFT")
+        self.frame[dungeonHeaderFrame] = CreateFrame("Frame", dungeonHeaderFrame, self.frame[dungeonRowFrame], "BackdropTemplate")
+        self.frame[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+        self.frame[dungeonHeaderFrame]:SetPoint("TOPLEFT", self.frame[dungeonRowFrame], "TOPLEFT")
         -- self.tableFrame[dungeonHeaderFrame]:SetBackdrop(self.static.backdrop)
         -- self.tableFrame[dungeonHeaderFrame]:SetBackdropColor(0, 0, 0, 0)
-        self.tableFrame[dungeonHeaderFrame]:SetBackdrop(self.constants.backdrop)
-        self.tableFrame[dungeonHeaderFrame]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
-        self.tableFrame[dungeonHeaderFrame].fontString = self.tableFrame[dungeonHeaderFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        self.tableFrame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.tableFrame[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
+        self.frame[dungeonHeaderFrame]:SetBackdrop(self.constants.backdrop)
+        self.frame[dungeonHeaderFrame]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
+        self.frame[dungeonHeaderFrame].fontString = self.frame[dungeonHeaderFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        self.frame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.frame[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
         -- self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(map.name))
-        self.tableFrame[dungeonHeaderFrame].fontString:SetJustifyH("LEFT")
+        self.frame[dungeonHeaderFrame].fontString:SetJustifyH("LEFT")
 
-        local lastCellFrame = self.tableFrame[dungeonHeaderFrame]
+        local lastCellFrame = self.frame[dungeonHeaderFrame]
         local columnIndex = 1
         for _, character in pairs(characters) do
             for affixIndex = 1, 2 do
@@ -446,16 +455,16 @@ function AlterEgo:CreateUI()
                 --     level = "-"
                 -- end
                 local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
-                self.tableFrame[dungeonCellFrame] = CreateFrame("Frame", dungeonCellFrame, lastCellFrame, "BackdropTemplate")
-                self.tableFrame[dungeonCellFrame]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
-                self.tableFrame[dungeonCellFrame]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
+                self.frame[dungeonCellFrame] = CreateFrame("Frame", dungeonCellFrame, lastCellFrame, "BackdropTemplate")
+                self.frame[dungeonCellFrame]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
+                self.frame[dungeonCellFrame]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
                 -- self.tableFrame[dungeonCellFrame]:SetBackdrop(self.static.backdrop)
                 -- self.tableFrame[dungeonCellFrame]:SetBackdropColor(0, 0, 0, 0)
-                self.tableFrame[dungeonCellFrame].fontString = self.tableFrame[dungeonCellFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                self.tableFrame[dungeonCellFrame].fontString:SetPoint("CENTER", self.tableFrame[dungeonCellFrame], "CENTER", self.constants.table.cellPadding, 0)
+                self.frame[dungeonCellFrame].fontString = self.frame[dungeonCellFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                self.frame[dungeonCellFrame].fontString:SetPoint("CENTER", self.frame[dungeonCellFrame], "CENTER", self.constants.table.cellPadding, 0)
                 -- self.tableFrame[dungeonCellFrame].fontString:SetText(level)
-                self.tableFrame[dungeonCellFrame].fontString:SetJustifyH("CENTER")
-                lastCellFrame = self.tableFrame[dungeonCellFrame]
+                self.frame[dungeonCellFrame].fontString:SetJustifyH("CENTER")
+                lastCellFrame = self.frame[dungeonCellFrame]
                 columnIndex = columnIndex + 1
             end
         end
@@ -477,17 +486,17 @@ function AlterEgo:UpdateUI()
 
     -- Character loop
     for i, row in ipairs(self.constants.characterTable) do
-        local characterRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
-        self.tableFrame[characterRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
+        local characterRowFrame = self.frame:GetName() .. "ROW" .. rowIndex
+        self.frame[characterRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
         local characterCellName = characterRowFrame .. "CELL0"
-        self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-        self.tableFrame[characterCellName].fontString:SetText(MaxLength(row.label))
+        self.frame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+        self.frame[characterCellName].fontString:SetText(MaxLength(row.label))
 
         local columnIndex = 1
         for _, character in pairs(characters) do
             characterCellName = characterRowFrame .. "CELL" .. columnIndex
-            self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-            self.tableFrame[characterCellName].fontString:SetText(row.value(self, character))
+            self.frame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+            self.frame[characterCellName].fontString:SetText(row.value(self, character))
             columnIndex = columnIndex + 1
         end
 
@@ -495,17 +504,17 @@ function AlterEgo:UpdateUI()
     end
 
     -- Dungeon Header
-    local dungeonHeaderRowName = self.tableFrame:GetName() .. "DUNGEONHEADERROW"
-    self.tableFrame[dungeonHeaderRowName]:SetSize(frameWidth, self.constants.table.rowHeight)
+    local dungeonHeaderRowName = self.frame:GetName() .. "DUNGEONHEADERROW"
+    self.frame[dungeonHeaderRowName]:SetSize(frameWidth, self.constants.table.rowHeight)
     rowIndex = rowIndex + 1
 
     -- Dungeon Loop
     for i, dungeon in ipairs(self.constants.dungeons) do
-        local dungeonRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
-        self.tableFrame[dungeonRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
+        local dungeonRowFrame = self.frame:GetName() .. "ROW" .. rowIndex
+        self.frame[dungeonRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
-        self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(dungeon.name))
+        self.frame[dungeonHeaderFrame].fontString:SetText(MaxLength(dungeon.name))
 
         local columnIndex = 1
         for _, character in pairs(characters) do
@@ -515,7 +524,7 @@ function AlterEgo:UpdateUI()
                     level = "-"
                 end
                 local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
-                self.tableFrame[dungeonCellFrame].fontString:SetText(level)
+                self.frame[dungeonCellFrame].fontString:SetText(level)
                 columnIndex = columnIndex + 1
             end
         end
@@ -523,5 +532,5 @@ function AlterEgo:UpdateUI()
         rowIndex = rowIndex + 1
     end
 
-    self.tableFrame:SetSize(frameWidth, self.constants.table.rowHeight * rowIndex)
+    self.frame:SetSize(frameWidth, self.constants.table.rowHeight * rowIndex)
 end
