@@ -1,21 +1,5 @@
 AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
 
-local options = {
-    name = "AlterEgo",
-    handler = AlterEgo,
-    type = "group",
-    args = {}
-}
-
-local defaultDB = {
-    global = {
-        characters = {},
-    },
-    profile = {
-        settings = {}
-    }
-}
-
 local function MaxLength(str, len)
     if len == nil then
         len = 15
@@ -26,80 +10,193 @@ local function MaxLength(str, len)
     return str
 end
 
-local Maps = {
-    [1] = {
-        id = 206,
-        mapId = 1458,
-        name = "Neltharion's Lair",
-        abbr = "NL"
+AlterEgo.constants = {
+    table = {
+        rowHeight = 22,
+        colWidth = 120,
+        cellPadding = 6,
+        cellLength = 18
     },
-    [2] = {
-        id = 245,
-        mapId = 1754,
-        name = "Freehold",
-        abbr = "FH"
+    colors = {
+        primary = CreateColor(0.08235294117647059, 0.08627450980392157, 0.10196078431372549), -- #15161a
+        dark = CreateColor(0.058823529411764705, 0.058823529411764705, 0.07058823529411765), -- #0f0f12
+        light = CreateColor(0.10196078431372549, 0.10588235294117647, 0.12156862745098039), -- #1a1b1f
+        lighter = CreateColor(0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3), -- #373a47
+        highlight = CreateColor(0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3), -- #373a47
     },
-    [3] = {
-        id = 251,
-        mapId = 1841,
-        name = "The Underrot",
-        abbr = "UR"
+    backdrop = {
+        bgFile = "Interface/BUTTONS/WHITE8X8",
+        tile = false,
+        insets = {top = 0, right = 0, bottom = 0, left = 0}
     },
-    [4] = {
-        id = 403,
-        mapId = 2451,
-        name = "Uldaman: Legacy of Tyr",
-        abbr = "UL"
+    defaultDB = {
+        global = {
+            characters = {},
+        },
+        profile = {
+            settings = {}
+        }
     },
-    [5] = {
-        id = 404,
-        mapId = 2519,
-        name = "Neltharus",
-        abbr = "NEL"
+    options = {
+        name = "AlterEgo",
+        handler = AlterEgo,
+        type = "group",
+        args = {}
     },
-    [6] = {
-        id = 405,
-        mapId = 2520,
-        name = "Brackenhide Hollow",
-        abbr = "BH"
+    dungeons = {
+        [1] = {
+            id = 206,
+            mapId = 1458,
+            name = "Neltharion's Lair",
+            abbr = "NL"
+        },
+        [2] = {
+            id = 245,
+            mapId = 1754,
+            name = "Freehold",
+            abbr = "FH"
+        },
+        [3] = {
+            id = 251,
+            mapId = 1841,
+            name = "The Underrot",
+            abbr = "UR"
+        },
+        [4] = {
+            id = 403,
+            mapId = 2451,
+            name = "Uldaman: Legacy of Tyr",
+            abbr = "UL"
+        },
+        [5] = {
+            id = 404,
+            mapId = 2519,
+            name = "Neltharus",
+            abbr = "NEL"
+        },
+        [6] = {
+            id = 405,
+            mapId = 2520,
+            name = "Brackenhide Hollow",
+            abbr = "BH"
+        },
+        [7] = {
+            id = 406,
+            mapId = 2527,
+            name = "Halls of Infusion",
+            abbr = "HOI"
+        },
+        [8] = {
+            id = 438,
+            mapId = 657,
+            name = "The Vortex Pinnacle",
+            abbr = "VP"
+        },
     },
-    [7] = {
-        id = 406,
-        mapId = 2527,
-        name = "Halls of Infusion",
-        abbr = "HOI"
-    },
-    [8] = {
-        id = 438,
-        mapId = 657,
-        name = "The Vortex Pinnacle",
-        abbr = "VP"
-    },
+    characterTable = {
+        [1] = {
+            name = "Name",
+            label = "Characters:",
+            value = function(self, character)
+                local characterColor = "|cffffffff"
+                if character.class ~= nil then
+                    local classColor = C_ClassColor.GetClassColor(character.class)
+                    if classColor ~= nil then
+                        characterColor = "|c" .. classColor.GenerateHexColor(classColor)
+                    end
+                end
+                return characterColor .. MaxLength(character.name) .. "|r"
+            end
+        },
+        [2] = {
+            name = "Realm",
+            label = "Realm:",
+            value = function(self, character)
+                return MaxLength(character.realm)
+            end
+        },
+        [3] = {
+            name = "Rating",
+            label = "Rating:",
+            value = function(self, character)
+                local ratingColor = "|cffffffff"
+                if character.rating > 0 then
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.rating)
+                    if color ~= nil then
+                        ratingColor = "|c" .. color.GenerateHexColor(color)
+                    end
+                end
+                return ratingColor .. character.rating .. "|r"
+            end
+        },
+        [4] = {
+            name = "ItemLevel",
+            label = "Item Level:",
+            value = function(self, character)
+                local r, g, b = GetItemLevelColor()
+                local itemLevelColorHex = "|cffffffff"
+                if r ~= nil then
+                    local color = CreateColor(r, g, b, 1)
+                    itemLevelColorHex = "|c" .. color:GenerateHexColor()
+                end
+                return itemLevelColorHex .. floor(character.ilvl) .. "|r"
+            end
+        },
+        [5] = {
+            name = "Vault1",
+            label = "Vault 1:",
+            value = function(self, character)
+                if character.vault[1] == 0 then
+                    return "-"
+                end
+                return character.vault[1]
+            end
+        },
+        [6] = {
+            name = "Vault2",
+            label = "Vault 2:",
+            value = function(self, character)
+                if character.vault[2] == 0 then
+                    return "-"
+                end
+                return character.vault[2]
+            end
+        },
+        [7] = {
+            name = "Vault3",
+            label = "Vault 3:",
+            value = function(self, character)
+                if character.vault[3] == 0 then
+                    return "-"
+                end
+                return character.vault[3]
+            end
+        },
+        [8] = {
+            name = "CurrentKey",
+            label = "Current Key:",
+            value = function(self, character)
+                if character.key.map == nil or character.key.map == "" then
+                    return "-"
+                end
+                local dungeon = self:GetDungeonByMapId(character.key.map)
+                if dungeon == nil then
+                    return "-"
+                end
+                return dungeon.abbr .. " +" .. character.key.level
+            end
+        },
+    }
 }
 
-local function GetMapShortName(mapId)
-    local map = "??"
-    for i, mapInfo in pairs(Maps) do
-        if mapInfo.mapId == mapId then
-            return mapInfo.abbr
+function AlterEgo:GetDungeonByMapId(mapId)
+    for i, dungeon in ipairs(self.constants.dungeons) do
+        if dungeon.mapId == mapId then
+            return dungeon
         end
     end
-    return map
+    return nil
 end
-
-local ALTEREGO_MAX_CELL_LENGTH = 15
-local rowHeight = 20
-local colWidth = 120
-local cellPadding = 4
-local backdropinfo = {
-    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-    -- edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true,
-    tileEdge = true,
-    tileSize = 8,
-    edgeSize = 0,
-    insets = { left = 0, right = 0, top = 0, bottom = 0 },
-}
 
 function AlterEgo:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
@@ -162,8 +259,8 @@ function AlterEgo:UpdateCharacter()
         dungeons = {}
     }
 
-    for i, mapInfo in pairs(Maps) do
-        local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(mapInfo.id)
+    for i, dungeon in pairs(self.constants.dungeons) do
+        local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
         if affixScores ~= nil then
             local fortified = 0
             local tyrannical = 0
@@ -176,12 +273,12 @@ function AlterEgo:UpdateCharacter()
                 end
             end
 
-            self.db.global.characters[playerGUID].dungeons[mapInfo.id] = {
+            self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
                 [1] = tyrannical,
                 [2] = fortified,
             }
         else
-            self.db.global.characters[playerGUID].dungeons[mapInfo.id] = {
+            self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
                 [1] = 0,
                 [2] = 0,
             }
@@ -202,96 +299,6 @@ function AlterEgo:GetCharacters()
     return characters
 end
 
-local UIData = {
-    [1] = {
-        name = "Name",
-        label = "Characters:",
-        value = function(self, character)
-            local characterColor = "|cffffffff"
-            if character.class ~= nil then
-                local classColor = C_ClassColor.GetClassColor(character.class)
-                if classColor ~= nil then
-                    characterColor = "|c" .. classColor.GenerateHexColor(classColor)
-                end
-            end
-            return characterColor .. MaxLength(character.name) .. "|r"
-        end
-    },
-    [2] = {
-        name = "Realm",
-        label = "Realm:",
-        value = function(self, character)
-            return MaxLength(character.realm)
-        end
-    },
-    [3] = {
-        name = "Rating",
-        label = "Rating:",
-        value = function(self, character)
-            local ratingColor = "|cffffffff"
-            if character.rating > 0 then
-                local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.rating)
-                if color ~= nil then
-                    ratingColor = "|c" .. color.GenerateHexColor(color)
-                end
-            end
-            return ratingColor .. character.rating .. "|r"
-        end
-    },
-    [4] = {
-        name = "ItemLevel",
-        label = "Item Level:",
-        value = function(self, character)
-            local r, g, b = GetItemLevelColor()
-            local itemLevelColorHex = "|cffffffff"
-            if r ~= nil then
-                local color = CreateColor(r, g, b, 1)
-                itemLevelColorHex = "|c" .. color:GenerateHexColor()
-            end
-            return itemLevelColorHex .. floor(character.ilvl) .. "|r"
-        end
-    },
-    [5] = {
-        name = "Vault1",
-        label = "Vault 1:",
-        value = function(self, character)
-            if character.vault[1] == 0 then
-                return "-"
-            end
-            return character.vault[1]
-        end
-    },
-    [6] = {
-        name = "Vault2",
-        label = "Vault 2:",
-        value = function(self, character)
-            if character.vault[2] == 0 then
-                return "-"
-            end
-            return character.vault[2]
-        end
-    },
-    [7] = {
-        name = "Vault3",
-        label = "Vault 3:",
-        value = function(self, character)
-            if character.vault[3] == 0 then
-                return "-"
-            end
-            return character.vault[3]
-        end
-    },
-    [8] = {
-        name = "CurrentKey",
-        label = "Current Key:",
-        value = function(self, character)
-            if character.key.map == nil or character.key.map == "" then
-                return "-"
-            end
-            return GetMapShortName(character.key.map) .. " " .. character.key.level
-        end
-    },
-}
 
 function AlterEgo:CreateUI()
     local characters = AlterEgo:GetCharacters()
@@ -299,40 +306,50 @@ function AlterEgo:CreateUI()
     self.tableFrame = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
     self.tableFrame:SetPoint("CENTER")
     self.tableFrame:SetSize(0, 0)
-    self.tableFrame:SetBackdrop(backdropinfo)
-    self.tableFrame:SetBackdropColor(0, 0, 0, 1)
+    self.tableFrame:SetBackdrop(self.constants.backdrop)
+    self.tableFrame:SetBackdropColor(self.constants.colors.primary:GetRGBA())
 
     local rowIndex = 0
 
     -- Character loop
-    for i, row in ipairs(UIData) do
+    for i, row in ipairs(self.constants.characterTable) do
         local characterRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
         self.tableFrame[characterRowFrame] = CreateFrame("Frame", characterRowFrame, self.tableFrame, "BackdropTemplate")
-        self.tableFrame[characterRowFrame]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -rowHeight * rowIndex)
-        self.tableFrame[characterRowFrame]:SetSize(self.tableFrame:GetWidth(), rowHeight)
+        self.tableFrame[characterRowFrame]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
+        self.tableFrame[characterRowFrame]:SetSize(self.tableFrame:GetWidth(), self.constants.table.rowHeight)
+        self.tableFrame[characterRowFrame]:SetBackdrop(self.constants.backdrop)
+        self.tableFrame[characterRowFrame]:SetBackdropColor(0,0,0,0)
+        self.tableFrame[characterRowFrame]:SetScript("OnEnter", function()
+            self.tableFrame[characterRowFrame]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
+        end)
+        self.tableFrame[characterRowFrame]:SetScript("OnLeave", function()
+                self.tableFrame[characterRowFrame]:SetBackdropColor(0,0,0,0)
+        end)
 
         local characterCellName = characterRowFrame .. "CELL0"
         self.tableFrame[characterCellName] = CreateFrame("Frame", characterCellName, self.tableFrame[characterRowFrame], "BackdropTemplate")
-        self.tableFrame[characterCellName]:SetSize(colWidth, rowHeight)
+        self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
         self.tableFrame[characterCellName]:SetPoint("TOPLEFT", self.tableFrame[characterRowFrame], "TOPLEFT")
-        self.tableFrame[characterCellName]:SetBackdrop(backdropinfo)
-        self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
+        -- self.tableFrame[characterCellName]:SetBackdrop(self.static.backdrop)
+        -- self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
+        self.tableFrame[characterCellName]:SetBackdrop(self.constants.backdrop)
+        self.tableFrame[characterCellName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
         self.tableFrame[characterCellName].fontString = self.tableFrame[characterCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        self.tableFrame[characterCellName].fontString:SetPoint("LEFT", self.tableFrame[characterCellName], "LEFT", cellPadding, 0)
+        self.tableFrame[characterCellName].fontString:SetPoint("LEFT", self.tableFrame[characterCellName], "LEFT", self.constants.table.cellPadding, 0)
         -- self.tableFrame[characterCellName].fontString:SetText(MaxLength(row.label))
         self.tableFrame[characterCellName].fontString:SetJustifyH("LEFT")
 
         local lastCellFrame = self.tableFrame[characterCellName]
         local columnIndex = 1
         for _, character in pairs(characters) do
-            characterCellName = characterRowFrame .. "CELL" .. columnIndex
+            local characterCellName = characterRowFrame .. "CELL" .. columnIndex
             self.tableFrame[characterCellName] = CreateFrame("Frame", characterCellName, lastCellFrame, "BackdropTemplate")
-            self.tableFrame[characterCellName]:SetSize(colWidth, rowHeight)
+            self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
             self.tableFrame[characterCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
-            self.tableFrame[characterCellName]:SetBackdrop(backdropinfo)
-            self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
+            -- self.tableFrame[characterCellName]:SetBackdrop(self.static.backdrop)
+            -- self.tableFrame[characterCellName]:SetBackdropColor(0, 0, 0, 0)
             self.tableFrame[characterCellName].fontString = self.tableFrame[characterCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.tableFrame[characterCellName].fontString:SetPoint("CENTER", self.tableFrame[characterCellName], "CENTER", cellPadding, 0)
+            self.tableFrame[characterCellName].fontString:SetPoint("CENTER", self.tableFrame[characterCellName], "CENTER", self.constants.table.cellPadding, 0)
             -- self.tableFrame[characterCellName].fontString:SetText(row:value(character))
             self.tableFrame[characterCellName].fontString:SetJustifyH("CENTER")
             lastCellFrame = self.tableFrame[characterCellName]
@@ -345,17 +362,21 @@ function AlterEgo:CreateUI()
     -- Dungeon Header
     local dungeonHeaderRowName = self.tableFrame:GetName() .. "DUNGEONHEADERROW"
     self.tableFrame[dungeonHeaderRowName] = CreateFrame("Frame", dungeonHeaderRowName, self.tableFrame, "BackdropTemplate")
-    self.tableFrame[dungeonHeaderRowName]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -rowHeight * rowIndex)
-    self.tableFrame[dungeonHeaderRowName]:SetSize(self.tableFrame:GetWidth(), rowHeight)
+    self.tableFrame[dungeonHeaderRowName]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
+    self.tableFrame[dungeonHeaderRowName]:SetSize(self.tableFrame:GetWidth(), self.constants.table.rowHeight)
+    self.tableFrame[dungeonHeaderRowName]:SetBackdrop(self.constants.backdrop)
+    self.tableFrame[dungeonHeaderRowName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
 
     local dungeonHeaderCellName = dungeonHeaderRowName .. "CELL0"
     self.tableFrame[dungeonHeaderCellName] = CreateFrame("Frame", dungeonHeaderCellName, self.tableFrame[dungeonHeaderRowName], "BackdropTemplate")
-    self.tableFrame[dungeonHeaderCellName]:SetSize(colWidth, rowHeight)
+    self.tableFrame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
     self.tableFrame[dungeonHeaderCellName]:SetPoint("TOPLEFT", self.tableFrame[dungeonHeaderRowName], "TOPLEFT")
-    self.tableFrame[dungeonHeaderCellName]:SetBackdrop(backdropinfo)
-    self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(0, 0, 0, 0)
+    self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
+    self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
+    -- self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
+    -- self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
     self.tableFrame[dungeonHeaderCellName].fontString = self.tableFrame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.tableFrame[dungeonHeaderCellName].fontString:SetPoint("LEFT", self.tableFrame[dungeonHeaderCellName], "LEFT", cellPadding, 0)
+    self.tableFrame[dungeonHeaderCellName].fontString:SetPoint("LEFT", self.tableFrame[dungeonHeaderCellName], "LEFT", self.constants.table.cellPadding, 0)
     self.tableFrame[dungeonHeaderCellName].fontString:SetText("Dungeons:")
     self.tableFrame[dungeonHeaderCellName].fontString:SetJustifyH("LEFT")
 
@@ -365,12 +386,12 @@ function AlterEgo:CreateUI()
         for affixIndex = 1, 2 do
             dungeonHeaderCellName = dungeonHeaderRowName .. "CELL" .. columnIndex
             self.tableFrame[dungeonHeaderCellName] = CreateFrame("Frame",  dungeonHeaderCellName, lastCellFrame, "BackdropTemplate")
-            self.tableFrame[dungeonHeaderCellName]:SetSize(colWidth / 2, rowHeight)
+            self.tableFrame[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
             self.tableFrame[dungeonHeaderCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
-            self.tableFrame[dungeonHeaderCellName]:SetBackdrop(backdropinfo)
-            self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(0, 0, 0, 0)
+            -- self.tableFrame[dungeonHeaderCellName]:SetBackdrop(self.constants.backdrop)
+            -- self.tableFrame[dungeonHeaderCellName]:SetBackdropColor(self.constants.colors.lighter:GetRGBA())
             self.tableFrame[dungeonHeaderCellName].fontString = self.tableFrame[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.tableFrame[dungeonHeaderCellName].fontString:SetPoint("CENTER", self.tableFrame[dungeonHeaderCellName], "CENTER", cellPadding, 0)
+            self.tableFrame[dungeonHeaderCellName].fontString:SetPoint("CENTER", self.tableFrame[dungeonHeaderCellName], "CENTER", self.constants.table.cellPadding, 0)
             self.tableFrame[dungeonHeaderCellName].fontString:SetText("AFFIX")
             self.tableFrame[dungeonHeaderCellName].fontString:SetJustifyH("CENTER")
             lastCellFrame = self.tableFrame[dungeonHeaderCellName]
@@ -381,20 +402,38 @@ function AlterEgo:CreateUI()
     rowIndex = rowIndex + 1
 
     -- Dungeon Loop
-    for i, map in ipairs(Maps) do
+    for i, dungeon in ipairs(self.constants.dungeons) do
         local dungeonRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
         self.tableFrame[dungeonRowFrame] = CreateFrame("Frame", dungeonRowFrame, self.tableFrame, "BackdropTemplate")
-        self.tableFrame[dungeonRowFrame]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -rowHeight * rowIndex)
-        self.tableFrame[dungeonRowFrame]:SetSize(self.tableFrame:GetWidth(), rowHeight)
+        self.tableFrame[dungeonRowFrame]:SetPoint("TOPLEFT", self.tableFrame, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
+        self.tableFrame[dungeonRowFrame]:SetSize(self.tableFrame:GetWidth(), self.constants.table.rowHeight)
+        self.tableFrame[dungeonRowFrame]:SetBackdrop(self.constants.backdrop)
+        if i % 2 == 0 then
+            self.tableFrame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
+        else
+            self.tableFrame[dungeonRowFrame]:SetBackdropColor(0,0,0,0)
+        end
+        self.tableFrame[dungeonRowFrame]:SetScript("OnEnter", function()
+            self.tableFrame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
+        end)
+        self.tableFrame[dungeonRowFrame]:SetScript("OnLeave", function()
+            if i % 2 == 0 then
+                self.tableFrame[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
+            else
+                self.tableFrame[dungeonRowFrame]:SetBackdropColor(0,0,0,0)
+            end
+        end)
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
         self.tableFrame[dungeonHeaderFrame] = CreateFrame("Frame", dungeonHeaderFrame, self.tableFrame[dungeonRowFrame], "BackdropTemplate")
-        self.tableFrame[dungeonHeaderFrame]:SetSize(colWidth, rowHeight)
+        self.tableFrame[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
         self.tableFrame[dungeonHeaderFrame]:SetPoint("TOPLEFT", self.tableFrame[dungeonRowFrame], "TOPLEFT")
-        self.tableFrame[dungeonHeaderFrame]:SetBackdrop(backdropinfo)
-        self.tableFrame[dungeonHeaderFrame]:SetBackdropColor(0, 0, 0, 0)
+        -- self.tableFrame[dungeonHeaderFrame]:SetBackdrop(self.static.backdrop)
+        -- self.tableFrame[dungeonHeaderFrame]:SetBackdropColor(0, 0, 0, 0)
+        self.tableFrame[dungeonHeaderFrame]:SetBackdrop(self.constants.backdrop)
+        self.tableFrame[dungeonHeaderFrame]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
         self.tableFrame[dungeonHeaderFrame].fontString = self.tableFrame[dungeonHeaderFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        self.tableFrame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.tableFrame[dungeonHeaderFrame], "LEFT", cellPadding, 0)
+        self.tableFrame[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.tableFrame[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
         -- self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(map.name))
         self.tableFrame[dungeonHeaderFrame].fontString:SetJustifyH("LEFT")
 
@@ -408,12 +447,12 @@ function AlterEgo:CreateUI()
                 -- end
                 local dungeonCellFrame = dungeonRowFrame .. "CELL" .. columnIndex
                 self.tableFrame[dungeonCellFrame] = CreateFrame("Frame", dungeonCellFrame, lastCellFrame, "BackdropTemplate")
-                self.tableFrame[dungeonCellFrame]:SetSize(colWidth / 2, rowHeight)
+                self.tableFrame[dungeonCellFrame]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
                 self.tableFrame[dungeonCellFrame]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
-                self.tableFrame[dungeonCellFrame]:SetBackdrop(backdropinfo)
-                self.tableFrame[dungeonCellFrame]:SetBackdropColor(0, 0, 0, 0)
+                -- self.tableFrame[dungeonCellFrame]:SetBackdrop(self.static.backdrop)
+                -- self.tableFrame[dungeonCellFrame]:SetBackdropColor(0, 0, 0, 0)
                 self.tableFrame[dungeonCellFrame].fontString = self.tableFrame[dungeonCellFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                self.tableFrame[dungeonCellFrame].fontString:SetPoint("CENTER", self.tableFrame[dungeonCellFrame], "CENTER", cellPadding, 0)
+                self.tableFrame[dungeonCellFrame].fontString:SetPoint("CENTER", self.tableFrame[dungeonCellFrame], "CENTER", self.constants.table.cellPadding, 0)
                 -- self.tableFrame[dungeonCellFrame].fontString:SetText(level)
                 self.tableFrame[dungeonCellFrame].fontString:SetJustifyH("CENTER")
                 lastCellFrame = self.tableFrame[dungeonCellFrame]
@@ -424,337 +463,31 @@ function AlterEgo:CreateUI()
         rowIndex = rowIndex + 1
     end
 
-
-    -- self.frame = CreateFrame("Frame", "AlterEgoFrame", UIParent, "BackdropTemplate")
-    -- self.frame:Hide()
-    -- self.frame:SetPoint("CENTER")
-    -- self.frame:SetSize(600, 600)
-    -- self.frame:SetBackdrop(backdropinfo)
-    -- self.frame:SetBackdropColor(0, 0, 0, 1)
-    
-    -- local rowCharacterName = CreateFrame("Frame", self.frame:GetName() .. "HeaderRow", self.frame, "BackdropTemplate")
-    -- rowCharacterName:SetSize(self.frame:GetWidth(), rowHeight)
-    -- rowCharacterName:SetPoint("TOPLEFT", self.frame, "TOPLEFT")
-    -- rowCharacterName.columns = {}
-    -- rowCharacterName.columns[0] = CreateFrame("Frame", rowCharacterName:GetName() .. "COL0", rowCharacterName, "BackdropTemplate")
-    -- rowCharacterName.columns[0]:SetSize(colWidth, rowHeight)
-    -- rowCharacterName.columns[0]:SetPoint("TOPLEFT", rowCharacterName, "TOPLEFT")
-    -- rowCharacterName.columns[0]:SetBackdrop(backdropinfo)
-    -- rowCharacterName.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    -- rowCharacterName.columns[0].fontString = rowCharacterName.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- rowCharacterName.columns[0].fontString:SetPoint("LEFT", rowCharacterName.columns[0], "LEFT", cellPadding, 0)
-    -- rowCharacterName.columns[0].fontString:SetText("Characters:")
-    -- rowCharacterName.columns[0].fontString:SetJustifyH("LEFT")
-    
-    -- local previousFrame = 0
-    -- for playerGUID,character in pairs(characters) do
-
-    --     local characterColor = "|cffffffff"
-    --     if character.class ~= nil then
-    --         local classColor = C_ClassColor.GetClassColor(character.class)
-    --         if classColor ~= nil then
-    --             characterColor = "|c" .. classColor.GenerateHexColor(classColor)
-    --         end
-    --     end
-
-    --     rowCharacterName.columns[playerGUID] = CreateFrame("Frame", rowCharacterName:GetName() .. "COL" .. playerGUID, rowCharacterName, "BackdropTemplate")
-    --     rowCharacterName.columns[playerGUID]:SetSize(colWidth, rowHeight)
-    --     rowCharacterName.columns[playerGUID]:SetPoint("TOPLEFT", rowCharacterName.columns[previousFrame], "TOPRIGHT")
-    --     rowCharacterName.columns[playerGUID]:SetBackdrop(backdropinfo)
-    --     rowCharacterName.columns[playerGUID]:SetBackdropColor(0, 0, 0, 0)
-    --     rowCharacterName.columns[playerGUID].fontString = rowCharacterName.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowCharacterName.columns[playerGUID].fontString:SetPoint("CENTER", rowCharacterName.columns[playerGUID], "CENTER", cellPadding, 0)
-    --     rowCharacterName.columns[playerGUID].fontString:SetJustifyH("CENTER")
-    --     rowCharacterName.columns[playerGUID].fontString:SetText(characterColor .. character.name .. "|r")
-    --     previousFrame = playerGUID
-    -- end
-
-    -- local rowRealmName = CreateFrame("Frame", self.frame:GetName() .. "RowRealm", self.frame, "BackdropTemplate")
-    -- rowRealmName:SetSize(self.frame:GetWidth(), rowHeight)
-    -- rowRealmName:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight)
-    -- rowRealmName.columns = {}
-    -- rowRealmName.columns[0] = CreateFrame("Frame", rowRealmName:GetName() .. "COL0", rowRealmName, "BackdropTemplate")
-    -- rowRealmName.columns[0]:SetSize(colWidth, rowHeight)
-    -- rowRealmName.columns[0]:SetPoint("TOPLEFT", rowRealmName, "TOPLEFT")
-    -- rowRealmName.columns[0]:SetBackdrop(backdropinfo)
-    -- rowRealmName.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    -- rowRealmName.columns[0].fontString = rowRealmName.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- rowRealmName.columns[0].fontString:SetPoint("LEFT", rowRealmName.columns[0], "LEFT", cellPadding, 0)
-    -- rowRealmName.columns[0].fontString:SetText("Realm:")
-    -- rowRealmName.columns[0].fontString:SetJustifyH("LEFT")
-
-    -- local previousFrame = 0
-    -- for playerGUID,character in pairs(characters) do
-    --     rowRealmName.columns[playerGUID] = CreateFrame("Frame", rowRealmName:GetName() .. "COL" .. playerGUID, rowRealmName, "BackdropTemplate")
-    --     rowRealmName.columns[playerGUID]:SetSize(colWidth, rowHeight)
-    --     rowRealmName.columns[playerGUID]:SetPoint("TOPLEFT", rowRealmName.columns[previousFrame], "TOPRIGHT")
-    --     rowRealmName.columns[playerGUID]:SetBackdrop(backdropinfo)
-    --     rowRealmName.columns[playerGUID]:SetBackdropColor(0, 0, 0, 0)
-    --     rowRealmName.columns[playerGUID].fontString = rowRealmName.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowRealmName.columns[playerGUID].fontString:SetPoint("CENTER", rowRealmName.columns[playerGUID], "CENTER", cellPadding, 0)
-    --     rowRealmName.columns[playerGUID].fontString:SetJustifyH("CENTER")
-    --     rowRealmName.columns[playerGUID].fontString:SetText((character.realm or ""))
-    --     previousFrame = playerGUID
-    -- end
-
-    -- local rowRating = CreateFrame("Frame", self.frame:GetName() .. "Rating", self.frame, "BackdropTemplate")
-    -- rowRating:SetSize(self.frame:GetWidth(), rowHeight)
-    -- rowRating:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 2)
-    -- rowRating.columns = {}
-    -- rowRating.columns[0] = CreateFrame("Frame", rowRating:GetName() .. "COL0", rowRating, "BackdropTemplate")
-    -- rowRating.columns[0]:SetSize(colWidth, rowHeight)
-    -- rowRating.columns[0]:SetPoint("TOPLEFT", rowRating, "TOPLEFT")
-    -- rowRating.columns[0]:SetBackdrop(backdropinfo)
-    -- rowRating.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    -- rowRating.columns[0].fontString = rowRating.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- rowRating.columns[0].fontString:SetPoint("LEFT", rowRating.columns[0], "LEFT", cellPadding, 0)
-    -- rowRating.columns[0].fontString:SetJustifyH("LEFT")
-    -- rowRating.columns[0].fontString:SetText("Rating:")
-
-    -- local previousFrame = 0
-    -- for playerGUID,character in pairs(characters) do
-
-    --     local ratingColor = "|cffffffff"
-    --     if character.rating > 0 then
-    --         local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.rating)
-    --         if color ~= nil then
-    --             ratingColor = "|c" .. color.GenerateHexColor(color)
-    --         end
-    --     end
-    --     rowRating.columns[playerGUID] = CreateFrame("Frame", rowRating:GetName() .. "COL" .. playerGUID, rowRating, "BackdropTemplate")
-    --     rowRating.columns[playerGUID]:SetSize(colWidth, rowHeight)
-    --     rowRating.columns[playerGUID]:SetPoint("TOPLEFT", rowRating.columns[previousFrame], "TOPRIGHT")
-    --     rowRating.columns[playerGUID]:SetBackdrop(backdropinfo)
-    --     rowRating.columns[playerGUID]:SetBackdropColor(0, 0, 0, 0)
-    --     rowRating.columns[playerGUID].fontString = rowRating.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowRating.columns[playerGUID].fontString:SetPoint("CENTER", rowRating.columns[playerGUID], "CENTER", cellPadding, 0)
-    --     rowRating.columns[playerGUID].fontString:SetJustifyH("CENTER")
-    --     rowRating.columns[playerGUID].fontString:SetText(ratingColor .. character.rating .. "|r")
-    --     previousFrame = playerGUID
-    -- end
-
-    -- local rowItemLevel = CreateFrame("Frame", self.frame:GetName() .. "ItemLevel", self.frame, "BackdropTemplate")
-    -- rowItemLevel:SetSize(self.frame:GetWidth(), rowHeight)
-    -- rowItemLevel:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 3)
-    -- rowItemLevel.columns = {}
-    -- rowItemLevel.columns[0] = CreateFrame("Frame", rowItemLevel:GetName() .. "COL0", rowItemLevel, "BackdropTemplate")
-    -- rowItemLevel.columns[0]:SetSize(colWidth, rowHeight)
-    -- rowItemLevel.columns[0]:SetPoint("TOPLEFT", rowItemLevel, "TOPLEFT")
-    -- rowItemLevel.columns[0]:SetBackdrop(backdropinfo)
-    -- rowItemLevel.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    -- rowItemLevel.columns[0].fontString = rowItemLevel.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- rowItemLevel.columns[0].fontString:SetPoint("LEFT", rowItemLevel.columns[0], "LEFT", cellPadding, 0)
-    -- rowItemLevel.columns[0].fontString:SetJustifyH("LEFT")
-    -- rowItemLevel.columns[0].fontString:SetText("Item Level:")
-
-    -- local previousFrame = 0
-    -- for playerGUID,character in pairs(characters) do
-    --     rowItemLevel.columns[playerGUID] = CreateFrame("Frame", rowItemLevel:GetName() .. "COL" .. playerGUID, rowItemLevel, "BackdropTemplate")
-    --     rowItemLevel.columns[playerGUID]:SetSize(colWidth, rowHeight)
-    --     rowItemLevel.columns[playerGUID]:SetPoint("TOPLEFT", rowItemLevel.columns[previousFrame], "TOPRIGHT")
-    --     rowItemLevel.columns[playerGUID]:SetBackdrop(backdropinfo)
-    --     rowItemLevel.columns[playerGUID]:SetBackdropColor(0, 0, 0, 0)
-    --     rowItemLevel.columns[playerGUID].fontString = rowItemLevel.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowItemLevel.columns[playerGUID].fontString:SetPoint("CENTER", rowItemLevel.columns[playerGUID], "CENTER", cellPadding, 0)
-    --     rowItemLevel.columns[playerGUID].fontString:SetJustifyH("CENTER")
-    --     rowItemLevel.columns[playerGUID].fontString:SetText(math.floor(character.ilvl))
-    --     previousFrame = playerGUID
-    -- end
-
-    -- for i = 1, 3 do
-    --     local rowVault = CreateFrame("Frame", self.frame:GetName() .. "Vault" .. i, self.frame, "BackdropTemplate")
-    --     rowVault:SetSize(self.frame:GetWidth(), rowHeight)
-    --     rowVault:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * (3 + i))
-    --     rowVault.columns = {}
-    --     rowVault.columns[0] = CreateFrame("Frame", rowVault:GetName() .. "COL0", rowVault, "BackdropTemplate")
-    --     rowVault.columns[0]:SetSize(colWidth, rowHeight)
-    --     rowVault.columns[0]:SetPoint("TOPLEFT", rowVault, "TOPLEFT")
-    --     rowVault.columns[0]:SetBackdrop(backdropinfo)
-    --     rowVault.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    --     rowVault.columns[0].fontString = rowVault.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowVault.columns[0].fontString:SetPoint("LEFT", rowVault.columns[0], "LEFT", cellPadding, 0)
-    --     rowVault.columns[0].fontString:SetJustifyH("LEFT")
-    --     rowVault.columns[0].fontString:SetText("Vault " .. i .. ":")
-    
-    --     local previousFrame = 0
-    --     for playerGUID,character in pairs(characters) do
-    --         rowVault.columns[playerGUID] = CreateFrame("Frame", rowVault:GetName() .. "COL" .. playerGUID, rowVault, "BackdropTemplate")
-    --         rowVault.columns[playerGUID]:SetSize(colWidth, rowHeight)
-    --         rowVault.columns[playerGUID]:SetPoint("TOPLEFT", rowVault.columns[previousFrame], "TOPRIGHT")
-    --         rowVault.columns[playerGUID]:SetBackdrop(backdropinfo)
-    --         rowVault.columns[playerGUID]:SetBackdropColor(0, 0, 0, 0)
-    --         rowVault.columns[playerGUID].fontString = rowVault.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --         rowVault.columns[playerGUID].fontString:SetPoint("CENTER", rowVault.columns[playerGUID], "CENTER", cellPadding, 0)
-    --         rowVault.columns[playerGUID].fontString:SetJustifyH("CENTER")
-    --         if character.vault[i] == 0 then
-    --             rowVault.columns[playerGUID].fontString:SetText("-")
-    --         else
-    --             rowVault.columns[playerGUID].fontString:SetText(character.vault[i])
-    --         end
-    --         previousFrame = playerGUID
-    --     end
-    -- end
-
-    
-    -- local rowCurrentKey = CreateFrame("Frame", self.frame:GetName() .. "CurrentKey", self.frame, "BackdropTemplate")
-    -- rowCurrentKey:SetSize(self.frame:GetWidth(), rowHeight)
-    -- rowCurrentKey:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 7)
-    -- rowCurrentKey.columns = {}
-    -- rowCurrentKey.columns[0] = CreateFrame("Frame", rowCurrentKey:GetName() .. "COL0", rowCurrentKey, "BackdropTemplate")
-    -- rowCurrentKey.columns[0]:SetSize(colWidth, rowHeight)
-    -- rowCurrentKey.columns[0]:SetPoint("TOPLEFT", rowCurrentKey, "TOPLEFT")
-    -- rowCurrentKey.columns[0]:SetBackdrop(backdropinfo)
-    -- rowCurrentKey.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    -- rowCurrentKey.columns[0].fontString = rowCurrentKey.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- rowCurrentKey.columns[0].fontString:SetPoint("LEFT", rowCurrentKey.columns[0], "LEFT", cellPadding, 0)
-    -- rowCurrentKey.columns[0].fontString:SetJustifyH("LEFT")
-    -- rowCurrentKey.columns[0].fontString:SetText("Current Key:")
-
-    -- local previousFrame = 0
-    -- for playerGUID,character in pairs(characters) do
-    --     rowCurrentKey.columns[playerGUID] = CreateFrame("Frame", rowCurrentKey:GetName() .. "COL" .. playerGUID, rowCurrentKey, "BackdropTemplate")
-    --     rowCurrentKey.columns[playerGUID]:SetSize(colWidth, rowHeight)
-    --     rowCurrentKey.columns[playerGUID]:SetPoint("TOPLEFT", rowCurrentKey.columns[previousFrame], "TOPRIGHT")
-    --     rowCurrentKey.columns[playerGUID]:SetBackdrop(backdropinfo)
-    --     rowCurrentKey.columns[playerGUID]:SetBackdropColor(0, 0, 0, 0)
-    --     rowCurrentKey.columns[playerGUID].fontString = rowCurrentKey.columns[playerGUID]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowCurrentKey.columns[playerGUID].fontString:SetPoint("CENTER", rowCurrentKey.columns[playerGUID], "CENTER", cellPadding, 0)
-    --     rowCurrentKey.columns[playerGUID].fontString:SetJustifyH("CENTER")
-    --     if character.key.map == nil or character.key.map == "" then
-    --         rowCurrentKey.columns[playerGUID].fontString:SetText("-")
-    --     else
-    --         rowCurrentKey.columns[playerGUID].fontString:SetText(GetMapShortName(character.key.map) .. " " .. character.key.level)
-    --     end
-    --     previousFrame = playerGUID
-    -- end
-    
-    -- self.frame.rowDungeonHeader = CreateFrame("Frame", self.frame:GetName() .. "DungeonHeader", self.frame, "BackdropTemplate")
-    -- self.frame.rowDungeonHeader:SetSize(self.frame:GetWidth(), rowHeight)
-    -- self.frame.rowDungeonHeader:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * 8)
-    -- self.frame.rowDungeonHeader:SetBackdrop(backdropinfo)
-    -- self.frame.rowDungeonHeader:SetBackdropColor(0.2, 0.2, 0.2, 1)
-    -- self.frame.rowDungeonHeader.columns = {}
-    -- self.frame.rowDungeonHeader.columns[0] = CreateFrame("Frame", self.frame.rowDungeonHeader:GetName() .. "COL0", self.frame.rowDungeonHeader, "BackdropTemplate")
-    -- self.frame.rowDungeonHeader.columns[0]:SetSize(colWidth, rowHeight)
-    -- self.frame.rowDungeonHeader.columns[0]:SetPoint("TOPLEFT", self.frame.rowDungeonHeader, "TOPLEFT")
-    -- self.frame.rowDungeonHeader.columns[0]:SetBackdrop(backdropinfo)
-    -- self.frame.rowDungeonHeader.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    -- self.frame.rowDungeonHeader.columns[0].fontString = self.frame.rowDungeonHeader.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- self.frame.rowDungeonHeader.columns[0].fontString:SetPoint("LEFT", self.frame.rowDungeonHeader.columns[0], "LEFT", cellPadding, 0)
-    -- self.frame.rowDungeonHeader.columns[0].fontString:SetJustifyH("LEFT")
-    -- self.frame.rowDungeonHeader.columns[0].fontString:SetText("Dungeons:")
-
-    -- local previousFrame = 0
-    -- for playerGUID,character in pairs(characters) do
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"] = CreateFrame("Frame", self.frame.rowDungeonHeader:GetName() .. "COL" .. playerGUID .. "F", self.frame.rowDungeonHeader, "BackdropTemplate")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetSize(colWidth / 2, rowHeight)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetPoint("TOPLEFT", self.frame.rowDungeonHeader.columns[previousFrame], "TOPRIGHT")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetBackdrop(backdropinfo)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:SetBackdropColor(0, 0, 0, 0)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString = self.frame.rowDungeonHeader.columns[playerGUID .. "F"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetPoint("CENTER", self.frame.rowDungeonHeader.columns[playerGUID .. "F"], "CENTER", cellPadding, 0)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetJustifyH("CENTER")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "F"].fontString:SetText("F")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"] = CreateFrame("Frame", self.frame.rowDungeonHeader:GetName() .. "COL" .. playerGUID .. "T", self.frame.rowDungeonHeader, "BackdropTemplate")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetSize(colWidth / 2, rowHeight)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetPoint("TOPLEFT", self.frame.rowDungeonHeader.columns[playerGUID .. "F"], "TOPRIGHT")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetBackdrop(backdropinfo)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:SetBackdropColor(0, 0, 0, 0)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString = self.frame.rowDungeonHeader.columns[playerGUID .. "T"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetPoint("CENTER", self.frame.rowDungeonHeader.columns[playerGUID .. "T"], "CENTER", cellPadding, 0)
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetJustifyH("CENTER")
-    --     self.frame.rowDungeonHeader.columns[playerGUID .. "T"].fontString:SetText("T")
-    --     previousFrame = playerGUID .. "T"
-    -- end
-
-    -- for i, mapInfo in pairs(Maps) do
-    --     local rowDungeon = CreateFrame("Frame", self.frame:GetName() .. "Dungeon" .. i, self.frame, "BackdropTemplate")
-    --     rowDungeon:SetSize(self.frame:GetWidth(), rowHeight)
-    --     rowDungeon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -rowHeight * (8 + i))
-    --     rowDungeon.columns = {}
-    --     rowDungeon.columns[0] = CreateFrame("Frame", rowDungeon:GetName() .. "COL0", rowDungeon, "BackdropTemplate")
-    --     rowDungeon.columns[0]:SetSize(colWidth, rowHeight)
-    --     rowDungeon.columns[0]:SetPoint("TOPLEFT", rowDungeon, "TOPLEFT")
-    --     rowDungeon.columns[0]:SetBackdrop(backdropinfo)
-    --     if i % 2 == 0 then
-    --         rowDungeon.columns[0]:SetBackdropColor(1, 1, 1, 0.1)
-    --     else
-    --         rowDungeon.columns[0]:SetBackdropColor(0, 0, 0, 0)
-    --     end
-    --     rowDungeon.columns[0].fontString = rowDungeon.columns[0]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --     rowDungeon.columns[0].fontString:SetPoint("LEFT", rowDungeon.columns[0], "LEFT", cellPadding, 0)
-    --     rowDungeon.columns[0].fontString:SetWidth(colWidth - cellPadding * 2)
-    --     rowDungeon.columns[0].fontString:SetJustifyH("LEFT")
-    --     rowDungeon.columns[0].fontString:SetText(MaxLength(mapInfo.name, 13))
-
-    --     local previousFrame = 0
-    --     for playerGUID,character in pairs(characters) do
-    --         rowDungeon.columns[playerGUID .. "F"] = CreateFrame("Frame", rowDungeon:GetName() .. "COL" .. playerGUID .. "F", rowDungeon, "BackdropTemplate")
-    --         rowDungeon.columns[playerGUID .. "F"]:SetSize(colWidth / 2, rowHeight)
-    --         rowDungeon.columns[playerGUID .. "F"]:SetPoint("TOPLEFT", rowDungeon.columns[previousFrame], "TOPRIGHT")
-    --         rowDungeon.columns[playerGUID .. "F"]:SetBackdrop(backdropinfo)
-    --         if i % 2 == 0 then
-    --             rowDungeon.columns[playerGUID .. "F"]:SetBackdropColor(1, 1, 1, 0.1)
-    --         else
-    --             rowDungeon.columns[playerGUID .. "F"]:SetBackdropColor(0, 0, 0, 0)
-    --         end
-    --         rowDungeon.columns[playerGUID .. "F"].fontString = rowDungeon.columns[playerGUID .. "F"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --         rowDungeon.columns[playerGUID .. "F"].fontString:SetPoint("CENTER", rowDungeon.columns[playerGUID .. "F"], "CENTER", cellPadding, 0)
-    --         rowDungeon.columns[playerGUID .. "F"].fontString:SetJustifyH("CENTER")
-    --         local level = character.dungeons[mapInfo.id][2]
-    --         if level == 0 then
-    --             level = "-"
-    --         end
-    --         rowDungeon.columns[playerGUID .. "F"].fontString:SetText(level)
-    --         rowDungeon.columns[playerGUID .. "T"] = CreateFrame("Frame", rowDungeon:GetName() .. "COL" .. playerGUID .. "T", rowDungeon, "BackdropTemplate")
-    --         rowDungeon.columns[playerGUID .. "T"]:SetSize(colWidth / 2, rowHeight)
-    --         rowDungeon.columns[playerGUID .. "T"]:SetPoint("TOPLEFT", rowDungeon.columns[playerGUID .. "F"], "TOPRIGHT")
-    --         rowDungeon.columns[playerGUID .. "T"]:SetBackdrop(backdropinfo)
-    --         if i % 2 == 0 then
-    --             rowDungeon.columns[playerGUID .. "T"]:SetBackdropColor(1, 1, 1, 0.1)
-    --         else
-    --             rowDungeon.columns[playerGUID .. "T"]:SetBackdropColor(0, 0, 0, 0)
-    --         end
-    --         rowDungeon.columns[playerGUID .. "T"].fontString = rowDungeon.columns[playerGUID .. "T"]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --         rowDungeon.columns[playerGUID .. "T"].fontString:SetPoint("CENTER", rowDungeon.columns[playerGUID .. "T"], "CENTER", cellPadding, 0)
-    --         rowDungeon.columns[playerGUID .. "T"].fontString:SetJustifyH("CENTER")
-    --         local level = character.dungeons[mapInfo.id][1]
-    --         if level == 0 then
-    --             level = "-"
-    --         end
-    --         rowDungeon.columns[playerGUID .. "T"].fontString:SetText(level)
-    --         previousFrame = playerGUID .. "T"
-    --     end
-    -- end
-    
-
     AlterEgo:UpdateUI()
 end
 
 function AlterEgo:UpdateUI()
     local characters = AlterEgo:GetCharacters()
-
-    local frameWidth = colWidth
-
-    for _, __ in pairs(characters) do
-        frameWidth = frameWidth + colWidth
-    end
-
+    local frameWidth = self.constants.table.colWidth
     local rowIndex = 0
 
+    for _, __ in pairs(characters) do
+        frameWidth = frameWidth + self.constants.table.colWidth
+    end
+
     -- Character loop
-    for i, row in ipairs(UIData) do
+    for i, row in ipairs(self.constants.characterTable) do
         local characterRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
-        self.tableFrame[characterRowFrame]:SetSize(frameWidth, rowHeight)
+        self.tableFrame[characterRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
         local characterCellName = characterRowFrame .. "CELL0"
-        self.tableFrame[characterCellName]:SetSize(colWidth, rowHeight)
+        self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
         self.tableFrame[characterCellName].fontString:SetText(MaxLength(row.label))
 
         local columnIndex = 1
         for _, character in pairs(characters) do
             characterCellName = characterRowFrame .. "CELL" .. columnIndex
-            self.tableFrame[characterCellName]:SetSize(colWidth, rowHeight)
-            self.tableFrame[characterCellName].fontString:SetText(row:value(character))
+            self.tableFrame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+            self.tableFrame[characterCellName].fontString:SetText(row.value(self, character))
             columnIndex = columnIndex + 1
         end
 
@@ -763,21 +496,21 @@ function AlterEgo:UpdateUI()
 
     -- Dungeon Header
     local dungeonHeaderRowName = self.tableFrame:GetName() .. "DUNGEONHEADERROW"
-    self.tableFrame[dungeonHeaderRowName]:SetSize(frameWidth, rowHeight)
+    self.tableFrame[dungeonHeaderRowName]:SetSize(frameWidth, self.constants.table.rowHeight)
     rowIndex = rowIndex + 1
 
     -- Dungeon Loop
-    for i, map in ipairs(Maps) do
+    for i, dungeon in ipairs(self.constants.dungeons) do
         local dungeonRowFrame = self.tableFrame:GetName() .. "ROW" .. rowIndex
-        self.tableFrame[dungeonRowFrame]:SetSize(frameWidth, rowHeight)
+        self.tableFrame[dungeonRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
-        self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(map.name))
+        self.tableFrame[dungeonHeaderFrame].fontString:SetText(MaxLength(dungeon.name))
 
         local columnIndex = 1
         for _, character in pairs(characters) do
             for affixIndex = 1, 2 do
-                local level = character.dungeons[map.id][affixIndex]
+                local level = character.dungeons[dungeon.id][affixIndex]
                 if level == 0 then
                     level = "-"
                 end
@@ -790,5 +523,5 @@ function AlterEgo:UpdateUI()
         rowIndex = rowIndex + 1
     end
 
-    self.tableFrame:SetSize(frameWidth, rowHeight * rowIndex)
+    self.tableFrame:SetSize(frameWidth, self.constants.table.rowHeight * rowIndex)
 end
