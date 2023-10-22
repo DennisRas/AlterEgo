@@ -361,32 +361,42 @@ function AlterEgo:CreateUI()
     self.frame:SetPoint("CENTER")
     self.frame:SetSize(0, 0)
     self.frame:SetBackdrop(self.constants.backdrop)
-    self.frame:SetBackdropColor(self.constants.colors.primary:GetRGBA())
-    -- self.frame:SetBackdropBorderColor(self.constants.colors.dark:GetRGBA())
+    -- self.frame:SetBackdrop({
+    --     bgFile = "Interface/BUTTONS/WHITE8X8",
+    --     edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+    --     edgeSize = 16,
+    --     tile = false,
+    --     tileEdge = true,
+    --     insets = {top = 4, right = 4, bottom = 4, left = 4}
+    -- })
+
+    -- TODO: Consider this the border color
+    self.frame:SetBackdropColor(self.constants.colors.darker:GetRGBA())
+    -- self.frame:SetBackdropColor(0, 1, 0, 1)
+    -- self.frame:SetBackdropBorderColor(self.constants.colors.darker:GetRGBA())
     self.frame:SetFrameStrata("HIGH")
+    self.frame:SetClampedToScreen(true)
+    self.frame:SetMovable(true)
 
     -- TODO: Uncomment for release
     -- tinsert(UISpecialFrames, self.frame:GetName())
 
-    self.frame.border = CreateFrame("Frame", self.frame:GetName() .. "BORDER", UIParent, "BackdropTemplate")
-    self.frame.border:SetPoint("TOPLEFT", self.frame, "TOPLEFT", -self.constants.frame.borderWidth, self.constants.frame.borderWidth)
-    self.frame.border:SetBackdrop({
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-	    edgeSize = 16,
-        tile = false,
-        tileEdge = true,
-        insets = {top = 0, right = 0, bottom = 0, left = 0}
-    })
-    self.frame.border:SetBackdropBorderColor(self.constants.colors.darker:GetRGBA())
+    -- self.frame.border = CreateFrame("Frame", self.frame:GetName() .. "BORDER", UIParent, "BackdropTemplate")
+    -- self.frame.border:SetPoint("TOPLEFT", self.frame, "TOPLEFT", -self.constants.frame.borderWidth, self.constants.frame.borderWidth)
+    -- self.frame.border:SetBackdrop({
+    --     edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+	--     edgeSize = 16,
+    --     tile = false,
+    --     tileEdge = true,
+    --     insets = {top = 0, right = 0, bottom = 0, left = 0}
+    -- })
+    -- self.frame.border:SetBackdropBorderColor(self.constants.colors.darker:GetRGBA())
 
     self.frame.titlebar = CreateFrame("Frame", self.frame:GetName() .. "TITLEBAR", self.frame, "BackdropTemplate")
-    self.frame.titlebar:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, 0)
-    self.frame.titlebar:SetSize(self.frame:GetWidth(), self.constants.frame.titleBarHeight)
+    self.frame.titlebar:SetPoint("TOPLEFT", self.frame, "TOPLEFT", self.constants.frame.borderWidth, -self.constants.frame.borderWidth)
     self.frame.titlebar:SetBackdrop(self.constants.backdrop)
+    -- self.frame.titlebar:SetBackdropColor(1, 0, 0, 1)
     self.frame.titlebar:SetBackdropColor(self.constants.colors.darker:GetRGBA())
-
-    self.frame:SetClampedToScreen(true)
-    self.frame:SetMovable(true)
     self.frame.titlebar:EnableMouse(true)
     self.frame.titlebar:RegisterForDrag("LeftButton")
     self.frame.titlebar:SetScript("OnDragStart", function()
@@ -397,23 +407,22 @@ function AlterEgo:CreateUI()
     end)
 
     self.frame.titlebar.fontString = self.frame.titlebar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.frame.titlebar.fontString:SetSize(self.frame.titlebar:GetSize())
-    self.frame.titlebar.fontString:SetPoint("CENTER", self.frame.titlebar, "CENTER", 0, 0)
-    self.frame.titlebar.fontString:SetJustifyH("CENTER")
+    self.frame.titlebar.fontString:SetPoint("LEFT", self.frame.titlebar, "LEFT", 6, 0)
+    self.frame.titlebar.fontString:SetJustifyH("LEFT")
     self.frame.titlebar.fontString:SetText("AlterEgo")
+    local font, size, flags = self.frame.titlebar.fontString:GetFont()
+    self.frame.titlebar.fontString:SetFont(font, size + 2, flags)
+    self.frame.titlebar.fontString:SetVertexColor(1, 1, 1, 1)
     self.frame.titlebar.closeBtn = CreateFrame("Frame", self.frame.titlebar:GetName() .. "CLOSEBTN", self.frame.titlebar, "BackdropTemplate")
-    self.frame.titlebar.closeBtn:SetPoint("RIGHT", self.frame.titlebar, "RIGHT", 0, 0)
+    self.frame.titlebar.closeBtn:SetPoint("RIGHT", self.frame.titlebar, "RIGHT", -2, 0)
     self.frame.titlebar.closeBtn:SetSize(self.constants.table.rowHeight, self.constants.table.rowHeight)
     self.frame.titlebar.closeBtn:SetBackdrop(self.constants.backdrop)
     self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1,0)
     self.frame.titlebar.closeBtn:SetScript("OnEnter", function()
-        self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1,0.15)
+        self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1,0.1)
     end)
     self.frame.titlebar.closeBtn:SetScript("OnLeave", function()
-        self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1,0)
-    end)
-    self.frame.titlebar.closeBtn:SetScript("OnLeave", function()
-        self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1,0)
+        self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1, 0)
     end)
     self.frame.titlebar.closeBtn:SetScript("OnMouseDown", function()
         self.frame.titlebar.closeBtn:SetBackdropColor(1,1,1,0)
@@ -421,18 +430,17 @@ function AlterEgo:CreateUI()
     end)
     self.frame.titlebar.closeBtn.fontString = self.frame.titlebar.closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     self.frame.titlebar.closeBtn.fontString:SetSize(self.frame.titlebar.closeBtn:GetSize())
-    self.frame.titlebar.closeBtn.fontString:SetPoint("CENTER", self.frame.titlebar.closeBtn, "CENTER", 0, 0)
+    self.frame.titlebar.closeBtn.fontString:SetPoint("CENTER", self.frame.titlebar.closeBtn, "CENTER", 1, 0)
     self.frame.titlebar.closeBtn.fontString:SetJustifyH("CENTER")
     self.frame.titlebar.closeBtn.fontString:SetText("X")
+    self.frame.titlebar.closeBtn.fontString:SetVertexColor(1, 1, 1, 1)
     local font, size = self.frame.titlebar.closeBtn.fontString:GetFont()
     self.frame.titlebar.closeBtn.fontString:SetFont(font, size + 1)
 
     self.frame.body = CreateFrame("Frame", self.frame:GetName() .. "BODY", self.frame, "BackdropTemplate")
-    self.frame.body:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -self.constants.frame.titleBarHeight)
-    self.frame.body:SetWidth(self.frame:GetWidth())
-    self.frame.body:SetHeight(self.frame:GetHeight() - self.constants.frame.titleBarHeight)
-    -- self.frame.body:SetBackdrop(self.constants.backdrop)
-    -- self.frame.body:SetBackdropColor(1, 0, 0, 1)
+    self.frame.body:SetPoint("TOPLEFT", self.frame.titlebar, "BOTTOMLEFT", 0, 0)
+    self.frame.body:SetBackdrop(self.constants.backdrop)
+    self.frame.body:SetBackdropColor(self.constants.colors.primary:GetRGBA())
 
     local rowIndex = 0
 
@@ -441,36 +449,37 @@ function AlterEgo:CreateUI()
         local frameRow = self.frame.body:GetName() .. "ROW" .. rowIndex
         self.frame.body[frameRow] = CreateFrame("Frame", frameRow, self.frame.body, "BackdropTemplate")
         self.frame.body[frameRow]:SetPoint("TOPLEFT", self.frame.body, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
-        self.frame.body[frameRow]:SetSize(self.frame.body:GetWidth(), self.constants.table.rowHeight)
+        -- self.frame.body[frameRow]:SetSize(self.frame.body:GetWidth(), self.constants.table.rowHeight)
         self.frame.body[frameRow]:SetBackdrop(self.constants.backdrop)
-        self.frame.body[frameRow]:SetBackdropColor(0,0,0,0)
+        self.frame.body[frameRow]:SetBackdropColor(0, 0, 0, 0)
         self.frame.body[frameRow]:SetScript("OnEnter", function()
             self.frame.body[frameRow]:SetBackdropColor(self.constants.colors.highlight:GetRGBA())
         end)
         self.frame.body[frameRow]:SetScript("OnLeave", function()
-                self.frame.body[frameRow]:SetBackdropColor(0,0,0,0)
+                self.frame.body[frameRow]:SetBackdropColor(0, 0, 0, 0)
         end)
 
-            local frameCell = frameRow .. "CELL0"
-            self.frame.body[frameCell] = CreateFrame("Frame", frameCell, self.frame.body[frameRow], "BackdropTemplate")
-            self.frame.body[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-            self.frame.body[frameCell]:SetPoint("TOPLEFT", self.frame.body[frameRow], "TOPLEFT")
-            self.frame.body[frameCell]:SetBackdrop(self.constants.backdrop)
-            self.frame.body[frameCell]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
-            self.frame.body[frameCell].fontString = self.frame.body[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.frame.body[frameCell].fontString:SetSize(self.frame.body[frameCell]:GetSize())
-            self.frame.body[frameCell].fontString:SetPoint("LEFT", self.frame.body[frameCell], "LEFT", self.constants.table.cellPadding, 0)
-            self.frame.body[frameCell].fontString:SetJustifyH("LEFT")
+        local frameCell = frameRow .. "CELL0"
+        self.frame.body[frameCell] = CreateFrame("Frame", frameCell, self.frame.body[frameRow], "BackdropTemplate")
+        -- self.frame.body[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+        self.frame.body[frameCell]:SetPoint("TOPLEFT", self.frame.body[frameRow], "TOPLEFT")
+        self.frame.body[frameCell]:SetBackdrop(self.constants.backdrop)
+        self.frame.body[frameCell]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
+        -- self.frame.body[frameCell]:SetBackdropColor(1, 1, 0, 1)
+        self.frame.body[frameCell].fontString = self.frame.body[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        -- self.frame.body[frameCell].fontString:SetSize(self.frame.body[frameCell]:GetSize())
+        self.frame.body[frameCell].fontString:SetPoint("LEFT", self.frame.body[frameCell], "LEFT", self.constants.table.cellPadding, 0)
+        self.frame.body[frameCell].fontString:SetJustifyH("LEFT")
         
         local lastCellFrame = self.frame.body[frameCell]
         local columnIndex = 1
         for _, character in pairs(characters) do
             local frameCell = frameRow .. "CELL" .. columnIndex
             self.frame.body[frameCell] = CreateFrame("Frame", frameCell, lastCellFrame, "BackdropTemplate")
-            self.frame.body[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+            -- self.frame.body[frameCell]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
             self.frame.body[frameCell]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
             self.frame.body[frameCell].fontString = self.frame.body[frameCell]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.frame.body[frameCell].fontString:SetSize(self.frame.body[frameCell]:GetSize())
+            -- self.frame.body[frameCell].fontString:SetSize(self.frame.body[frameCell]:GetSize())
             self.frame.body[frameCell].fontString:SetPoint("CENTER", self.frame.body[frameCell], "CENTER", 0, 0)
             self.frame.body[frameCell].fontString:SetJustifyH("CENTER")
             lastCellFrame = self.frame.body[frameCell]
@@ -480,31 +489,34 @@ function AlterEgo:CreateUI()
         rowIndex = rowIndex + 1
     end
 
-    -- Dungeon Header
+    -- Dungeon Header Row
     local dungeonHeaderRowName = self.frame.body:GetName() .. "DUNGEONHEADERROW"
     self.frame.body[dungeonHeaderRowName] = CreateFrame("Frame", dungeonHeaderRowName, self.frame.body, "BackdropTemplate")
     self.frame.body[dungeonHeaderRowName]:SetPoint("TOPLEFT", self.frame.body, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
-    self.frame.body[dungeonHeaderRowName]:SetSize(self.frame.body:GetWidth(), self.constants.table.rowHeight)
+    -- self.frame.body[dungeonHeaderRowName]:SetSize(self.frame.body:GetWidth(), self.constants.table.rowHeight)
     self.frame.body[dungeonHeaderRowName]:SetBackdrop(self.constants.backdrop)
     self.frame.body[dungeonHeaderRowName]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
-
+    
+    -- Dungeon Header Cell 0
     local dungeonHeaderCellName = dungeonHeaderRowName .. "CELL0"
     self.frame.body[dungeonHeaderCellName] = CreateFrame("Frame", dungeonHeaderCellName, self.frame.body[dungeonHeaderRowName], "BackdropTemplate")
-    self.frame.body[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+    -- self.frame.body[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
     self.frame.body[dungeonHeaderCellName]:SetPoint("TOPLEFT", self.frame.body[dungeonHeaderRowName], "TOPLEFT")
     self.frame.body[dungeonHeaderCellName].fontString = self.frame.body[dungeonHeaderCellName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.frame.body[dungeonHeaderCellName].fontString:SetSize(self.frame.body[dungeonHeaderCellName]:GetSize())
+    -- self.frame.body[dungeonHeaderCellName].fontString:SetSize(self.frame.body[dungeonHeaderCellName]:GetSize())
     self.frame.body[dungeonHeaderCellName].fontString:SetPoint("LEFT", self.frame.body[dungeonHeaderCellName], "LEFT", self.constants.table.cellPadding, 0)
     self.frame.body[dungeonHeaderCellName].fontString:SetText("Dungeons:")
     self.frame.body[dungeonHeaderCellName].fontString:SetJustifyH("LEFT")
 
+    -- Dungeon Header Cell X
     local lastCellFrame = self.frame.body[dungeonHeaderCellName]
     local columnIndex = 1
     for _, character in pairs(characters) do
+        -- BUG: USE AFFIX TABLE
         for affixIndex = 1, 2 do
             dungeonHeaderCellName = dungeonHeaderRowName .. "CELL" .. columnIndex
             self.frame.body[dungeonHeaderCellName] = CreateFrame("Frame",  dungeonHeaderCellName, lastCellFrame, "BackdropTemplate")
-            self.frame.body[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
+            -- self.frame.body[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
             self.frame.body[dungeonHeaderCellName]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
             self.frame.body[dungeonHeaderCellName].iconFrame = self.frame.body[dungeonHeaderCellName]:CreateTexture(dungeonHeaderCellName .. "ICON", "BACKGROUND")
             self.frame.body[dungeonHeaderCellName].iconFrame:SetSize(16, 16)
@@ -517,12 +529,12 @@ function AlterEgo:CreateUI()
 
     rowIndex = rowIndex + 1
 
-    -- Dungeon Loop
+    -- Dungeon Values
     for i, dungeon in ipairs(self.constants.dungeons) do
         local dungeonRowFrame = self.frame.body:GetName() .. "ROW" .. rowIndex
         self.frame.body[dungeonRowFrame] = CreateFrame("Frame", dungeonRowFrame, self.frame.body, "BackdropTemplate")
         self.frame.body[dungeonRowFrame]:SetPoint("TOPLEFT", self.frame.body, "TOPLEFT", 0, -self.constants.table.rowHeight * rowIndex)
-        self.frame.body[dungeonRowFrame]:SetSize(self.frame.body:GetWidth(), self.constants.table.rowHeight)
+        -- self.frame.body[dungeonRowFrame]:SetSize(self.frame.body:GetWidth(), self.constants.table.rowHeight)
         self.frame.body[dungeonRowFrame]:SetBackdrop(self.constants.backdrop)
         if i % 2 == 0 then
             self.frame.body[dungeonRowFrame]:SetBackdropColor(self.constants.colors.light:GetRGBA())
@@ -542,7 +554,7 @@ function AlterEgo:CreateUI()
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
         self.frame.body[dungeonHeaderFrame] = CreateFrame("Frame", dungeonHeaderFrame, self.frame.body[dungeonRowFrame], "BackdropTemplate")
-        self.frame.body[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+        -- self.frame.body[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
         self.frame.body[dungeonHeaderFrame]:SetPoint("TOPLEFT", self.frame.body[dungeonRowFrame], "TOPLEFT")
         self.frame.body[dungeonHeaderFrame]:SetBackdrop(self.constants.backdrop)
         self.frame.body[dungeonHeaderFrame]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
@@ -557,10 +569,8 @@ function AlterEgo:CreateUI()
         self.frame.body[dungeonHeaderFrame].iconFrame:SetSize(16, 16)
         self.frame.body[dungeonHeaderFrame].iconFrame:SetPoint("LEFT", self.frame.body[dungeonHeaderFrame], "LEFT", self.constants.table.cellPadding, 0)
         self.frame.body[dungeonHeaderFrame].iconFrame:SetTexture(mapIconTexture)
-
-
         self.frame.body[dungeonHeaderFrame].fontString = self.frame.body[dungeonHeaderFrame]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        self.frame.body[dungeonHeaderFrame].fontString:SetSize(self.constants.table.colWidth - 16 - self.constants.table.cellPadding * 3, 16)
+        -- self.frame.body[dungeonHeaderFrame].fontString:SetSize(self.constants.table.colWidth - 16 - self.constants.table.cellPadding * 3, 16)
         self.frame.body[dungeonHeaderFrame].fontString:SetPoint("LEFT", self.frame.body[dungeonHeaderFrame].iconFrame, "LEFT", 16 + self.constants.table.cellPadding, 0)
         self.frame.body[dungeonHeaderFrame].fontString:SetVertexColor(1, 1, 1)
         self.frame.body[dungeonHeaderFrame].fontString:SetJustifyH("LEFT")
@@ -570,21 +580,22 @@ function AlterEgo:CreateUI()
         local lastCellFrame = self.frame.body[dungeonHeaderFrame]
         local columnIndex = 1
         for _, character in pairs(characters) do
+            -- BUG: USE AFFIX TABLE
             for affixIndex = 1, 2 do
                 local dungeonCellFrameLeft = dungeonRowFrame .. "CELL" .. columnIndex .. "LEFT"
                 self.frame.body[dungeonCellFrameLeft] = CreateFrame("Frame", dungeonCellFrameLeft, lastCellFrame, "BackdropTemplate")
-                self.frame.body[dungeonCellFrameLeft]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
+                -- self.frame.body[dungeonCellFrameLeft]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
                 self.frame.body[dungeonCellFrameLeft]:SetPoint("TOPLEFT", lastCellFrame, "TOPRIGHT")
                 self.frame.body[dungeonCellFrameLeft].fontString = self.frame.body[dungeonCellFrameLeft]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                self.frame.body[dungeonCellFrameLeft].fontString:SetSize(self.frame.body[dungeonCellFrameLeft]:GetSize())
+                -- self.frame.body[dungeonCellFrameLeft].fontString:SetSize(self.frame.body[dungeonCellFrameLeft]:GetSize())
                 self.frame.body[dungeonCellFrameLeft].fontString:SetPoint("RIGHT", self.frame.body[dungeonCellFrameLeft], "RIGHT", -1, 0)
                 self.frame.body[dungeonCellFrameLeft].fontString:SetJustifyH("RIGHT")
                 local dungeonCellFrameRight = dungeonRowFrame .. "CELL" .. columnIndex .. "RIGHT"
                 self.frame.body[dungeonCellFrameRight] = CreateFrame("Frame", dungeonCellFrameRight, self.frame.body[dungeonCellFrameLeft], "BackdropTemplate")
-                self.frame.body[dungeonCellFrameRight]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
+                -- self.frame.body[dungeonCellFrameRight]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
                 self.frame.body[dungeonCellFrameRight]:SetPoint("TOPLEFT", self.frame.body[dungeonCellFrameLeft], "TOPRIGHT")
                 self.frame.body[dungeonCellFrameRight].fontString = self.frame.body[dungeonCellFrameRight]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                self.frame.body[dungeonCellFrameRight].fontString:SetSize(self.frame.body[dungeonCellFrameRight]:GetSize())
+                -- self.frame.body[dungeonCellFrameRight].fontString:SetSize(self.frame.body[dungeonCellFrameRight]:GetSize())
                 self.frame.body[dungeonCellFrameRight].fontString:SetPoint("LEFT", self.frame.body[dungeonCellFrameRight], "LEFT", 1, 0)
                 self.frame.body[dungeonCellFrameRight].fontString:SetJustifyH("LEFT")
                 lastCellFrame = self.frame.body[dungeonCellFrameRight]
@@ -602,21 +613,28 @@ function AlterEgo:UpdateUI()
     if not self.frame then return end
 
     local characters = AlterEgo:GetCharacters()
-    local frameWidth = self.constants.table.colWidth
+    local frameWidth = 0
     local rowIndex = 0
 
+    -- First column
+    frameWidth = frameWidth + self.constants.table.colWidth
+
+    -- Character columns
     for _, __ in pairs(characters) do
         frameWidth = frameWidth + self.constants.table.colWidth
     end
 
-    frameWidth = frameWidth + 6
+    local frameWidthInner = frameWidth
+    frameWidth = frameWidth + self.constants.frame.borderWidth * 2
 
     -- Character loop
     for i, row in ipairs(self.constants.characterTable) do
         local characterRowFrame = self.frame.body:GetName() .. "ROW" .. rowIndex
-        self.frame.body[characterRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
+        self.frame.body[characterRowFrame]:SetSize(frameWidthInner, self.constants.table.rowHeight)
+
         local characterCellName = characterRowFrame .. "CELL0"
         self.frame.body[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+        self.frame.body[characterCellName].fontString:SetSize(self.frame.body[characterCellName]:GetSize())
         self.frame.body[characterCellName].fontString:SetText(row.label)
 
         local columnIndex = 1
@@ -624,23 +642,43 @@ function AlterEgo:UpdateUI()
             characterCellName = characterRowFrame .. "CELL" .. columnIndex
             self.frame.body[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
             self.frame.body[characterCellName].fontString:SetText(row.value(self, character))
+            self.frame.body[characterCellName].fontString:SetSize(self.frame.body[characterCellName]:GetSize())
             columnIndex = columnIndex + 1
         end
 
         rowIndex = rowIndex + 1
     end
 
-    -- Dungeon Header
+    -- Dungeon Header Row
     local dungeonHeaderRowName = self.frame.body:GetName() .. "DUNGEONHEADERROW"
-    self.frame.body[dungeonHeaderRowName]:SetSize(frameWidth, self.constants.table.rowHeight)
+    self.frame.body[dungeonHeaderRowName]:SetSize(frameWidthInner, self.constants.table.rowHeight)
+    
+    -- Dungeon Header Cell 0
+    local dungeonHeaderCellName = dungeonHeaderRowName .. "CELL0"
+    self.frame.body[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+    self.frame.body[dungeonHeaderCellName].fontString:SetSize(self.frame.body[dungeonHeaderCellName]:GetSize())
+
+    -- Dungeon Header Cell X
+    local columnIndex = 1
+    for _, character in pairs(characters) do
+        -- BUG: USE AFFIX TABLE
+        for affixIndex = 1, 2 do
+            dungeonHeaderCellName = dungeonHeaderRowName .. "CELL" .. columnIndex
+            self.frame.body[dungeonHeaderCellName]:SetSize(self.constants.table.colWidth / 2, self.constants.table.rowHeight)
+            columnIndex = columnIndex + 1
+        end
+    end
+
     rowIndex = rowIndex + 1
 
-    -- Dungeon Loop
+    -- Dungeon Values
     for i, dungeon in ipairs(self.constants.dungeons) do
         local dungeonRowFrame = self.frame.body:GetName() .. "ROW" .. rowIndex
-        self.frame.body[dungeonRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
+        self.frame.body[dungeonRowFrame]:SetSize(frameWidthInner, self.constants.table.rowHeight)
 
         local dungeonHeaderFrame = dungeonRowFrame .. "CELL0"
+        self.frame.body[dungeonHeaderFrame]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
+        self.frame.body[dungeonHeaderFrame].fontString:SetSize(self.constants.table.colWidth - 16 - self.constants.table.cellPadding * 3, 16)
         self.frame.body[dungeonHeaderFrame].fontString:SetText(dungeon.name)
 
         local columnIndex = 1
@@ -659,11 +697,6 @@ function AlterEgo:UpdateUI()
                     levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                 else
                     level = characterAffix.level
-
-                    -- if level < 10 then
-                    --     level = "  " .. level
-                    -- end
-
                     if characterAffix.durationSec <= dungeon.time * 0.6 then
                         tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
                     elseif characterAffix.durationSec <= dungeon.time * 0.8 then
@@ -676,21 +709,23 @@ function AlterEgo:UpdateUI()
                 end
 
                 local dungeonCellFrameLeft = dungeonRowFrame .. "CELL" .. columnIndex .. "LEFT"
+                self.frame.body[dungeonCellFrameLeft]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
+                self.frame.body[dungeonCellFrameLeft].fontString:SetSize(self.frame.body[dungeonCellFrameLeft]:GetSize())
                 self.frame.body[dungeonCellFrameLeft].fontString:SetText("|c" .. levelColor .. level .. "|r")
                 local dungeonCellFrameRight = dungeonRowFrame .. "CELL" .. columnIndex .. "RIGHT"
+                self.frame.body[dungeonCellFrameRight]:SetSize(self.constants.table.colWidth / 4, self.constants.table.rowHeight)
+                self.frame.body[dungeonCellFrameRight].fontString:SetSize(self.frame.body[dungeonCellFrameRight]:GetSize())
                 self.frame.body[dungeonCellFrameRight].fontString:SetText(tier)
                 columnIndex = columnIndex + 1
             end
         end
 
         rowIndex = rowIndex + 1
-    end
 
-    self.frame:SetSize(frameWidth, self.constants.frame.titleBarHeight + self.constants.table.rowHeight * rowIndex)
-    self.frame.border:SetSize(self.frame:GetWidth() + self.constants.frame.borderWidth * 2, self.frame:GetHeight() + self.constants.frame.borderWidth * 2)
-    self.frame.body:SetSize(self.frame:GetWidth(), self.constants.table.rowHeight * rowIndex)
-    -- self.frame.body:SetPoint("TOPLEFT", self.frame, "TOPLEFT", self.constants.table.rowHeight * rowIndex)
-    -- self.frame.body:SetWidth(frameWidth)
-    -- self.frame.body:SetHeight(self.constants.table.rowHeight * rowIndex - self.constants.frame.titleBarHeight)
-    self.frame.titlebar:SetWidth(self.frame:GetWidth())
+        -- Frame sizing
+        self.frame:SetSize(frameWidth, self.constants.frame.titleBarHeight + self.constants.table.rowHeight * rowIndex + self.constants.frame.borderWidth * 2)
+        self.frame.titlebar:SetSize(frameWidthInner, self.constants.frame.titleBarHeight)
+        self.frame.titlebar.fontString:SetSize(self.frame.titlebar:GetSize())
+        self.frame.body:SetSize(frameWidthInner, self.constants.table.rowHeight * rowIndex)
+    end
 end
