@@ -1,15 +1,5 @@
-AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
-
-local function MaxLength(str, len)
-    if len == nil then
-        len = 15
-    end
-    if string.len(str) > len then
-        return str:sub(1, len) .. "..."
-    end
-    return str
-end
-
+---@diagnostic disable: undefined-field, inject-field, duplicate-set-field
+AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 AlterEgo.constants = {
     table = {
         rowHeight = 22,
@@ -38,6 +28,19 @@ AlterEgo.constants = {
         profile = {
             settings = {}
         }
+    },
+    defaultCharacter = {
+        name = "-",
+        realm = "-",
+        class = "",
+        itemLevel = 0,
+        itemLevelColor = "ffffffff",
+        vault = {},
+        key = {
+            map = 0,
+            level = 0
+        },
+        dungeons = {}
     },
     options = {
         name = "AlterEgo",
@@ -122,7 +125,7 @@ AlterEgo.constants = {
             name = "Realm",
             label = "Realm:",
             value = function(self, character)
-                return MaxLength(character.realm)
+                return character.realm
             end
         },
         [3] = {
@@ -131,7 +134,7 @@ AlterEgo.constants = {
             value = function(self, character)
                 local rating = character.rating
                 local ratingColor = "ffffffff"
-                if rating > 0 then
+                if rating and rating > 0 then
                     local color = C_ChallengeMode.GetDungeonScoreRarityColor(rating)
                     if color ~= nil then
                         ratingColor = color.GenerateHexColor(color)
@@ -178,26 +181,6 @@ AlterEgo.constants = {
                 return vaults:trim()
             end
         },
-        -- [6] = {
-        --     name = "Vault2",
-        --     label = "Vault 2:",
-        --     value = function(self, character)
-        --         if character.vault[2] == 0 then
-        --             return "-"
-        --         end
-        --         return character.vault[2]
-        --     end
-        -- },
-        -- [7] = {
-        --     name = "Vault3",
-        --     label = "Vault 3:",
-        --     value = function(self, character)
-        --         if character.vault[3] == 0 then
-        --             return "-"
-        --         end
-        --         return character.vault[3]
-        --     end
-        -- },
         [6] = {
             name = "CurrentKey",
             label = "Current Key:",
@@ -225,26 +208,15 @@ function AlterEgo:GetDungeonByMapId(mapId)
 end
 
 function AlterEgo:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", defaultDB)
+    self.db = LibStub("AceDB-3.0"):New("AlterEgoDB", self.constants.defaultDB)
     self:RegisterChatCommand("alterego", "OnSlashCommand")
     self:RegisterChatCommand("ae", "OnSlashCommand")
+    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 1, "UpdateCharacter")
+    self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "UpdateMythicPlus")
+    self:RegisterEvent("CHALLENGE_MODE_RESET", "UpdateMythicPlus")
 
-    -- TODO: Split these into different event handlers
-    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 1, "OnEvent")
-    self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "OnEvent")
-    self:RegisterEvent("CHALLENGE_MODE_RESET", "OnEvent")
-
-    -- TODO: Do this on event updates as well
-    C_MythicPlus.RequestMapInfo()
-
-    for i, dungeon in ipairs(self.constants.dungeons) do
-        local _, __, time = C_ChallengeMode.GetMapUIInfo(dungeon.id)
-        self.constants.dungeons[i].time = time
-    end
-    
-
-    AlterEgo:UpdateCharacter()
-    AlterEgo:CreateUI()
+    self:UpdateAll()
+    self:CreateUI()
 end
 
 function AlterEgo:OnSlashCommand(message)
@@ -255,43 +227,87 @@ function AlterEgo:OnSlashCommand(message)
     end
 end
 
-function AlterEgo:OnEvent()
+function AlterEgo:UpdateAll()
     self:UpdateCharacter()
-    self:UpdateUI()
+    self:UpdateMythicPlus()
 end
 
 function AlterEgo:UpdateCharacter()
-    local playerName = UnitName("player")
-    local _, playerClass = UnitClass("player")
-    local playerRealm = GetRealmName()
-    local activities = C_WeeklyRewards.GetActivities(1)
-    -- local playerRealm = GetNormalizedRealmName()
     local playerGUID = UnitGUID("player")
-    local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
-    local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
-    local itemLevelColor = CreateColor(GetItemLevelColor()):GenerateHexColor()
-    local mapID = C_MythicPlus.GetOwnedKeystoneMapID()
-    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    if not playerGUID then
+        return
+    end
+
+    if self.db.global.characters[playerGUID] == nil then
+        self.db.global.characters[playerGUID] = self.constants.defaultCharacter
+    end
+
+    local playerName = UnitName("player")
+    if playerName then
+        self.db.global.characters[playerGUID].name = playerName
+    end
+
+    local playerRealm = GetRealmName()
+    if playerRealm then
+        self.db.global.characters[playerGUID].realm = playerRealm
+    end
+
+    local _, playerClass = UnitClass("player")
+    if playerClass then
+        self.db.global.characters[playerGUID].class = playerClass
+    end
+
+    local _, avgItemLevelEquipped = GetAverageItemLevel()
+    if avgItemLevelEquipped then
+        self.db.global.characters[playerGUID].itemLevel = avgItemLevelEquipped
+    end
+
+    local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
+    if itemLevelColorR and itemLevelColorG and itemLevelColorB then
+        self.db.global.characters[playerGUID].itemLevelColor = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
+    end
+
+    self:UpdateUI()
+end
+
+function AlterEgo:UpdateMythicPlus()
+    local playerGUID = UnitGUID("player")
+    if not playerGUID then
+        return
+    end
+
+    if self.db.global.characters[playerGUID] == nil then
+        self.db.global.characters[playerGUID] = self.constants.defaultCharacter
+    end
+
     -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
     -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
     -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
     -- local history = C_MythicPlus.GetRunHistory(true)
     -- C_ChallengeMode.GetMapUIInfo(2527)
 
-    self.db.global.characters[playerGUID] = {
-        name = playerName,
-        realm = playerRealm,
-        class = playerClass,
-        rating = ratingSummary.currentSeasonScore,
-        itemLevel = avgItemLevelEquipped,
-        itemLevelColor = itemLevelColor,
-        vault = {},
-        key = {
-            map = mapID,
-            level = keyStoneLevel or 0
-        },
-        dungeons = {}
-    }
+    local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
+    if ratingSummary then
+        self.db.global.characters[playerGUID].rating = ratingSummary.currentSeasonScore
+    else
+        C_MythicPlus.RequestMapInfo()
+        return self:ScheduleTimer("UpdateMythicPlus", 1)
+    end
+
+    for i, dungeon in ipairs(self.constants.dungeons) do
+        local _, __, time = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+        self.constants.dungeons[i].time = time
+    end
+
+    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+    if keyStoneMapID then
+        self.db.global.characters[playerGUID].key.map = keyStoneMapID
+    end
+
+    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    if keyStoneLevel then
+        self.db.global.characters[playerGUID].key.level = keyStoneLevel
+    end
 
     for i, dungeon in pairs(self.constants.dungeons) do
         if self.db.global.characters[playerGUID].dungeons[dungeon.id] == nil then
@@ -316,9 +332,12 @@ function AlterEgo:UpdateCharacter()
         end
     end
 
+    local activities = C_WeeklyRewards.GetActivities(1)
     for _, activity in pairs(activities) do
         self.db.global.characters[playerGUID].vault[activity.index] = activity.level
     end
+
+    self:UpdateUI()
 end
 
 function AlterEgo:GetCharacters()
@@ -329,7 +348,6 @@ function AlterEgo:GetCharacters()
 
     return characters
 end
-
 
 function AlterEgo:CreateUI()
     local characters = AlterEgo:GetCharacters()
@@ -452,11 +470,11 @@ function AlterEgo:CreateUI()
         self.frame[dungeonHeaderFrame]:SetPoint("TOPLEFT", self.frame[dungeonRowFrame], "TOPLEFT")
         self.frame[dungeonHeaderFrame]:SetBackdrop(self.constants.backdrop)
         self.frame[dungeonHeaderFrame]:SetBackdropColor(self.constants.colors.dark:GetRGBA())
-        
+  
         local _, _, _, texture = C_ChallengeMode.GetMapUIInfo(dungeon.id);
-        local mapIconTexture = texture
-        if texture == 0 then
-            mapIconTexture = "Interface/Icons/achievement_bg_wineos_underxminutes"
+        local mapIconTexture = "Interface/Icons/achievement_bg_wineos_underxminutes"
+        if texture ~= 0 then
+            mapIconTexture = tostring(texture)
         end
 
         self.frame[dungeonHeaderFrame].iconFrame = self.frame[dungeonHeaderFrame]:CreateTexture(dungeonHeaderFrame .. "ICON", "BACKGROUND")
@@ -505,6 +523,8 @@ function AlterEgo:CreateUI()
 end
 
 function AlterEgo:UpdateUI()
+    if not self.frame then return end
+
     local characters = AlterEgo:GetCharacters()
     local frameWidth = self.constants.table.colWidth
     local rowIndex = 0
@@ -519,7 +539,7 @@ function AlterEgo:UpdateUI()
         self.frame[characterRowFrame]:SetSize(frameWidth, self.constants.table.rowHeight)
         local characterCellName = characterRowFrame .. "CELL0"
         self.frame[characterCellName]:SetSize(self.constants.table.colWidth, self.constants.table.rowHeight)
-        self.frame[characterCellName].fontString:SetText(MaxLength(row.label))
+        self.frame[characterCellName].fontString:SetText(row.label)
 
         local columnIndex = 1
         for _, character in pairs(characters) do
