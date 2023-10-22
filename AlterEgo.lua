@@ -357,6 +357,7 @@ function AlterEgo:CreateUI()
     self.frame:SetSize(0, 0)
     self.frame:SetBackdrop(self.constants.backdrop)
     self.frame:SetBackdropColor(self.constants.colors.primary:GetRGBA())
+    self.frame:SetFrameStrata("HIGH")
 
     -- TODO: Uncomment for release
     -- tinsert(UISpecialFrames, self.frame:GetName())
