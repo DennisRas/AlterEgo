@@ -8,13 +8,13 @@ AlterEgo.constants = {
         cellLength = 18
     },
     colors = {
-        -- primary = CreateColorFromHexString("ff15161a"), -- 0.08235294117647059, 0.08627450980392157, 0.10196078431372549
-        primary = CreateColorFromHexString("FF21232C"), -- 0.1803921568627451, 0.19607843137254902, 0.2784313725490196
-        dark = CreateColorFromHexString("FF1B1C24"), -- 0.058823529411764705, 0.058823529411764705, 0.07058823529411765
-        light = CreateColorFromHexString("FF252833"), -- 0.10196078431372549, 0.10588235294117647, 0.12156862745098039
-        lighter = CreateColorFromHexString("FF222329"), -- 0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3
-        highlight = CreateColorFromHexString("FF2E313A"), -- 0.21568627450980393, 0.22745098039215686, 0.2784313725490196, 0.3
-        font = CreateColorFromHexString("FF9097BD"), -- 0.3254901960784314, 0.35294117647058826, 0.5137254901960784
+        primary = CreateColorFromHexString("FF21232C"),
+        darker = CreateColorFromHexString("FF14151A"),
+        dark = CreateColorFromHexString("FF1B1C24"),
+        light = CreateColorFromHexString("FF252833"),
+        lighter = CreateColorFromHexString("FF222329"),
+        highlight = CreateColorFromHexString("FF2E313A"),
+        font = CreateColorFromHexString("FF9097BD"),
     },
     backdrop = {
         bgFile = "Interface/BUTTONS/WHITE8X8",
@@ -358,6 +358,45 @@ function AlterEgo:CreateUI()
     self.frame:SetBackdrop(self.constants.backdrop)
     self.frame:SetBackdropColor(self.constants.colors.primary:GetRGBA())
 
+    -- TODO: Uncomment for release
+    -- tinsert(UISpecialFrames, self.frame:GetName())
+
+    self.frame.header = CreateFrame("Frame", self.frame:GetName() .. "HEADER", self.frame, "BackdropTemplate")
+    self.frame.header:SetPoint("BOTTOM", self.frame, "TOP")
+    self.frame.header:SetSize(self.frame:GetWidth(), self.constants.table.rowHeight)
+    self.frame.header:SetBackdrop(self.constants.backdrop)
+    self.frame.header:SetBackdropColor(self.constants.colors.darker:GetRGBA())
+    self.frame.header.fontString = self.frame.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    self.frame.header.fontString:SetSize(self.frame.header:GetSize())
+    self.frame.header.fontString:SetPoint("CENTER", self.frame.header, "CENTER", 0, 0)
+    self.frame.header.fontString:SetJustifyH("CENTER")
+    self.frame.header.fontString:SetText("AlterEgo")
+    self.frame.header.closeBtn = CreateFrame("Frame", self.frame.header:GetName() .. "CLOSEBTN", self.frame.header, "BackdropTemplate")
+    self.frame.header.closeBtn:SetPoint("RIGHT", self.frame.header, "RIGHT", 0, 0)
+    self.frame.header.closeBtn:SetSize(self.constants.table.rowHeight, self.constants.table.rowHeight)
+    self.frame.header.closeBtn:SetBackdrop(self.constants.backdrop)
+    self.frame.header.closeBtn:SetBackdropColor(1,1,1,0)
+    self.frame.header.closeBtn:SetScript("OnEnter", function()
+        self.frame.header.closeBtn:SetBackdropColor(1,1,1,0.15)
+    end)
+    self.frame.header.closeBtn:SetScript("OnLeave", function()
+        self.frame.header.closeBtn:SetBackdropColor(1,1,1,0)
+    end)
+    self.frame.header.closeBtn:SetScript("OnLeave", function()
+        self.frame.header.closeBtn:SetBackdropColor(1,1,1,0)
+    end)
+    self.frame.header.closeBtn:SetScript("OnMouseDown", function()
+        self.frame.header.closeBtn:SetBackdropColor(1,1,1,0)
+        self.frame:Hide()
+    end)
+    self.frame.header.closeBtn.fontString = self.frame.header.closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    self.frame.header.closeBtn.fontString:SetSize(self.frame.header.closeBtn:GetSize())
+    self.frame.header.closeBtn.fontString:SetPoint("CENTER", self.frame.header.closeBtn, "CENTER", 0, 0)
+    self.frame.header.closeBtn.fontString:SetJustifyH("CENTER")
+    self.frame.header.closeBtn.fontString:SetText("X")
+    local font, size = self.frame.header.closeBtn.fontString:GetFont()
+    self.frame.header.closeBtn.fontString:SetFont(font, size + 1)
+
     local rowIndex = 0
 
     -- Character loop
@@ -609,4 +648,5 @@ function AlterEgo:UpdateUI()
     end
 
     self.frame:SetSize(frameWidth, self.constants.table.rowHeight * rowIndex)
+    self.frame.header:SetWidth(self.frame:GetWidth())
 end
