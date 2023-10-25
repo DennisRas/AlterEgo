@@ -11,6 +11,20 @@ AlterEgo.constants = {
         titleBarHeight = 28,
         borderWidth = 3
     },
+    sizes = {
+        row = 22,
+        column = 120,
+        border = {
+            width = 3
+        },
+        titlebar = {
+            height = 30
+        },
+        sidebar = {
+            width = 100,
+            collapsedWidth = 30
+        }
+    },
     colors = {
         primary = CreateColorFromHexString("FF21232C"),
         border = CreateColorFromHexString("FF14151A"),
