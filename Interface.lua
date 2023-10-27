@@ -8,7 +8,7 @@ local assets = {
     },
 }
 local sizes = {
-    padding = 4,
+    padding = 8,
     row = 22,
     column = 120,
     border = 4,
@@ -16,12 +16,13 @@ local sizes = {
         height = 30
     },
     sidebar = {
-        width = 140,
+        width = 150,
         collapsedWidth = 30
     }
 }
 local colors = {
-    primary = CreateColorFromHexString("FF21232C"),
+    primary = CreateColorFromHexString("FF21162c"),
+    dark = CreateColorFromHexString("FF1b1225"),
 }
 
 local function SetBackgroundColor(parent, r, g, b, a)
@@ -32,6 +33,15 @@ local function SetBackgroundColor(parent, r, g, b, a)
     end
 
     parent.Background:SetVertexColor(r, g, b, a)
+end
+
+function AlterEgo:ToggleWindow()
+    if not self.Window then return end
+    if self.Window:IsVisible() then
+        self.Window:Hide()
+    else
+        self.Window:Show()
+    end
 end
 
 function AlterEgo:GetWindowSize()
@@ -75,25 +85,29 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar:SetPoint("TOPLEFT", self.Window, "TOPLEFT")
     self.Window.TitleBar:SetPoint("TOPRIGHT", self.Window, "TOPRIGHT")
     self.Window.TitleBar:SetHeight(sizes.titlebar.height)
-    SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.75)
+    SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.4)
     self.Window.TitleBar.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT")
-    self.Window.TitleBar.Icon:SetSize(20, 20)
-    -- self.Window.TitleBar.Icon:SetTexture("...") -- TODO: Create icon
+    self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", sizes.padding, 0)
+    self.Window.TitleBar.Icon:SetSize(16, 16)
+    self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/Logo.tga")
     self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString(self.Window.TitleBar:GetName() .. "Text", "OVERLAY")
-    self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 28, 0)
+    self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 16 + sizes.padding + 4, 0)
     self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
     self.Window.TitleBar.Text:SetText("AlterEgo")
+    -- self.Window.TitleBar.Text:SetVertexColor(1, 0, 1, 1)
     self.Window.TitleBar.Dropdowns = CreateFrame("Frame", self.Window.TitleBar:GetName() .. "Dropdowns", self.Window.TitleBar)
     self.Window.TitleBar.CloseButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "CloseButton", self.Window.TitleBar)
-    self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT")
-    self.Window.TitleBar.CloseButton:SetSize(20, 20)
+    self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", -sizes.padding, 0)
+    self.Window.TitleBar.CloseButton:SetSize(24, 20)
     SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
     self.Window.TitleBar.CloseButton:SetScript("OnEnter", function()
-        SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.1)
+        SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05)
     end)
     self.Window.TitleBar.CloseButton:SetScript("OnLeave", function()
         SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
+    end)
+    self.Window.TitleBar.CloseButton:SetScript("OnMouseUp", function()
+        self:ToggleWindow()
     end)
     self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
     self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
@@ -105,13 +119,13 @@ function AlterEgo:CreateUI()
     self.Window.Body:SetPoint("TOPRIGHT", self.Window.TitleBar, "BOTTOMRIGHT")
     self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
     self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
-    SetBackgroundColor(self.Window.Body, 0, 0, 0, 0.1)
+    SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
     -- Sidebar
     self.Window.Body.Sidebar = CreateFrame("Frame", self.Window.Body:GetName() .. "Sidebar", self.Window.Body)
     self.Window.Body.Sidebar:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT")
     self.Window.Body.Sidebar:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT")
     self.Window.Body.Sidebar:SetWidth(sizes.sidebar.width)
-    SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.25)
+    SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.2)
 
     -- Character labels
     for i, label in ipairs(labels) do
@@ -131,7 +145,7 @@ function AlterEgo:CreateUI()
         CharacterLabel.Text:SetJustifyH("LEFT")
         CharacterLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         CharacterLabel.Text:SetText(label)
-        CharacterLabel.Text:SetVertexColor(1, 0, 0, 1)
+        CharacterLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
     end
 
     local DungeonHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label", self.Window.Body.Sidebar)
@@ -144,6 +158,7 @@ function AlterEgo:CreateUI()
     DungeonHeaderLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
     DungeonHeaderLabel.Text:SetJustifyH("LEFT")
     DungeonHeaderLabel.Text:SetText("Dungeons")
+    DungeonHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
 
     -- Dungeon names
     for i, dungeon in ipairs(dungeons) do
@@ -159,14 +174,14 @@ function AlterEgo:CreateUI()
 
         DungeonLabel:SetHeight(sizes.row)
         DungeonLabel.Text = DungeonLabel:CreateFontString(DungeonLabel:GetName() .. "Text", "OVERLAY")
-        DungeonLabel.Text:SetPoint("TOPLEFT", DungeonLabel, "TOPLEFT", 24, -3)
-        DungeonLabel.Text:SetPoint("BOTTOMRIGHT", DungeonLabel, "BOTTOMRIGHT", -6, 3)
+        DungeonLabel.Text:SetPoint("TOPLEFT", DungeonLabel, "TOPLEFT", 16 + sizes.padding * 2, -3)
+        DungeonLabel.Text:SetPoint("BOTTOMRIGHT", DungeonLabel, "BOTTOMRIGHT", -sizes.padding, 3)
         DungeonLabel.Text:SetJustifyH("LEFT")
         DungeonLabel.Text:SetFont(assets.font.file, assets.font.size - 2, assets.font.flags)
         DungeonLabel.Text:SetText(dungeon.name)
         DungeonLabel.Icon = DungeonLabel:CreateTexture(DungeonLabel:GetName() .. "Icon", "ARTWORK")
         DungeonLabel.Icon:SetSize(16, 16)
-        DungeonLabel.Icon:SetPoint("LEFT", DungeonLabel, "LEFT", 4, 0)
+        DungeonLabel.Icon:SetPoint("LEFT", DungeonLabel, "LEFT", sizes.padding, 0)
         DungeonLabel.Icon:SetTexture(dungeon.icon)
     end
 
@@ -250,7 +265,7 @@ function AlterEgo:CreateUI()
                 AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOM")
             end
 
-            SetBackgroundColor(AffixHeader, 0, 0, 0, .3)
+            SetBackgroundColor(AffixHeader, 0, 0, 0, 0.2)
             AffixHeader.Icon = AffixHeader:CreateTexture(AffixHeader:GetName() .. "Icon", "ARTWORK")
             AffixHeader.Icon:SetTexture(affix.icon)
             AffixHeader.Icon:SetSize(16, 16)
@@ -268,7 +283,7 @@ function AlterEgo:CreateUI()
                 DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
                 DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
                 -- DungeonFrame:SetWidth(sizes.column / 2)
-                SetBackgroundColor(DungeonFrame, 1, 1, 1, k % 2 == 0 and 0.02 or 0)
+                SetBackgroundColor(DungeonFrame, 1, 1, 1, k % 2 == 0 and 0.01 or 0)
                 DungeonFrame.Text = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Text", "OVERLAY")
                 DungeonFrame.Text:SetPoint("TOPLEFT", DungeonFrame, "TOPLEFT", 1, -1)
                 DungeonFrame.Text:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOM", -1, 1)

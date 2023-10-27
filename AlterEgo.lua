@@ -1,9 +1,17 @@
 ---@diagnostic disable: undefined-field, inject-field, duplicate-set-field
 AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
+AlterEgo.Libs = {}
+AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
+AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
 
 local defaultDB = {
     global = {
         characters = {},
+        settings = {
+            minimap = {
+                hide = false
+            }
+        }
     },
     profile = {
         settings = {}
@@ -25,17 +33,25 @@ function AlterEgo:OnInitialize()
     self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "OnMythicPlusEvent")
     self:RegisterEvent("CHALLENGE_MODE_RESET", "OnMythicPlusEvent")
 
+    local libDataObject = {
+        label = "AlterEgo",
+        tocname = "AlterEgo",
+        type = "launcher",
+        icon = "Interface/AddOns/AlterEgo/Logo.tga",
+        OnClick = function()
+            self:OnSlashCommand()
+        end,
+    }
+
+    self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
+    self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.settings.minimap)
+
     self:UpdateDB()
     self:CreateUI()
 end
 
 function AlterEgo:OnSlashCommand(message)
-    if not self.Window then return end
-    if self.Window:IsVisible() then
-        self.Window:Hide()
-    else
-        self.Window:Show()
-    end
+    self:ToggleWindow()
 end
 
 function AlterEgo:OnInventoryEvent()
