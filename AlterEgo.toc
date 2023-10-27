@@ -20,4 +20,3 @@ Libs\AceConfig-3.0\AceConfig-3.0.xml
 AlterEgo.lua
 Database.lua
 Interface.lua
-Util.lua
