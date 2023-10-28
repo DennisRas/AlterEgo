@@ -69,30 +69,30 @@ function AlterEgo:GetDungeons()
 end
 
 function AlterEgo:GetCharacters(unfiltered)
-    local unfiltered = {}
+    local characters = {}
     for charachterId, character in pairs(self.db.global.characters) do
-        table.insert(unfiltered, character)
+        table.insert(characters, character)
     end
 
     -- Sorting
     -- TODO: Options
-    table.sort(unfiltered, function (a, b)
+    table.sort(characters, function (a, b)
         return a.lastUpdate > b.lastUpdate
     end)
 
     -- Filters
     if not unfiltered then
-        return unfiltered
+        return characters
     end
 
-    local filtered = {}
+    local charactersFiltered = {}
     for i, character in ipairs(unfiltered) do
         if character.level ~= nil and character.level == 70 then
-            table.insert(filtered, character)
+            table.insert(charactersFiltered, character)
         end
     end
 
-    return filtered
+    return charactersFiltered
 end
 
 function AlterEgo:GetDungeonByMapId(mapId)
@@ -187,13 +187,20 @@ function AlterEgo:UpdateMythicPlus()
         end
 
         if character.bestDungeons[dungeon.id] == nil then
-            character.bestDungeons[dungeon.id] = {}
+            character.bestDungeons[dungeon.id] = {
+                bestTimed = {},
+                bestNotTimed = {},
+                affixScores = {},
+                bestOverAllScore = 0
+            }
         end
 
-        local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
-        if affixScores ~= nil then
-            character.bestDungeons[dungeon.id] = affixScores
-        end
+        local bestTimed, bestNotTimed = C_MythicPlus.GetSeasonBestForMap(dungeon.id);
+        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
+        if bestTimed ~= nil then character.bestDungeons[dungeon.id].bestTimed = bestTimed end
+        if bestNotTimed ~= nil then character.bestDungeons[dungeon.id].bestNotTimed = bestNotTimed end
+        if affixScores ~= nil then character.bestDungeons[dungeon.id].affixScores = affixScores end
+        if bestOverAllScore ~= nil then character.bestDungeons[dungeon.id].bestOverAllScore = bestOverAllScore end
     end
 
     character.lastUpdate = time()
