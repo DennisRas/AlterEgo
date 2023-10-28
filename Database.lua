@@ -2,6 +2,7 @@
 local defaultCharacter = {
     name = "",
     realm = "",
+    level = 0,
     class = "",
     ilvl = {
         level = 0,
@@ -37,32 +38,60 @@ local dataDungeons = {
 }
 
 function AlterEgo:GetAffixes()
-    -- Sorting?
-    return dataAffixes
+    local result = {}
+    for id, affix in pairs(dataAffixes) do
+        table.insert(result, affix)
+    end
+
+    table.sort(result, function (a, b)
+        return a.id < b.id
+    end)
+
+    return result
 end
 
 function AlterEgo:GetDungeons()
-    -- Sorting?
-    return dataDungeons
+    local result = {}
+    for d, dungeon in pairs(dataDungeons) do
+        table.insert(result, dungeon)
+    end
+
+    table.sort(result, function (a, b)
+        return a.name < b.name
+    end)
+
+    return result
 end
 
 function AlterEgo:GetCharacters(unfiltered)
-    local characters = self.db.global.characters
-    local result = {}
+    local unfiltered = {}
+    for charachterId, character in pairs(self.db.global.characters) do
+        table.insert(unfiltered, character)
+    end
 
     -- Sorting
+    -- TODO: Options
+    table.sort(unfiltered, function (a, b)
+        return a.lastUpdate > b.lastUpdate
+    end)
 
     -- Filters
     if not unfiltered then
-        return characters
+        return unfiltered
     end
 
-    return characters
+    local filtered = {}
+    for i, character in ipairs(unfiltered) do
+        if character.level ~= nil and character.level == 70 then
+            table.insert(filtered, character)
+        end
+    end
+
+    return filtered
 end
 
 function AlterEgo:GetDungeonByMapId(mapId)
-    local dungeons = self:GetDungeons()
-    for dungeonId, dungeon in pairs(dungeons) do
+    for dungeonId, dungeon in pairs(dataDungeons) do
         if dungeon.mapId == mapId then
             return dungeon
         end
@@ -88,11 +117,13 @@ function AlterEgo:UpdateCharacterInfo()
     local character = self.db.global.characters[playerGUID]
     local playerName = UnitName("player")
     local playerRealm = GetRealmName()
+    local playerLevel = UnitLevel("player")
     local _, playerClass = UnitClass("player")
     local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
     local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
     if playerName then character.name = playerName end
     if playerRealm then character.realm = playerRealm end
+    if playerLevel then character.level = playerLevel end
     if playerClass then character.class = playerClass end
     if avgItemLevel then character.ilvl.level = avgItemLevel end
     if avgItemLevelEquipped then character.ilvl.equipped = avgItemLevelEquipped end
@@ -126,7 +157,6 @@ function AlterEgo:UpdateMythicPlus()
         return self:ScheduleTimer("UpdateMythicPlus", 2)
     end
 
-    local dungeons = self:GetDungeons()
     local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
     local runHistory = C_MythicPlus.GetRunHistory(true, true)
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
@@ -139,12 +169,12 @@ function AlterEgo:UpdateMythicPlus()
     if keyStoneLevel ~= nil then character.key.level = keyStoneLevel end
     if vault ~= nil then character.vault = vault end
 
-    for i, dungeon in pairs(dungeons) do
-        if dungeons[i].texture == nil then
-            local dungeonName, dungeonId, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
-            dungeons[i].name = dungeonName
-            dungeons[i].time = dungeonTimeLimit
-            dungeons[i].texture = dungeonTexture
+    for dungeonId, dungeon in pairs(dataDungeons) do
+        if dungeon.texture == nil then
+            local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+            dungeon.name = dungeonName
+            dungeon.time = dungeonTimeLimit
+            dungeon.texture = dungeonTexture
         end
 
         if character.bestDungeons == nil then
