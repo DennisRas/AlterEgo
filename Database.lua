@@ -1,58 +1,68 @@
 ---@diagnostic disable: inject-field
 local defaultCharacter = {
-    name = "-",
-    realm = "-",
+    name = "",
+    realm = "",
     class = "",
-    itemLevel = 0,
-    itemLevelColor = "ffffffff",
+    ilvl = {
+        level = 0,
+        equipped = 0,
+        pvp = 0,
+        color = "ffffffff"
+    },
     vault = {},
-    key = { map = 0, level = 0 },
-    dungeons = {}
+    key = {  map = 0, level = 0 },
+    ratingSummary = {
+        runs = {},
+        currentSeasonScore = 0
+    },
+    history = {},
+    bestDungeons = {},
+    lastUpdate = 0
 }
 
-local affixes = {
-    { id = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas" },
-    { id = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness" },
+local dataAffixes = {
+    [9] = { id = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas" },
+    [10] = { id = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness" },
 }
-local dungeons = {
-    { id = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
-    { id = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
-    { id = 251, mapId = 1841, time = 0, abbr = "UR", name = "The Underrot" },
-    { id = 403, mapId = 2451, time = 0, abbr = "UL", name = "Uldaman: Legacy of Tyr" },
-    { id = 404, mapId = 2519, time = 0, abbr = "NEL", name = "Neltharus" },
-    { id = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
-    { id = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
-    { id = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
+
+local dataDungeons = {
+    [206] = { id = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
+    [245] = { id = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
+    [251] = { id = 251, mapId = 1841, time = 0, abbr = "UR", name = "The Underrot" },
+    [403] = { id = 403, mapId = 2451, time = 0, abbr = "UL", name = "Uldaman: Legacy of Tyr" },
+    [404] = { id = 404, mapId = 2519, time = 0, abbr = "NEL", name = "Neltharus" },
+    [405] = { id = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
+    [406] = { id = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
+    [438] = { id = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
 }
 
 function AlterEgo:GetAffixes()
     -- Sorting?
-    return affixes
-end
-
-function AlterEgo:GetCharacters()
-    local characters = self.db.global.characters
-    local result = {}
-
-    -- Temp fix
-    for i, character in pairs(characters) do
-        table.insert(result, character)
-    end
-
-    -- Filters
-    -- Sorting
-
-    return result
+    return dataAffixes
 end
 
 function AlterEgo:GetDungeons()
     -- Sorting?
-    return dungeons
+    return dataDungeons
+end
+
+function AlterEgo:GetCharacters(unfiltered)
+    local characters = self.db.global.characters
+    local result = {}
+
+    -- Sorting
+
+    -- Filters
+    if not unfiltered then
+        return characters
+    end
+
+    return characters
 end
 
 function AlterEgo:GetDungeonByMapId(mapId)
     local dungeons = self:GetDungeons()
-    for i, dungeon in ipairs(dungeons) do
+    for dungeonId, dungeon in pairs(dungeons) do
         if dungeon.mapId == mapId then
             return dungeon
         end
@@ -75,30 +85,23 @@ function AlterEgo:UpdateCharacterInfo()
         self.db.global.characters[playerGUID] = defaultCharacter
     end
 
+    local character = self.db.global.characters[playerGUID]
     local playerName = UnitName("player")
-    if playerName then
-        self.db.global.characters[playerGUID].name = playerName
-    end
-
     local playerRealm = GetRealmName()
-    if playerRealm then
-        self.db.global.characters[playerGUID].realm = playerRealm
-    end
-
     local _, playerClass = UnitClass("player")
-    if playerClass then
-        self.db.global.characters[playerGUID].class = playerClass
-    end
-
-    local _, avgItemLevelEquipped = GetAverageItemLevel()
-    if avgItemLevelEquipped then
-        self.db.global.characters[playerGUID].itemLevel = avgItemLevelEquipped
-    end
-
+    local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
     local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
+    if playerName then character.name = playerName end
+    if playerRealm then character.realm = playerRealm end
+    if playerClass then character.class = playerClass end
+    if avgItemLevel then character.ilvl.level = avgItemLevel end
+    if avgItemLevelEquipped then character.ilvl.equipped = avgItemLevelEquipped end
+    if avgItemLevelPvp then character.ilvl.pvp = avgItemLevelPvp end
     if itemLevelColorR and itemLevelColorG and itemLevelColorB then
-        self.db.global.characters[playerGUID].itemLevelColor = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
+        character.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
     end
+
+    character.lastUpdate = time()
     self:UpdateUI()
 end
 
@@ -114,58 +117,50 @@ function AlterEgo:UpdateMythicPlus()
 
     -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
     -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
-    -- local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
-    -- local history = C_MythicPlus.GetRunHistory(true)
-    -- C_ChallengeMode.GetMapUIInfo(2527)
 
+    local character = self.db.global.characters[playerGUID]
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
-    if ratingSummary then
-        self.db.global.characters[playerGUID].rating = ratingSummary.currentSeasonScore
-    else
+    if not ratingSummary then
         C_MythicPlus.RequestMapInfo()
-        return self:ScheduleTimer("UpdateMythicPlus", 1)
-    end
-
-    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-    if keyStoneMapID then
-        self.db.global.characters[playerGUID].key.map = keyStoneMapID
-    end
-
-    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-    if keyStoneLevel then
-        self.db.global.characters[playerGUID].key.level = keyStoneLevel
+        ---@diagnostic disable-next-line: undefined-field
+        return self:ScheduleTimer("UpdateMythicPlus", 2)
     end
 
     local dungeons = self:GetDungeons()
-    for i, dungeon in pairs(dungeons) do
-        local _, __, time = C_ChallengeMode.GetMapUIInfo(dungeon.id)
-        dungeons[i].time = time
+    local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
+    local runHistory = C_MythicPlus.GetRunHistory(true, true)
+    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    local vault = C_WeeklyRewards.GetActivities(1)
+    if weeklyRewardAvailable ~= nil then character.weeklyRewardAvailable = weeklyRewardAvailable end
+    if ratingSummary ~= nil then character.ratingSummary = ratingSummary end
+    if runHistory ~= nil then character.history = runHistory end
+    if keyStoneMapID ~= nil then character.key.map = keyStoneMapID end
+    if keyStoneLevel ~= nil then character.key.level = keyStoneLevel end
+    if vault ~= nil then character.vault = vault end
 
-        if self.db.global.characters[playerGUID].dungeons[dungeon.id] == nil then
-            self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
-                ["Fortified"] = {},
-                ["Tyrannical"] = {},
-            }
+    for i, dungeon in pairs(dungeons) do
+        if dungeons[i].texture == nil then
+            local dungeonName, dungeonId, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+            dungeons[i].name = dungeonName
+            dungeons[i].time = dungeonTimeLimit
+            dungeons[i].texture = dungeonTexture
+        end
+
+        if character.bestDungeons == nil then
+            character.bestDungeons = {}
+        end
+
+        if character.bestDungeons[dungeon.id] == nil then
+            character.bestDungeons[dungeon.id] = {}
         end
 
         local affixScores = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
         if affixScores ~= nil then
-            local fortified = 0
-            local tyrannical = 0
-            for _, affixScore in pairs(affixScores) do
-                self.db.global.characters[playerGUID].dungeons[dungeon.id][affixScore.name] = affixScore
-            end
-        else
-            self.db.global.characters[playerGUID].dungeons[dungeon.id] = {
-                ["Fortified"] = {},
-                ["Tyrannical"] = {},
-            }
+            character.bestDungeons[dungeon.id] = affixScores
         end
     end
 
-    local activities = C_WeeklyRewards.GetActivities(1)
-    for _, activity in pairs(activities) do
-        self.db.global.characters[playerGUID].vault[activity.index] = activity.level
-    end
+    character.lastUpdate = time()
     self:UpdateUI()
 end

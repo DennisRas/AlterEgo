@@ -61,3 +61,9 @@ end
 function AlterEgo:OnMythicPlusEvent()
     self:UpdateDB()
 end
+
+function AlterEgo:tablen(table)
+    local n = 0
+    for _ in pairs(table) do n = n + 1 end
+    return n
+end

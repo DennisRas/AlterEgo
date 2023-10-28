@@ -47,16 +47,17 @@ end
 function AlterEgo:GetWindowSize()
     local characters = self:GetCharacters()
     local dungeons = self:GetDungeons()
-    local width = sizes.sidebar.width + #characters * sizes.column
-    local height = sizes.titlebar.height + (#labels + 1 + #dungeons) * sizes.row
+    local width = sizes.sidebar.width + self:tablen(characters) * sizes.column
+    local height = sizes.titlebar.height + (self:tablen(labels) + 1 + self:tablen(dungeons)) * sizes.row
     return width, height
 end
 
 function AlterEgo:CreateUI()
     if self.Window then return end
 
+    local affixes = self:GetAffixes()
     local characters = self:GetCharacters()
-    local charactersUnfiltered = self:GetCharacters() -- TODO: FIX THIS
+    local charactersUnfiltered = self:GetCharacters(true)
     -- TODO: Create a method for this
     local dungeons = self:GetDungeons()
 
@@ -128,29 +129,31 @@ function AlterEgo:CreateUI()
     SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.2)
 
     -- Character labels
-    for i, label in ipairs(labels) do
-        local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. i, self.Window.Body.Sidebar)
-        if i > 1 then
-            CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. (i-1), "BOTTOMLEFT")
-            CharacterLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Label" .. (i-1), "BOTTOMRIGHT")
-        else
-            CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName(), "TOPLEFT")
-            CharacterLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName(), "TOPRIGHT")
-        end
+    do
+        for l, label in ipairs(labels) do
+            local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. l, self.Window.Body.Sidebar)
+            if l > 1 then
+                CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. (l-1), "BOTTOMLEFT")
+                CharacterLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Label" .. (l-1), "BOTTOMRIGHT")
+            else
+                CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName(), "TOPLEFT")
+                CharacterLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName(), "TOPRIGHT")
+            end
 
-        CharacterLabel:SetHeight(sizes.row)
-        CharacterLabel.Text = CharacterLabel:CreateFontString(CharacterLabel:GetName() .. "Text", "OVERLAY")
-        CharacterLabel.Text:SetPoint("LEFT", CharacterLabel, "LEFT", sizes.padding, 0)
-        CharacterLabel.Text:SetPoint("RIGHT", CharacterLabel, "RIGHT", -sizes.padding, 0)
-        CharacterLabel.Text:SetJustifyH("LEFT")
-        CharacterLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterLabel.Text:SetText(label)
-        CharacterLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+            CharacterLabel:SetHeight(sizes.row)
+            CharacterLabel.Text = CharacterLabel:CreateFontString(CharacterLabel:GetName() .. "Text", "OVERLAY")
+            CharacterLabel.Text:SetPoint("LEFT", CharacterLabel, "LEFT", sizes.padding, 0)
+            CharacterLabel.Text:SetPoint("RIGHT", CharacterLabel, "RIGHT", -sizes.padding, 0)
+            CharacterLabel.Text:SetJustifyH("LEFT")
+            CharacterLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterLabel.Text:SetText(label)
+            CharacterLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        end
     end
 
     local DungeonHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label", self.Window.Body.Sidebar)
-    DungeonHeaderLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. #labels, "BOTTOMLEFT")
-    DungeonHeaderLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Label" .. #labels, "BOTTOMRIGHT")
+    DungeonHeaderLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. self:tablen(labels), "BOTTOMLEFT")
+    DungeonHeaderLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Label" .. self:tablen(labels), "BOTTOMRIGHT")
     DungeonHeaderLabel:SetHeight(sizes.row)
     DungeonHeaderLabel.Text = DungeonHeaderLabel:CreateFontString(DungeonHeaderLabel:GetName() .. "Text", "OVERLAY")
     DungeonHeaderLabel.Text:SetPoint("TOPLEFT", DungeonHeaderLabel, "TOPLEFT", sizes.padding, 0)
@@ -161,28 +164,32 @@ function AlterEgo:CreateUI()
     DungeonHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
 
     -- Dungeon names
-    for i, dungeon in ipairs(dungeons) do
-        local DungeonLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. i, self.Window.Body.Sidebar)
+    do
+        local d = 1
+        for dungeonId, dungeon in pairs(dungeons) do
+            local DungeonLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. d, self.Window.Body.Sidebar)
 
-        if i > 1 then
-            DungeonLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (i-1), "BOTTOMLEFT")
-            DungeonLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (i-1), "BOTTOMRIGHT")
-        else
-            DungeonLabel:SetPoint("TOPLEFT", DungeonHeaderLabel:GetName(), "BOTTOMLEFT")
-            DungeonLabel:SetPoint("TOPRIGHT", DungeonHeaderLabel:GetName(), "BOTTOMRIGHT")
+            if d > 1 then
+                DungeonLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (d-1), "BOTTOMLEFT")
+                DungeonLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (d-1), "BOTTOMRIGHT")
+            else
+                DungeonLabel:SetPoint("TOPLEFT", DungeonHeaderLabel:GetName(), "BOTTOMLEFT")
+                DungeonLabel:SetPoint("TOPRIGHT", DungeonHeaderLabel:GetName(), "BOTTOMRIGHT")
+            end
+
+            DungeonLabel:SetHeight(sizes.row)
+            DungeonLabel.Text = DungeonLabel:CreateFontString(DungeonLabel:GetName() .. "Text", "OVERLAY")
+            DungeonLabel.Text:SetPoint("TOPLEFT", DungeonLabel, "TOPLEFT", 16 + sizes.padding * 2, -3)
+            DungeonLabel.Text:SetPoint("BOTTOMRIGHT", DungeonLabel, "BOTTOMRIGHT", -sizes.padding, 3)
+            DungeonLabel.Text:SetJustifyH("LEFT")
+            DungeonLabel.Text:SetFont(assets.font.file, assets.font.size - 2, assets.font.flags)
+            DungeonLabel.Text:SetText(dungeon.name)
+            DungeonLabel.Icon = DungeonLabel:CreateTexture(DungeonLabel:GetName() .. "Icon", "ARTWORK")
+            DungeonLabel.Icon:SetSize(16, 16)
+            DungeonLabel.Icon:SetPoint("LEFT", DungeonLabel, "LEFT", sizes.padding, 0)
+            DungeonLabel.Icon:SetTexture(dungeon.icon)
+            d = d + 1
         end
-
-        DungeonLabel:SetHeight(sizes.row)
-        DungeonLabel.Text = DungeonLabel:CreateFontString(DungeonLabel:GetName() .. "Text", "OVERLAY")
-        DungeonLabel.Text:SetPoint("TOPLEFT", DungeonLabel, "TOPLEFT", 16 + sizes.padding * 2, -3)
-        DungeonLabel.Text:SetPoint("BOTTOMRIGHT", DungeonLabel, "BOTTOMRIGHT", -sizes.padding, 3)
-        DungeonLabel.Text:SetJustifyH("LEFT")
-        DungeonLabel.Text:SetFont(assets.font.file, assets.font.size - 2, assets.font.flags)
-        DungeonLabel.Text:SetText(dungeon.name)
-        DungeonLabel.Icon = DungeonLabel:CreateTexture(DungeonLabel:GetName() .. "Icon", "ARTWORK")
-        DungeonLabel.Icon:SetSize(16, 16)
-        DungeonLabel.Icon:SetPoint("LEFT", DungeonLabel, "LEFT", sizes.padding, 0)
-        DungeonLabel.Icon:SetTexture(dungeon.icon)
     end
 
     self.Window.Body.ScrollFrame = CreateFrame("Frame", self.Window.Body:GetName() .. "ScrollFrame", self.Window.Body)
@@ -194,107 +201,117 @@ function AlterEgo:CreateUI()
     self.Window.Body.ScrollFrame.Characters:SetAllPoints()
 
     -- Characters
-    for i, _ in ipairs(charactersUnfiltered) do
-        local CharacterColumn = CreateFrame("Frame", self.Window.Body.ScrollFrame.Characters:GetName() .. i, self.Window.Body.ScrollFrame.Characters)
+    do
+        local c = 1
+        for characterId, character in pairs(characters) do
+            local CharacterColumn = CreateFrame("Frame", self.Window.Body.ScrollFrame.Characters:GetName() .. c, self.Window.Body.ScrollFrame.Characters)
 
-        if i > 1 then
-            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName() .. (i-1), "TOPRIGHT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName() .. (i-1), "BOTTOMRIGHT")
-        else
-            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "TOPLEFT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "BOTTOMLEFT")
-        end
-
-        CharacterColumn:SetWidth(sizes.column)
-        SetBackgroundColor(CharacterColumn, 1, 1, 1, i % 2 == 0 and 0.01 or 0)
-
-        -- Character info
-        CharacterColumn.Name = CreateFrame("Frame", CharacterColumn:GetName() .. "Name", CharacterColumn)
-        CharacterColumn.Name:SetPoint("TOPLEFT", CharacterColumn:GetName(), "TOPLEFT")
-        CharacterColumn.Name:SetPoint("TOPRIGHT", CharacterColumn:GetName(), "TOPRIGHT")
-        CharacterColumn.Name:SetHeight(sizes.row)
-        CharacterColumn.Name.Text = CharacterColumn.Name:CreateFontString(CharacterColumn.Name:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Name.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Name.Text:SetAllPoints()
-        CharacterColumn.Realm = CreateFrame("Frame", CharacterColumn:GetName() .. "Realm", CharacterColumn)
-        CharacterColumn.Realm:SetPoint("TOPLEFT", CharacterColumn.Name:GetName(), "BOTTOMLEFT")
-        CharacterColumn.Realm:SetPoint("TOPRIGHT", CharacterColumn.Name:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.Realm:SetHeight(sizes.row)
-        CharacterColumn.Realm.Text = CharacterColumn.Realm:CreateFontString(CharacterColumn.Realm:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Realm.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Realm.Text:SetAllPoints()
-        CharacterColumn.Rating = CreateFrame("Frame", CharacterColumn:GetName() .. "Rating", CharacterColumn)
-        CharacterColumn.Rating:SetPoint("TOPLEFT", CharacterColumn.Realm:GetName(), "BOTTOMLEFT")
-        CharacterColumn.Rating:SetPoint("TOPRIGHT", CharacterColumn.Realm:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.Rating:SetHeight(sizes.row)
-        CharacterColumn.Rating.Text = CharacterColumn.Rating:CreateFontString(CharacterColumn.Rating:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Rating.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Rating.Text:SetAllPoints()
-        CharacterColumn.ItemLevel = CreateFrame("Frame", CharacterColumn:GetName() .. "ItemLevel", CharacterColumn)
-        CharacterColumn.ItemLevel:SetPoint("TOPLEFT", CharacterColumn.Rating:GetName(), "BOTTOMLEFT")
-        CharacterColumn.ItemLevel:SetPoint("TOPRIGHT", CharacterColumn.Rating:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.ItemLevel:SetHeight(sizes.row)
-        CharacterColumn.ItemLevel.Text = CharacterColumn.ItemLevel:CreateFontString(CharacterColumn.ItemLevel:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.ItemLevel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.ItemLevel.Text:SetAllPoints()
-        CharacterColumn.Vault = CreateFrame("Frame", CharacterColumn:GetName() .. "Vault", CharacterColumn)
-        CharacterColumn.Vault:SetPoint("TOPLEFT", CharacterColumn.ItemLevel:GetName(), "BOTTOMLEFT")
-        CharacterColumn.Vault:SetPoint("TOPRIGHT", CharacterColumn.ItemLevel:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.Vault:SetHeight(sizes.row)
-        CharacterColumn.Vault.Text = CharacterColumn.Vault:CreateFontString(CharacterColumn.Vault:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Vault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Vault.Text:SetAllPoints()
-        CharacterColumn.CurrentKey = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
-        CharacterColumn.CurrentKey:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
-        CharacterColumn.CurrentKey:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.CurrentKey:SetHeight(sizes.row)
-        CharacterColumn.CurrentKey.Text = CharacterColumn.CurrentKey:CreateFontString(CharacterColumn.CurrentKey:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.CurrentKey.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.CurrentKey.Text:SetAllPoints()
-
-        -- Affix icons
-        for j, affix in ipairs(self:GetAffixes()) do
-            local AffixHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Affixes" .. j, CharacterColumn)
-            AffixHeader:SetHeight(sizes.row)
-
-            if j == 1 then
-                AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOMLEFT")
-                AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKey:GetName(), "BOTTOM")
+            if c > 1 then
+                CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName() .. (c-1), "TOPRIGHT")
+                CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName() .. (c-1), "BOTTOMRIGHT")
             else
-                AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKey:GetName(), "BOTTOMRIGHT")
-                AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOM")
+                CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "TOPLEFT")
+                CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "BOTTOMLEFT")
             end
 
-            SetBackgroundColor(AffixHeader, 0, 0, 0, 0.2)
-            AffixHeader.Icon = AffixHeader:CreateTexture(AffixHeader:GetName() .. "Icon", "ARTWORK")
-            AffixHeader.Icon:SetTexture(affix.icon)
-            AffixHeader.Icon:SetSize(16, 16)
-            AffixHeader.Icon:SetPoint("CENTER", AffixHeader, "CENTER", 0, 0)
+            CharacterColumn:SetWidth(sizes.column)
+            SetBackgroundColor(CharacterColumn, 1, 1, 1, c % 2 == 0 and 0.01 or 0)
 
-            -- Dungeon rows
-            for k, dungeon in ipairs(dungeons) do
-                local DungeonFrame = CreateFrame("Frame", AffixHeader:GetName() .. "Dungeons" .. k, AffixHeader)
-                local relativeTo = AffixHeader:GetName()
-                if k > 1 then
-                    relativeTo = AffixHeader:GetName() .. "Dungeons" .. (k-1)
+            -- Character info
+            CharacterColumn.Name = CreateFrame("Frame", CharacterColumn:GetName() .. "Name", CharacterColumn)
+            CharacterColumn.Name:SetPoint("TOPLEFT", CharacterColumn:GetName(), "TOPLEFT")
+            CharacterColumn.Name:SetPoint("TOPRIGHT", CharacterColumn:GetName(), "TOPRIGHT")
+            CharacterColumn.Name:SetHeight(sizes.row)
+            CharacterColumn.Name.Text = CharacterColumn.Name:CreateFontString(CharacterColumn.Name:GetName() .. "Text", "OVERLAY")
+            CharacterColumn.Name.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterColumn.Name.Text:SetAllPoints()
+            CharacterColumn.Realm = CreateFrame("Frame", CharacterColumn:GetName() .. "Realm", CharacterColumn)
+            CharacterColumn.Realm:SetPoint("TOPLEFT", CharacterColumn.Name:GetName(), "BOTTOMLEFT")
+            CharacterColumn.Realm:SetPoint("TOPRIGHT", CharacterColumn.Name:GetName(), "BOTTOMRIGHT")
+            CharacterColumn.Realm:SetHeight(sizes.row)
+            CharacterColumn.Realm.Text = CharacterColumn.Realm:CreateFontString(CharacterColumn.Realm:GetName() .. "Text", "OVERLAY")
+            CharacterColumn.Realm.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterColumn.Realm.Text:SetAllPoints()
+            CharacterColumn.Rating = CreateFrame("Frame", CharacterColumn:GetName() .. "Rating", CharacterColumn)
+            CharacterColumn.Rating:SetPoint("TOPLEFT", CharacterColumn.Realm:GetName(), "BOTTOMLEFT")
+            CharacterColumn.Rating:SetPoint("TOPRIGHT", CharacterColumn.Realm:GetName(), "BOTTOMRIGHT")
+            CharacterColumn.Rating:SetHeight(sizes.row)
+            CharacterColumn.Rating.Text = CharacterColumn.Rating:CreateFontString(CharacterColumn.Rating:GetName() .. "Text", "OVERLAY")
+            CharacterColumn.Rating.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterColumn.Rating.Text:SetAllPoints()
+            CharacterColumn.ItemLevel = CreateFrame("Frame", CharacterColumn:GetName() .. "ItemLevel", CharacterColumn)
+            CharacterColumn.ItemLevel:SetPoint("TOPLEFT", CharacterColumn.Rating:GetName(), "BOTTOMLEFT")
+            CharacterColumn.ItemLevel:SetPoint("TOPRIGHT", CharacterColumn.Rating:GetName(), "BOTTOMRIGHT")
+            CharacterColumn.ItemLevel:SetHeight(sizes.row)
+            CharacterColumn.ItemLevel.Text = CharacterColumn.ItemLevel:CreateFontString(CharacterColumn.ItemLevel:GetName() .. "Text", "OVERLAY")
+            CharacterColumn.ItemLevel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterColumn.ItemLevel.Text:SetAllPoints()
+            CharacterColumn.Vault = CreateFrame("Frame", CharacterColumn:GetName() .. "Vault", CharacterColumn)
+            CharacterColumn.Vault:SetPoint("TOPLEFT", CharacterColumn.ItemLevel:GetName(), "BOTTOMLEFT")
+            CharacterColumn.Vault:SetPoint("TOPRIGHT", CharacterColumn.ItemLevel:GetName(), "BOTTOMRIGHT")
+            CharacterColumn.Vault:SetHeight(sizes.row)
+            CharacterColumn.Vault.Text = CharacterColumn.Vault:CreateFontString(CharacterColumn.Vault:GetName() .. "Text", "OVERLAY")
+            CharacterColumn.Vault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterColumn.Vault.Text:SetAllPoints()
+            CharacterColumn.CurrentKey = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
+            CharacterColumn.CurrentKey:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
+            CharacterColumn.CurrentKey:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
+            CharacterColumn.CurrentKey:SetHeight(sizes.row)
+            CharacterColumn.CurrentKey.Text = CharacterColumn.CurrentKey:CreateFontString(CharacterColumn.CurrentKey:GetName() .. "Text", "OVERLAY")
+            CharacterColumn.CurrentKey.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterColumn.CurrentKey.Text:SetAllPoints()
+
+            -- Affix icons
+            local a = 1
+            for affixId, affix in pairs(affixes) do
+                local AffixHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Affixes" .. a, CharacterColumn)
+                AffixHeader:SetHeight(sizes.row)
+
+                if a == 1 then
+                    AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOMLEFT")
+                    AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKey:GetName(), "BOTTOM")
+                else
+                    AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKey:GetName(), "BOTTOMRIGHT")
+                    AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOM")
                 end
 
-                DungeonFrame:SetHeight(sizes.row)
-                DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
-                DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
-                -- DungeonFrame:SetWidth(sizes.column / 2)
-                SetBackgroundColor(DungeonFrame, 1, 1, 1, k % 2 == 0 and 0.01 or 0)
-                DungeonFrame.Text = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Text", "OVERLAY")
-                DungeonFrame.Text:SetPoint("TOPLEFT", DungeonFrame, "TOPLEFT", 1, -1)
-                DungeonFrame.Text:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOM", -1, 1)
-                DungeonFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-                DungeonFrame.Text:SetJustifyH("RIGHT")
-                DungeonFrame.Tier = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Tier", "OVERLAY")
-                DungeonFrame.Tier:SetPoint("TOPLEFT", DungeonFrame, "TOP", 1, -1)
-                DungeonFrame.Tier:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOMRIGHT", -1, 1)
-                DungeonFrame.Tier:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-                DungeonFrame.Tier:SetJustifyH("LEFT")
+                SetBackgroundColor(AffixHeader, 0, 0, 0, 0.2)
+                AffixHeader.Icon = AffixHeader:CreateTexture(AffixHeader:GetName() .. "Icon", "ARTWORK")
+                AffixHeader.Icon:SetTexture(affix.icon)
+                AffixHeader.Icon:SetSize(16, 16)
+                AffixHeader.Icon:SetPoint("CENTER", AffixHeader, "CENTER", 0, 0)
+
+                -- Dungeon rows
+                -- TODO: Create a shared dungeon frame for hovering and tooltip
+                local k = 1
+                for dungeonId, dungeon in pairs(dungeons) do
+                    local DungeonFrame = CreateFrame("Frame", AffixHeader:GetName() .. "Dungeons" .. k, AffixHeader)
+                    local relativeTo = AffixHeader:GetName()
+
+                    if k > 1 then
+                        relativeTo = AffixHeader:GetName() .. "Dungeons" .. (k-1)
+                    end
+
+                    DungeonFrame:SetHeight(sizes.row)
+                    DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
+                    DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
+                    -- DungeonFrame:SetWidth(sizes.column / 2)
+                    SetBackgroundColor(DungeonFrame, 1, 1, 1, k % 2 == 0 and 0.01 or 0)
+                    DungeonFrame.Text = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Text", "OVERLAY")
+                    DungeonFrame.Text:SetPoint("TOPLEFT", DungeonFrame, "TOPLEFT", 1, -1)
+                    DungeonFrame.Text:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOM", -1, 1)
+                    DungeonFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+                    DungeonFrame.Text:SetJustifyH("RIGHT")
+                    DungeonFrame.Tier = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Tier", "OVERLAY")
+                    DungeonFrame.Tier:SetPoint("TOPLEFT", DungeonFrame, "TOP", 1, -1)
+                    DungeonFrame.Tier:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOMRIGHT", -1, 1)
+                    DungeonFrame.Tier:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+                    DungeonFrame.Tier:SetJustifyH("LEFT")
+                    k = k + 1
+                end
+                a = a + 1
             end
+            c = c + 1
         end
     end
 
@@ -306,122 +323,158 @@ function AlterEgo:UpdateUI()
 
     self.Window:SetSize(self:GetWindowSize())
 
+    local affixes = self:GetAffixes()
     local characters = self:GetCharacters()
-    local charactersUnfiltered = self.db.global.characters
-    -- TODO: Create a method for this
+    local charactersUnfiltered = self:GetCharacters(true)
     local dungeons = self:GetDungeons()
 
     -- Dungeon names
-    for i, dungeon in ipairs(dungeons) do
-        local DungeonLabel = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. i]
-        DungeonLabel.Icon:SetTexture(dungeon.icon)
-        DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        DungeonLabel.Text:SetText(dungeon.name)
-        local _, _, _, texture = C_ChallengeMode.GetMapUIInfo(dungeon.id);
-        local mapIconTexture = "Interface/Icons/achievement_bg_wineos_underxminutes"
-        if texture ~= 0 then
-            mapIconTexture = tostring(texture)
+    do
+        local d = 1
+        for dungeonId, dungeon in pairs(dungeons) do
+            local DungeonLabel = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. d]
+            DungeonLabel.Icon:SetTexture(dungeon.icon)
+            DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            DungeonLabel.Text:SetText(dungeon.name)
+            local mapIconTexture = "Interface/Icons/achievement_bg_wineos_underxminutes"
+            if dungeon.texture ~= 0 then
+                mapIconTexture = tostring(dungeon.texture)
+            end
+            DungeonLabel.Icon:SetTexture(mapIconTexture)
+            d = d + 1
         end
-        DungeonLabel.Icon:SetTexture(mapIconTexture)
     end
 
     -- Characters
-    local totalColumns = #charactersUnfiltered
-    for i, character in ipairs(characters) do
+    do
+        local totalColumns = self:tablen(charactersUnfiltered)
+        local c = 1
+        for characterId, character in pairs(characters) do
+            local name = "-"
+            local nameColor = "ffffffff"
+            local realm = "-"
+            local realmColor = "ffffffff"
+            local rating = "-"
+            local ratingColor = "ffffffff"
+            local itemLevel = "-"
+            local itemLevelColor = "ffffffff"
+            local vaultLevels = ""
+            local currentKey = "-"
 
-        local name = character.name
-        local nameColor = "ffffffff"
-        local realm = character.realm
-        local realmColor = "ffffffff"
-        local rating = character.rating
-        local ratingColor = "ffffffff"
-        local itemLevel = character.itemLevel
-        local itemLevelColor = "ffffffff"
-        local vault = ""
-        local currentKey = "-"
-
-        if character.class ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.class)
-            if classColor ~= nil then
-                nameColor = classColor.GenerateHexColor(classColor)
+            if character.name ~= nil then
+                name = character.name
             end
-        end
 
-        if rating and rating > 0 then
-            local color = C_ChallengeMode.GetDungeonScoreRarityColor(rating)
-            if color ~= nil then
-                ratingColor = color.GenerateHexColor(color)
+            if character.realm ~= nil then
+                realm = character.realm
             end
-        else
-            rating = "-"
-        end
 
-        if itemLevel == nil then
-            itemLevel = "-"
-        else
-            itemLevel = floor(itemLevel)
-        end
-
-        if character.itemLevelColor then
-            itemLevelColor = character.itemLevelColor
-        end
-
-        for _, key in ipairs(character.vault) do
-            if key == 0 then
-                vault = "-"
-            end
-            vault = vault .. vault .. "  "
-        end
-
-        if character.key and character.key.map and character.key.level then
-            local dungeon = self:GetDungeonByMapId(character.key.map)
-            if dungeon then
-                currentKey = dungeon.abbr .. " +" .. character.key.level
-            end
-        end
-
-        local CharacterColumn = _G[self.Window.Body.ScrollFrame.Characters:GetName() .. i]
-        CharacterColumn.Name.Text:SetText("|c" .. nameColor .. name .. "|r")
-        CharacterColumn.Realm.Text:SetText("|c" .. realmColor .. realm .. "|r")
-        CharacterColumn.Rating.Text:SetText("|c" .. ratingColor .. rating .. "|r")
-        CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
-        CharacterColumn.Vault.Text:SetText(vault:trim())
-        CharacterColumn.CurrentKey.Text:SetText(currentKey)
-
-        -- TODO: Create a method for affixes
-        for j, affix in ipairs(self:GetAffixes()) do
-            for k, dungeon in ipairs(dungeons) do
-                local DungeonFrame = _G[CharacterColumn:GetName() .. "Affixes" .. j .. "Dungeons" .. k]
-                local bestRun = character.dungeons[dungeon.id][affix.name]
-                local level = "-"
-                local levelColor = "ffffffff"
-                local tier = ""
-
-                if bestRun == nil or bestRun.level == nil or bestRun.score == nil or bestRun.durationSec == nil then
-                    level = "-"
-                    levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                else
-                    level = bestRun.level
-
-                    if bestRun.durationSec <= dungeon.time * 0.6 then
-                        tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                    elseif bestRun.durationSec <= dungeon.time * 0.8 then
-                        tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                    elseif bestRun.durationSec <= dungeon.time then
-                        tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                    else
-                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                    end
+            if character.class ~= nil then
+                local classColor = C_ClassColor.GetClassColor(character.class)
+                if classColor ~= nil then
+                    nameColor = classColor.GenerateHexColor(classColor)
                 end
-
-                -- TODO: Align based on tier visibility
-                DungeonFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
-                DungeonFrame.Tier:SetText(tier)
-                -- DungeonFrame.Text:SetPoint("TOPLEFT", DungeonFrame, "TOPLEFT")
-                -- DungeonFrame.Text:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOM")
-                -- DungeonFrame.Tier:SetPoint("TOPRIGHT", DungeonFrame, "TOPRIGHT")
-                -- DungeonFrame.Tier:SetPoint("BOTTOMLEFT", DungeonFrame, "BOTTOM")
             end
+
+            if character.ratingSummary ~= nil and character.ratingSummary.currentSeasonScore ~= nil then
+                local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.ratingSummary.currentSeasonScore)
+                if color ~= nil then
+                    ratingColor = color.GenerateHexColor(color)
+                end
+                rating = tostring(character.ratingSummary.currentSeasonScore)
+            end
+
+            if character.ilvl ~= nil and character.ilvl.level ~= nil then
+                itemLevel = tostring(floor(character.ilvl.level))
+            end
+
+            if character.itemLevelColor then
+                itemLevelColor = character.itemLevelColor
+            end
+
+            for _, vault in ipairs(character.vault) do
+                local level = "-"
+                if vault.level > 0 then
+                    level = tostring(vault.level)
+                end
+                vaultLevels = vaultLevels .. level .. "  "
+            end
+
+            if character.key ~= nil and character.key.map ~= nil and character.key.level ~= nil then
+                local dungeon = self:GetDungeonByMapId(character.key.map)
+                if dungeon then
+                    currentKey = dungeon.abbr .. " +" .. tostring(character.key.level)
+                end
+            end
+
+            local CharacterColumn = _G[self.Window.Body.ScrollFrame.Characters:GetName() .. c]
+            CharacterColumn.Name.Text:SetText("|c" .. nameColor .. name .. "|r")
+            CharacterColumn.Realm.Text:SetText("|c" .. realmColor .. realm .. "|r")
+            CharacterColumn.Rating.Text:SetText("|c" .. ratingColor .. rating .. "|r")
+            CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
+            CharacterColumn.Vault.Text:SetText(vaultLevels:trim())
+            CharacterColumn.CurrentKey.Text:SetText(currentKey)
+
+            local a = 1
+            for affixId, affix in pairs(affixes) do
+                local d = 1
+                for dungeonId, dungeon in pairs(dungeons) do
+                    local DungeonFrame = _G[CharacterColumn:GetName() .. "Affixes" .. a .. "Dungeons" .. d]
+                    local level = "-"
+                    local levelColor = "ffffffff"
+                    local tier = ""
+
+                    if character.bestDungeons == nil or character.bestDungeons[dungeon.id] == nil then
+                        level = "-"
+                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                    else
+                        for b, bestDungeon in ipairs(character.bestDungeons[dungeon.id]) do
+                            if bestDungeon.name == affix.name then
+                                level = bestDungeon.level
+
+                                if bestDungeon.durationSec <= dungeon.time * 0.6 then
+                                    tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                                elseif bestDungeon.durationSec <= dungeon.time * 0.8 then
+                                    tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                                elseif bestDungeon.durationSec <= dungeon.time then
+                                    tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                                else
+                                    levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                                end
+                            end
+                        end
+                        
+                    end
+
+                    -- if bestRuns == nil or bestRun.level == nil or bestRun.score == nil or bestRun.durationSec == nil then
+                    --     level = "-"
+                    --     levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                    -- else
+                    --     level = bestRun.level
+
+                    --     if bestRun.durationSec <= dungeon.time * 0.6 then
+                    --         tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                    --     elseif bestRun.durationSec <= dungeon.time * 0.8 then
+                    --         tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                    --     elseif bestRun.durationSec <= dungeon.time then
+                    --         tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                    --     else
+                    --         levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                    --     end
+                    -- end
+
+                    -- TODO: Align based on tier visibility
+                    DungeonFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
+                    DungeonFrame.Tier:SetText(tier)
+                    -- DungeonFrame.Text:SetPoint("TOPLEFT", DungeonFrame, "TOPLEFT")
+                    -- DungeonFrame.Text:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOM")
+                    -- DungeonFrame.Tier:SetPoint("TOPRIGHT", DungeonFrame, "TOPRIGHT")
+                    -- DungeonFrame.Tier:SetPoint("BOTTOMLEFT", DungeonFrame, "BOTTOM")
+                    d = d + 1
+                end
+                a = a + 1
+            end
+            c = c + 1
         end
     end
 
