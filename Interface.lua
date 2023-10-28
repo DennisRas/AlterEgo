@@ -273,6 +273,17 @@ function AlterEgo:CreateUI()
             AffixHeader.Icon:SetTexture(affix.icon)
             AffixHeader.Icon:SetSize(16, 16)
             AffixHeader.Icon:SetPoint("CENTER", AffixHeader, "CENTER", 0, 0)
+            AffixHeader:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(AffixHeader, "ANCHOR_RIGHT")
+                GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
+                GameTooltip:AddLine(affix.description, nil, nil, nil, true);
+                GameTooltip:Show()
+            end)
+            AffixHeader:SetScript("OnLeave", function ()
+                GameTooltip:Hide()
+            end)
 
             -- Dungeon rows
             -- TODO: Create a shared dungeon frame for hovering and tooltip

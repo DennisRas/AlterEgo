@@ -40,6 +40,11 @@ local dataDungeons = {
 function AlterEgo:GetAffixes()
     local result = {}
     for id, affix in pairs(dataAffixes) do
+        if affix.description == nil then
+            local name, description = C_ChallengeMode.GetAffixInfo(affix.id);
+            affix.name = name
+            affix.description = description
+        end
         table.insert(result, affix)
     end
 
