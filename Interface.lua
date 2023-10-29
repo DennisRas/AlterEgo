@@ -77,12 +77,8 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar = CreateFrame("Frame", self.Window:GetName() .. "TitleBar", self.Window)
     self.Window.TitleBar:EnableMouse(true)
     self.Window.TitleBar:RegisterForDrag("LeftButton")
-    self.Window.TitleBar:SetScript("OnDragStart", function()
-        self.Window:StartMoving()
-    end)
-    self.Window.TitleBar:SetScript("OnDragStop", function()
-        self.Window:StopMovingOrSizing()
-    end)
+    self.Window.TitleBar:SetScript("OnDragStart", function() self.Window:StartMoving() end)
+    self.Window.TitleBar:SetScript("OnDragStop", function() self.Window:StopMovingOrSizing() end)
     self.Window.TitleBar:SetPoint("TOPLEFT", self.Window, "TOPLEFT")
     self.Window.TitleBar:SetPoint("TOPRIGHT", self.Window, "TOPRIGHT")
     self.Window.TitleBar:SetHeight(sizes.titlebar.height)
@@ -278,9 +274,7 @@ function AlterEgo:CreateUI()
                 GameTooltip:AddLine(affix.description, nil, nil, nil, true);
                 GameTooltip:Show()
             end)
-            AffixFrame:SetScript("OnLeave", function ()
-                GameTooltip:Hide()
-            end)
+            AffixFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
         end
 
         -- Dungeon rows
@@ -354,9 +348,7 @@ function AlterEgo:UpdateUI()
             GameTooltip:Show()
         end)
 
-        DungeonLabel:SetScript("OnLeave", function ()
-            GameTooltip:Hide()
-        end)
+        DungeonLabel:SetScript("OnLeave", function() GameTooltip:Hide() end)
     end
 
     -- Characters
@@ -481,9 +473,7 @@ function AlterEgo:UpdateUI()
             GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             GameTooltip:Show()
         end)
-        CharacterColumn.Rating:SetScript("OnLeave", function ()
-            GameTooltip:Hide()
-        end)
+        CharacterColumn.Rating:SetScript("OnLeave", function() GameTooltip:Hide() end)
         CharacterColumn.Rating:SetScript("OnClick", function()
             if IsModifiedClick("CHATLINK") then
                 local dungeonScoreDungeonTable = { };
@@ -513,8 +503,6 @@ function AlterEgo:UpdateUI()
             end
         end)
 
-
-
         CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
         if itemLevelTooltip then
             CharacterColumn.ItemLevel:SetScript("OnEnter", function()
@@ -525,10 +513,9 @@ function AlterEgo:UpdateUI()
                 GameTooltip:AddLine(itemLevelTooltip2,  NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
                 GameTooltip:Show()
             end)
-            CharacterColumn.ItemLevel:SetScript("OnLeave", function ()
-                GameTooltip:Hide()
-            end)
+            CharacterColumn.ItemLevel:SetScript("OnLeave", function() GameTooltip:Hide() end)
         end
+
         CharacterColumn.Vault.Text:SetText(vaultLevels:trim())
         CharacterColumn.CurrentKey.Text:SetText(currentKey)
 
@@ -573,11 +560,11 @@ function AlterEgo:UpdateUI()
                 GameTooltip:Show()
                 SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
             end)
-            DungeonFrame:SetScript("OnLeave", function ()
+            DungeonFrame:SetScript("OnLeave", function()
                 GameTooltip:Hide()
                 SetBackgroundColor(DungeonFrame, 1, 1, 1, d % 2 == 0 and 0.01 or 0)
             end)
-            
+
             for a, affix in ipairs(affixes) do
                 local AffixFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. d .. "Affix" .. a]
                 local level = "-"
