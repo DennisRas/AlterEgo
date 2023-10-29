@@ -37,7 +37,7 @@ function AlterEgo:OnInitialize()
         label = "AlterEgo",
         tocname = "AlterEgo",
         type = "launcher",
-        icon = "Interface/AddOns/AlterEgo/Logo.tga",
+        icon = "Interface/AddOns/AlterEgo/Logo.blp",
         OnClick = function()
             self:OnSlashCommand()
         end,

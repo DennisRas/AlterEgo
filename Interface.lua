@@ -21,8 +21,8 @@ local sizes = {
     }
 }
 local colors = {
-    primary = CreateColorFromHexString("FF21162c"),
-    dark = CreateColorFromHexString("FF1b1225"),
+    primary = CreateColorFromHexString("FF98cbd8"),
+    dark = CreateColorFromHexString("FF1d242a"),
 }
 
 local function SetBackgroundColor(parent, r, g, b, a)
@@ -66,7 +66,7 @@ function AlterEgo:CreateUI()
     self.Window:SetClampedToScreen(true)
     self.Window:SetMovable(true)
     self.Window:SetPoint("CENTER")
-    SetBackgroundColor(self.Window, colors.primary:GetRGBA())
+    SetBackgroundColor(self.Window, colors.dark:GetRGBA())
     -- Border
     -- TODO: Make this work with insets
     self.Window.Border = CreateFrame("Frame", self.Window:GetName() .. "Border", self.Window, "BackdropTemplate")
@@ -82,29 +82,42 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar:SetPoint("TOPLEFT", self.Window, "TOPLEFT")
     self.Window.TitleBar:SetPoint("TOPRIGHT", self.Window, "TOPRIGHT")
     self.Window.TitleBar:SetHeight(sizes.titlebar.height)
-    SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.4)
+    SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.5)
     self.Window.TitleBar.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", sizes.padding, 0)
-    self.Window.TitleBar.Icon:SetSize(16, 16)
-    self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/Logo.tga")
+    self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 6, 0)
+    self.Window.TitleBar.Icon:SetSize(20, 20)
+    self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/LogoTransparent.blp")
     self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString(self.Window.TitleBar:GetName() .. "Text", "OVERLAY")
-    self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 16 + sizes.padding + 4, 0)
+    self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + sizes.padding, -1)
     self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
     self.Window.TitleBar.Text:SetText("AlterEgo")
     -- self.Window.TitleBar.Text:SetVertexColor(1, 0, 1, 1)
     self.Window.TitleBar.Dropdowns = CreateFrame("Frame", self.Window.TitleBar:GetName() .. "Dropdowns", self.Window.TitleBar)
     self.Window.TitleBar.CloseButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "CloseButton", self.Window.TitleBar)
-    self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", -sizes.padding, 0)
-    self.Window.TitleBar.CloseButton:SetSize(24, 20)
+    self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", 0, 0)
+    self.Window.TitleBar.CloseButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
     self.Window.TitleBar.CloseButton:RegisterForClicks("AnyUp")
     SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
-    self.Window.TitleBar.CloseButton:SetScript("OnEnter", function() SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05) end)
-    self.Window.TitleBar.CloseButton:SetScript("OnLeave", function() SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0) end)
+    self.Window.TitleBar.CloseButton:SetScript("OnEnter", function()
+        self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(self.Window.TitleBar.CloseButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Close the window", 1, 1, 1, 1, true);
+        GameTooltip:Show()
+    end)
+    self.Window.TitleBar.CloseButton:SetScript("OnLeave", function()
+        self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+    end)
     self.Window.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
     self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
     self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
-    self.Window.TitleBar.CloseButton.Icon:SetSize(16, 16)
-    self.Window.TitleBar.CloseButton.Icon:SetTexture("...") -- TODO: Create texture
+    self.Window.TitleBar.CloseButton.Icon:SetSize(10, 10)
+    self.Window.TitleBar.CloseButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Close.blp") -- TODO: Create texture
+    self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     -- Body
     self.Window.Body = CreateFrame("Frame", self.Window:GetName() .. "Body", self.Window)
     self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")
@@ -117,7 +130,7 @@ function AlterEgo:CreateUI()
     self.Window.Body.Sidebar:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT")
     self.Window.Body.Sidebar:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT")
     self.Window.Body.Sidebar:SetWidth(sizes.sidebar.width)
-    SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.2)
+    SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.3)
 
     -- Character labels
     do
@@ -250,7 +263,7 @@ function AlterEgo:CreateUI()
         CharacterColumn.AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOMLEFT")
         CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKey:GetName(), "BOTTOMRIGHT")
         CharacterColumn.AffixHeader:SetHeight(sizes.row)
-        SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.2)
+        SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
 
         -- Affix header icons
         for a, affix in ipairs(affixes) do
