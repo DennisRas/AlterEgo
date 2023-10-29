@@ -3,7 +3,11 @@ local defaultCharacter = {
     name = "",
     realm = "",
     level = 0,
-    class = "",
+    class = {
+        name = "",
+        file = "",
+        id = 0
+    },
     ilvl = {
         level = 0,
         equipped = 0,
@@ -70,7 +74,8 @@ end
 
 function AlterEgo:GetCharacters(unfiltered)
     local characters = {}
-    for _, character in pairs(self.db.global.characters) do
+    for characterGUID, character in pairs(self.db.global.characters) do
+        character.GUID = characterGUID
         table.insert(characters, character)
     end
 
@@ -123,13 +128,18 @@ function AlterEgo:UpdateCharacterInfo()
     local playerName = UnitName("player")
     local playerRealm = GetRealmName()
     local playerLevel = UnitLevel("player")
-    local _, playerClass = UnitClass("player")
+    local playerClassName, playerClassFile, playerClassID = UnitClass("player")
     local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
     local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
     if playerName then character.name = playerName end
     if playerRealm then character.realm = playerRealm end
     if playerLevel then character.level = playerLevel end
-    if playerClass then character.class = playerClass end
+    if type(character.class) ~= "table" then
+        character.class = {}
+    end
+    if playerClassName then character.class.name = playerClassName end
+    if playerClassFile then character.class.file = playerClassFile end
+    if playerClassID then character.class.id = playerClassID end
     if avgItemLevel then character.ilvl.level = avgItemLevel end
     if avgItemLevelEquipped then character.ilvl.equipped = avgItemLevelEquipped end
     if avgItemLevelPvp then character.ilvl.pvp = avgItemLevelPvp end
@@ -167,12 +177,15 @@ function AlterEgo:UpdateMythicPlus()
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
     local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
     local vault = C_WeeklyRewards.GetActivities(1)
+    local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion(); 
     if weeklyRewardAvailable ~= nil then character.weeklyRewardAvailable = weeklyRewardAvailable end
     if ratingSummary ~= nil then character.ratingSummary = ratingSummary end
     if runHistory ~= nil then character.history = runHistory end
     if keyStoneMapID ~= nil then character.key.map = keyStoneMapID end
     if keyStoneLevel ~= nil then character.key.level = keyStoneLevel end
     if vault ~= nil then character.vault = vault end
+    if bestSeasonScore ~= nil then character.bestSeasonScore = bestSeasonScore end
+    if bestSeasonNumber ~= nil then character.bestSeasonNumber = bestSeasonNumber end
 
     for dungeonId, dungeon in pairs(dataDungeons) do
         if dungeon.texture == nil then

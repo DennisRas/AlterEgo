@@ -226,10 +226,11 @@ function AlterEgo:CreateUI()
         CharacterColumn.Realm.Text = CharacterColumn.Realm:CreateFontString(CharacterColumn.Realm:GetName() .. "Text", "OVERLAY")
         CharacterColumn.Realm.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         CharacterColumn.Realm.Text:SetAllPoints()
-        CharacterColumn.Rating = CreateFrame("Frame", CharacterColumn:GetName() .. "Rating", CharacterColumn)
+        CharacterColumn.Rating = CreateFrame("Button", CharacterColumn:GetName() .. "Rating", CharacterColumn)
         CharacterColumn.Rating:SetPoint("TOPLEFT", CharacterColumn.Realm:GetName(), "BOTTOMLEFT")
         CharacterColumn.Rating:SetPoint("TOPRIGHT", CharacterColumn.Realm:GetName(), "BOTTOMRIGHT")
         CharacterColumn.Rating:SetHeight(sizes.row)
+        CharacterColumn.Rating:RegisterForClicks("AnyUp")
         CharacterColumn.Rating.Text = CharacterColumn.Rating:CreateFontString(CharacterColumn.Rating:GetName() .. "Text", "OVERLAY")
         CharacterColumn.Rating.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         CharacterColumn.Rating.Text:SetAllPoints()
@@ -378,6 +379,9 @@ function AlterEgo:UpdateUI()
         local itemLevelColor = "ffffffff"
         local vaultLevels = ""
         local currentKey = "-"
+        local bestSeasonScore = nil
+        local bestSeasonScoreColor = "ffffffff"
+        local bestSeasonNumber = nil
 
         if character.name ~= nil then
             name = character.name
@@ -387,8 +391,8 @@ function AlterEgo:UpdateUI()
             realm = character.realm
         end
 
-        if character.class ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.class)
+        if character.class.file ~= nil then
+            local classColor = C_ClassColor.GetClassColor(character.class.file)
             if classColor ~= nil then
                 nameColor = classColor.GenerateHexColor(classColor)
             end
@@ -437,10 +441,85 @@ function AlterEgo:UpdateUI()
             end
         end
 
+        if character.bestSeasonScore ~= nil then
+            bestSeasonScore = character.bestSeasonScore
+            local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
+            if color ~= nil then
+                bestSeasonScoreColor = color.GenerateHexColor(color)
+            end
+        end
+
+        if character.bestSeasonNumber ~= nil then
+            bestSeasonNumber = character.bestSeasonNumber
+        end
+
         local CharacterColumn = _G[self.Window.Body.ScrollFrame.Characters:GetName() .. c]
         CharacterColumn.Name.Text:SetText("|c" .. nameColor .. name .. "|r")
         CharacterColumn.Realm.Text:SetText("|c" .. realmColor .. realm .. "|r")
         CharacterColumn.Rating.Text:SetText("|c" .. ratingColor .. rating .. "|r")
+        CharacterColumn.Rating:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(CharacterColumn.ItemLevel, "ANCHOR_RIGHT")
+            GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
+            GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.history or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            if bestSeasonScore ~= nil then
+                local score = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
+                if bestSeasonNumber ~= nil then
+                    score = score .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
+                end
+                GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            end
+
+            if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
+                GameTooltip:AddLine(" ")
+                for r,run in ipairs(character.ratingSummary.runs) do
+                    local dungeonName = C_ChallengeMode.GetMapUIInfo(run.challengeModeID)
+                    if dungeonName ~= nil then
+                        GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(run.bestRunLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+                    end
+                end
+            end
+
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
+        end)
+        CharacterColumn.Rating:SetScript("OnLeave", function ()
+            GameTooltip:Hide()
+        end)
+        CharacterColumn.Rating:SetScript("OnClick", function()
+            if IsModifiedClick("CHATLINK") then
+                local dungeonScoreDungeonTable = { };
+                if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
+                    for _, run in ipairs(character.ratingSummary.runs) do
+                        table.insert(dungeonScoreDungeonTable, run.challengeModeID);
+                        table.insert(dungeonScoreDungeonTable, run.finishedSuccess and 1 or 0);
+                        table.insert(dungeonScoreDungeonTable, run.bestRunLevel);
+                    end
+                end
+                local dungeonScoreTable = {
+                    character.ratingSummary.currentSeasonScore,
+                    character.GUID,
+                    character.name,
+                    character.class.id,
+                    math.ceil(character.ilvl.level),
+                    character.level,
+                    character.history and #character.history or 0,
+                    character.bestSeasonScore,
+                    character.bestSeasonNumber,
+                    unpack(dungeonScoreDungeonTable)
+                };
+                local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+                if not ChatEdit_InsertLink(link) then
+                    ChatFrame_OpenChat(link);
+                end
+            end
+        end)
+
+
+
         CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
         if itemLevelTooltip then
             CharacterColumn.ItemLevel:SetScript("OnEnter", function()
