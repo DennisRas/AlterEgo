@@ -160,7 +160,7 @@ function AlterEgo:UpdateCharacterInfo()
         character.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
     end
 
-    character.lastUpdate = time()
+    character.lastUpdate = GetServerTime()
     self:UpdateUI()
 end
 
