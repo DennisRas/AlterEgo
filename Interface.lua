@@ -420,10 +420,9 @@ function AlterEgo:UpdateUI()
             if character.ilvl.level ~= nil and character.ilvl.pvp ~= nil and floor(character.ilvl.level) ~= character.ilvl.pvp then
                 itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.ilvl.pvp)));
             end
-        end
-
-        if character.itemLevelColor then
-            itemLevelColor = character.itemLevelColor
+            if character.ilvl.color then
+                itemLevelColor = character.ilvl.color
+            end
         end
 
         for _, vault in ipairs(character.vault) do
