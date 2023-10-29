@@ -70,7 +70,7 @@ end
 
 function AlterEgo:GetCharacters(unfiltered)
     local characters = {}
-    for charachterId, character in pairs(self.db.global.characters) do
+    for _, character in pairs(self.db.global.characters) do
         table.insert(characters, character)
     end
 
@@ -86,7 +86,7 @@ function AlterEgo:GetCharacters(unfiltered)
     end
 
     local charactersFiltered = {}
-    for i, character in ipairs(unfiltered) do
+    for _, character in ipairs(characters) do
         if character.level ~= nil and character.level == 70 then
             table.insert(charactersFiltered, character)
         end
