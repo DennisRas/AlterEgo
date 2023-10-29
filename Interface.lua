@@ -1,5 +1,5 @@
 ---@diagnostic disable: inject-field
-local labels = {"Character", "Realm", "Rating", "ItemLevel", "Vault", "Current Key"}
+local labels = {"Character", "Realm", "Rating", STAT_AVERAGE_ITEM_LEVEL, "Vault", "Current Key"}
 local assets = {
     font = {
         file = "Fonts\\FRIZQT__.TTF",
@@ -350,6 +350,17 @@ function AlterEgo:UpdateUI()
             mapIconTexture = tostring(dungeon.texture)
         end
         DungeonLabel.Icon:SetTexture(mapIconTexture)
+        DungeonLabel:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(DungeonLabel, "ANCHOR_RIGHT")
+            GameTooltip:SetText(dungeon.name, 1, 1, 1);
+            GameTooltip:Show()
+        end)
+
+        DungeonLabel:SetScript("OnLeave", function ()
+            GameTooltip:Hide()
+        end)
     end
 
     -- Characters
@@ -361,7 +372,9 @@ function AlterEgo:UpdateUI()
         local realmColor = "ffffffff"
         local rating = "-"
         local ratingColor = "ffffffff"
-        local itemLevel = "-"
+        local itemLevel = ""
+        local itemLevelTooltip = ""
+        local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
         local itemLevelColor = "ffffffff"
         local vaultLevels = ""
         local currentKey = "-"
@@ -389,8 +402,20 @@ function AlterEgo:UpdateUI()
             rating = tostring(character.ratingSummary.currentSeasonScore)
         end
 
-        if character.ilvl ~= nil and character.ilvl.level ~= nil then
-            itemLevel = tostring(floor(character.ilvl.level))
+        if character.ilvl ~= nil then
+            if character.ilvl.level ~= nil then
+                itemLevel = tostring(floor(character.ilvl.level))
+                itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.ilvl.level)
+            end
+            if character.ilvl.level ~= nil and character.ilvl.equipped ~= nil and character.ilvl.level ~= character.ilvl.equipped then
+                itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.ilvl.equipped);
+            end
+            if character.ilvl.level ~= nil then
+                itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
+            end
+            if character.ilvl.level ~= nil and character.ilvl.pvp ~= nil and floor(character.ilvl.level) ~= character.ilvl.pvp then
+                itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.ilvl.pvp)));
+            end
         end
 
         if character.itemLevelColor then
@@ -417,6 +442,19 @@ function AlterEgo:UpdateUI()
         CharacterColumn.Realm.Text:SetText("|c" .. realmColor .. realm .. "|r")
         CharacterColumn.Rating.Text:SetText("|c" .. ratingColor .. rating .. "|r")
         CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
+        if itemLevelTooltip then
+            CharacterColumn.ItemLevel:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(CharacterColumn.ItemLevel, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
+                GameTooltip:AddLine(itemLevelTooltip2,  NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+                GameTooltip:Show()
+            end)
+            CharacterColumn.ItemLevel:SetScript("OnLeave", function ()
+                GameTooltip:Hide()
+            end)
+        end
         CharacterColumn.Vault.Text:SetText(vaultLevels:trim())
         CharacterColumn.CurrentKey.Text:SetText(currentKey)
 
