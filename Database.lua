@@ -145,12 +145,15 @@ function AlterEgo:UpdateCharacterInfo()
     if playerName then character.name = playerName end
     if playerRealm then character.realm = playerRealm end
     if playerLevel then character.level = playerLevel end
+    if type(character.race) ~= "table" then character.race = defaultCharacter.race end
     if playerRaceName then character.race.name = playerRaceName end
     if playerRaceFile then character.race.file = playerRaceFile end
     if playerRaceID then character.race.id = playerRaceID end
+    if type(character.class) ~= "table" then character.class = defaultCharacter.class end
     if playerClassName then character.class.name = playerClassName end
     if playerClassFile then character.class.file = playerClassFile end
     if playerClassID then character.class.id = playerClassID end
+    if type(character.factionGroup) ~= "table" then character.factionGroup = defaultCharacter.factionGroup end
     if playerFactionGroupEnglish then character.factionGroup.english = playerFactionGroupEnglish end
     if playerFactionGroupLocalized then character.factionGroup.localized = playerFactionGroupLocalized end
     if avgItemLevel then character.ilvl.level = avgItemLevel end

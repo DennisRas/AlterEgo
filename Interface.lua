@@ -442,6 +442,22 @@ function AlterEgo:UpdateUI()
 
         local CharacterColumn = _G[self.Window.Body.ScrollFrame.Characters:GetName() .. c]
         CharacterColumn.Name.Text:SetText("|c" .. nameColor .. name .. "|r")
+        CharacterColumn.Name:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(CharacterColumn.Name, "ANCHOR_RIGHT")
+            GameTooltip:AddLine("|c" .. nameColor .. name .. "|r");
+            GameTooltip:AddLine(format("Level %d %s", character.level, character.race ~= nil and character.race.name or ""), 1, 1, 1);
+            if character.factionGroup ~= nil and character.factionGroup.localized~= nil then
+                GameTooltip:AddLine(character.factionGroup.localized, 1, 1, 1);
+            end
+            if character.lastUpdate ~= nil then
+                GameTooltip:AddLine(" ");
+                GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            end
+            GameTooltip:Show()
+        end)
+        CharacterColumn.Name:SetScript("OnLeave", function() GameTooltip:Hide() end)
         CharacterColumn.Realm.Text:SetText("|c" .. realmColor .. realm .. "|r")
         CharacterColumn.Rating.Text:SetText("|c" .. ratingColor .. rating .. "|r")
         CharacterColumn.Rating:SetScript("OnEnter", function()
