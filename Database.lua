@@ -3,10 +3,19 @@ local defaultCharacter = {
     name = "",
     realm = "",
     level = 0,
+    race = {
+        name = "",
+        file = "",
+        id = 0
+    },
     class = {
         name = "",
         file = "",
         id = 0
+    },
+    factionGroup = {
+        english = "",
+        localized = ""
     },
     ilvl = {
         level = 0,
@@ -128,18 +137,22 @@ function AlterEgo:UpdateCharacterInfo()
     local playerName = UnitName("player")
     local playerRealm = GetRealmName()
     local playerLevel = UnitLevel("player")
+    local playerRaceName, playerRaceFile, playerRaceID = UnitRace("player")
     local playerClassName, playerClassFile, playerClassID = UnitClass("player")
+    local playerFactionGroupEnglish, playerFactionGroupLocalized = UnitFactionGroup("player")
     local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
     local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
     if playerName then character.name = playerName end
     if playerRealm then character.realm = playerRealm end
     if playerLevel then character.level = playerLevel end
-    if type(character.class) ~= "table" then
-        character.class = {}
-    end
+    if playerRaceName then character.race.name = playerRaceName end
+    if playerRaceFile then character.race.file = playerRaceFile end
+    if playerRaceID then character.race.id = playerRaceID end
     if playerClassName then character.class.name = playerClassName end
     if playerClassFile then character.class.file = playerClassFile end
     if playerClassID then character.class.id = playerClassID end
+    if playerFactionGroupEnglish then character.factionGroup.english = playerFactionGroupEnglish end
+    if playerFactionGroupLocalized then character.factionGroup.localized = playerFactionGroupLocalized end
     if avgItemLevel then character.ilvl.level = avgItemLevel end
     if avgItemLevelEquipped then character.ilvl.equipped = avgItemLevelEquipped end
     if avgItemLevelPvp then character.ilvl.pvp = avgItemLevelPvp end
