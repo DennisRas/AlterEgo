@@ -487,7 +487,7 @@ function AlterEgo:UpdateUI()
                 GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             end
 
-            if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
+            if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
                 GameTooltip:AddLine(" ")
                 for r,run in ipairs(character.ratingSummary.runs) do
                     local dungeonName = C_ChallengeMode.GetMapUIInfo(run.challengeModeID)
@@ -495,42 +495,44 @@ function AlterEgo:UpdateUI()
                         GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(run.bestRunLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
                     end
                 end
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             end
-
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             GameTooltip:Show()
         end)
         CharacterColumn.Rating:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        CharacterColumn.Rating:SetScript("OnClick", function()
-            if IsModifiedClick("CHATLINK") then
-                local dungeonScoreDungeonTable = { };
-                if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
-                    for _, run in ipairs(character.ratingSummary.runs) do
-                        table.insert(dungeonScoreDungeonTable, run.challengeModeID);
-                        table.insert(dungeonScoreDungeonTable, run.finishedSuccess and 1 or 0);
-                        table.insert(dungeonScoreDungeonTable, run.bestRunLevel);
+        if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
+            CharacterColumn.Rating:SetScript("OnClick", function()
+                if IsModifiedClick("CHATLINK") then
+                    local dungeonScoreDungeonTable = { };
+                    if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
+                        for _, run in ipairs(character.ratingSummary.runs) do
+                            table.insert(dungeonScoreDungeonTable, run.challengeModeID);
+                            table.insert(dungeonScoreDungeonTable, run.finishedSuccess and 1 or 0);
+                            table.insert(dungeonScoreDungeonTable, run.bestRunLevel);
+                        end
+                    end
+                    local dungeonScoreTable = {
+                        character.ratingSummary.currentSeasonScore,
+                        character.GUID,
+                        character.name,
+                        character.class.id,
+                        math.ceil(character.ilvl.level),
+                        character.level,
+                        character.history and #character.history or 0,
+                        character.bestSeasonScore,
+                        character.bestSeasonNumber,
+                        unpack(dungeonScoreDungeonTable)
+                    };
+                    local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+                    if not ChatEdit_InsertLink(link) then
+                        ChatFrame_OpenChat(link);
                     end
                 end
-                local dungeonScoreTable = {
-                    character.ratingSummary.currentSeasonScore,
-                    character.GUID,
-                    character.name,
-                    character.class.id,
-                    math.ceil(character.ilvl.level),
-                    character.level,
-                    character.history and #character.history or 0,
-                    character.bestSeasonScore,
-                    character.bestSeasonNumber,
-                    unpack(dungeonScoreDungeonTable)
-                };
-                local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
-                if not ChatEdit_InsertLink(link) then
-                    ChatFrame_OpenChat(link);
-                end
-            end
-        end)
-
+            end)
+        else
+            CharacterColumn.Rating:SetScript("OnClick", nil)
+        end
         CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
         if itemLevelTooltip then
             CharacterColumn.ItemLevel:SetScript("OnEnter", function()
