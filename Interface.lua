@@ -104,7 +104,8 @@ function AlterEgo:CreateUI()
         GameTooltip:ClearAllPoints()
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(self.Window.TitleBar.CloseButton, "ANCHOR_TOP")
-        GameTooltip:SetText("Close the window", 1, 1, 1, 1, true);
+        GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
         GameTooltip:Show()
     end)
     self.Window.TitleBar.CloseButton:SetScript("OnLeave", function()
@@ -540,7 +541,7 @@ function AlterEgo:UpdateUI()
                 GameTooltip:ClearLines()
                 GameTooltip:SetOwner(CharacterColumn.ItemLevel, "ANCHOR_RIGHT")
                 GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
-                GameTooltip:AddLine(itemLevelTooltip2,  NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+                GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
                 GameTooltip:Show()
             end)
             CharacterColumn.ItemLevel:SetScript("OnLeave", function() GameTooltip:Hide() end)
