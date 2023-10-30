@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field
+---@diagnostic disable: inject-field, deprecated
 local labels = {"Character", "Realm", "Rating", STAT_AVERAGE_ITEM_LEVEL, "Vault", "Current Key"}
 local assets = {
     font = {
