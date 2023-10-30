@@ -475,7 +475,7 @@ function AlterEgo:UpdateUI()
         CharacterColumn.Rating:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(CharacterColumn.ItemLevel, "ANCHOR_RIGHT")
+            GameTooltip:SetOwner(CharacterColumn.Rating, "ANCHOR_RIGHT")
             GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
             GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.history or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
