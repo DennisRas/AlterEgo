@@ -1,5 +1,5 @@
 ---@diagnostic disable: inject-field, deprecated
-local labels = {"Character", "Realm", "Rating", STAT_AVERAGE_ITEM_LEVEL, "Vault", "Current Key"}
+local labels = {"Character", "Realm", "Rating", STAT_AVERAGE_ITEM_LEVEL, "Vault", "Current Keystone"}
 local assets = {
     font = {
         file = "Fonts\\FRIZQT__.TTF",
@@ -252,16 +252,16 @@ function AlterEgo:CreateUI()
         CharacterColumn.Vault.Text = CharacterColumn.Vault:CreateFontString(CharacterColumn.Vault:GetName() .. "Text", "OVERLAY")
         CharacterColumn.Vault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         CharacterColumn.Vault.Text:SetAllPoints()
-        CharacterColumn.CurrentKey = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
-        CharacterColumn.CurrentKey:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
-        CharacterColumn.CurrentKey:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.CurrentKey:SetHeight(sizes.row)
-        CharacterColumn.CurrentKey.Text = CharacterColumn.CurrentKey:CreateFontString(CharacterColumn.CurrentKey:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.CurrentKey.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.CurrentKey.Text:SetAllPoints()
+        CharacterColumn.CurrentKeystone = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
+        CharacterColumn.CurrentKeystone:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
+        CharacterColumn.CurrentKeystone:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
+        CharacterColumn.CurrentKeystone:SetHeight(sizes.row)
+        CharacterColumn.CurrentKeystone.Text = CharacterColumn.CurrentKeystone:CreateFontString(CharacterColumn.CurrentKeystone:GetName() .. "Text", "OVERLAY")
+        CharacterColumn.CurrentKeystone.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+        CharacterColumn.CurrentKeystone.Text:SetAllPoints()
         CharacterColumn.AffixHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Affixes", CharacterColumn)
-        CharacterColumn.AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKey:GetName(), "BOTTOMLEFT")
-        CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKey:GetName(), "BOTTOMRIGHT")
+        CharacterColumn.AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMLEFT")
+        CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMRIGHT")
         CharacterColumn.AffixHeader:SetHeight(sizes.row)
         SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
 
@@ -378,7 +378,7 @@ function AlterEgo:UpdateUI()
         local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
         local itemLevelColor = "ffffffff"
         local vaultLevels = ""
-        local currentKey = "-"
+        local currentKeystone = "-"
         local bestSeasonScore = nil
         local bestSeasonScoreColor = "ffffffff"
         local bestSeasonNumber = nil
@@ -436,7 +436,7 @@ function AlterEgo:UpdateUI()
         if character.key ~= nil and character.key.map ~= nil and character.key.level ~= nil then
             local dungeon = self:GetDungeonByMapId(character.key.map)
             if dungeon then
-                currentKey = dungeon.abbr .. " +" .. tostring(character.key.level)
+                currentKeystone = dungeon.abbr .. " +" .. tostring(character.key.level)
             end
         end
 
@@ -547,7 +547,7 @@ function AlterEgo:UpdateUI()
         end
 
         CharacterColumn.Vault.Text:SetText(vaultLevels:trim())
-        CharacterColumn.CurrentKey.Text:SetText(currentKey)
+        CharacterColumn.CurrentKeystone.Text:SetText(currentKeystone)
 
         for d, dungeon in ipairs(dungeons) do
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
