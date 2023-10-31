@@ -99,21 +99,21 @@ function AlterEgo:GetCharacters(unfiltered)
     -- ["ilvl.desc"] = "Item Level (Highest)",
     -- ["lastUpdate"] = "Recently played",
     table.sort(characters, function (a, b)
-        if self.db.profile.sorting == "name.asc" then
+        if self.db.global.sorting == "name.asc" then
             return a.name < b.name
-        elseif self.db.profile.sorting == "name.desc" then
+        elseif self.db.global.sorting == "name.desc" then
             return a.name > b.name
-        elseif self.db.profile.sorting == "realm.asc" then
+        elseif self.db.global.sorting == "realm.asc" then
             return a.realm < b.realm
-        elseif self.db.profile.sorting == "realm.desc" then
+        elseif self.db.global.sorting == "realm.desc" then
             return a.realm > b.realm
-        elseif self.db.profile.sorting == "rating.asc" then
+        elseif self.db.global.sorting == "rating.asc" then
             return a.ratingSummary.currentSeasonScore < b.ratingSummary.currentSeasonScore
-        elseif self.db.profile.sorting == "rating.desc" then
+        elseif self.db.global.sorting == "rating.desc" then
             return a.ratingSummary.currentSeasonScore > b.ratingSummary.currentSeasonScore
-        elseif self.db.profile.sorting == "ilvl.asc" then
+        elseif self.db.global.sorting == "ilvl.asc" then
             return a.ilvl.level < b.ilvl.level
-        elseif self.db.profile.sorting == "ilvl.desc" then
+        elseif self.db.global.sorting == "ilvl.desc" then
             return a.ilvl.level > b.ilvl.level
         end
         return a.lastUpdate > b.lastUpdate

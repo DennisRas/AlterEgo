@@ -131,7 +131,7 @@ function AlterEgo:CreateUI()
         SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
         GameTooltip:Hide()
     end)
-    
+
     self.Window.TitleBar.SettingsButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "SettingsButton", self.Window.TitleBar)
     self.Window.TitleBar.SettingsButton:SetPoint("RIGHT", self.Window.TitleBar.CloseButton, "LEFT", 0, 0)
     self.Window.TitleBar.SettingsButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
@@ -148,26 +148,26 @@ function AlterEgo:CreateUI()
     UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function(frame, level, menuList)
         local line = UIDropDownMenu_CreateInfo()
         line.text = "Show the minimap button"
-        line.checked = not self.db.profile.minimap.hide
+        line.checked = not self.db.global.minimap.hide
         line.isNotRadio = true
         line.tooltipTitle = "Show the minimap button"
         line.tooltipText = "It does get crowded around the minimap sometimes"
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
-            self.db.profile.minimap.hide = checked
-            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.profile.minimap)
+            self.db.global.minimap.hide = checked
+            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
         end
         UIDropDownMenu_AddButton(line)
         local line = UIDropDownMenu_CreateInfo()
         line.text = "Lock the minimap button"
-        line.checked = self.db.profile.minimap.lock
+        line.checked = self.db.global.minimap.lock
         line.isNotRadio = true
         line.tooltipTitle = "Lock the minimap button"
         line.tooltipText = "No more accidentally moving the button around!"
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
-            self.db.profile.minimap.lock = not checked
-            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.profile.minimap)
+            self.db.global.minimap.lock = not checked
+            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
         end
         UIDropDownMenu_AddButton(line)
     end, "MENU")
@@ -187,32 +187,8 @@ function AlterEgo:CreateUI()
         GameTooltip:Hide()
     end)
 
-    self.Window.TitleBar.ProfilesButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Profiles", self.Window.TitleBar)
-    self.Window.TitleBar.ProfilesButton:SetPoint("RIGHT", self.Window.TitleBar.SettingsButton, "LEFT", 0, 0)
-    self.Window.TitleBar.ProfilesButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-    self.Window.TitleBar.ProfilesButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.ProfilesButton:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.ProfilesButton.Icon:SetPoint("CENTER", self.Window.TitleBar.ProfilesButton, "CENTER")
-    self.Window.TitleBar.ProfilesButton.Icon:SetSize(15, 15)
-    self.Window.TitleBar.ProfilesButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Profiles.blp")
-    self.Window.TitleBar.ProfilesButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    self.Window.TitleBar.ProfilesButton:SetScript("OnEnter", function()
-        self.Window.TitleBar.ProfilesButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-        SetBackgroundColor(self.Window.TitleBar.ProfilesButton, 1, 1, 1, 0.05)
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self.Window.TitleBar.ProfilesButton, "ANCHOR_TOP")
-        GameTooltip:SetText("Profiles", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("Manage your profiles", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-        GameTooltip:Show()
-    end)
-    self.Window.TitleBar.ProfilesButton:SetScript("OnLeave", function()
-        self.Window.TitleBar.ProfilesButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        SetBackgroundColor(self.Window.TitleBar.ProfilesButton, 1, 1, 1, 0)
-        GameTooltip:Hide()
-    end)
-
     self.Window.TitleBar.SortingButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Sorting", self.Window.TitleBar)
-    self.Window.TitleBar.SortingButton:SetPoint("RIGHT", self.Window.TitleBar.ProfilesButton, "LEFT", 0, 0)
+    self.Window.TitleBar.SortingButton:SetPoint("RIGHT", self.Window.TitleBar.SettingsButton, "LEFT", 0, 0)
     self.Window.TitleBar.SortingButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
     self.Window.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SortingButton.Dropdown) end)
     self.Window.TitleBar.SortingButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
@@ -227,10 +203,10 @@ function AlterEgo:CreateUI()
         for value, text in pairs(sortingOptions) do
             local line = UIDropDownMenu_CreateInfo()
             line.text = text
-            line.checked = self.db.profile.sorting == value
+            line.checked = self.db.global.sorting == value
             line.arg1 = value
             line.func = function(button, arg1, arg2, checked)
-                self.db.profile.sorting = arg1
+                self.db.global.sorting = arg1
                 self:UpdateUI()
             end
             UIDropDownMenu_AddButton(line)
