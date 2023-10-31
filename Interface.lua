@@ -20,9 +20,22 @@ local sizes = {
         collapsedWidth = 30
     }
 }
+
 local colors = {
     primary = CreateColorFromHexString("FF98cbd8"),
     dark = CreateColorFromHexString("FF1d242a"),
+}
+
+local sortingOptions = {
+    ["name.asc"] = "Name (A-Z)",
+    ["name.desc"] = "Name (Z-A)",
+    ["realm.asc"] = "Realm (A-Z)",
+    ["realm.desc"] = "Realm (Z-A)",
+    ["rating.asc"] = "Rating (Lowest)",
+    ["rating.desc"] = "Rating (Highest)",
+    ["ilvl.asc"] = "Item Level (Lowest)",
+    ["ilvl.desc"] = "Item Level (Highest)",
+    ["lastUpdate"] = "Recently played",
 }
 
 local function SetBackgroundColor(parent, r, g, b, a)
@@ -58,7 +71,6 @@ function AlterEgo:CreateUI()
     local affixes = self:GetAffixes()
     local characters = self:GetCharacters()
     local charactersUnfiltered = self:GetCharacters(true)
-    -- TODO: Create a method for this
     local dungeons = self:GetDungeons()
 
     self.Window = CreateFrame("Frame", "AlterEgoWindow", UIParent)
@@ -67,12 +79,14 @@ function AlterEgo:CreateUI()
     self.Window:SetMovable(true)
     self.Window:SetPoint("CENTER")
     SetBackgroundColor(self.Window, colors.dark:GetRGBA())
+
     -- Border
     -- TODO: Make this work with insets
     self.Window.Border = CreateFrame("Frame", self.Window:GetName() .. "Border", self.Window, "BackdropTemplate")
     self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -10, -10)
     self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 10, 10)
     self.Window.Border:Hide()
+
     -- TitleBar
     self.Window.TitleBar = CreateFrame("Frame", self.Window:GetName() .. "TitleBar", self.Window)
     self.Window.TitleBar:EnableMouse(true)
@@ -86,18 +100,22 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar:GetName() .. "Icon", "ARTWORK")
     self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 6, 0)
     self.Window.TitleBar.Icon:SetSize(20, 20)
-    self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/LogoTransparent.blp")
+    self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/LogoTransparent.blp")
     self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString(self.Window.TitleBar:GetName() .. "Text", "OVERLAY")
     self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + sizes.padding, -1)
     self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
     self.Window.TitleBar.Text:SetText("AlterEgo")
-    -- self.Window.TitleBar.Text:SetVertexColor(1, 0, 1, 1)
-    self.Window.TitleBar.Dropdowns = CreateFrame("Frame", self.Window.TitleBar:GetName() .. "Dropdowns", self.Window.TitleBar)
+
     self.Window.TitleBar.CloseButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "CloseButton", self.Window.TitleBar)
     self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", 0, 0)
     self.Window.TitleBar.CloseButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
     self.Window.TitleBar.CloseButton:RegisterForClicks("AnyUp")
-    SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
+    self.Window.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
+    self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
+    self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
+    self.Window.TitleBar.CloseButton.Icon:SetSize(10, 10)
+    self.Window.TitleBar.CloseButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Close.blp")
+    self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     self.Window.TitleBar.CloseButton:SetScript("OnEnter", function()
         self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
         SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05)
@@ -113,12 +131,151 @@ function AlterEgo:CreateUI()
         SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
         GameTooltip:Hide()
     end)
-    self.Window.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
-    self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
-    self.Window.TitleBar.CloseButton.Icon:SetSize(10, 10)
-    self.Window.TitleBar.CloseButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Close.blp") -- TODO: Create texture
-    self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    
+    self.Window.TitleBar.SettingsButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "SettingsButton", self.Window.TitleBar)
+    self.Window.TitleBar.SettingsButton:SetPoint("RIGHT", self.Window.TitleBar.CloseButton, "LEFT", 0, 0)
+    self.Window.TitleBar.SettingsButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+    self.Window.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
+    self.Window.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SettingsButton.Dropdown) end)
+    self.Window.TitleBar.SettingsButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
+    self.Window.TitleBar.SettingsButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER")
+    self.Window.TitleBar.SettingsButton.Icon:SetSize(12, 12)
+    self.Window.TitleBar.SettingsButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Settings.blp")
+    self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    self.Window.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SettingsButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
+    self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -8)
+    UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height) -- Use in place of dropDown:SetWidth
+    UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function(frame, level, menuList)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Show the minimap button"
+        line.checked = not self.db.profile.minimap.hide
+        line.isNotRadio = true
+        line.tooltipTitle = "Show the minimap button"
+        line.tooltipText = "It does get crowded around the minimap sometimes"
+        line.tooltipOnButton = true
+        line.func = function(button, arg1, arg2, checked)
+            self.db.profile.minimap.hide = checked
+            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.profile.minimap)
+        end
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Lock the minimap button"
+        line.checked = self.db.profile.minimap.lock
+        line.isNotRadio = true
+        line.tooltipTitle = "Lock the minimap button"
+        line.tooltipText = "No more accidentally moving the button around!"
+        line.tooltipOnButton = true
+        line.func = function(button, arg1, arg2, checked)
+            self.db.profile.minimap.lock = not checked
+            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.profile.minimap)
+        end
+        UIDropDownMenu_AddButton(line)
+    end, "MENU")
+    self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
+        self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(self.Window.TitleBar.SettingsButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:Show()
+    end)
+    self.Window.TitleBar.SettingsButton:SetScript("OnLeave", function()
+        self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+    end)
+
+    self.Window.TitleBar.ProfilesButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Profiles", self.Window.TitleBar)
+    self.Window.TitleBar.ProfilesButton:SetPoint("RIGHT", self.Window.TitleBar.SettingsButton, "LEFT", 0, 0)
+    self.Window.TitleBar.ProfilesButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+    self.Window.TitleBar.ProfilesButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.ProfilesButton:GetName() .. "Icon", "ARTWORK")
+    self.Window.TitleBar.ProfilesButton.Icon:SetPoint("CENTER", self.Window.TitleBar.ProfilesButton, "CENTER")
+    self.Window.TitleBar.ProfilesButton.Icon:SetSize(15, 15)
+    self.Window.TitleBar.ProfilesButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Profiles.blp")
+    self.Window.TitleBar.ProfilesButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    self.Window.TitleBar.ProfilesButton:SetScript("OnEnter", function()
+        self.Window.TitleBar.ProfilesButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        SetBackgroundColor(self.Window.TitleBar.ProfilesButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(self.Window.TitleBar.ProfilesButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Profiles", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Manage your profiles", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+        GameTooltip:Show()
+    end)
+    self.Window.TitleBar.ProfilesButton:SetScript("OnLeave", function()
+        self.Window.TitleBar.ProfilesButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        SetBackgroundColor(self.Window.TitleBar.ProfilesButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+    end)
+
+    self.Window.TitleBar.SortingButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Sorting", self.Window.TitleBar)
+    self.Window.TitleBar.SortingButton:SetPoint("RIGHT", self.Window.TitleBar.ProfilesButton, "LEFT", 0, 0)
+    self.Window.TitleBar.SortingButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+    self.Window.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SortingButton.Dropdown) end)
+    self.Window.TitleBar.SortingButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
+    self.Window.TitleBar.SortingButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER")
+    self.Window.TitleBar.SortingButton.Icon:SetSize(16, 16)
+    self.Window.TitleBar.SortingButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp")
+    self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    self.Window.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SortingButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
+    self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -8)
+    UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height) -- Use in place of dropDown:SetWidth
+    UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function(frame, level, menuList)
+        for value, text in pairs(sortingOptions) do
+            local line = UIDropDownMenu_CreateInfo()
+            line.text = text
+            line.checked = self.db.profile.sorting == value
+            line.arg1 = value
+            line.func = function(button, arg1, arg2, checked)
+                self.db.profile.sorting = arg1
+                self:UpdateUI()
+            end
+            UIDropDownMenu_AddButton(line)
+        end
+    end, "MENU")
+    self.Window.TitleBar.SortingButton:SetScript("OnEnter", function()
+        self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(self.Window.TitleBar.SortingButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("How do you want to sort your characters?", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+        GameTooltip:Show()
+    end)
+    self.Window.TitleBar.SortingButton:SetScript("OnLeave", function()
+        self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+    end)
+
+    self.Window.TitleBar.CharactersButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Characters", self.Window.TitleBar)
+    self.Window.TitleBar.CharactersButton:SetPoint("RIGHT", self.Window.TitleBar.SortingButton, "LEFT", 0, 0)
+    self.Window.TitleBar.CharactersButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+    self.Window.TitleBar.CharactersButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
+    self.Window.TitleBar.CharactersButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER")
+    self.Window.TitleBar.CharactersButton.Icon:SetSize(14, 14)
+    self.Window.TitleBar.CharactersButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Characters.blp")
+    self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
+        self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(self.Window.TitleBar.CharactersButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Which characters do you want to show?", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+        GameTooltip:Show()
+    end)
+    self.Window.TitleBar.CharactersButton:SetScript("OnLeave", function()
+        self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+    end)
+
     -- Body
     self.Window.Body = CreateFrame("Frame", self.Window:GetName() .. "Body", self.Window)
     self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")

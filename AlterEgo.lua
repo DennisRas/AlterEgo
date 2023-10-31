@@ -24,16 +24,6 @@ local defaultDB = {
     }
 }
 
-local function getOpt(info)
-    local key = info[#info]
-    return AlterEgo.db.profile[key]
-end
-
-local function setOpt(info, value)
-    local key = info[#info]
-    AlterEgo.db.profile[key] = value or false
-end
-
 local options = {
     name = "AlterEgo",
     desc = "Varius options for the AlterEgo addon",
@@ -167,18 +157,13 @@ function AlterEgo:OnInitialize()
         label = "AlterEgo",
         tocname = "AlterEgo",
         type = "launcher",
-        icon = "Interface/AddOns/AlterEgo/Logo.blp",
-        OnClick = function(info, button)
-            if button == "LeftButton" then
-                self:ToggleWindow()
-            else
-                self:ToggleOptions()
-            end
+        icon = "Interface/AddOns/AlterEgo/Media/Logo.blp",
+        OnClick = function()
+            self:ToggleWindow()
         end,
         OnTooltipShow = function(tooltip)
             tooltip:SetText("AlterEgo", 1, 1, 1)
             tooltip:AddLine("Click to show the character summary.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-            tooltip:AddLine("Right click to open the options.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
             tooltip:AddLine("Drag to reposition this icon.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         end
     }
