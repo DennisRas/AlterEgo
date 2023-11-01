@@ -28,7 +28,7 @@ local libDataObject = {
     OnTooltipShow = function(tooltip)
         tooltip:SetText("AlterEgo", 1, 1, 1)
         tooltip:AddLine("Click to show the character summary.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-        tooltip:AddLine("Drag to reposition this icon.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+        tooltip:AddLine("Drag to move this icon.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     end
 }
 
