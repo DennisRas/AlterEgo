@@ -294,6 +294,11 @@ function AlterEgo:CreateUI()
     UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
     UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function()
         local line = UIDropDownMenu_CreateInfo()
+        line.text = "Minimap"
+        line.isTitle = true
+        line.notCheckable = true
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
         line.text = "Show the minimap button"
         line.checked = not self.db.global.minimap.hide
         line.isNotRadio = true
@@ -318,14 +323,48 @@ function AlterEgo:CreateUI()
         end
         UIDropDownMenu_AddButton(line)
         local line = UIDropDownMenu_CreateInfo()
-        line.text = "Hide chest/tier indicators"
-        line.checked = self.db.global.hidetiers
+        line.text = "Grid view"
+        line.isTitle = true
+        line.notCheckable = true
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Show tier indicators"
+        line.checked = self.db.global.showTiers
         line.isNotRadio = true
-        line.tooltipTitle = "Hide chest/tier indicators"
-        line.tooltipText = "Don't show the tiers (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) next to each number in the grid."
+        line.tooltipTitle = "Show tier indicators"
+        line.tooltipText = "Show the dungeon tiers (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid."
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
-            self.db.global.hidetiers = not checked
+            self.db.global.showTiers = not checked
+            self:UpdateUI()
+        end
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Show colors on dungeon scores"
+        line.checked = self.db.global.showAffixColors
+        line.isNotRadio = true
+        line.tooltipTitle = "Show colors on dungeon scores"
+        line.tooltipText = "Show some colors!"
+        line.tooltipOnButton = true
+        line.func = function(button, arg1, arg2, checked)
+            self.db.global.showAffixColors = not checked
+            self:UpdateUI()
+        end
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Characters"
+        line.isTitle = true
+        line.notCheckable = true
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Show characters with zero rating"
+        line.checked = self.db.global.showZeroRatedCharacters
+        line.isNotRadio = true
+        line.tooltipTitle = "Show characters with zero rating"
+        line.tooltipText = "Too many alts?"
+        line.tooltipOnButton = true
+        line.func = function(button, arg1, arg2, checked)
+            self.db.global.showZeroRatedCharacters = not checked
             self:UpdateUI()
         end
         UIDropDownMenu_AddButton(line)
@@ -753,18 +792,20 @@ function AlterEgo:UpdateUI()
 
         for d, dungeon in ipairs(dungeons) do
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
+
+            local scoreColor = HIGHLIGHT_FONT_COLOR
+            if (character.bestDungeons[dungeon.id] and character.bestDungeons[dungeon.id].bestOverAllScore and (character.bestDungeons[dungeon.id].bestTimed or character.bestDungeons[dungeon.id].bestNotTimed)) then
+                scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.bestDungeons[dungeon.id].bestOverAllScore);
+            end
+
             DungeonFrame:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
                 GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
 
-                if(character.bestDungeons[dungeon.id].bestOverAllScore and (character.bestDungeons[dungeon.id].bestTimed or character.bestDungeons[dungeon.id].bestNotTimed)) then
-                    local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.bestDungeons[dungeon.id].bestOverAllScore);
-                    if not color then
-                        color = HIGHLIGHT_FONT_COLOR;
-                    end
-                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(character.bestDungeons[dungeon.id].bestOverAllScore)), GREEN_FONT_COLOR);
+                if(character.bestDungeons[dungeon.id] and character.bestDungeons[dungeon.id].bestOverAllScore and (character.bestDungeons[dungeon.id].bestTimed or character.bestDungeons[dungeon.id].bestNotTimed)) then
+                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(character.bestDungeons[dungeon.id].bestOverAllScore)), GREEN_FONT_COLOR);
                 end
 
                 local affixScores = character.bestDungeons[dungeon.id].affixScores
@@ -817,25 +858,28 @@ function AlterEgo:UpdateUI()
                                 tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
                             elseif affixScore.durationSec <= dungeon.time then
                                 tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                            else
+                            end
+
+                            if tier == "" then
                                 levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                            elseif self.db.global.showAffixColors then
+                                levelColor = scoreColor:GenerateHexColor()
                             end
                         end
                     end
-
                 end
 
                 AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
                 AffixFrame.Tier:SetText(tier)
 
-                if self.db.global.hidetiers then
-                    AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-                    AffixFrame.Text:SetJustifyH("CENTER")
-                    AffixFrame.Tier:Hide()
-                else
+                if self.db.global.showTiers then
                     AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
                     AffixFrame.Text:SetJustifyH("RIGHT")
                     AffixFrame.Tier:Show()
+                else
+                    AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
+                    AffixFrame.Text:SetJustifyH("CENTER")
+                    AffixFrame.Tier:Hide()
                 end
             end
         end

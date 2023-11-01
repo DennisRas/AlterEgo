@@ -13,8 +13,9 @@ local defaultDB = {
             lock = false
         },
         sorting = "lastUpdate",
-        hidezero = false,
-        hidetiers = false
+        showTiers = true,
+        showAffixColors = false,
+        showZeroRatedCharacters = true
     }
 }
 

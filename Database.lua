@@ -91,15 +91,6 @@ function AlterEgo:GetCharacters(unfiltered)
     end
 
     -- Sorting
-    -- ["name.asc"] = "Name (A-Z)",
-    -- ["name.desc"] = "Name (Z-A)",
-    -- ["realm.asc"] = "Realm (A-Z)",
-    -- ["realm.desc"] = "Realm (Z-A)",
-    -- ["rating.asc"] = "Rating (Lowest)",
-    -- ["rating.desc"] = "Rating (Highest)",
-    -- ["ilvl.asc"] = "Item Level (Lowest)",
-    -- ["ilvl.desc"] = "Item Level (Highest)",
-    -- ["lastUpdate"] = "Recently played",
     table.sort(characters, function (a, b)
         if self.db.global.sorting == "name.asc" then
             return a.name < b.name
@@ -135,7 +126,9 @@ function AlterEgo:GetCharacters(unfiltered)
         if not character.enabled then
             keep = false
         end
-
+        if self.db.global.showZeroRatedCharacters == false and (character.ratingSummary and character.ratingSummary.currentSeasonScore <= 0) then
+            keep = false
+        end
         if keep then
             table.insert(charactersFiltered, character)
         end
