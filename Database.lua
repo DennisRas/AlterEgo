@@ -1,5 +1,7 @@
 ---@diagnostic disable: inject-field
 local defaultCharacter = {
+    GUID = "",
+    enabled = true,
     name = "",
     realm = "",
     level = 0,
@@ -120,13 +122,21 @@ function AlterEgo:GetCharacters(unfiltered)
     end)
 
     -- Filters
-    if not unfiltered then
+    if unfiltered then
         return characters
     end
 
     local charactersFiltered = {}
     for _, character in ipairs(characters) do
-        if character.level ~= nil and character.level == 70 then
+        local keep = true
+        if character.level == nil or character.level < 70 then
+            keep = false
+        end
+        if not character.enabled then
+            keep = false
+        end
+
+        if keep then
             table.insert(charactersFiltered, character)
         end
     end

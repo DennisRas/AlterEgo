@@ -48,6 +48,155 @@ local function SetBackgroundColor(parent, r, g, b, a)
     parent.Background:SetVertexColor(r, g, b, a)
 end
 
+local CreateCharacterColumn = function(parent, index)
+    local CharacterColumn = CreateFrame("Frame", parent:GetName() .. "CharacterColumn" .. index, parent)
+    local affixes = AlterEgo:GetAffixes()
+    local dungeons = AlterEgo:GetDungeons()
+
+    CharacterColumn:SetWidth(sizes.column)
+    SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
+
+    -- Character info
+    CharacterColumn.Name = CreateFrame("Frame", CharacterColumn:GetName() .. "Name", CharacterColumn)
+    CharacterColumn.Name:SetPoint("TOPLEFT", CharacterColumn:GetName(), "TOPLEFT")
+    CharacterColumn.Name:SetPoint("TOPRIGHT", CharacterColumn:GetName(), "TOPRIGHT")
+    CharacterColumn.Name:SetHeight(sizes.row)
+    CharacterColumn.Name.Text = CharacterColumn.Name:CreateFontString(CharacterColumn.Name:GetName() .. "Text", "OVERLAY")
+    CharacterColumn.Name.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    CharacterColumn.Name.Text:SetAllPoints()
+    CharacterColumn.Realm = CreateFrame("Frame", CharacterColumn:GetName() .. "Realm", CharacterColumn)
+    CharacterColumn.Realm:SetPoint("TOPLEFT", CharacterColumn.Name:GetName(), "BOTTOMLEFT")
+    CharacterColumn.Realm:SetPoint("TOPRIGHT", CharacterColumn.Name:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.Realm:SetHeight(sizes.row)
+    CharacterColumn.Realm.Text = CharacterColumn.Realm:CreateFontString(CharacterColumn.Realm:GetName() .. "Text", "OVERLAY")
+    CharacterColumn.Realm.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    CharacterColumn.Realm.Text:SetAllPoints()
+    CharacterColumn.Rating = CreateFrame("Button", CharacterColumn:GetName() .. "Rating", CharacterColumn)
+    CharacterColumn.Rating:SetPoint("TOPLEFT", CharacterColumn.Realm:GetName(), "BOTTOMLEFT")
+    CharacterColumn.Rating:SetPoint("TOPRIGHT", CharacterColumn.Realm:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.Rating:SetHeight(sizes.row)
+    CharacterColumn.Rating:RegisterForClicks("AnyUp")
+    CharacterColumn.Rating.Text = CharacterColumn.Rating:CreateFontString(CharacterColumn.Rating:GetName() .. "Text", "OVERLAY")
+    CharacterColumn.Rating.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    CharacterColumn.Rating.Text:SetAllPoints()
+    CharacterColumn.ItemLevel = CreateFrame("Frame", CharacterColumn:GetName() .. "ItemLevel", CharacterColumn)
+    CharacterColumn.ItemLevel:SetPoint("TOPLEFT", CharacterColumn.Rating:GetName(), "BOTTOMLEFT")
+    CharacterColumn.ItemLevel:SetPoint("TOPRIGHT", CharacterColumn.Rating:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.ItemLevel:SetHeight(sizes.row)
+    CharacterColumn.ItemLevel.Text = CharacterColumn.ItemLevel:CreateFontString(CharacterColumn.ItemLevel:GetName() .. "Text", "OVERLAY")
+    CharacterColumn.ItemLevel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    CharacterColumn.ItemLevel.Text:SetAllPoints()
+    CharacterColumn.Vault = CreateFrame("Frame", CharacterColumn:GetName() .. "Vault", CharacterColumn)
+    CharacterColumn.Vault:SetPoint("TOPLEFT", CharacterColumn.ItemLevel:GetName(), "BOTTOMLEFT")
+    CharacterColumn.Vault:SetPoint("TOPRIGHT", CharacterColumn.ItemLevel:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.Vault:SetHeight(sizes.row)
+    CharacterColumn.Vault.Text = CharacterColumn.Vault:CreateFontString(CharacterColumn.Vault:GetName() .. "Text", "OVERLAY")
+    CharacterColumn.Vault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    CharacterColumn.Vault.Text:SetAllPoints()
+    CharacterColumn.CurrentKeystone = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
+    CharacterColumn.CurrentKeystone:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
+    CharacterColumn.CurrentKeystone:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.CurrentKeystone:SetHeight(sizes.row)
+    CharacterColumn.CurrentKeystone.Text = CharacterColumn.CurrentKeystone:CreateFontString(CharacterColumn.CurrentKeystone:GetName() .. "Text", "OVERLAY")
+    CharacterColumn.CurrentKeystone.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    CharacterColumn.CurrentKeystone.Text:SetAllPoints()
+    CharacterColumn.AffixHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Affixes", CharacterColumn)
+    CharacterColumn.AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMLEFT")
+    CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.AffixHeader:SetHeight(sizes.row)
+    SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
+
+    -- Affix header icons
+    for a, affix in ipairs(affixes) do
+        local AffixFrame = CreateFrame("Frame", CharacterColumn.AffixHeader:GetName() .. a, CharacterColumn)
+        if a == 1 then
+            AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOPLEFT")
+            AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOM")
+        else
+            AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOP")
+            AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOMRIGHT")
+        end
+        AffixFrame.Icon = AffixFrame:CreateTexture(AffixFrame:GetName() .. "Icon", "ARTWORK")
+        AffixFrame.Icon:SetTexture(affix.icon)
+        AffixFrame.Icon:SetSize(16, 16)
+        AffixFrame.Icon:SetPoint("CENTER", AffixFrame, "CENTER", 0, 0)
+        AffixFrame:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(AffixFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
+            GameTooltip:AddLine(affix.description, nil, nil, nil, true);
+            GameTooltip:Show()
+        end)
+        AffixFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+
+    -- Dungeon rows
+    for d, dungeon in ipairs(dungeons) do
+        local DungeonFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Dungeons" .. d, CharacterColumn)
+        local relativeTo = CharacterColumn.AffixHeader:GetName()
+
+        if d > 1 then
+            relativeTo = CharacterColumn:GetName() .. "Dungeons" .. (d-1)
+        end
+
+        DungeonFrame:SetHeight(sizes.row)
+        DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
+        DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
+        SetBackgroundColor(DungeonFrame, 1, 1, 1, d % 2 == 0 and 0.01 or 0)
+
+        -- Affix values
+        for a, affix in ipairs(affixes) do
+            local AffixFrame = CreateFrame("Frame", DungeonFrame:GetName() .. "Affix" .. a, DungeonFrame)
+            if a == 1 then
+                AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOPLEFT")
+                AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOM")
+            else
+                AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOP")
+                AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOMRIGHT")
+            end
+
+            AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
+            AffixFrame.Text:SetPoint("TOPLEFT", AffixFrame, "TOPLEFT", 1, -1)
+            AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
+            AffixFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            AffixFrame.Text:SetJustifyH("RIGHT")
+            AffixFrame.Tier = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Tier", "OVERLAY")
+            AffixFrame.Tier:SetPoint("TOPLEFT", AffixFrame, "TOP", 1, -1)
+            AffixFrame.Tier:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
+            AffixFrame.Tier:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            AffixFrame.Tier:SetJustifyH("LEFT")
+        end
+    end
+
+    return CharacterColumn
+end
+
+
+function AlterEgo:GetCharacterColumn(parent, index)
+    if self.Window.Body.ScrollFrame.Characters.Columns == nil then
+        self.Window.Body.ScrollFrame.Characters.Columns = {}
+    end
+
+    if self.Window.Body.ScrollFrame.Characters.Columns[index] == nil then
+        self.Window.Body.ScrollFrame.Characters.Columns[index] = CreateCharacterColumn(parent, index)
+    end
+
+    self.Window.Body.ScrollFrame.Characters.Columns[index]:Show()
+
+    return self.Window.Body.ScrollFrame.Characters.Columns[index]
+end
+
+function AlterEgo:HideCharacterColumns()
+    if self.Window.Body.ScrollFrame.Characters.Columns == nil then
+        return
+    end
+
+    for _, CharacterColumn in ipairs(self.Window.Body.ScrollFrame.Characters.Columns) do
+        CharacterColumn:Hide()
+    end
+end
+
 function AlterEgo:ToggleWindow()
     if not self.Window then return end
     if self.Window:IsVisible() then
@@ -144,8 +293,8 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     self.Window.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SettingsButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
     self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -8)
-    UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height) -- Use in place of dropDown:SetWidth
-    UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function(frame, level, menuList)
+    UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
+    UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function()
         local line = UIDropDownMenu_CreateInfo()
         line.text = "Show the minimap button"
         line.checked = not self.db.global.minimap.hide
@@ -198,8 +347,8 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     self.Window.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SortingButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
     self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -8)
-    UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height) -- Use in place of dropDown:SetWidth
-    UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function(frame, level, menuList)
+    UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
+    UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function()
         for value, text in pairs(sortingOptions) do
             local line = UIDropDownMenu_CreateInfo()
             line.text = text
@@ -231,11 +380,37 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar.CharactersButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Characters", self.Window.TitleBar)
     self.Window.TitleBar.CharactersButton:SetPoint("RIGHT", self.Window.TitleBar.SortingButton, "LEFT", 0, 0)
     self.Window.TitleBar.CharactersButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+    self.Window.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.CharactersButton.Dropdown) end)
     self.Window.TitleBar.CharactersButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
     self.Window.TitleBar.CharactersButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER")
     self.Window.TitleBar.CharactersButton.Icon:SetSize(14, 14)
     self.Window.TitleBar.CharactersButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Characters.blp")
     self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    self.Window.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.CharactersButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
+    self.Window.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER", 0, -8)
+    UIDropDownMenu_SetWidth(self.Window.TitleBar.CharactersButton.Dropdown, sizes.titlebar.height)
+    UIDropDownMenu_Initialize(self.Window.TitleBar.CharactersButton.Dropdown, function()
+        local charactersUnfilteredList = self:GetCharacters(true)
+        for _, character in ipairs(charactersUnfilteredList) do
+            local nameColor = "ffffffff"
+            if character.class.file ~= nil then
+                local classColor = C_ClassColor.GetClassColor(character.class.file)
+                if classColor ~= nil then
+                    nameColor = classColor.GenerateHexColor(classColor)
+                end
+            end
+            local line = UIDropDownMenu_CreateInfo()
+            line.text = "|c" .. nameColor .. character.name .. "|r (" .. character.realm .. ")"
+            line.checked = character.enabled
+            line.isNotRadio = true
+            line.arg1 = character.GUID
+            line.func = function(button, arg1, arg2, checked)
+                self.db.global.characters[arg1].enabled = not checked
+                self:UpdateUI()
+            end
+            UIDropDownMenu_AddButton(line)
+        end
+    end, "MENU")
     self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
         self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
         SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0.05)
@@ -259,6 +434,7 @@ function AlterEgo:CreateUI()
     self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
     self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
     SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
+
     -- Sidebar
     self.Window.Body.Sidebar = CreateFrame("Frame", self.Window.Body:GetName() .. "Sidebar", self.Window.Body)
     self.Window.Body.Sidebar:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT")
@@ -334,135 +510,6 @@ function AlterEgo:CreateUI()
     self.Window.Body.ScrollFrame.Characters = CreateFrame("Frame", self.Window.Body.ScrollFrame:GetName() .. "Characters", self.Window.Body.ScrollFrame)
     self.Window.Body.ScrollFrame.Characters:SetAllPoints()
 
-    -- Characters
-    for c in ipairs(characters) do
-        local CharacterColumn = CreateFrame("Frame", self.Window.Body.ScrollFrame.Characters:GetName() .. c, self.Window.Body.ScrollFrame.Characters)
-
-        if c > 1 then
-            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName() .. (c-1), "TOPRIGHT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName() .. (c-1), "BOTTOMRIGHT")
-        else
-            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "TOPLEFT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "BOTTOMLEFT")
-        end
-
-        CharacterColumn:SetWidth(sizes.column)
-        SetBackgroundColor(CharacterColumn, 1, 1, 1, c % 2 == 0 and 0.01 or 0)
-
-        -- Character info
-        CharacterColumn.Name = CreateFrame("Frame", CharacterColumn:GetName() .. "Name", CharacterColumn)
-        CharacterColumn.Name:SetPoint("TOPLEFT", CharacterColumn:GetName(), "TOPLEFT")
-        CharacterColumn.Name:SetPoint("TOPRIGHT", CharacterColumn:GetName(), "TOPRIGHT")
-        CharacterColumn.Name:SetHeight(sizes.row)
-        CharacterColumn.Name.Text = CharacterColumn.Name:CreateFontString(CharacterColumn.Name:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Name.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Name.Text:SetAllPoints()
-        CharacterColumn.Realm = CreateFrame("Frame", CharacterColumn:GetName() .. "Realm", CharacterColumn)
-        CharacterColumn.Realm:SetPoint("TOPLEFT", CharacterColumn.Name:GetName(), "BOTTOMLEFT")
-        CharacterColumn.Realm:SetPoint("TOPRIGHT", CharacterColumn.Name:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.Realm:SetHeight(sizes.row)
-        CharacterColumn.Realm.Text = CharacterColumn.Realm:CreateFontString(CharacterColumn.Realm:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Realm.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Realm.Text:SetAllPoints()
-        CharacterColumn.Rating = CreateFrame("Button", CharacterColumn:GetName() .. "Rating", CharacterColumn)
-        CharacterColumn.Rating:SetPoint("TOPLEFT", CharacterColumn.Realm:GetName(), "BOTTOMLEFT")
-        CharacterColumn.Rating:SetPoint("TOPRIGHT", CharacterColumn.Realm:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.Rating:SetHeight(sizes.row)
-        CharacterColumn.Rating:RegisterForClicks("AnyUp")
-        CharacterColumn.Rating.Text = CharacterColumn.Rating:CreateFontString(CharacterColumn.Rating:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Rating.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Rating.Text:SetAllPoints()
-        CharacterColumn.ItemLevel = CreateFrame("Frame", CharacterColumn:GetName() .. "ItemLevel", CharacterColumn)
-        CharacterColumn.ItemLevel:SetPoint("TOPLEFT", CharacterColumn.Rating:GetName(), "BOTTOMLEFT")
-        CharacterColumn.ItemLevel:SetPoint("TOPRIGHT", CharacterColumn.Rating:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.ItemLevel:SetHeight(sizes.row)
-        CharacterColumn.ItemLevel.Text = CharacterColumn.ItemLevel:CreateFontString(CharacterColumn.ItemLevel:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.ItemLevel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.ItemLevel.Text:SetAllPoints()
-        CharacterColumn.Vault = CreateFrame("Frame", CharacterColumn:GetName() .. "Vault", CharacterColumn)
-        CharacterColumn.Vault:SetPoint("TOPLEFT", CharacterColumn.ItemLevel:GetName(), "BOTTOMLEFT")
-        CharacterColumn.Vault:SetPoint("TOPRIGHT", CharacterColumn.ItemLevel:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.Vault:SetHeight(sizes.row)
-        CharacterColumn.Vault.Text = CharacterColumn.Vault:CreateFontString(CharacterColumn.Vault:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.Vault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.Vault.Text:SetAllPoints()
-        CharacterColumn.CurrentKeystone = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
-        CharacterColumn.CurrentKeystone:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
-        CharacterColumn.CurrentKeystone:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.CurrentKeystone:SetHeight(sizes.row)
-        CharacterColumn.CurrentKeystone.Text = CharacterColumn.CurrentKeystone:CreateFontString(CharacterColumn.CurrentKeystone:GetName() .. "Text", "OVERLAY")
-        CharacterColumn.CurrentKeystone.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        CharacterColumn.CurrentKeystone.Text:SetAllPoints()
-        CharacterColumn.AffixHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Affixes", CharacterColumn)
-        CharacterColumn.AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMLEFT")
-        CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMRIGHT")
-        CharacterColumn.AffixHeader:SetHeight(sizes.row)
-        SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
-
-        -- Affix header icons
-        for a, affix in ipairs(affixes) do
-            local AffixFrame = CreateFrame("Frame", CharacterColumn.AffixHeader:GetName() .. a, CharacterColumn)
-            if a == 1 then
-                AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOPLEFT")
-                AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOM")
-            else
-                AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOP")
-                AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOMRIGHT")
-            end
-            AffixFrame.Icon = AffixFrame:CreateTexture(AffixFrame:GetName() .. "Icon", "ARTWORK")
-            AffixFrame.Icon:SetTexture(affix.icon)
-            AffixFrame.Icon:SetSize(16, 16)
-            AffixFrame.Icon:SetPoint("CENTER", AffixFrame, "CENTER", 0, 0)
-            AffixFrame:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
-                GameTooltip:SetOwner(AffixFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
-                GameTooltip:AddLine(affix.description, nil, nil, nil, true);
-                GameTooltip:Show()
-            end)
-            AffixFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        end
-
-        -- Dungeon rows
-        for d, dungeon in ipairs(dungeons) do
-            local DungeonFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Dungeons" .. d, CharacterColumn)
-            local relativeTo = CharacterColumn.AffixHeader:GetName()
-
-            if d > 1 then
-                relativeTo = CharacterColumn:GetName() .. "Dungeons" .. (d-1)
-            end
-
-            DungeonFrame:SetHeight(sizes.row)
-            DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
-            DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
-            SetBackgroundColor(DungeonFrame, 1, 1, 1, d % 2 == 0 and 0.01 or 0)
-
-            -- Affix values
-            for a, affix in ipairs(affixes) do
-                local AffixFrame = CreateFrame("Frame", DungeonFrame:GetName() .. "Affix" .. a, DungeonFrame)
-                if a == 1 then
-                    AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOPLEFT")
-                    AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOM")
-                else
-                    AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOP")
-                    AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOMRIGHT")
-                end
-
-                AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
-                AffixFrame.Text:SetPoint("TOPLEFT", AffixFrame, "TOPLEFT", 1, -1)
-                AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-                AffixFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-                AffixFrame.Text:SetJustifyH("RIGHT")
-                AffixFrame.Tier = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Tier", "OVERLAY")
-                AffixFrame.Tier:SetPoint("TOPLEFT", AffixFrame, "TOP", 1, -1)
-                AffixFrame.Tier:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-                AffixFrame.Tier:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-                AffixFrame.Tier:SetJustifyH("LEFT")
-            end
-        end
-    end
-
     self:UpdateUI()
 end
 
@@ -475,6 +522,8 @@ function AlterEgo:UpdateUI()
     local characters = self:GetCharacters()
     local charactersUnfiltered = self:GetCharacters(true)
     local dungeons = self:GetDungeons()
+
+    self:HideCharacterColumns()
 
     -- Dungeon names
     for d, dungeon in ipairs(dungeons) do
@@ -499,7 +548,7 @@ function AlterEgo:UpdateUI()
     end
 
     -- Characters
-    -- local totalColumns = self:tablen(charactersUnfiltered)
+    local lastCharacterColumn = nil
     for c, character in ipairs(characters) do
         local name = "-"
         local nameColor = "ffffffff"
@@ -586,7 +635,16 @@ function AlterEgo:UpdateUI()
             bestSeasonNumber = character.bestSeasonNumber
         end
 
-        local CharacterColumn = _G[self.Window.Body.ScrollFrame.Characters:GetName() .. c]
+        local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.Characters, c)
+        SetBackgroundColor(CharacterColumn, 1, 1, 1, c % 2 == 0 and 0.01 or 0)
+        if c > 1 then
+            CharacterColumn:SetPoint("TOPLEFT", lastCharacterColumn, "TOPRIGHT")
+            CharacterColumn:SetPoint("BOTTOMLEFT", lastCharacterColumn, "BOTTOMRIGHT")
+        else
+            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "TOPLEFT")
+            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "BOTTOMLEFT")
+        end
+        lastCharacterColumn = CharacterColumn
         CharacterColumn.Name.Text:SetText("|c" .. nameColor .. name .. "|r")
         CharacterColumn.Name:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
@@ -767,6 +825,4 @@ function AlterEgo:UpdateUI()
             end
         end
     end
-
-    -- TODO: Hide extra columns not needed anymore (hint: filtered vs unfiltered count)
 end
