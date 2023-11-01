@@ -223,9 +223,16 @@ function AlterEgo:CreateUI()
     -- Border
     -- TODO: Make this work with insets
     self.Window.Border = CreateFrame("Frame", self.Window:GetName() .. "Border", self.Window, "BackdropTemplate")
-    self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -10, -10)
-    self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 10, 10)
-    self.Window.Border:Hide()
+    self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
+    self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
+    self.Window.Border:SetBackdrop({
+        -- bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        edgeSize = 16,
+        insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border },
+    })
+    self.Window.Border:SetBackdropBorderColor(0, 0, 0, .5)
+    self.Window.Border:Show()
 
     -- TitleBar
     self.Window.TitleBar = CreateFrame("Frame", self.Window:GetName() .. "TitleBar", self.Window)
