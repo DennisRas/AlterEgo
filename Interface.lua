@@ -172,27 +172,18 @@ local CreateCharacterColumn = function(parent, index)
     return CharacterColumn
 end
 
-
+local CharacterColumns = {}
 function AlterEgo:GetCharacterColumn(parent, index)
-    if self.Window.Body.ScrollFrame.Characters.Columns == nil then
-        self.Window.Body.ScrollFrame.Characters.Columns = {}
+    if CharacterColumns[index] == nil then
+        CharacterColumns[index] = CreateCharacterColumn(parent, index)
     end
 
-    if self.Window.Body.ScrollFrame.Characters.Columns[index] == nil then
-        self.Window.Body.ScrollFrame.Characters.Columns[index] = CreateCharacterColumn(parent, index)
-    end
-
-    self.Window.Body.ScrollFrame.Characters.Columns[index]:Show()
-
-    return self.Window.Body.ScrollFrame.Characters.Columns[index]
+    CharacterColumns[index]:Show()
+    return CharacterColumns[index]
 end
 
 function AlterEgo:HideCharacterColumns()
-    if self.Window.Body.ScrollFrame.Characters.Columns == nil then
-        return
-    end
-
-    for _, CharacterColumn in ipairs(self.Window.Body.ScrollFrame.Characters.Columns) do
+    for _, CharacterColumn in ipairs(CharacterColumns) do
         CharacterColumn:Hide()
     end
 end
