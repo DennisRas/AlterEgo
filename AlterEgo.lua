@@ -15,7 +15,16 @@ local defaultDB = {
         sorting = "lastUpdate",
         showTiers = true,
         showAffixColors = false,
-        showZeroRatedCharacters = true
+        showZeroRatedCharacters = true,
+        raids = {
+            enabled = false,
+            currentTierOnly = true,
+            lfr = true,
+            normal = true,
+            heroic = true,
+            mythic = true,
+            boxes = false
+        }
     }
 }
 
@@ -45,6 +54,7 @@ function AlterEgo:OnInitialize()
     self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 3, "UpdateCharacterInfo")
     self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "UpdateDB")
     self:RegisterEvent("CHALLENGE_MODE_RESET", "UpdateDB")
+    self:RegisterEvent("UPDATE_INSTANCE_INFO", "UpdateRaidInstances")
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
 

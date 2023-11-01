@@ -33,7 +33,8 @@ local defaultCharacter = {
     },
     history = {},
     bestDungeons = {},
-    lastUpdate = 0
+    lastUpdate = 0,
+    raids = {}
 }
 
 local dataAffixes = {
@@ -51,6 +52,32 @@ local dataDungeons = {
     [406] = { id = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
     [438] = { id = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
 }
+
+local dataRaids = {
+    -- [1200] = { id = 1200, order = 1, mapId = 2522, encounters = 8, abbr = "VOTI", name = "Vault of the Incarnates" },
+    [1208] = { id = 1208, order = 2, mapId = 2569, encounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
+    -- [1207] = { id = 1208, order = 3, mapId = 2549, encounters = 9, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope" },
+}
+
+local dataRaidDifficulties = {
+    [14] = { id = 14, order = 2, abbr = "NM", name = "Normal" },
+    [15] = { id = 15, order = 3, abbr = "HC", name = "Heroic" },
+    [16] = { id = 16, order = 4, abbr = "M", name = "Mythic" },
+    [17] = { id = 17, order = 1, abbr = "LFR", name = "Looking For Raid" },
+}
+
+function AlterEgo:GetRaidDifficulties()
+    local result = {}
+    for rd, difficulty in pairs(dataRaidDifficulties) do
+        table.insert(result, difficulty)
+    end
+
+    table.sort(result, function (a, b)
+        return a.order < b.order
+    end)
+
+    return result
+end
 
 function AlterEgo:GetAffixes()
     local result = {}
@@ -78,6 +105,19 @@ function AlterEgo:GetDungeons()
 
     table.sort(result, function (a, b)
         return a.name < b.name
+    end)
+
+    return result
+end
+
+function AlterEgo:GetRaids()
+    local result = {}
+    for r, raid in pairs(dataRaids) do
+        table.insert(result, raid)
+    end
+
+    table.sort(result, function (a, b)
+        return a.order < b.order
     end)
 
     return result
@@ -149,6 +189,69 @@ end
 function AlterEgo:UpdateDB()
     self:UpdateCharacterInfo()
     self:UpdateMythicPlus()
+    self:UpdateRaidInstances()
+end
+
+function AlterEgo:UpdateRaidInstances()
+    local playerGUID = UnitGUID("player")
+    if not playerGUID then
+        return
+    end
+
+    if self.db.global.characters[playerGUID] == nil then
+        self.db.global.characters[playerGUID] = defaultCharacter
+    end
+
+    local character = self.db.global.characters[playerGUID]
+    local numInstances = GetNumSavedInstances()
+    if numInstances == nil then
+        RequestRaidInfo()
+        ---@diagnostic disable-next-line: undefined-field
+        return self:ScheduleTimer("UpdateRaidInstances", 3)
+    end
+
+    -- Boss encounter: EJ_GetEncounterInfo(2522)
+
+    character.raids = {}
+    if numInstances > 0 then 
+        for i = 1, numInstances do
+            local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceId = GetSavedInstanceInfo(i)
+            local expires = 0
+            if reset and reset > 0 then
+                expires = reset + time()
+            end
+            local encounters = {}
+            for e = 1, numEncounters do
+                local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(i, e)
+                encounters[e] = {
+                    encounterId = e,
+                    ["bossName"] = bossName,
+                    ["fileDataID"] = fileDataID or 0,
+                    ["killed"] = killed
+                }
+            end
+            character.raids[i] = {
+                ["id"] = lockoutId,
+                ["name"] = name,
+                ["lockoutId"] = lockoutId,
+                ["reset"] = reset,
+                ["expires"] = expires,
+                ["difficultyId"] = difficultyId,
+                ["locked"] = locked,
+                ["instanceIDMostSig"] = instanceIDMostSig,
+                ["isRaid"] = isRaid,
+                ["maxPlayers"] = maxPlayers,
+                ["difficultyName"] = difficultyName,
+                ["numEncounters"] = numEncounters,
+                ["encounterProgress"] = encounterProgress,
+                ["extendDisabled"] = extendDisabled,
+                ["instanceId"] = instanceId,
+                link = GetSavedInstanceChatLink(i),
+                ["encounters"] = encounters
+            }
+        end
+    end
+    DevTools_Dump(character.raids)
 end
 
 function AlterEgo:UpdateCharacterInfo()
