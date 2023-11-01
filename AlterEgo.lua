@@ -13,7 +13,8 @@ local defaultDB = {
             lock = false
         },
         sorting = "lastUpdate",
-        hidezero = false
+        hidezero = false,
+        hidetiers = false
     }
 }
 

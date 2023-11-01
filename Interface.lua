@@ -291,7 +291,7 @@ function AlterEgo:CreateUI()
         line.checked = not self.db.global.minimap.hide
         line.isNotRadio = true
         line.tooltipTitle = "Show the minimap button"
-        line.tooltipText = "It does get crowded around the minimap sometimes"
+        line.tooltipText = "It does get crowded around the minimap sometimes."
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
             self.db.global.minimap.hide = checked
@@ -303,11 +303,23 @@ function AlterEgo:CreateUI()
         line.checked = self.db.global.minimap.lock
         line.isNotRadio = true
         line.tooltipTitle = "Lock the minimap button"
-        line.tooltipText = "No more accidentally moving the button around!"
+        line.tooltipText = "No more moving the button around accidentally!"
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
             self.db.global.minimap.lock = not checked
             self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+        end
+        UIDropDownMenu_AddButton(line)
+        local line = UIDropDownMenu_CreateInfo()
+        line.text = "Hide chest/tier indicators"
+        line.checked = self.db.global.hidetiers
+        line.isNotRadio = true
+        line.tooltipTitle = "Hide chest/tier indicators"
+        line.tooltipText = "Don't show the tiers (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) next to each number in the grid."
+        line.tooltipOnButton = true
+        line.func = function(button, arg1, arg2, checked)
+            self.db.global.hidetiers = not checked
+            self:UpdateUI()
         end
         UIDropDownMenu_AddButton(line)
     end, "MENU")
@@ -806,13 +818,18 @@ function AlterEgo:UpdateUI()
 
                 end
 
-                -- TODO: Align based on tier visibility
                 AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
                 AffixFrame.Tier:SetText(tier)
-                -- DungeonFrame.Text:SetPoint("TOPLEFT", DungeonFrame, "TOPLEFT")
-                -- DungeonFrame.Text:SetPoint("BOTTOMRIGHT", DungeonFrame, "BOTTOM")
-                -- DungeonFrame.Tier:SetPoint("TOPRIGHT", DungeonFrame, "TOPRIGHT")
-                -- DungeonFrame.Tier:SetPoint("BOTTOMLEFT", DungeonFrame, "BOTTOM")
+
+                if self.db.global.hidetiers then
+                    AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
+                    AffixFrame.Text:SetJustifyH("CENTER")
+                    AffixFrame.Tier:Hide()
+                else
+                    AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
+                    AffixFrame.Text:SetJustifyH("RIGHT")
+                    AffixFrame.Tier:Show()
+                end
             end
         end
     end
