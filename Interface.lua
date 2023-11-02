@@ -27,15 +27,15 @@ local colors = {
 }
 
 local sortingOptions = {
-    ["name.asc"] = "Name (A-Z)",
-    ["name.desc"] = "Name (Z-A)",
-    ["realm.asc"] = "Realm (A-Z)",
-    ["realm.desc"] = "Realm (Z-A)",
-    ["rating.asc"] = "Rating (Lowest)",
-    ["rating.desc"] = "Rating (Highest)",
-    ["ilvl.asc"] = "Item Level (Lowest)",
-    ["ilvl.desc"] = "Item Level (Highest)",
-    ["lastUpdate"] = "Recently played",
+    {value = "lastUpdate", text = "Recently played"},
+    {value = "name.asc", text = "Name (A-Z)"},
+    {value = "name.desc", text = "Name (Z-A)"},
+    {value = "realm.asc", text = "Realm (A-Z)"},
+    {value = "realm.desc", text = "Realm (Z-A)"},
+    {value = "rating.asc", text = "Rating (Lowest)"},
+    {value = "rating.desc", text = "Rating (Highest)"},
+    {value = "ilvl.asc", text = "Item Level (Lowest)"},
+    {value = "ilvl.desc", text = "Item Level (Highest)"},
 }
 
 local function SetBackgroundColor(parent, r, g, b, a)
@@ -263,12 +263,10 @@ function AlterEgo:CreateUI()
     SetBackgroundColor(self.Window, colors.dark:GetRGBA())
 
     -- Border
-    -- TODO: Make this work with insets
     self.Window.Border = CreateFrame("Frame", self.Window:GetName() .. "Border", self.Window, "BackdropTemplate")
     self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
     self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
     self.Window.Border:SetBackdrop({
-        -- bgFile = "Interface/Tooltips/UI-Tooltip-Background",
         edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
         edgeSize = 16,
         insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border },
@@ -457,11 +455,11 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -8)
     UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
     UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function()
-        for value, text in pairs(sortingOptions) do
+        for _, option in ipairs(sortingOptions) do
             local line = UIDropDownMenu_CreateInfo()
-            line.text = text
-            line.checked = self.db.global.sorting == value
-            line.arg1 = value
+            line.text = option.text
+            line.checked = self.db.global.sorting == option.value
+            line.arg1 = option.value
             line.func = function(button, arg1, arg2, checked)
                 self.db.global.sorting = arg1
                 self:UpdateUI()
@@ -1026,7 +1024,7 @@ function AlterEgo:UpdateUI()
                         end
                     end
                     if killed then
-                        SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5) -- green
+                        SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5)
                     else
                         SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                     end
