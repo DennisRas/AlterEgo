@@ -204,11 +204,11 @@ function AlterEgo:UpdateRaidInstances()
 
     local character = self.db.global.characters[playerGUID]
     local numInstances = GetNumSavedInstances()
-    if numInstances == nil then
-        RequestRaidInfo()
-        ---@diagnostic disable-next-line: undefined-field
-        return self:ScheduleTimer("UpdateRaidInstances", 3)
-    end
+    -- if numInstances == nil then
+    --     RequestRaidInfo()
+    --     ---@diagnostic disable-next-line: undefined-field
+    --     return self:ScheduleTimer("UpdateRaidInstances", 3)
+    -- end
 
     -- Boss encounter: EJ_GetEncounterInfo(2522)
 
@@ -251,7 +251,7 @@ function AlterEgo:UpdateRaidInstances()
             }
         end
     end
-    DevTools_Dump(character.raids)
+    -- DevTools_Dump(character.raids)
 end
 
 function AlterEgo:UpdateCharacterInfo()

@@ -174,13 +174,10 @@ local CreateCharacterColumn = function(parent, index)
     local previousRowFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. #dungeons]
     for r, raid in ipairs(raids) do
         local RaidHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r, CharacterColumn)
-        -- RaidHeader:SetPoint("TOPLEFT", CharacterColumn:GetName() .. "Dungeons" .. #dungeons, "BOTTOMLEFT")
-        -- RaidHeader:SetPoint("TOPRIGHT", CharacterColumn:GetName() .. "Dungeons" .. #dungeons, "BOTTOMRIGHT")
         RaidHeader:SetHeight(sizes.row)
-        SetBackgroundColor(RaidHeader, 0, 0, 0, 0.3)
-
         RaidHeader:SetPoint("TOPLEFT", previousRowFrame, "BOTTOMLEFT")
         RaidHeader:SetPoint("TOPRIGHT", previousRowFrame, "BOTTOMRIGHT")
+        SetBackgroundColor(RaidHeader, 0, 0, 0, 0.3)
         previousRowFrame = RaidHeader
 
         for rd, difficulty in pairs(AlterEgo:GetRaidDifficulties()) do
@@ -193,22 +190,13 @@ local CreateCharacterColumn = function(parent, index)
             local previousEncounterFrame = RaidFrame
             for e = 1, raid.encounters do
                 local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e, RaidFrame)
-                SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
-                if e < 7 and random() < 0.9 then
-                    SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5)
-                elseif random() < 0.2 then
-                    SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5)
-                end
-                if e > 1 then
-                    EncounterFrame:SetPoint("LEFT", previousEncounterFrame, "RIGHT", 3, 0)
-                else
-                    EncounterFrame:SetPoint("LEFT", previousEncounterFrame, "LEFT", 5, 0)
-                end
                 local size = sizes.column
-                size = size - 6 * 2
-                size = size - (raid.encounters - 1) * 3
-                size = size / raid.encounters
+                size = size - sizes.padding -- left/right cell padding
+                size = size - (raid.encounters - 1) * 4 -- gaps
+                size = size / raid.encounters -- box sizes
+                EncounterFrame:SetPoint("LEFT", previousEncounterFrame, e > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
                 EncounterFrame:SetSize(size, sizes.row - 12)
+                SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                 previousEncounterFrame = EncounterFrame
             end
             previousRowFrame = RaidFrame
@@ -382,11 +370,11 @@ function AlterEgo:CreateUI()
         line.notCheckable = true
         UIDropDownMenu_AddButton(line)
         local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show tier indicators"
+        line.text = "Show tier icons"
         line.checked = self.db.global.showTiers
         line.isNotRadio = true
-        line.tooltipTitle = "Show tier indicators"
-        line.tooltipText = "Show the dungeon tiers (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid."
+        line.tooltipTitle = "Show tier icons"
+        line.tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid."
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
             self.db.global.showTiers = not checked
@@ -428,10 +416,10 @@ function AlterEgo:CreateUI()
         line.notCheckable = true
         UIDropDownMenu_AddButton(line)
         local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show saved raid instances"
+        line.text = "Show the current raid tier"
         line.checked = self.db.global.raids and self.db.global.raids.enabled
         line.isNotRadio = true
-        line.tooltipTitle = "Show saved raid instances"
+        line.tooltipTitle = "Show the current raid tier"
         line.tooltipText = "Because Mythic Plus ain't enough!"
         line.tooltipOnButton = true
         line.func = function(button, arg1, arg2, checked)
@@ -488,7 +476,7 @@ function AlterEgo:CreateUI()
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(self.Window.TitleBar.SortingButton, "ANCHOR_TOP")
         GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("How do you want to sort your characters?", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+        GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
         GameTooltip:Show()
     end)
     self.Window.TitleBar.SortingButton:SetScript("OnLeave", function()
@@ -538,7 +526,7 @@ function AlterEgo:CreateUI()
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(self.Window.TitleBar.CharactersButton, "ANCHOR_TOP")
         GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("Which characters do you want to show?", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+        GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
         GameTooltip:Show()
     end)
     self.Window.TitleBar.CharactersButton:SetScript("OnLeave", function()
@@ -1026,8 +1014,22 @@ function AlterEgo:UpdateUI()
 
                 for e = 1, raid.encounters do
                     local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e]
-                    -- SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
-                        -- SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5) -- green
+                    local killed = false
+                    if character.raids then
+                        for k, characterRaid in pairs(character.raids) do
+                            if characterRaid.instanceId == raid.mapId and characterRaid.expires > time() and characterRaid.difficultyId == difficulty.id then
+                                local encounter = characterRaid.encounters[e]
+                                if encounter and encounter.killed then
+                                    killed = true
+                                end
+                            end
+                        end
+                    end
+                    if killed then
+                        SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5) -- green
+                    else
+                        SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+                    end
                 end
             end
         end
