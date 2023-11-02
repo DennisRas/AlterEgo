@@ -333,98 +333,82 @@ function AlterEgo:CreateUI()
     self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -8)
     UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
     UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function()
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Minimap"
-        line.isTitle = true
-        line.notCheckable = true
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show the minimap button"
-        line.checked = not self.db.global.minimap.hide
-        line.isNotRadio = true
-        line.tooltipTitle = "Show the minimap button"
-        line.tooltipText = "It does get crowded around the minimap sometimes."
-        line.tooltipOnButton = true
-        line.func = function(button, arg1, arg2, checked)
-            self.db.global.minimap.hide = checked
-            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-        end
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Lock the minimap button"
-        line.checked = self.db.global.minimap.lock
-        line.isNotRadio = true
-        line.tooltipTitle = "Lock the minimap button"
-        line.tooltipText = "No more moving the button around accidentally!"
-        line.tooltipOnButton = true
-        line.func = function(button, arg1, arg2, checked)
-            self.db.global.minimap.lock = not checked
-            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-        end
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Grid view"
-        line.isTitle = true
-        line.notCheckable = true
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show tier icons"
-        line.checked = self.db.global.showTiers
-        line.isNotRadio = true
-        line.tooltipTitle = "Show tier icons"
-        line.tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid."
-        line.tooltipOnButton = true
-        line.func = function(button, arg1, arg2, checked)
-            self.db.global.showTiers = not checked
-            self:UpdateUI()
-        end
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show colors on dungeon scores"
-        line.checked = self.db.global.showAffixColors
-        line.isNotRadio = true
-        line.tooltipTitle = "Show colors on dungeon scores"
-        line.tooltipText = "Show some colors!"
-        line.tooltipOnButton = true
-        line.func = function(button, arg1, arg2, checked)
-            self.db.global.showAffixColors = not checked
-            self:UpdateUI()
-        end
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Characters"
-        line.isTitle = true
-        line.notCheckable = true
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show characters with zero rating"
-        line.checked = self.db.global.showZeroRatedCharacters
-        line.isNotRadio = true
-        line.tooltipTitle = "Show characters with zero rating"
-        line.tooltipText = "Too many alts?"
-        line.tooltipOnButton = true
-        line.func = function(button, arg1, arg2, checked)
-            self.db.global.showZeroRatedCharacters = not checked
-            self:UpdateUI()
-        end
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Raiding"
-        line.isTitle = true
-        line.notCheckable = true
-        UIDropDownMenu_AddButton(line)
-        local line = UIDropDownMenu_CreateInfo()
-        line.text = "Show the current raid tier"
-        line.checked = self.db.global.raids and self.db.global.raids.enabled
-        line.isNotRadio = true
-        line.tooltipTitle = "Show the current raid tier"
-        line.tooltipText = "Because Mythic Plus ain't enough!"
-        line.tooltipOnButton = true
-        line.func = function(button, arg1, arg2, checked)
-            self.db.global.raids.enabled = not checked
-            self:UpdateUI()
-        end
-        UIDropDownMenu_AddButton(line)
+        UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({
+            text = "Show the minimap button",
+            checked = not self.db.global.minimap.hide,
+            isNotRadio = true,
+            tooltipTitle = "Show the minimap button",
+            tooltipText = "It does get crowded around the minimap sometimes.",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.minimap.hide = checked
+                self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+            end
+        })
+        UIDropDownMenu_AddButton({
+            text = "Lock the minimap button",
+            checked = self.db.global.minimap.lock,
+            isNotRadio = true,
+            tooltipTitle = "Lock the minimap button",
+            tooltipText = "No more moving the button around accidentally!",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.minimap.lock = not checked
+                self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+            end
+        })
+        UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({
+            text = "Show tier icons",
+            checked = self.db.global.showTiers,
+            isNotRadio = true,
+            tooltipTitle = "Show tier icons",
+            tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid.",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.showTiers = not checked
+                self:UpdateUI()
+            end
+        }) 
+        UIDropDownMenu_AddButton({
+            text = "Show colors on dungeon scores",
+            checked = self.db.global.showAffixColors,
+            isNotRadio = true,
+            tooltipTitle = "Show colors on dungeon scores",
+            tooltipText = "Show some colors!",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.showAffixColors = not checked
+                self:UpdateUI()
+            end
+        })
+        UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({
+            text = "Show characters with zero rating",
+            checked = self.db.global.showZeroRatedCharacters,
+            isNotRadio = true,
+            tooltipTitle = "Show characters with zero rating",
+            tooltipText = "Too many alts?",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.showZeroRatedCharacters = not checked
+                self:UpdateUI()
+            end
+        })
+        UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({
+            text = "Show the current raid tier",
+            checked = self.db.global.raids and self.db.global.raids.enabled,
+            isNotRadio = true,
+            tooltipTitle = "Show the current raid tier",
+            tooltipText = "Because Mythic Plus ain't enough!",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.raids.enabled = not checked
+                self:UpdateUI()
+            end
+        })
     end, "MENU")
     self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
         self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
@@ -456,15 +440,15 @@ function AlterEgo:CreateUI()
     UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
     UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function()
         for _, option in ipairs(sortingOptions) do
-            local line = UIDropDownMenu_CreateInfo()
-            line.text = option.text
-            line.checked = self.db.global.sorting == option.value
-            line.arg1 = option.value
-            line.func = function(button, arg1, arg2, checked)
-                self.db.global.sorting = arg1
-                self:UpdateUI()
-            end
-            UIDropDownMenu_AddButton(line)
+            UIDropDownMenu_AddButton({
+                text = option.text,
+                checked = self.db.global.sorting == option.value,
+                arg1 = option.value,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.sorting = arg1
+                    self:UpdateUI()
+                end
+            })
         end
     end, "MENU")
     self.Window.TitleBar.SortingButton:SetScript("OnEnter", function()
@@ -505,16 +489,16 @@ function AlterEgo:CreateUI()
                     nameColor = classColor.GenerateHexColor(classColor)
                 end
             end
-            local line = UIDropDownMenu_CreateInfo()
-            line.text = "|c" .. nameColor .. character.name .. "|r (" .. character.realm .. ")"
-            line.checked = character.enabled
-            line.isNotRadio = true
-            line.arg1 = character.GUID
-            line.func = function(button, arg1, arg2, checked)
-                self.db.global.characters[arg1].enabled = not checked
-                self:UpdateUI()
-            end
-            UIDropDownMenu_AddButton(line)
+            UIDropDownMenu_AddButton({
+                text = "|c" .. nameColor .. character.name .. "|r (" .. character.realm .. ")",
+                checked = character.enabled,
+                isNotRadio = true,
+                arg1 = character.GUID,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.characters[arg1].enabled = not checked
+                    self:UpdateUI()
+                end
+            })
         end
     end, "MENU")
     self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
