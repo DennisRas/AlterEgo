@@ -373,13 +373,13 @@ local CreateCharacterColumn = function(parent, index)
     -- Raid Rows
     local anchorFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. #dungeons]
     for r, raid in ipairs(raids) do
-        local RaidHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r, CharacterColumn)
-        RaidHeader:SetHeight(sizes.row)
-        RaidHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        RaidHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        SetBackgroundColor(RaidHeader, 0, 0, 0, 0.3)
+        local RaidFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r, CharacterColumn)
+        RaidFrame:SetHeight(sizes.row)
+        RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+        SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
 
-        anchorFrame = RaidHeader
+        anchorFrame = RaidFrame
 
         -- local RaidVault = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Vault", CharacterColumn)
         -- RaidVault:SetHeight(sizes.row)
@@ -394,15 +394,15 @@ local CreateCharacterColumn = function(parent, index)
         -- anchorFrame = RaidVault
 
         for rd, difficulty in pairs(AlterEgo:GetRaidDifficulties()) do
-            local RaidFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd, RaidHeader)
-            RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-            RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-            RaidFrame:SetHeight(sizes.row)
-            SetBackgroundColor(RaidFrame, 1, 1, 1, rd % 2 == 0 and 0.01 or 0)
+            local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd, RaidFrame)
+            DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+            DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+            DifficultyFrame:SetHeight(sizes.row)
+            SetBackgroundColor(DifficultyFrame, 1, 1, 1, rd % 2 == 0 and 0.01 or 0)
 
-            local previousEncounterFrame = RaidFrame
+            local previousEncounterFrame = DifficultyFrame
             for e = 1, raid.encounters do
-                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e, RaidFrame)
+                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e, DifficultyFrame)
                 local size = sizes.column
                 size = size - sizes.padding -- left/right cell padding
                 size = size - (raid.encounters - 1) * 4 -- gaps
@@ -412,7 +412,7 @@ local CreateCharacterColumn = function(parent, index)
                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                 previousEncounterFrame = EncounterFrame
             end
-            anchorFrame = RaidFrame
+            anchorFrame = DifficultyFrame
         end
     end
 
@@ -1139,19 +1139,19 @@ function AlterEgo:UpdateUI()
 
         -- Raid Rows
         for r, raid in ipairs(raids) do
-            local RaidHeader = _G[CharacterColumn:GetName() .. "Raid" .. r]
+            local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. r]
             if self.db.global.raids.enabled then
-                RaidHeader:Show()
+                RaidFrame:Show()
             else
-                RaidHeader:Hide()
+                RaidFrame:Hide()
             end
 
             for rd, difficulty in pairs(difficulties) do
-                local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd]
+                local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd]
                 if self.db.global.raids.enabled then
-                    RaidFrame:Show()
+                    DifficultyFrame:Show()
                 else
-                    RaidFrame:Hide()
+                    DifficultyFrame:Hide()
                 end
 
                 for e = 1, raid.encounters do
