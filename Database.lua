@@ -324,16 +324,20 @@ function AlterEgo:UpdateMythicPlus()
     local runHistory = C_MythicPlus.GetRunHistory(true, true)
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
     local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-    local vault = C_WeeklyRewards.GetActivities(1)
     local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion(); 
     if weeklyRewardAvailable ~= nil then character.weeklyRewardAvailable = weeklyRewardAvailable end
     if ratingSummary ~= nil then character.ratingSummary = ratingSummary end
     if runHistory ~= nil then character.history = runHistory end
     if keyStoneMapID ~= nil then character.key.map = keyStoneMapID end
     if keyStoneLevel ~= nil then character.key.level = keyStoneLevel end
-    if vault ~= nil then character.vault = vault end
     if bestSeasonScore ~= nil then character.bestSeasonScore = bestSeasonScore end
     if bestSeasonNumber ~= nil then character.bestSeasonNumber = bestSeasonNumber end
+
+    character.vault = {}
+    for i = 1, 3 do
+        local vault = C_WeeklyRewards.GetActivities(i)
+        table.insert(character.vault, vault)
+    end
 
     for dungeonId, dungeon in pairs(dataDungeons) do
         if dungeon.texture == nil then
