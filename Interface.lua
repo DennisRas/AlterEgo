@@ -1,5 +1,224 @@
 ---@diagnostic disable: inject-field, deprecated
-local labels = {"Character", "Realm", "Rating", STAT_AVERAGE_ITEM_LEVEL, "Vault", "Current Keystone"}
+function AlterEgo:GetCharacterInfo()
+    return {
+        {
+            label = "Character",
+            value = function(character)
+                local name = "-"
+                local nameColor = "ffffffff"
+                if character.name ~= nil then
+                    name = character.name
+                end
+                if character.class.file ~= nil then
+                    local classColor = C_ClassColor.GetClassColor(character.class.file)
+                    if classColor ~= nil then
+                        nameColor = classColor.GenerateHexColor(classColor)
+                    end
+                end
+                return "|c" .. nameColor .. name .. "|r"
+            end,
+            OnEnter = function(character)
+                local name = "-"
+                local nameColor = "ffffffff"
+                if character.name ~= nil then
+                    name = character.name
+                end
+                if character.class.file ~= nil then
+                    local classColor = C_ClassColor.GetClassColor(character.class.file)
+                    if classColor ~= nil then
+                        nameColor = classColor.GenerateHexColor(classColor)
+                    end
+                end
+                GameTooltip:AddLine("|c" .. nameColor .. name .. "|r");
+                GameTooltip:AddLine(format("Level %d %s", character.level, character.race ~= nil and character.race.name or ""), 1, 1, 1);
+                if character.factionGroup ~= nil and character.factionGroup.localized~= nil then
+                    GameTooltip:AddLine(character.factionGroup.localized, 1, 1, 1);
+                end
+                if character.lastUpdate ~= nil then
+                    GameTooltip:AddLine(" ");
+                    GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                end
+            end,
+            enabled = true,
+        },
+        {
+            label = "Realm",
+            value = function(character)
+                local realm = "-"
+                local realmColor = "ffffffff"
+                if character.realm ~= nil then
+                    realm = character.realm
+                end
+                return "|c" .. realmColor .. realm .. "|r"
+            end,
+            tooltip = false,
+            enabled = true,
+        },
+        {
+            label = STAT_AVERAGE_ITEM_LEVEL,
+            value = function(character)
+                local itemLevel = ""
+                local itemLevelColor = "ffffffff"
+                if character.ilvl ~= nil then
+                    if character.ilvl.level ~= nil then
+                        itemLevel = tostring(floor(character.ilvl.level))
+                    end
+                    if character.ilvl.color then
+                        itemLevelColor = character.ilvl.color
+                    end
+                end
+                return "|c" .. itemLevelColor .. itemLevel .. "|r"
+            end,
+            OnEnter = function(character)
+                local itemLevelTooltip = ""
+                local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
+                if character.ilvl ~= nil then
+                    if character.ilvl.level ~= nil then
+                        itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.ilvl.level)
+                    end
+                    if character.ilvl.level ~= nil and character.ilvl.equipped ~= nil and character.ilvl.level ~= character.ilvl.equipped then
+                        itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.ilvl.equipped);
+                    end
+                    if character.ilvl.level ~= nil then
+                        itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
+                    end
+                    if character.ilvl.level ~= nil and character.ilvl.pvp ~= nil and floor(character.ilvl.level) ~= character.ilvl.pvp then
+                        itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.ilvl.pvp)));
+                    end
+                end
+                GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
+                GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+            end,
+            enabled = true,
+        },
+        {
+            label = "Rating",
+            value = function(character)
+                local rating = "-"
+                local ratingColor = "ffffffff"
+                if character.ratingSummary ~= nil and character.ratingSummary.currentSeasonScore ~= nil then
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.ratingSummary.currentSeasonScore)
+                    if color ~= nil then
+                        ratingColor = color.GenerateHexColor(color)
+                    end
+                    rating = tostring(character.ratingSummary.currentSeasonScore)
+                end
+                return "|c" .. ratingColor .. rating .. "|r"
+            end,
+            OnEnter = function(character)
+                local rating = "-"
+                local ratingColor = "ffffffff"
+                local bestSeasonScore = nil
+                local bestSeasonScoreColor = "ffffffff"
+                local bestSeasonNumber = nil
+                if character.bestSeasonScore ~= nil then
+                    bestSeasonScore = character.bestSeasonScore
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
+                    if color ~= nil then
+                        bestSeasonScoreColor = color.GenerateHexColor(color)
+                    end
+                end
+                if character.bestSeasonNumber ~= nil then
+                    bestSeasonNumber = character.bestSeasonNumber
+                end
+                if character.ratingSummary ~= nil and character.ratingSummary.currentSeasonScore ~= nil then
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.ratingSummary.currentSeasonScore)
+                    if color ~= nil then
+                        ratingColor = color.GenerateHexColor(color)
+                    end
+                    rating = tostring(character.ratingSummary.currentSeasonScore)
+                end
+                GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
+                GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.history or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                if bestSeasonScore ~= nil then
+                    local score = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
+                    if bestSeasonNumber ~= nil then
+                        score = score .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
+                    end
+                    GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                end
+                if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
+                    GameTooltip:AddLine(" ")
+                    for r,run in ipairs(character.ratingSummary.runs) do
+                        local dungeonName = C_ChallengeMode.GetMapUIInfo(run.challengeModeID)
+                        if dungeonName ~= nil then
+                            GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(run.bestRunLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+                        end
+                    end
+                    GameTooltip:AddLine(" ")
+                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                end
+            end,
+            OnClick = function(character)
+                if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
+                    if IsModifiedClick("CHATLINK") then
+                        local dungeonScoreDungeonTable = {};
+                        if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
+                            for _, run in ipairs(character.ratingSummary.runs) do
+                                table.insert(dungeonScoreDungeonTable, run.challengeModeID);
+                                table.insert(dungeonScoreDungeonTable, run.finishedSuccess and 1 or 0);
+                                table.insert(dungeonScoreDungeonTable, run.bestRunLevel);
+                            end
+                        end
+                        local dungeonScoreTable = {
+                            character.ratingSummary.currentSeasonScore,
+                            character.GUID,
+                            character.name,
+                            character.class.id,
+                            math.ceil(character.ilvl.level),
+                            character.level,
+                            character.history and #character.history or 0,
+                            character.bestSeasonScore,
+                            character.bestSeasonNumber,
+                            unpack(dungeonScoreDungeonTable)
+                        };
+                        local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+                        if not ChatEdit_InsertLink(link) then
+                            ChatFrame_OpenChat(link);
+                        end
+                    end
+                end
+            end,
+            enabled = true,
+        },
+        {
+            label = "Current Keystone",
+            value = function(character)
+                local currentKeystone = "-"
+                if character.key ~= nil and character.key.map ~= nil and character.key.level ~= nil then
+                    local dungeon = self:GetDungeonByMapId(character.key.map)
+                    if dungeon then
+                        currentKeystone = dungeon.abbr .. " +" .. tostring(character.key.level)
+                    end
+                end
+                return currentKeystone
+            end,
+            enabled = true,
+        },
+        {
+            label = "Vault (Raids)",
+            value = function(character) return "-  -   -" end,
+            enabled = self.db.global.raids.enabled,
+        },
+        {
+            label = "Vault (Dungeons)",
+            value = function(character)
+                local vaultLevels = ""
+                for _, vault in ipairs(character.vault) do
+                    local level = "-"
+                    if vault.level > 0 then
+                        level = tostring(vault.level)
+                    end
+                    vaultLevels = vaultLevels .. level .. "  "
+                end
+                return vaultLevels:trim()
+            end,
+            OnEnter = function(character) end,
+            enabled = true,
+        },
+    }
+end
 local assets = {
     font = {
         file = "Fonts\\FRIZQT__.TTF",
@@ -58,52 +277,33 @@ local CreateCharacterColumn = function(parent, index)
     SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
 
     -- Character info
-    CharacterColumn.Name = CreateFrame("Frame", CharacterColumn:GetName() .. "Name", CharacterColumn)
-    CharacterColumn.Name:SetPoint("TOPLEFT", CharacterColumn:GetName(), "TOPLEFT")
-    CharacterColumn.Name:SetPoint("TOPRIGHT", CharacterColumn:GetName(), "TOPRIGHT")
-    CharacterColumn.Name:SetHeight(sizes.row)
-    CharacterColumn.Name.Text = CharacterColumn.Name:CreateFontString(CharacterColumn.Name:GetName() .. "Text", "OVERLAY")
-    CharacterColumn.Name.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    CharacterColumn.Name.Text:SetAllPoints()
-    CharacterColumn.Realm = CreateFrame("Frame", CharacterColumn:GetName() .. "Realm", CharacterColumn)
-    CharacterColumn.Realm:SetPoint("TOPLEFT", CharacterColumn.Name:GetName(), "BOTTOMLEFT")
-    CharacterColumn.Realm:SetPoint("TOPRIGHT", CharacterColumn.Name:GetName(), "BOTTOMRIGHT")
-    CharacterColumn.Realm:SetHeight(sizes.row)
-    CharacterColumn.Realm.Text = CharacterColumn.Realm:CreateFontString(CharacterColumn.Realm:GetName() .. "Text", "OVERLAY")
-    CharacterColumn.Realm.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    CharacterColumn.Realm.Text:SetAllPoints()
-    CharacterColumn.Rating = CreateFrame("Button", CharacterColumn:GetName() .. "Rating", CharacterColumn)
-    CharacterColumn.Rating:SetPoint("TOPLEFT", CharacterColumn.Realm:GetName(), "BOTTOMLEFT")
-    CharacterColumn.Rating:SetPoint("TOPRIGHT", CharacterColumn.Realm:GetName(), "BOTTOMRIGHT")
-    CharacterColumn.Rating:SetHeight(sizes.row)
-    CharacterColumn.Rating:RegisterForClicks("AnyUp")
-    CharacterColumn.Rating.Text = CharacterColumn.Rating:CreateFontString(CharacterColumn.Rating:GetName() .. "Text", "OVERLAY")
-    CharacterColumn.Rating.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    CharacterColumn.Rating.Text:SetAllPoints()
-    CharacterColumn.ItemLevel = CreateFrame("Frame", CharacterColumn:GetName() .. "ItemLevel", CharacterColumn)
-    CharacterColumn.ItemLevel:SetPoint("TOPLEFT", CharacterColumn.Rating:GetName(), "BOTTOMLEFT")
-    CharacterColumn.ItemLevel:SetPoint("TOPRIGHT", CharacterColumn.Rating:GetName(), "BOTTOMRIGHT")
-    CharacterColumn.ItemLevel:SetHeight(sizes.row)
-    CharacterColumn.ItemLevel.Text = CharacterColumn.ItemLevel:CreateFontString(CharacterColumn.ItemLevel:GetName() .. "Text", "OVERLAY")
-    CharacterColumn.ItemLevel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    CharacterColumn.ItemLevel.Text:SetAllPoints()
-    CharacterColumn.Vault = CreateFrame("Frame", CharacterColumn:GetName() .. "Vault", CharacterColumn)
-    CharacterColumn.Vault:SetPoint("TOPLEFT", CharacterColumn.ItemLevel:GetName(), "BOTTOMLEFT")
-    CharacterColumn.Vault:SetPoint("TOPRIGHT", CharacterColumn.ItemLevel:GetName(), "BOTTOMRIGHT")
-    CharacterColumn.Vault:SetHeight(sizes.row)
-    CharacterColumn.Vault.Text = CharacterColumn.Vault:CreateFontString(CharacterColumn.Vault:GetName() .. "Text", "OVERLAY")
-    CharacterColumn.Vault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    CharacterColumn.Vault.Text:SetAllPoints()
-    CharacterColumn.CurrentKeystone = CreateFrame("Frame", CharacterColumn:GetName() .. "CurrentKey", CharacterColumn)
-    CharacterColumn.CurrentKeystone:SetPoint("TOPLEFT", CharacterColumn.Vault:GetName(), "BOTTOMLEFT")
-    CharacterColumn.CurrentKeystone:SetPoint("TOPRIGHT", CharacterColumn.Vault:GetName(), "BOTTOMRIGHT")
-    CharacterColumn.CurrentKeystone:SetHeight(sizes.row)
-    CharacterColumn.CurrentKeystone.Text = CharacterColumn.CurrentKeystone:CreateFontString(CharacterColumn.CurrentKeystone:GetName() .. "Text", "OVERLAY")
-    CharacterColumn.CurrentKeystone.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    CharacterColumn.CurrentKeystone.Text:SetAllPoints()
+    local anchorFrame = CharacterColumn
+    do
+        local labels = AlterEgo:GetCharacterInfo()
+        for l, info in ipairs(labels) do
+            local CharacterFrame = CreateFrame(info.OnClick and "Button" or "Frame", CharacterColumn:GetName() .. "Info" .. l, CharacterColumn)
+            if l > 1 then
+                CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+            else
+                CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+            end
+
+            CharacterFrame:SetHeight(sizes.row)
+            CharacterFrame.Text = CharacterFrame:CreateFontString(CharacterFrame:GetName() .. "Text", "OVERLAY")
+            CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", sizes.padding, 0)
+            CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -sizes.padding, 0)
+            CharacterFrame.Text:SetJustifyH("CENTER")
+            CharacterFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+
+            anchorFrame = CharacterFrame
+        end
+    end
+
     CharacterColumn.AffixHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Affixes", CharacterColumn)
-    CharacterColumn.AffixHeader:SetPoint("TOPLEFT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMLEFT")
-    CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", CharacterColumn.CurrentKeystone:GetName(), "BOTTOMRIGHT")
+    CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+    CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
     CharacterColumn.AffixHeader:SetHeight(sizes.row)
     SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
 
@@ -171,19 +371,32 @@ local CreateCharacterColumn = function(parent, index)
     end
 
     -- Raid Rows
-    local previousRowFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. #dungeons]
+    local anchorFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. #dungeons]
     for r, raid in ipairs(raids) do
         local RaidHeader = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r, CharacterColumn)
         RaidHeader:SetHeight(sizes.row)
-        RaidHeader:SetPoint("TOPLEFT", previousRowFrame, "BOTTOMLEFT")
-        RaidHeader:SetPoint("TOPRIGHT", previousRowFrame, "BOTTOMRIGHT")
+        RaidHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        RaidHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
         SetBackgroundColor(RaidHeader, 0, 0, 0, 0.3)
-        previousRowFrame = RaidHeader
+
+        anchorFrame = RaidHeader
+
+        -- local RaidVault = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Vault", CharacterColumn)
+        -- RaidVault:SetHeight(sizes.row)
+        -- RaidVault:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        -- RaidVault:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+        -- RaidVault.Text = RaidVault:CreateFontString(RaidVault:GetName() .. "Text", "OVERLAY")
+        -- RaidVault.Text:SetPoint("TOPLEFT", RaidVault, "TOPLEFT", 1, -1)
+        -- RaidVault.Text:SetPoint("BOTTOMRIGHT", RaidVault, "BOTTOMRIGHT", -1, 1)
+        -- RaidVault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+        -- RaidVault.Text:SetJustifyH("CENTER")
+
+        -- anchorFrame = RaidVault
 
         for rd, difficulty in pairs(AlterEgo:GetRaidDifficulties()) do
             local RaidFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd, RaidHeader)
-            RaidFrame:SetPoint("TOPLEFT", previousRowFrame, "BOTTOMLEFT")
-            RaidFrame:SetPoint("TOPRIGHT", previousRowFrame, "BOTTOMRIGHT")
+            RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+            RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             RaidFrame:SetHeight(sizes.row)
             SetBackgroundColor(RaidFrame, 1, 1, 1, rd % 2 == 0 and 0.01 or 0)
 
@@ -199,7 +412,7 @@ local CreateCharacterColumn = function(parent, index)
                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                 previousEncounterFrame = EncounterFrame
             end
-            previousRowFrame = RaidFrame
+            anchorFrame = RaidFrame
         end
     end
 
@@ -241,7 +454,7 @@ function AlterEgo:GetWindowSize()
     if self.db.global.raids.enabled then
         raidHeight = self:tablen(raids) * (self:tablen(difficulties) + 1) * sizes.row
     end
-    local height = sizes.titlebar.height + self:tablen(labels) * sizes.row + sizes.row + self:tablen(dungeons) * sizes.row + raidHeight
+    local height = sizes.titlebar.height + self:tablen(self:GetCharacterInfo()) * sizes.row + sizes.row + self:tablen(dungeons) * sizes.row + raidHeight
     return width, height
 end
 
@@ -409,6 +622,18 @@ function AlterEgo:CreateUI()
                 self:UpdateUI()
             end
         })
+        UIDropDownMenu_AddButton({
+            text = "Show different colors per difficulty",
+            checked = self.db.global.raids and self.db.global.raids.colors,
+            isNotRadio = true,
+            tooltipTitle = "Show different colors per difficulty",
+            tooltipText = "Argharhggh! So much greeeen!",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.raids.colors = not checked
+                self:UpdateUI()
+            end
+        })
     end, "MENU")
     self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
         self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
@@ -532,9 +757,11 @@ function AlterEgo:CreateUI()
     self.Window.Body.Sidebar:SetWidth(sizes.sidebar.width)
     SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.3)
 
-    -- Character labels
+    -- Character info
+    local anchorFrame
     do
-        for l, label in ipairs(labels) do
+        local labels = self:GetCharacterInfo()
+        for l, info in ipairs(labels) do
             local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. l, self.Window.Body.Sidebar)
             if l > 1 then
                 CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. (l-1), "BOTTOMLEFT")
@@ -550,21 +777,23 @@ function AlterEgo:CreateUI()
             CharacterLabel.Text:SetPoint("RIGHT", CharacterLabel, "RIGHT", -sizes.padding, 0)
             CharacterLabel.Text:SetJustifyH("LEFT")
             CharacterLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-            CharacterLabel.Text:SetText(label)
+            CharacterLabel.Text:SetText(info.label)
             CharacterLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+
+            anchorFrame = CharacterLabel
         end
     end
 
     local DungeonHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "DungeonHeaderLabel", self.Window.Body.Sidebar)
-    DungeonHeaderLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. self:tablen(labels), "BOTTOMLEFT")
-    DungeonHeaderLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Label" .. self:tablen(labels), "BOTTOMRIGHT")
+    DungeonHeaderLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+    DungeonHeaderLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
     DungeonHeaderLabel:SetHeight(sizes.row)
     DungeonHeaderLabel.Text = DungeonHeaderLabel:CreateFontString(DungeonHeaderLabel:GetName() .. "Text", "OVERLAY")
     DungeonHeaderLabel.Text:SetPoint("TOPLEFT", DungeonHeaderLabel, "TOPLEFT", sizes.padding, 0)
     DungeonHeaderLabel.Text:SetPoint("BOTTOMRIGHT", DungeonHeaderLabel, "BOTTOMRIGHT", -sizes.padding, 0)
     DungeonHeaderLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
     DungeonHeaderLabel.Text:SetJustifyH("LEFT")
-    DungeonHeaderLabel.Text:SetText("Mythic Plus")
+    DungeonHeaderLabel.Text:SetText("M+ Season " .. C_MythicPlus.GetCurrentUIDisplaySeason())
     DungeonHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
 
     -- Dungeon names
@@ -593,12 +822,12 @@ function AlterEgo:CreateUI()
     end
 
     -- Raids & Difficulties
-    local previousRowFrame = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. #dungeons]
+    local anchorFrame = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. #dungeons]
     for r, raid in ipairs(raids) do
         local RaidHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. r, self.Window.Body.Sidebar)
-        RaidHeaderLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. self:tablen(dungeons), "BOTTOMLEFT")
-        RaidHeaderLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. self:tablen(dungeons), "BOTTOMRIGHT")
         RaidHeaderLabel:SetHeight(sizes.row)
+        RaidHeaderLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        RaidHeaderLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
         RaidHeaderLabel.Text = RaidHeaderLabel:CreateFontString(RaidHeaderLabel:GetName() .. "Text", "OVERLAY")
         RaidHeaderLabel.Text:SetPoint("TOPLEFT", RaidHeaderLabel, "TOPLEFT", sizes.padding, 0)
         RaidHeaderLabel.Text:SetPoint("BOTTOMRIGHT", RaidHeaderLabel, "BOTTOMRIGHT", -sizes.padding, 0)
@@ -607,15 +836,13 @@ function AlterEgo:CreateUI()
         RaidHeaderLabel.Text:SetText(raid.name)
         RaidHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
 
-        RaidHeaderLabel:SetPoint("TOPLEFT", previousRowFrame, "BOTTOMLEFT")
-        RaidHeaderLabel:SetPoint("TOPRIGHT", previousRowFrame, "BOTTOMRIGHT")
-        previousRowFrame = RaidHeaderLabel
+        anchorFrame = RaidHeaderLabel
 
         for rd, difficulty in ipairs(difficulties) do
             local RaidDifficulty = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. r .. "Difficulty" .. rd, RaidHeaderLabel)
 
-            RaidDifficulty:SetPoint("TOPLEFT", previousRowFrame, "BOTTOMLEFT")
-            RaidDifficulty:SetPoint("TOPRIGHT", previousRowFrame, "BOTTOMRIGHT")
+            RaidDifficulty:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+            RaidDifficulty:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
 
             RaidDifficulty:SetHeight(sizes.row)
             RaidDifficulty.Text = RaidDifficulty:CreateFontString(RaidDifficulty:GetName() .. "Text", "OVERLAY")
@@ -628,7 +855,7 @@ function AlterEgo:CreateUI()
             -- RaidLabel.Icon:SetSize(16, 16)
             -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", sizes.padding, 0)
             -- RaidLabel.Icon:SetTexture(raid.icon)
-            previousRowFrame = RaidDifficulty
+            anchorFrame = RaidDifficulty
         end
     end
 
@@ -787,102 +1014,35 @@ function AlterEgo:UpdateUI()
             CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "BOTTOMLEFT")
         end
         lastCharacterColumn = CharacterColumn
-        CharacterColumn.Name.Text:SetText("|c" .. nameColor .. name .. "|r")
-        CharacterColumn.Name:SetScript("OnEnter", function()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(CharacterColumn.Name, "ANCHOR_RIGHT")
-            GameTooltip:AddLine("|c" .. nameColor .. name .. "|r");
-            GameTooltip:AddLine(format("Level %d %s", character.level, character.race ~= nil and character.race.name or ""), 1, 1, 1);
-            if character.factionGroup ~= nil and character.factionGroup.localized~= nil then
-                GameTooltip:AddLine(character.factionGroup.localized, 1, 1, 1);
-            end
-            if character.lastUpdate ~= nil then
-                GameTooltip:AddLine(" ");
-                GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-            end
-            GameTooltip:Show()
-        end)
-        CharacterColumn.Name:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        CharacterColumn.Realm.Text:SetText("|c" .. realmColor .. realm .. "|r")
-        CharacterColumn.Rating.Text:SetText("|c" .. ratingColor .. rating .. "|r")
-        CharacterColumn.Rating:SetScript("OnEnter", function()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(CharacterColumn.Rating, "ANCHOR_RIGHT")
-            GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
-            GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-            GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.history or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-            if bestSeasonScore ~= nil then
-                local score = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
-                if bestSeasonNumber ~= nil then
-                    score = score .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
-                end
-                GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-            end
 
-            if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
-                GameTooltip:AddLine(" ")
-                for r,run in ipairs(character.ratingSummary.runs) do
-                    local dungeonName = C_ChallengeMode.GetMapUIInfo(run.challengeModeID)
-                    if dungeonName ~= nil then
-                        GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(run.bestRunLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
-                    end
+
+        -- Character info
+        local anchorFrame = CharacterColumn
+        do
+            local labels = AlterEgo:GetCharacterInfo()
+            for l, info in ipairs(labels) do
+                local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. l]
+                CharacterFrame.Text:SetText(info.value(character))
+                if info.OnEnter then
+                    CharacterFrame:SetScript("OnEnter", function()
+                        GameTooltip:ClearAllPoints()
+                        GameTooltip:ClearLines()
+                        GameTooltip:SetOwner(CharacterFrame, "ANCHOR_RIGHT")
+                        info.OnEnter(character)
+                        GameTooltip:Show()
+                    end)
+                    CharacterFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
                 end
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                if info.OnClick then
+                    CharacterFrame:SetScript("OnClick", function()
+                        info.OnClick(character)
+                    end)
+                end
+                anchorFrame = CharacterFrame
             end
-            GameTooltip:Show()
-        end)
-        CharacterColumn.Rating:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
-            CharacterColumn.Rating:SetScript("OnClick", function()
-                if IsModifiedClick("CHATLINK") then
-                    local dungeonScoreDungeonTable = { };
-                    if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
-                        for _, run in ipairs(character.ratingSummary.runs) do
-                            table.insert(dungeonScoreDungeonTable, run.challengeModeID);
-                            table.insert(dungeonScoreDungeonTable, run.finishedSuccess and 1 or 0);
-                            table.insert(dungeonScoreDungeonTable, run.bestRunLevel);
-                        end
-                    end
-                    local dungeonScoreTable = {
-                        character.ratingSummary.currentSeasonScore,
-                        character.GUID,
-                        character.name,
-                        character.class.id,
-                        math.ceil(character.ilvl.level),
-                        character.level,
-                        character.history and #character.history or 0,
-                        character.bestSeasonScore,
-                        character.bestSeasonNumber,
-                        unpack(dungeonScoreDungeonTable)
-                    };
-                    local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
-                    if not ChatEdit_InsertLink(link) then
-                        ChatFrame_OpenChat(link);
-                    end
-                end
-            end)
-        else
-            CharacterColumn.Rating:SetScript("OnClick", nil)
-        end
-        CharacterColumn.ItemLevel.Text:SetText("|c" .. itemLevelColor .. itemLevel .. "|r")
-        if itemLevelTooltip then
-            CharacterColumn.ItemLevel:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
-                GameTooltip:SetOwner(CharacterColumn.ItemLevel, "ANCHOR_RIGHT")
-                GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
-                GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-                GameTooltip:Show()
-            end)
-            CharacterColumn.ItemLevel:SetScript("OnLeave", function() GameTooltip:Hide() end)
         end
 
-        CharacterColumn.Vault.Text:SetText(vaultLevels:trim())
-        CharacterColumn.CurrentKeystone.Text:SetText(currentKeystone)
-
+        -- Dungeon rows
         for d, dungeon in ipairs(dungeons) do
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
 
@@ -1007,8 +1167,12 @@ function AlterEgo:UpdateUI()
                             end
                         end
                     end
-                    if killed then
-                        SetBackgroundColor(EncounterFrame, 0, 1, 0, 0.5)
+                    if killed or random() < 0.8 then
+                        local color = difficulty.color
+                        if not self.db.global.raids.colors then
+                            color = UNCOMMON_GREEN_COLOR
+                        end
+                        SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, 0.5)
                     else
                         SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                     end

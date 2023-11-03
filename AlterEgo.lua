@@ -18,6 +18,7 @@ local defaultDB = {
         showZeroRatedCharacters = true,
         raids = {
             enabled = false,
+            colors = false,
             currentTierOnly = true,
             lfr = true,
             normal = true,
@@ -47,19 +48,73 @@ local libDataObject = {
     end
 }
 
+function AlterEgo:RefreshLockInfo() -- throttled lock update with retry
+    local now = GetTime()
+    if now > (self.lastrefreshlock or 0) + 1 then
+        self.lastrefreshlock = now
+        self:RequestLockInfo()
+    end
+    if now > (self.lastrefreshlocksched or 0) + 120 then
+        -- make sure we update any lockout info (sometimes there's server-selfde delay)
+        self:Print("(self.lastrefreshlocksched or 0)")
+        self.lastrefreshlockshed = now
+        self:ScheduleTimer("RequestLockInfo", 5)
+        self:ScheduleTimer("RequestLockInfo", 30)
+        self:ScheduleTimer("RequestLockInfo", 60)
+        self:ScheduleTimer("RequestLockInfo", 90)
+        self:ScheduleTimer("RequestLockInfo", 120)
+    end
+end
+
+function AlterEgo:RequestLockInfo() -- request lock info from the server immediately
+    RequestRaidInfo()
+    RequestLFDPlayerLockInfo()
+end
+
 function AlterEgo:OnInitialize()
     self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
-    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 3, "UpdateDB")
-    self:RegisterBucketEvent("RAID_INSTANCE_WELCOME", 2, RequestRaidInfo)
-    self:RegisterBucketEvent("LFG_LOCK_INFO_RECEIVED", 2, RequestRaidInfo)
-    self:RegisterBucketEvent({"WEEKLY_REWARDS_UPDATE", "CHALLENGE_MODE_MAPS_UPDATE"}, 2, "UpdateDB")
-    self:RegisterBucketEvent("LFG_UPDATE_RANDOM_INFO", 2, "UpdateDB")
-    self:RegisterBucketEvent("UPDATE_INSTANCE_INFO", 2, "UpdateDB")
-    self:RegisterBucketEvent("CHALLENGE_MODE_COMPLETED", 5, "UpdateDB")
-    self:RegisterBucketEvent("CHALLENGE_MODE_RESET", 2, "UpdateDB")
-    self:RegisterBucketEvent("MYTHIC_PLUS_NEW_WEEKLY_RECORD", 2, "UpdateDB")
+    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 3, function()
+        self:Print("BAG_UPDATE_DELAYED")
+        self:UpdateDB()
+    end)
+    self:RegisterBucketEvent("RAID_INSTANCE_WELCOME", 2, function()
+        self:Print("RAID_INSTANCE_WELCOME")
+        RequestRaidInfo()
+    end)
+    self:RegisterBucketEvent("LFG_LOCK_INFO_RECEIVED", 2, function()
+        self:Print("LFG_LOCK_INFO_RECEIVED")
+        RequestRaidInfo()
+    end)
+    self:RegisterBucketEvent({"BOSS_KILL", "ENCOUNTER_END"}, 5, function()
+        self:Print("BOSS_KILL, ENCOUNTER_END")
+        RequestRaidInfo()
+    end)
+    self:RegisterBucketEvent({"WEEKLY_REWARDS_UPDATE", "CHALLENGE_MODE_MAPS_UPDATE"}, 2, function()
+        self:Print("WEEKLY_REWARDS_UPDATE")
+        self:UpdateDB()
+    end)
+    self:RegisterBucketEvent("LFG_UPDATE_RANDOM_INFO", 2, function()
+        self:Print("LFG_UPDATE_RANDOM_INFO")
+        self:UpdateDB()
+    end)
+    self:RegisterBucketEvent("UPDATE_INSTANCE_INFO", 2, function()
+        self:Print("UPDATE_INSTANCE_INFO")
+        self:UpdateDB()
+    end)
+    self:RegisterBucketEvent("CHALLENGE_MODE_COMPLETED", 5, function()
+        self:Print("CHALLENGE_MODE_COMPLETED")
+        self:UpdateDB()
+    end)
+    self:RegisterBucketEvent("CHALLENGE_MODE_RESET", 2, function()
+        self:Print("CHALLENGE_MODE_RESET")
+        self:UpdateDB()
+    end)
+    self:RegisterBucketEvent("MYTHIC_PLUS_NEW_WEEKLY_RECORD", 2, function()
+        self:Print("MYTHIC_PLUS_NEW_WEEKLY_RECORD")
+        self:UpdateDB()
+    end)
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
 
