@@ -1167,7 +1167,7 @@ function AlterEgo:UpdateUI()
                             end
                         end
                     end
-                    if killed or random() < 0.8 then
+                    if killed then
                         local color = difficulty.color
                         if not self.db.global.raids.colors then
                             color = UNCOMMON_GREEN_COLOR
