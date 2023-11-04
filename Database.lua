@@ -1,40 +1,128 @@
 ---@diagnostic disable: inject-field
 local defaultCharacter = {
     GUID = "",
-    enabled = true,
-    name = "",
-    realm = "",
-    level = 0,
-    race = {
-        name = "",
-        file = "",
-        id = 0
-    },
-    class = {
-        name = "",
-        file = "",
-        id = 0
-    },
-    factionGroup = {
-        english = "",
-        localized = ""
-    },
-    ilvl = {
-        level = 0,
-        equipped = 0,
-        pvp = 0,
-        color = "ffffffff"
-    },
-    vault = {},
-    key = {  map = 0, level = 0 },
-    ratingSummary = {
-        runs = {},
-        currentSeasonScore = 0
-    },
-    history = {},
-    bestDungeons = {},
     lastUpdate = 0,
-    raids = {}
+    enabled = true,
+    info = {
+        name = "",
+        realm = "",
+        level = 0,
+        race = {
+            name = "",
+            file = "",
+            id = 0
+        },
+        class = {
+            name = "",
+            file = "",
+            id = 0
+        },
+        factionGroup = {
+            english = "",
+            localized = ""
+        },
+        ilvl = {
+            level = 0,
+            equipped = 0,
+            pvp = 0,
+            color = "ffffffff"
+        },
+    },
+    raids = {
+        savedInstances = {
+            -- [1] = {
+            --     ["id"] = lockoutId,
+            --     ["name"] = name,
+            --     ["lockoutId"] = lockoutId,
+            --     ["reset"] = reset,
+            --     ["expires"] = expires,
+            --     ["difficultyId"] = difficultyId,
+            --     ["locked"] = locked,
+            --     ["instanceIDMostSig"] = instanceIDMostSig,
+            --     ["isRaid"] = isRaid,
+            --     ["maxPlayers"] = maxPlayers,
+            --     ["difficultyName"] = difficultyName,
+            --     ["numEncounters"] = numEncounters,
+            --     ["encounterProgress"] = encounterProgress,
+            --     ["extendDisabled"] = extendDisabled,
+            --     ["instanceId"] = instanceId,
+            --     link = GetSavedInstanceChatLink(i),
+            --     ["encounters"] = encounters
+            -- }
+        },
+    },
+    mythicplus = { -- Mythic Plus
+        rating = 0,
+        keystone = {
+            mapId = 0,
+            level = 0,
+            itemId = 0
+        },
+        bestSeasonScore = 0,
+        bestSeasonNumber = 0,
+        runHistory = {},
+        dungeons = {
+            -- [1] = {
+            --     rating = 0,
+            --     level = 0,
+            --     finishedSuccess = false,
+            --     bestTimedRun = {
+            --         ["durationSec"] = 0,
+            --         ["completionDate"] = {
+            --             ["year"] = 0,
+            --             ["month"] = 0,
+            --             ["minute"] = 0,
+            --             ["hour"] = 0,
+            --             ["day"] = 0,
+            --         },
+            --         ["affixIDs"] = {
+            --             0, 0, 0
+            --         },
+            --         ["level"] = 0,
+            --         ["members"] = {
+            --             {
+            --                 ["specID"] = 0,
+            --                 ["name"] = "",
+            --                 ["classID"] = 0,
+            --             }
+            --         }
+            --     },
+            --     bestNotTimedRun = {},
+            --     affixScores = {
+            --         [1] = {
+            --             ["name"] = "Tyrannical",
+            --             ["overTime"] = false,
+            --             ["level"] = 0,
+            --             ["durationSec"] = 0,
+            --             ["score"] = 0,
+            --         },
+            --         [2] = {
+            --             ["name"] = "Fortified",
+            --             ["overTime"] = false,
+            --             ["level"] = 0,
+            --             ["durationSec"] = 0,
+            --             ["score"] = 0,
+            --         },
+            --     }
+            -- }
+        },
+    },
+    pvp = {},
+    vault = {
+        hasAvailableRewards = false,
+        slots = {
+            -- [1] = {
+            --     ["threshold"] = 0,
+            --     ["type"] = 0,
+            --     ["index"] = 0,
+            --     ["rewards"] = {},
+            --     ["progress"] = 0,
+            --     ["level"] = 0,
+            --     ["raidString"] = "",
+            --     ["id"] = 0,
+            -- },
+        }
+    },
 }
 
 local dataAffixes = {
@@ -133,21 +221,21 @@ function AlterEgo:GetCharacters(unfiltered)
     -- Sorting
     table.sort(characters, function (a, b)
         if self.db.global.sorting == "name.asc" then
-            return a.name < b.name
+            return a.info.name < b.info.name
         elseif self.db.global.sorting == "name.desc" then
-            return a.name > b.name
+            return a.info.name > b.info.name
         elseif self.db.global.sorting == "realm.asc" then
-            return a.realm < b.realm
+            return a.info.realm < b.info.realm
         elseif self.db.global.sorting == "realm.desc" then
-            return a.realm > b.realm
+            return a.info.realm > b.info.realm
         elseif self.db.global.sorting == "rating.asc" then
-            return a.ratingSummary.currentSeasonScore < b.ratingSummary.currentSeasonScore
+            return a.mythicplus.rating < b.mythicplus.rating
         elseif self.db.global.sorting == "rating.desc" then
-            return a.ratingSummary.currentSeasonScore > b.ratingSummary.currentSeasonScore
+            return a.mythicplus.rating > b.mythicplus.rating
         elseif self.db.global.sorting == "ilvl.asc" then
-            return a.ilvl.level < b.ilvl.level
+            return a.info.ilvl.level < b.info.ilvl.level
         elseif self.db.global.sorting == "ilvl.desc" then
-            return a.ilvl.level > b.ilvl.level
+            return a.info.ilvl.level > b.info.ilvl.level
         end
         return a.lastUpdate > b.lastUpdate
     end)
@@ -160,13 +248,13 @@ function AlterEgo:GetCharacters(unfiltered)
     local charactersFiltered = {}
     for _, character in ipairs(characters) do
         local keep = true
-        if character.level == nil or character.level < 70 then
+        if character.info.level == nil or character.info.level < 70 then
             keep = false
         end
         if not character.enabled then
             keep = false
         end
-        if self.db.global.showZeroRatedCharacters == false and (character.ratingSummary and character.ratingSummary.currentSeasonScore <= 0) then
+        if self.db.global.showZeroRatedCharacters == false and (character.mythicplus.rating and character.mythicplus.rating <= 0) then
             keep = false
         end
         if keep then
@@ -212,7 +300,7 @@ function AlterEgo:UpdateRaidInstances()
 
     -- Boss encounter: EJ_GetEncounterInfo(2522)
 
-    character.raids = {}
+    character.raids.savedInstances = {}
     if numInstances > 0 then 
         for i = 1, numInstances do
             local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceId = GetSavedInstanceInfo(i)
@@ -230,7 +318,7 @@ function AlterEgo:UpdateRaidInstances()
                     ["killed"] = killed
                 }
             end
-            character.raids[i] = {
+            character.raids.savedInstances[i] = {
                 ["id"] = lockoutId,
                 ["name"] = name,
                 ["lockoutId"] = lockoutId,
@@ -273,25 +361,25 @@ function AlterEgo:UpdateCharacterInfo()
     local playerFactionGroupEnglish, playerFactionGroupLocalized = UnitFactionGroup("player")
     local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
     local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
-    if playerName then character.name = playerName end
-    if playerRealm then character.realm = playerRealm end
-    if playerLevel then character.level = playerLevel end
-    if type(character.race) ~= "table" then character.race = defaultCharacter.race end
-    if playerRaceName then character.race.name = playerRaceName end
-    if playerRaceFile then character.race.file = playerRaceFile end
-    if playerRaceID then character.race.id = playerRaceID end
-    if type(character.class) ~= "table" then character.class = defaultCharacter.class end
-    if playerClassName then character.class.name = playerClassName end
-    if playerClassFile then character.class.file = playerClassFile end
-    if playerClassID then character.class.id = playerClassID end
-    if type(character.factionGroup) ~= "table" then character.factionGroup = defaultCharacter.factionGroup end
-    if playerFactionGroupEnglish then character.factionGroup.english = playerFactionGroupEnglish end
-    if playerFactionGroupLocalized then character.factionGroup.localized = playerFactionGroupLocalized end
-    if avgItemLevel then character.ilvl.level = avgItemLevel end
-    if avgItemLevelEquipped then character.ilvl.equipped = avgItemLevelEquipped end
-    if avgItemLevelPvp then character.ilvl.pvp = avgItemLevelPvp end
+    if playerName then character.info.name = playerName end
+    if playerRealm then character.info.realm = playerRealm end
+    if playerLevel then character.info.level = playerLevel end
+    if type(character.info.race) ~= "table" then character.info.race = defaultCharacter.info.race end
+    if playerRaceName then character.info.race.name = playerRaceName end
+    if playerRaceFile then character.info.race.file = playerRaceFile end
+    if playerRaceID then character.info.race.id = playerRaceID end
+    if type(character.info.class) ~= "table" then character.info.class = defaultCharacter.info.class end
+    if playerClassName then character.info.class.name = playerClassName end
+    if playerClassFile then character.info.class.file = playerClassFile end
+    if playerClassID then character.info.class.id = playerClassID end
+    if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = defaultCharacter.info.factionGroup end
+    if playerFactionGroupEnglish then character.info.factionGroup.english = playerFactionGroupEnglish end
+    if playerFactionGroupLocalized then character.info.factionGroup.localized = playerFactionGroupLocalized end
+    if avgItemLevel then character.info.ilvl.level = avgItemLevel end
+    if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
+    if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
     if itemLevelColorR and itemLevelColorG and itemLevelColorB then
-        character.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
+        character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
     end
 
     character.GUID = playerGUID
@@ -320,26 +408,49 @@ function AlterEgo:UpdateMythicPlus()
         return self:ScheduleTimer("UpdateMythicPlus", 2)
     end
 
-    local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
     local runHistory = C_MythicPlus.GetRunHistory(true, true)
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
     local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-    local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion(); 
-    if weeklyRewardAvailable ~= nil then character.weeklyRewardAvailable = weeklyRewardAvailable end
-    if ratingSummary ~= nil then character.ratingSummary = ratingSummary end
-    if runHistory ~= nil then character.history = runHistory end
-    if keyStoneMapID ~= nil then character.key.map = keyStoneMapID end
-    if keyStoneLevel ~= nil then character.key.level = keyStoneLevel end
-    if bestSeasonScore ~= nil then character.bestSeasonScore = bestSeasonScore end
-    if bestSeasonNumber ~= nil then character.bestSeasonNumber = bestSeasonNumber end
+    local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
+    if ratingSummary ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
+    if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
+    if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = keyStoneMapID end
+    if keyStoneLevel ~= nil then character.mythicplus.keystone.level = keyStoneLevel end
+    if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
+    if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
 
-    character.vault = {}
-    for i = 1, 3 do
-        local vault = C_WeeklyRewards.GetActivities(i)
-        table.insert(character.vault, vault)
+    local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
+    if weeklyRewardAvailable ~= nil then character.vault.hasAvailableRewards = weeklyRewardAvailable end
+
+    -- TODO: Scan bags for keystone item
+
+    if ratingSummary ~= nil and ratingSummary.runs ~= nil then
+        for i, run in ipairs(ratingSummary.runs) do
+            if character.mythicplus.dungeons[run.challengeModeID] == nil then
+                character.mythicplus.dungeons[run.challengeModeID] = {}
+            end
+
+            character.mythicplus.dungeons[run.challengeModeID].rating = run.mapScore
+            character.mythicplus.dungeons[run.challengeModeID].level = run.bestRunLevel
+            character.mythicplus.dungeons[run.challengeModeID].id = run.challengeModeID
+            character.mythicplus.dungeons[run.challengeModeID].finishedSuccess = run.finishedSuccess
+            
+        end
     end
 
-    for dungeonId, dungeon in pairs(dataDungeons) do
+    if character.vault == nil then
+        character.vault = {
+            hasAvailableRewards = false,
+            slots = {}
+        }
+    end
+    character.vault.slots = {}
+    for i = 1, 3 do
+        local vault = C_WeeklyRewards.GetActivities(1)
+        table.insert(character.vault.slots, vault)
+    end
+
+    for _, dungeon in pairs(dataDungeons) do
         if dungeon.texture == nil then
             local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
             dungeon.name = dungeonName
@@ -347,25 +458,25 @@ function AlterEgo:UpdateMythicPlus()
             dungeon.texture = dungeonTexture
         end
 
-        if character.bestDungeons == nil then
-            character.bestDungeons = {}
+        if character.mythicplus.dungeons == nil then
+            character.mythicplus.dungeons = {}
         end
 
-        if character.bestDungeons[dungeon.id] == nil then
-            character.bestDungeons[dungeon.id] = {
-                bestTimed = {},
-                bestNotTimed = {},
+        if character.mythicplus.dungeons[dungeon.id] == nil then
+            character.mythicplus.dungeons[dungeon.id] = {
+                bestTimedRun = {},
+                bestNotTimedRun = {},
                 affixScores = {},
-                bestOverAllScore = 0
+                -- bestOverAllScore = 0
             }
         end
 
         local bestTimed, bestNotTimed = C_MythicPlus.GetSeasonBestForMap(dungeon.id);
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
-        if bestTimed ~= nil then character.bestDungeons[dungeon.id].bestTimed = bestTimed end
-        if bestNotTimed ~= nil then character.bestDungeons[dungeon.id].bestNotTimed = bestNotTimed end
-        if affixScores ~= nil then character.bestDungeons[dungeon.id].affixScores = affixScores end
-        if bestOverAllScore ~= nil then character.bestDungeons[dungeon.id].bestOverAllScore = bestOverAllScore end
+        if bestTimed ~= nil then character.mythicplus.dungeons[dungeon.id].bestTimed = bestTimed end
+        if bestNotTimed ~= nil then character.mythicplus.dungeons[dungeon.id].bestNotTimed = bestNotTimed end
+        if affixScores ~= nil then character.mythicplus.dungeons[dungeon.id].affixScores = affixScores end
+        -- if bestOverAllScore ~= nil then character.mythicplus.dungeons[dungeon.id].bestOverAllScore = bestOverAllScore end
     end
 
     character.lastUpdate = time()

@@ -6,11 +6,11 @@ function AlterEgo:GetCharacterInfo()
             value = function(character)
                 local name = "-"
                 local nameColor = "ffffffff"
-                if character.name ~= nil then
-                    name = character.name
+                if character.info.name ~= nil then
+                    name = character.info.name
                 end
-                if character.class.file ~= nil then
-                    local classColor = C_ClassColor.GetClassColor(character.class.file)
+                if character.info.class.file ~= nil then
+                    local classColor = C_ClassColor.GetClassColor(character.info.class.file)
                     if classColor ~= nil then
                         nameColor = classColor.GenerateHexColor(classColor)
                     end
@@ -20,19 +20,19 @@ function AlterEgo:GetCharacterInfo()
             OnEnter = function(character)
                 local name = "-"
                 local nameColor = "ffffffff"
-                if character.name ~= nil then
-                    name = character.name
+                if character.info.name ~= nil then
+                    name = character.info.name
                 end
-                if character.class.file ~= nil then
-                    local classColor = C_ClassColor.GetClassColor(character.class.file)
+                if character.info.class.file ~= nil then
+                    local classColor = C_ClassColor.GetClassColor(character.info.class.file)
                     if classColor ~= nil then
                         nameColor = classColor.GenerateHexColor(classColor)
                     end
                 end
                 GameTooltip:AddLine("|c" .. nameColor .. name .. "|r");
-                GameTooltip:AddLine(format("Level %d %s", character.level, character.race ~= nil and character.race.name or ""), 1, 1, 1);
-                if character.factionGroup ~= nil and character.factionGroup.localized~= nil then
-                    GameTooltip:AddLine(character.factionGroup.localized, 1, 1, 1);
+                GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1);
+                if character.info.factionGroup ~= nil and character.info.factionGroup.localized~= nil then
+                    GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
                 end
                 if character.lastUpdate ~= nil then
                     GameTooltip:AddLine(" ");
@@ -46,8 +46,8 @@ function AlterEgo:GetCharacterInfo()
             value = function(character)
                 local realm = "-"
                 local realmColor = "ffffffff"
-                if character.realm ~= nil then
-                    realm = character.realm
+                if character.info.realm ~= nil then
+                    realm = character.info.realm
                 end
                 return "|c" .. realmColor .. realm .. "|r"
             end,
@@ -59,12 +59,12 @@ function AlterEgo:GetCharacterInfo()
             value = function(character)
                 local itemLevel = ""
                 local itemLevelColor = "ffffffff"
-                if character.ilvl ~= nil then
-                    if character.ilvl.level ~= nil then
-                        itemLevel = tostring(floor(character.ilvl.level))
+                if character.info.ilvl ~= nil then
+                    if character.info.ilvl.level ~= nil then
+                        itemLevel = tostring(floor(character.info.ilvl.level))
                     end
-                    if character.ilvl.color then
-                        itemLevelColor = character.ilvl.color
+                    if character.info.ilvl.color then
+                        itemLevelColor = character.info.ilvl.color
                     end
                 end
                 return "|c" .. itemLevelColor .. itemLevel .. "|r"
@@ -72,18 +72,18 @@ function AlterEgo:GetCharacterInfo()
             OnEnter = function(character)
                 local itemLevelTooltip = ""
                 local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
-                if character.ilvl ~= nil then
-                    if character.ilvl.level ~= nil then
-                        itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.ilvl.level)
+                if character.info.ilvl ~= nil then
+                    if character.info.ilvl.level ~= nil then
+                        itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.info.ilvl.level)
                     end
-                    if character.ilvl.level ~= nil and character.ilvl.equipped ~= nil and character.ilvl.level ~= character.ilvl.equipped then
-                        itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.ilvl.equipped);
+                    if character.info.ilvl.level ~= nil and character.info.ilvl.equipped ~= nil and character.info.ilvl.level ~= character.info.ilvl.equipped then
+                        itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped);
                     end
-                    if character.ilvl.level ~= nil then
+                    if character.info.ilvl.level ~= nil then
                         itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
                     end
-                    if character.ilvl.level ~= nil and character.ilvl.pvp ~= nil and floor(character.ilvl.level) ~= character.ilvl.pvp then
-                        itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.ilvl.pvp)));
+                    if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
+                        itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
                     end
                 end
                 GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
@@ -96,12 +96,12 @@ function AlterEgo:GetCharacterInfo()
             value = function(character)
                 local rating = "-"
                 local ratingColor = "ffffffff"
-                if character.ratingSummary ~= nil and character.ratingSummary.currentSeasonScore ~= nil then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.ratingSummary.currentSeasonScore)
+                if character.mythicplus.rating ~= nil then
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
                     if color ~= nil then
                         ratingColor = color.GenerateHexColor(color)
                     end
-                    rating = tostring(character.ratingSummary.currentSeasonScore)
+                    rating = tostring(character.mythicplus.rating)
                 end
                 return "|c" .. ratingColor .. rating .. "|r"
             end,
@@ -111,26 +111,26 @@ function AlterEgo:GetCharacterInfo()
                 local bestSeasonScore = nil
                 local bestSeasonScoreColor = "ffffffff"
                 local bestSeasonNumber = nil
-                if character.bestSeasonScore ~= nil then
-                    bestSeasonScore = character.bestSeasonScore
+                if character.mythicplus.bestSeasonScore ~= nil then
+                    bestSeasonScore = character.mythicplus.bestSeasonScore
                     local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
                     if color ~= nil then
                         bestSeasonScoreColor = color.GenerateHexColor(color)
                     end
                 end
-                if character.bestSeasonNumber ~= nil then
-                    bestSeasonNumber = character.bestSeasonNumber
+                if character.mythicplus.bestSeasonNumber ~= nil then
+                    bestSeasonNumber = character.mythicplus.bestSeasonNumber
                 end
-                if character.ratingSummary ~= nil and character.ratingSummary.currentSeasonScore ~= nil then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.ratingSummary.currentSeasonScore)
+                if character.mythicplus.rating ~= nil then
+                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
                     if color ~= nil then
                         ratingColor = color.GenerateHexColor(color)
                     end
-                    rating = tostring(character.ratingSummary.currentSeasonScore)
+                    rating = tostring(character.mythicplus.rating)
                 end
                 GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
                 GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-                GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.history or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.mythicplus.runHistory or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 if bestSeasonScore ~= nil then
                     local score = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
                     if bestSeasonNumber ~= nil then
@@ -138,12 +138,12 @@ function AlterEgo:GetCharacterInfo()
                     end
                     GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 end
-                if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
+                if character.mythicplus.dungeons ~= nil and self:tablen(character.mythicplus.dungeons) > 0 then
                     GameTooltip:AddLine(" ")
-                    for r,run in ipairs(character.ratingSummary.runs) do
-                        local dungeonName = C_ChallengeMode.GetMapUIInfo(run.challengeModeID)
+                    for _, dungeon in pairs(character.mythicplus.dungeons) do
+                        local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.id)
                         if dungeonName ~= nil then
-                            GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(run.bestRunLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+                            GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(dungeon.level), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
                         end
                     end
                     GameTooltip:AddLine(" ")
@@ -151,26 +151,24 @@ function AlterEgo:GetCharacterInfo()
                 end
             end,
             OnClick = function(character)
-                if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil and #character.ratingSummary.runs > 0 then
+                if character.mythicplus.dungeons ~= nil and self:tablen(character.mythicplus.dungeons) > 0 then
                     if IsModifiedClick("CHATLINK") then
                         local dungeonScoreDungeonTable = {};
-                        if character.ratingSummary ~= nil and character.ratingSummary.runs ~= nil then
-                            for _, run in ipairs(character.ratingSummary.runs) do
-                                table.insert(dungeonScoreDungeonTable, run.challengeModeID);
-                                table.insert(dungeonScoreDungeonTable, run.finishedSuccess and 1 or 0);
-                                table.insert(dungeonScoreDungeonTable, run.bestRunLevel);
-                            end
+                        for _, dungeon in pairs(character.mythicplus.dungeons) do
+                            table.insert(dungeonScoreDungeonTable, dungeon.id);
+                            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
+                            table.insert(dungeonScoreDungeonTable, dungeon.level);
                         end
                         local dungeonScoreTable = {
-                            character.ratingSummary.currentSeasonScore,
+                            character.mythicplus.rating,
                             character.GUID,
-                            character.name,
-                            character.class.id,
-                            math.ceil(character.ilvl.level),
-                            character.level,
-                            character.history and #character.history or 0,
-                            character.bestSeasonScore,
-                            character.bestSeasonNumber,
+                            character.info.name,
+                            character.info.class.id,
+                            math.ceil(character.info.ilvl.level),
+                            character.info.level,
+                            character.mythicplus.runHistory and self:tablen(character.mythicplus.runHistory) or 0,
+                            character.mythicplus.bestSeasonScore,
+                            character.mythicplus.bestSeasonNumber,
                             unpack(dungeonScoreDungeonTable)
                         };
                         local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
@@ -186,10 +184,10 @@ function AlterEgo:GetCharacterInfo()
             label = "Current Keystone",
             value = function(character)
                 local currentKeystone = "-"
-                if character.key ~= nil and character.key.map ~= nil and character.key.level ~= nil then
-                    local dungeon = self:GetDungeonByMapId(character.key.map)
+                if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
+                    local dungeon = self:GetDungeonByMapId(character.mythicplus.keystone.mapId)
                     if dungeon then
-                        currentKeystone = dungeon.abbr .. " +" .. tostring(character.key.level)
+                        currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
                     end
                 end
                 return currentKeystone
@@ -205,12 +203,16 @@ function AlterEgo:GetCharacterInfo()
             label = "Vault (Dungeons)",
             value = function(character)
                 local vaultLevels = ""
-                for _, vault in ipairs(character.vault) do
-                    local level = "-"
-                    if vault.level > 0 then
-                        level = tostring(vault.level)
+                if character.vault.slots ~= nil then
+                    for _, slot in ipairs(character.vault.slots) do
+                        if slot.type == 1 then
+                            local level = "-"
+                            if slot.level > 0 then
+                                level = tostring(slot.level)
+                            end
+                            vaultLevels = vaultLevels .. level .. "  "
+                        end
                     end
-                    vaultLevels = vaultLevels .. level .. "  "
                 end
                 return vaultLevels:trim()
             end,
@@ -708,14 +710,14 @@ function AlterEgo:CreateUI()
         local charactersUnfilteredList = self:GetCharacters(true)
         for _, character in ipairs(charactersUnfilteredList) do
             local nameColor = "ffffffff"
-            if character.class.file ~= nil then
-                local classColor = C_ClassColor.GetClassColor(character.class.file)
+            if character.info.class.file ~= nil then
+                local classColor = C_ClassColor.GetClassColor(character.info.class.file)
                 if classColor ~= nil then
                     nameColor = classColor.GenerateHexColor(classColor)
                 end
             end
             UIDropDownMenu_AddButton({
-                text = "|c" .. nameColor .. character.name .. "|r (" .. character.realm .. ")",
+                text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
                 checked = character.enabled,
                 isNotRadio = true,
                 arg1 = character.GUID,
@@ -793,7 +795,7 @@ function AlterEgo:CreateUI()
     DungeonHeaderLabel.Text:SetPoint("BOTTOMRIGHT", DungeonHeaderLabel, "BOTTOMRIGHT", -sizes.padding, 0)
     DungeonHeaderLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
     DungeonHeaderLabel.Text:SetJustifyH("LEFT")
-    DungeonHeaderLabel.Text:SetText("M+ Season " .. C_MythicPlus.GetCurrentUIDisplaySeason())
+    DungeonHeaderLabel.Text:SetText("Mythic Plus")
     DungeonHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
 
     -- Dungeon names
@@ -935,73 +937,73 @@ function AlterEgo:UpdateUI()
         local bestSeasonScoreColor = "ffffffff"
         local bestSeasonNumber = nil
 
-        if character.name ~= nil then
-            name = character.name
+        if character.info.name ~= nil then
+            name = character.info.name
         end
 
-        if character.realm ~= nil then
-            realm = character.realm
+        if character.info.realm ~= nil then
+            realm = character.info.realm
         end
 
-        if character.class.file ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.class.file)
+        if character.info.class.file ~= nil then
+            local classColor = C_ClassColor.GetClassColor(character.info.class.file)
             if classColor ~= nil then
                 nameColor = classColor.GenerateHexColor(classColor)
             end
         end
 
-        if character.ratingSummary ~= nil and character.ratingSummary.currentSeasonScore ~= nil then
-            local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.ratingSummary.currentSeasonScore)
+        if character.mythicplus.rating ~= nil then
+            local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
             if color ~= nil then
                 ratingColor = color.GenerateHexColor(color)
             end
-            rating = tostring(character.ratingSummary.currentSeasonScore)
+            rating = tostring(character.mythicplus.rating)
         end
 
-        if character.ilvl ~= nil then
-            if character.ilvl.level ~= nil then
-                itemLevel = tostring(floor(character.ilvl.level))
-                itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.ilvl.level)
+        if character.info.ilvl ~= nil then
+            if character.info.ilvl.level ~= nil then
+                itemLevel = tostring(floor(character.info.ilvl.level))
+                itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.info.ilvl.level)
             end
-            if character.ilvl.level ~= nil and character.ilvl.equipped ~= nil and character.ilvl.level ~= character.ilvl.equipped then
-                itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.ilvl.equipped);
+            if character.info.ilvl.level ~= nil and character.info.ilvl.equipped ~= nil and character.info.ilvl.level ~= character.info.ilvl.equipped then
+                itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped);
             end
-            if character.ilvl.level ~= nil then
+            if character.info.ilvl.level ~= nil then
                 itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
             end
-            if character.ilvl.level ~= nil and character.ilvl.pvp ~= nil and floor(character.ilvl.level) ~= character.ilvl.pvp then
-                itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.ilvl.pvp)));
+            if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
+                itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
             end
-            if character.ilvl.color then
-                itemLevelColor = character.ilvl.color
+            if character.info.ilvl.color then
+                itemLevelColor = character.info.ilvl.color
             end
         end
 
-        for _, vault in ipairs(character.vault) do
-            local level = "-"
-            if vault.level > 0 then
-                level = tostring(vault.level)
-            end
-            vaultLevels = vaultLevels .. level .. "  "
-        end
+        -- for _, vault in ipairs(character.vault) do
+        --     local level = "-"
+        --     if vault.level > 0 then
+        --         level = tostring(vault.level)
+        --     end
+        --     vaultLevels = vaultLevels .. level .. "  "
+        -- end
 
-        if character.key ~= nil and character.key.map ~= nil and character.key.level ~= nil then
-            local dungeon = self:GetDungeonByMapId(character.key.map)
+        if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
+            local dungeon = self:GetDungeonByMapId(character.mythicplus.keystone.mapId)
             if dungeon then
-                currentKeystone = dungeon.abbr .. " +" .. tostring(character.key.level)
+                currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
             end
         end
 
-        if character.bestSeasonScore ~= nil then
-            bestSeasonScore = character.bestSeasonScore
+        if character.mythicplus.bestSeasonScore ~= nil then
+            bestSeasonScore = character.mythicplus.bestSeasonScore
             local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
             if color ~= nil then
                 bestSeasonScoreColor = color.GenerateHexColor(color)
             end
         end
 
-        if character.bestSeasonNumber ~= nil then
-            bestSeasonNumber = character.bestSeasonNumber
+        if character.mythicplus.bestSeasonNumber ~= nil then
+            bestSeasonNumber = character.mythicplus.bestSeasonNumber
         end
 
         local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.Characters, c)
@@ -1047,8 +1049,8 @@ function AlterEgo:UpdateUI()
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
 
             local scoreColor = HIGHLIGHT_FONT_COLOR
-            if (character.bestDungeons[dungeon.id] and character.bestDungeons[dungeon.id].bestOverAllScore and (character.bestDungeons[dungeon.id].bestTimed or character.bestDungeons[dungeon.id].bestNotTimed)) then
-                scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.bestDungeons[dungeon.id].bestOverAllScore);
+            if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and self:tablen(character.mythicplus.dungeons[dungeon.id].affixScores)) then
+                scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.mythicplus.dungeons[dungeon.id].rating);
             end
 
             DungeonFrame:SetScript("OnEnter", function()
@@ -1057,11 +1059,11 @@ function AlterEgo:UpdateUI()
                 GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
 
-                if(character.bestDungeons[dungeon.id] and character.bestDungeons[dungeon.id].bestOverAllScore and (character.bestDungeons[dungeon.id].bestTimed or character.bestDungeons[dungeon.id].bestNotTimed)) then
-                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(character.bestDungeons[dungeon.id].bestOverAllScore)), GREEN_FONT_COLOR);
+                if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and self:tablen(character.mythicplus.dungeons[dungeon.id].affixScores)) then
+                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(character.mythicplus.dungeons[dungeon.id].rating)), GREEN_FONT_COLOR);
                 end
 
-                local affixScores = character.bestDungeons[dungeon.id].affixScores
+                local affixScores = character.mythicplus.dungeons[dungeon.id].affixScores
                 if(affixScores and #affixScores > 0) then
                     for _, affixInfo in ipairs(affixScores) do
                         GameTooltip_AddBlankLineToTooltip(GameTooltip);
@@ -1097,11 +1099,11 @@ function AlterEgo:UpdateUI()
                 local levelColor = "ffffffff"
                 local tier = ""
 
-                if character.bestDungeons == nil or character.bestDungeons[dungeon.id] == nil or character.bestDungeons[dungeon.id].affixScores == nil then
+                if character.mythicplus.dungeons == nil or character.mythicplus.dungeons[dungeon.id] == nil or character.mythicplus.dungeons[dungeon.id].affixScores == nil then
                     level = "-"
                     levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                 else
-                    for _, affixScore in ipairs(character.bestDungeons[dungeon.id].affixScores) do
+                    for _, affixScore in ipairs(character.mythicplus.dungeons[dungeon.id].affixScores) do
                         if affixScore.name == affix.name then
                             level = affixScore.level
 
@@ -1157,10 +1159,10 @@ function AlterEgo:UpdateUI()
                 for e = 1, raid.encounters do
                     local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e]
                     local killed = false
-                    if character.raids then
-                        for k, characterRaid in pairs(character.raids) do
-                            if characterRaid.instanceId == raid.mapId and characterRaid.expires > time() and characterRaid.difficultyId == difficulty.id then
-                                local encounter = characterRaid.encounters[e]
+                    if character.raids.savedInstances ~= nil then
+                        for k, savedInstance in pairs(character.raids.savedInstances) do
+                            if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
+                                local encounter = savedInstance.encounters[e]
                                 if encounter and encounter.killed then
                                     killed = true
                                 end
