@@ -580,7 +580,7 @@ function AlterEgo:GetWindowSize()
     if self.db.global.raids.enabled then
         raidHeight = AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row
     end
-    local height = sizes.titlebar.height + AE_table_count(self:GetCharacterInfo()) * sizes.row + sizes.row + AE_table_count(dungeons) * sizes.row + raidHeight
+    local height = sizes.titlebar.height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(info) return info.enabled == nil or info.enabled end)) * sizes.row + sizes.row + AE_table_count(dungeons) * sizes.row + raidHeight
     return width, height
 end
 
@@ -884,17 +884,17 @@ function AlterEgo:CreateUI()
     SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.3)
 
     -- Character info
-    local anchorFrame
+    local anchorFrame = self.Window.Body.Sidebar
     do
         local labels = self:GetCharacterInfo()
         for l, info in ipairs(labels) do
             local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. l, self.Window.Body.Sidebar)
             if l > 1 then
-                CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Label" .. (l-1), "BOTTOMLEFT")
-                CharacterLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Label" .. (l-1), "BOTTOMRIGHT")
+                CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             else
-                CharacterLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName(), "TOPLEFT")
-                CharacterLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName(), "TOPRIGHT")
+                CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
             end
 
             CharacterLabel:SetHeight(sizes.row)
@@ -1141,13 +1141,36 @@ function AlterEgo:UpdateUI()
         end
         lastCharacterColumn = CharacterColumn
 
+        -- Character Labels
+        do
+            local anchorFrame = self.Window.Body.Sidebar
+            local labels = self:GetCharacterInfo()
+            for l, info in ipairs(labels) do
+                local CharacterLabel =_G[self.Window.Body.Sidebar:GetName() .. "Label" .. l]
+
+                if info.enabled ~= nil and not info.enabled then
+                    CharacterLabel:Hide()
+                else
+                    if l > 1 then
+                        CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                        CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                    else
+                        CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                        CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+                    end
+                    anchorFrame = CharacterLabel
+                    CharacterLabel:Show()
+                end
+            end
+        end
 
         -- Character info
-        local anchorFrame = CharacterColumn
         do
+            local anchorFrame = CharacterColumn
             local labels = AlterEgo:GetCharacterInfo()
             for l, info in ipairs(labels) do
                 local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. l]
+                local CharacterLabel = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. l]
                 CharacterFrame.Text:SetText(info.value(character))
                 if info.OnEnter then
                     CharacterFrame:SetScript("OnEnter", function()
@@ -1164,7 +1187,20 @@ function AlterEgo:UpdateUI()
                         info.OnClick(character)
                     end)
                 end
-                anchorFrame = CharacterFrame
+
+                if info.enabled ~= nil and not info.enabled then
+                    CharacterFrame:Hide()
+                else
+                    if l > 1 then
+                        CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                        CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                    else
+                        CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                        CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+                    end
+                    anchorFrame = CharacterFrame
+                    CharacterFrame:Show()
+                end
             end
         end
 
