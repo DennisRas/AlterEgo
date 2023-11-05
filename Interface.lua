@@ -1,5 +1,6 @@
 ---@diagnostic disable: inject-field, deprecated
 function AlterEgo:GetCharacterInfo()
+    local dungeons = self:GetDungeons()
     return {
         {
             label = "Character",
@@ -195,12 +196,28 @@ function AlterEgo:GetCharacterInfo()
             enabled = true,
         },
         {
-            label = "Vault (Raids)",
-            value = function(character) return "-  -   -" end,
+            label = "Vault",
+            value = function(character)
+                if character.vault.hasAvailableRewards == true then
+                    return WrapTextInColorCode("Rewards", GREEN_FONT_COLOR:GenerateHexColor())
+                end
+                return ""
+            end,
+            OnEnter = function(character)
+                if character.vault.hasAvailableRewards == true then
+                    GameTooltip:AddLine("It's payday!")
+                    GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
+                end
+            end,
+            backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
+        },
+        {
+            label = WrapTextInColorCode("Raids", "ffffffff"),
+            value = function(character) return "-  -  -" end,
             enabled = self.db.global.raids.enabled,
         },
         {
-            label = "Vault (Dungeons)",
+            label = WrapTextInColorCode("Dungeons", "ffffffff"),
             value = function(character)
                 local vaultLevels = ""
                 if character.vault.slots ~= nil then
@@ -219,7 +236,42 @@ function AlterEgo:GetCharacterInfo()
                 end
                 return vaultLevels:trim()
             end,
-            OnEnter = function(character) end,
+            OnEnter = function(character)
+                local runs = AE_table_filter(character.mythicplus.runHistory, function(run) return true end)
+                local countRuns = AE_table_count(runs) or 0
+                GameTooltip:AddLine("Vault (Dungeons)", 1, 1, 1);
+                GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. countRuns .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+
+                if countRuns > 0 then
+                    GameTooltip:AddLine(" ")
+                    table.sort(runs, function(a, b) return a.level > b.level end)
+                    for i, run in ipairs(runs) do
+                        local threshold = false
+                        for _, slot in ipairs(character.vault.slots) do
+                            if slot.type == 1 and i == slot.threshold then
+                                threshold = true
+                            end
+                        end
+                        local dungeon = AE_table_get(dungeons, "id", run.mapChallengeModeID)
+                        if dungeon then
+                            local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
+                            if threshold then
+                                GameTooltip:AddDoubleLine(dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                            else
+                                GameTooltip:AddDoubleLine(dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+                            end
+                        end
+                        if i == 8 then
+                            break
+                        end
+                    end
+                end
+                -- if countRuns < 8 then
+                --     for i = countRuns, 8 do
+                --         GameTooltip:AddDoubleLine("-", "-", LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b, LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b)
+                --     end
+                -- end
+            end,
             enabled = true,
         },
     }
@@ -301,6 +353,10 @@ local CreateCharacterColumn = function(parent, index)
             CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -sizes.padding, 0)
             CharacterFrame.Text:SetJustifyH("CENTER")
             CharacterFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+
+            if info.backgroundColor then
+                SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
+            end
 
             anchorFrame = CharacterFrame
         end
