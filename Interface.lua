@@ -697,6 +697,19 @@ function AlterEgo:CreateUI()
                 self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
             end
         })
+        UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({
+            text = "Show characters with zero rating",
+            checked = self.db.global.showZeroRatedCharacters,
+            isNotRadio = true,
+            tooltipTitle = "Show characters with zero rating",
+            tooltipText = "Too many alts?",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+                self.db.global.showZeroRatedCharacters = not checked
+                self:UpdateUI()
+            end
+        })
         UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
             text = "Show tier icons",
@@ -719,19 +732,6 @@ function AlterEgo:CreateUI()
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
                 self.db.global.showAffixColors = not checked
-                self:UpdateUI()
-            end
-        })
-        UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-            text = "Show characters with zero rating",
-            checked = self.db.global.showZeroRatedCharacters,
-            isNotRadio = true,
-            tooltipTitle = "Show characters with zero rating",
-            tooltipText = "Too many alts?",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.showZeroRatedCharacters = not checked
                 self:UpdateUI()
             end
         })
