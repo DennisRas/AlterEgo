@@ -527,12 +527,12 @@ local CreateCharacterColumn = function(parent, index)
             SetBackgroundColor(DifficultyFrame, 1, 1, 1, rd % 2 == 0 and 0.01 or 0)
 
             local previousEncounterFrame = DifficultyFrame
-            for e = 1, raid.encounters do
+            for e = 1, raid.numEncounters do
                 local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e, DifficultyFrame)
                 local size = sizes.column
                 size = size - sizes.padding -- left/right cell padding
-                size = size - (raid.encounters - 1) * 4 -- gaps
-                size = size / raid.encounters -- box sizes
+                size = size - (raid.numEncounters - 1) * 4 -- gaps
+                size = size / raid.numEncounters -- box sizes
                 EncounterFrame:SetPoint("LEFT", previousEncounterFrame, e > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
                 EncounterFrame:SetSize(size, sizes.row - 12)
                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
@@ -1274,20 +1274,80 @@ function AlterEgo:UpdateUI()
 
             for rd, difficulty in pairs(difficulties) do
                 local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd]
-                if self.db.global.raids.enabled then
-                    DifficultyFrame:Show()
-                else
-                    DifficultyFrame:Hide()
-                end
 
-                for e = 1, raid.encounters do
+                DifficultyFrame:SetScript("OnEnter", function()
+                    GameTooltip:ClearAllPoints()
+                    GameTooltip:ClearLines()
+                    GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
+                    GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
+                    GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.name));
+                    local expires = 0
+                    if character.raids.savedInstances ~= nil then
+                        for k, savedInstance in pairs(character.raids.savedInstances) do
+                            if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
+                                expires = savedInstance.expires
+                            end
+                        end
+                    end
+
+                    if expires > 0 then
+                        GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", expires)))
+                    end
+
+                    if raid.encounters == nil then
+                        -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info. Can't call this during game load either sigh (bugs out)
+                        EJ_SelectInstance(raid.id)
+                        raid.encounters = {}
+                        for e = 1, raid.numEncounters do
+                            local encounterName, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
+                            if encounterName ~= nil then
+                                table.insert(raid.encounters, {
+                                    ["name"] = encounterName,
+                                    ["description"] = description,
+                                    ["journalEncounterID"] = journalEncounterID,
+                                    ["rootSectionID"] = rootSectionID,
+                                    ["link"] = link,
+                                    ["journalInstanceID"] = journalInstanceID,
+                                    ["dungeonEncounterID"] = dungeonEncounterID,
+                                    ["instanceID"] = instanceID,
+                                })
+                            end
+                        end
+                    end
+
+                    GameTooltip:AddLine(" ")
+                    for e, encounter in ipairs(raid.encounters) do
+                        local killed = false
+                        local color = LIGHTGRAY_FONT_COLOR
+                        if character.raids.savedInstances ~= nil then
+                            for k, savedInstance in pairs(character.raids.savedInstances) do
+                                if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
+                                    local savedInstanceEncounter = savedInstance.encounters[e]
+                                    expires = savedInstance.expires
+                                    if savedInstanceEncounter and savedInstanceEncounter.killed then
+                                        killed = true
+                                    end
+                                end
+                            end
+                        end
+                        if killed then
+                            color = GREEN_FONT_COLOR
+                        end
+                        GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
+                    end
+                    GameTooltip:Show()
+                end)
+                DifficultyFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+                for e = 1, raid.numEncounters do
                     local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e]
+
                     local killed = false
                     if character.raids.savedInstances ~= nil then
                         for k, savedInstance in pairs(character.raids.savedInstances) do
                             if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
-                                local encounter = savedInstance.encounters[e]
-                                if encounter and encounter.killed then
+                                local savedInstanceEncounter = savedInstance.encounters[e]
+                                if savedInstanceEncounter and savedInstanceEncounter.killed then
                                     killed = true
                                 end
                             end

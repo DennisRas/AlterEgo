@@ -144,8 +144,9 @@ local dataDungeons = {
 
 local dataRaids = {
     -- [1200] = { id = 1200, order = 1, mapId = 2522, encounters = 8, abbr = "VOTI", name = "Vault of the Incarnates" },
-    [1208] = { id = 1208, order = 2, mapId = 2569, encounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
+    -- [1208] = { id = 1208, order = 2, mapId = 2569, encounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
     -- [1207] = { id = 1208, order = 3, mapId = 2549, encounters = 9, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope" },
+    [1208] = { id = 1208, order = 2, mapId = 2569, numEncounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
 }
 
 local dataRaidDifficulties = {
