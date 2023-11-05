@@ -3,7 +3,7 @@ function AlterEgo:GetCharacterInfo()
     local dungeons = self:GetDungeons()
     return {
         {
-            label = "Character",
+            label = CHARACTER,
             value = function(character)
                 local name = "-"
                 local nameColor = "ffffffff"
@@ -260,6 +260,52 @@ function AlterEgo:GetCharacterInfo()
                 local countRuns = AE_table_count(runs) or 0
                 GameTooltip:AddLine("Vault Progress", 1, 1, 1);
                 GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. countRuns .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                GameTooltip:AddLine(" ")
+
+                local function GetLowestLevelInTopRuns(numRuns)
+                    table.sort(runs, function(a, b) return a.level > b.level; end);
+                    local lowestLevel;
+                    local lowestCount = 0;
+                    for i = math.min(numRuns, #runs), 1, -1 do
+                        local run = runs[i];
+                        if not lowestLevel then
+                            lowestLevel = run.level;
+                        end
+                        if lowestLevel == run.level then
+                            lowestCount = lowestCount + 1;
+                        else
+                            break;
+                        end
+                    end
+                    return lowestLevel, lowestCount;
+                end
+
+                -- local runHistory = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.MythicPlus);
+                local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus end)
+                table.sort(slots, function(a, b) return a.index < b.index; end);
+                local lastCompletedIndex = 0;
+                for i, activityInfo in ipairs(slots) do
+                    if activityInfo.progress >= activityInfo.threshold then
+                        lastCompletedIndex = i;
+                    end
+                end
+                if lastCompletedIndex == 0 then
+                    GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE);
+                else
+                    if lastCompletedIndex == #slots then
+                        GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
+                        GameTooltip_AddBlankLineToTooltip(GameTooltip);
+                        GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
+                        local info = slots[lastCompletedIndex];
+                        local level, count = GetLowestLevelInTopRuns(info.threshold);
+                        GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, level + 1));
+                    else
+                        local nextInfo = slots[lastCompletedIndex + 1];
+                        local textString = (lastCompletedIndex == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND;
+                        local level, count = GetLowestLevelInTopRuns(nextInfo.threshold);
+                        GameTooltip_AddNormalLine(GameTooltip, textString:format(nextInfo.threshold - nextInfo.progress, nextInfo.threshold, level));
+                    end
+                end
 
                 if countRuns > 0 then
                     GameTooltip:AddLine(" ")
