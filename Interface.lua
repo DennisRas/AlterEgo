@@ -214,6 +214,9 @@ function AlterEgo:GetCharacterInfo()
                         end
                     end
                 end
+                if vaultLevels == "" then
+                    vaultLevels = "-  -  -"
+                end
                 return vaultLevels:trim()
             end,
             OnEnter = function(character) end,
