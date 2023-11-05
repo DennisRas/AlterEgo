@@ -138,7 +138,7 @@ function AlterEgo:GetCharacterInfo()
                     end
                     GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 end
-                if character.mythicplus.dungeons ~= nil and self:tablen(character.mythicplus.dungeons) > 0 then
+                if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
                     GameTooltip:AddLine(" ")
                     for _, dungeon in pairs(character.mythicplus.dungeons) do
                         local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.id)
@@ -151,7 +151,7 @@ function AlterEgo:GetCharacterInfo()
                 end
             end,
             OnClick = function(character)
-                if character.mythicplus.dungeons ~= nil and self:tablen(character.mythicplus.dungeons) > 0 then
+                if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
                     if IsModifiedClick("CHATLINK") then
                         local dungeonScoreDungeonTable = {};
                         for _, dungeon in pairs(character.mythicplus.dungeons) do
@@ -166,7 +166,7 @@ function AlterEgo:GetCharacterInfo()
                             character.info.class.id,
                             math.ceil(character.info.ilvl.level),
                             character.info.level,
-                            character.mythicplus.runHistory and self:tablen(character.mythicplus.runHistory) or 0,
+                            character.mythicplus.runHistory and AE_table_count(character.mythicplus.runHistory) or 0,
                             character.mythicplus.bestSeasonScore,
                             character.mythicplus.bestSeasonNumber,
                             unpack(dungeonScoreDungeonTable)
@@ -451,12 +451,12 @@ function AlterEgo:GetWindowSize()
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
-    local width = sizes.sidebar.width + self:tablen(characters) * sizes.column
+    local width = sizes.sidebar.width + AE_table_count(characters) * sizes.column
     local raidHeight = 0
     if self.db.global.raids.enabled then
-        raidHeight = self:tablen(raids) * (self:tablen(difficulties) + 1) * sizes.row
+        raidHeight = AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row
     end
-    local height = sizes.titlebar.height + self:tablen(self:GetCharacterInfo()) * sizes.row + sizes.row + self:tablen(dungeons) * sizes.row + raidHeight
+    local height = sizes.titlebar.height + AE_table_count(self:GetCharacterInfo()) * sizes.row + sizes.row + AE_table_count(dungeons) * sizes.row + raidHeight
     return width, height
 end
 
@@ -1049,7 +1049,7 @@ function AlterEgo:UpdateUI()
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
 
             local scoreColor = HIGHLIGHT_FONT_COLOR
-            if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and self:tablen(character.mythicplus.dungeons[dungeon.id].affixScores)) then
+            if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and AE_table_count(character.mythicplus.dungeons[dungeon.id].affixScores)) then
                 scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.mythicplus.dungeons[dungeon.id].rating);
             end
 
@@ -1059,7 +1059,7 @@ function AlterEgo:UpdateUI()
                 GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
 
-                if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and self:tablen(character.mythicplus.dungeons[dungeon.id].affixScores)) then
+                if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and AE_table_count(character.mythicplus.dungeons[dungeon.id].affixScores)) then
                     GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(character.mythicplus.dungeons[dungeon.id].rating)), GREEN_FONT_COLOR);
                 end
 

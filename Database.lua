@@ -58,6 +58,7 @@ local defaultCharacter = {
             level = 0,
             itemId = 0
         },
+        weeklyRewardAvailable = false,
         bestSeasonScore = 0,
         bestSeasonNumber = 0,
         runHistory = {},
@@ -420,23 +421,11 @@ function AlterEgo:UpdateMythicPlus()
     if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
 
     local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
-    if weeklyRewardAvailable ~= nil then character.vault.hasAvailableRewards = weeklyRewardAvailable end
+    local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
+    if weeklyRewardAvailable ~= nil then character.mythicplus.weeklyRewardAvailable = weeklyRewardAvailable end
+    if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
 
     -- TODO: Scan bags for keystone item
-
-    if ratingSummary ~= nil and ratingSummary.runs ~= nil then
-        for i, run in ipairs(ratingSummary.runs) do
-            if character.mythicplus.dungeons[run.challengeModeID] == nil then
-                character.mythicplus.dungeons[run.challengeModeID] = {}
-            end
-
-            character.mythicplus.dungeons[run.challengeModeID].rating = run.mapScore
-            character.mythicplus.dungeons[run.challengeModeID].level = run.bestRunLevel
-            character.mythicplus.dungeons[run.challengeModeID].id = run.challengeModeID
-            character.mythicplus.dungeons[run.challengeModeID].finishedSuccess = run.finishedSuccess
-            
-        end
-    end
 
     if character.vault == nil then
         character.vault = {
@@ -444,39 +433,50 @@ function AlterEgo:UpdateMythicPlus()
             slots = {}
         }
     end
+
     character.vault.slots = {}
     for i = 1, 3 do
-        local vault = C_WeeklyRewards.GetActivities(1)
-        table.insert(character.vault.slots, vault)
+        local slots = C_WeeklyRewards.GetActivities(i)
+        for _, slot in ipairs(slots) do
+            table.insert(character.vault.slots, slot)
+        end
     end
 
-    for _, dungeon in pairs(dataDungeons) do
-        if dungeon.texture == nil then
-            local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
-            dungeon.name = dungeonName
-            dungeon.time = dungeonTimeLimit
-            dungeon.texture = dungeonTexture
+    character.mythicplus.dungeons = {}
+    for _, dataDungeon in pairs(dataDungeons) do
+        if dataDungeon.texture == nil then
+            local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dataDungeon.id)
+            dataDungeon.name = dungeonName
+            dataDungeon.time = dungeonTimeLimit
+            dataDungeon.texture = dungeonTexture
         end
 
-        if character.mythicplus.dungeons == nil then
-            character.mythicplus.dungeons = {}
-        end
-
-        if character.mythicplus.dungeons[dungeon.id] == nil then
-            character.mythicplus.dungeons[dungeon.id] = {
+        if character.mythicplus.dungeons[dataDungeon.id] == nil then
+            character.mythicplus.dungeons[dataDungeon.id] = {
+                id = dataDungeon.id,
                 bestTimedRun = {},
                 bestNotTimedRun = {},
                 affixScores = {},
-                -- bestOverAllScore = 0
+                rating = 0,
+                level = 0,
+                finishedSuccess = false,
             }
         end
 
-        local bestTimed, bestNotTimed = C_MythicPlus.GetSeasonBestForMap(dungeon.id);
-        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dungeon.id)
-        if bestTimed ~= nil then character.mythicplus.dungeons[dungeon.id].bestTimed = bestTimed end
-        if bestNotTimed ~= nil then character.mythicplus.dungeons[dungeon.id].bestNotTimed = bestNotTimed end
-        if affixScores ~= nil then character.mythicplus.dungeons[dungeon.id].affixScores = affixScores end
+        local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.id);
+        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.id)
+        if bestTimedRun ~= nil then character.mythicplus.dungeons[dataDungeon.id].bestTimedRun = bestTimedRun end
+        if bestNotTimedRun ~= nil then character.mythicplus.dungeons[dataDungeon.id].bestNotTimedRun = bestNotTimedRun end
+        if affixScores ~= nil then character.mythicplus.dungeons[dataDungeon.id].affixScores = affixScores end
         -- if bestOverAllScore ~= nil then character.mythicplus.dungeons[dungeon.id].bestOverAllScore = bestOverAllScore end
+    end
+
+    if ratingSummary ~= nil and ratingSummary.runs ~= nil then
+        for _, run in ipairs(ratingSummary.runs) do
+            character.mythicplus.dungeons[run.challengeModeID].rating = run.mapScore
+            character.mythicplus.dungeons[run.challengeModeID].level = run.bestRunLevel
+            character.mythicplus.dungeons[run.challengeModeID].finishedSuccess = run.finishedSuccess
+        end
     end
 
     character.lastUpdate = time()

@@ -20,6 +20,7 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 # Libs\AceGUI-3.0\AceGUI-3.0.xml
 # Libs\AceConfig-3.0\AceConfig-3.0.xml
 
+Utils.lua
 AlterEgo.lua
 Database.lua
 Interface.lua
