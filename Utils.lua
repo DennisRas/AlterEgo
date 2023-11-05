@@ -27,7 +27,7 @@ end
 function AE_table_filter(tbl, fnc)
     local t = {}
     for i, v in ipairs(tbl) do
-        if fnc(v, i) then t.insert(v) end
+        if fnc(v, i) then table.insert(t, v) end
     end
     return t
 end
