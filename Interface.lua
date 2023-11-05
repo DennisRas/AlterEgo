@@ -205,7 +205,7 @@ function AlterEgo:GetCharacterInfo()
             end,
             OnEnter = function(character)
                 if character.vault.hasAvailableRewards == true then
-                    GameTooltip:AddLine("It's payday!")
+                    GameTooltip:AddLine("It's payday!", 1, 1, 1)
                     GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
                 end
             end,
@@ -213,7 +213,26 @@ function AlterEgo:GetCharacterInfo()
         },
         {
             label = WrapTextInColorCode("Raids", "ffffffff"),
-            value = function(character) return "-  -  -" end,
+            value = function(character)
+                local vaultLevels = ""
+                if character.vault.slots ~= nil then
+                    for _, slot in ipairs(character.vault.slots) do
+                        if slot.type == Enum.WeeklyRewardChestThresholdType.Raid then
+                            local level = "-"
+                            if slot.level > 0 then
+                                local name = GetDifficultyInfo(slot.level)
+                                -- local name = DifficultyUtil.GetDifficultyName(slot.level); -- WTF BLizzard?
+                                level = tostring(name):sub(1, 1)
+                            end
+                            vaultLevels = vaultLevels .. level .. "  "
+                        end
+                    end
+                end
+                if vaultLevels == "" then
+                    vaultLevels = "-  -  -"
+                end
+                return vaultLevels:trim()
+            end,
             enabled = self.db.global.raids.enabled,
         },
         {
@@ -222,7 +241,7 @@ function AlterEgo:GetCharacterInfo()
                 local vaultLevels = ""
                 if character.vault.slots ~= nil then
                     for _, slot in ipairs(character.vault.slots) do
-                        if slot.type == 1 then
+                        if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus then
                             local level = "-"
                             if slot.level > 0 then
                                 level = tostring(slot.level)
@@ -237,9 +256,9 @@ function AlterEgo:GetCharacterInfo()
                 return vaultLevels:trim()
             end,
             OnEnter = function(character)
-                local runs = AE_table_filter(character.mythicplus.runHistory, function(run) return true end)
+                local runs = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
                 local countRuns = AE_table_count(runs) or 0
-                GameTooltip:AddLine("Vault (Dungeons)", 1, 1, 1);
+                GameTooltip:AddLine("Vault Progress", 1, 1, 1);
                 GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. countRuns .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 
                 if countRuns > 0 then
@@ -248,7 +267,7 @@ function AlterEgo:GetCharacterInfo()
                     for i, run in ipairs(runs) do
                         local threshold = false
                         for _, slot in ipairs(character.vault.slots) do
-                            if slot.type == 1 and i == slot.threshold then
+                            if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus and i == slot.threshold then
                                 threshold = true
                             end
                         end
