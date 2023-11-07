@@ -292,7 +292,7 @@ function AlterEgo:UpdateDB()
 end
 
 function AlterEgo:UpdateGameData()
-    for _, raid in ipairs(dataRaids) do
+    for _, raid in pairs(dataRaids) do
         -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info.
         EJ_SelectInstance(raid.id)
         raid.encounters = {}
@@ -313,7 +313,7 @@ function AlterEgo:UpdateGameData()
         end
     end
 
-    for _, dungeon in ipairs(dataDungeons) do
+    for _, dungeon in pairs(dataDungeons) do
         local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
         dungeon.name = dungeonName
         dungeon.time = dungeonTimeLimit
@@ -325,6 +325,7 @@ function AlterEgo:UpdateGameData()
         affix.name = name
         affix.description = description
     end
+    self:UpdateDB()
 end
 
 function AlterEgo:UpdateRaidInstances()
