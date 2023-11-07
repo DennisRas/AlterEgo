@@ -285,15 +285,6 @@ function AlterEgo:GetCharacters(unfiltered)
     return charactersFiltered
 end
 
-function AlterEgo:GetDungeonByMapId(mapId)
-    for _, dungeon in pairs(dataDungeons) do
-        if dungeon.mapId == mapId then
-            return dungeon
-        end
-    end
-    return nil
-end
-
 function AlterEgo:UpdateDB()
     self:UpdateCharacterInfo()
     self:UpdateMythicPlus()

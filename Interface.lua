@@ -186,7 +186,7 @@ function AlterEgo:GetCharacterInfo()
             value = function(character)
                 local currentKeystone = "-"
                 if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
-                    local dungeon = self:GetDungeonByMapId(character.mythicplus.keystone.mapId)
+                    local dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
                     if dungeon then
                         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
                     end
@@ -1107,12 +1107,12 @@ function AlterEgo:UpdateUI()
         --     vaultLevels = vaultLevels .. level .. "  "
         -- end
 
-        if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
-            local dungeon = self:GetDungeonByMapId(character.mythicplus.keystone.mapId)
-            if dungeon then
-                currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
-            end
-        end
+        -- if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
+        --     local dungeon = self:GetDungeonByMapId(character.mythicplus.keystone.mapId)
+        --     if dungeon then
+        --         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
+        --     end
+        -- end
 
         if character.mythicplus.bestSeasonScore ~= nil then
             bestSeasonScore = character.mythicplus.bestSeasonScore
