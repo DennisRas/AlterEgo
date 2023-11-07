@@ -1016,11 +1016,7 @@ function AlterEgo:UpdateUI()
         DungeonLabel.Icon:SetTexture(dungeon.icon)
         DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         DungeonLabel.Text:SetText(dungeon.name)
-        local mapIconTexture = "Interface/Icons/achievement_bg_wineos_underxminutes"
-        if dungeon.texture ~= 0 then
-            mapIconTexture = tostring(dungeon.texture)
-        end
-        DungeonLabel.Icon:SetTexture(mapIconTexture)
+        DungeonLabel.Icon:SetTexture(tostring(dungeon.texture))
         DungeonLabel:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
@@ -1355,26 +1351,26 @@ function AlterEgo:UpdateUI()
                         GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", expires)))
                     end
 
-                    if raid.encounters == nil then
-                        -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info. Can't call this during game load either sigh (bugs out)
-                        EJ_SelectInstance(raid.id)
-                        raid.encounters = {}
-                        for e = 1, raid.numEncounters do
-                            local encounterName, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
-                            if encounterName ~= nil then
-                                table.insert(raid.encounters, {
-                                    ["name"] = encounterName,
-                                    ["description"] = description,
-                                    ["journalEncounterID"] = journalEncounterID,
-                                    ["rootSectionID"] = rootSectionID,
-                                    ["link"] = link,
-                                    ["journalInstanceID"] = journalInstanceID,
-                                    ["dungeonEncounterID"] = dungeonEncounterID,
-                                    ["instanceID"] = instanceID,
-                                })
-                            end
-                        end
-                    end
+                    -- if raid.encounters == nil then
+                    --     -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info. Can't call this during game load either sigh (bugs out)
+                    --     EJ_SelectInstance(raid.id)
+                    --     raid.encounters = {}
+                    --     for e = 1, raid.numEncounters do
+                    --         local encounterName, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
+                    --         if encounterName ~= nil then
+                    --             table.insert(raid.encounters, {
+                    --                 ["name"] = encounterName,
+                    --                 ["description"] = description,
+                    --                 ["journalEncounterID"] = journalEncounterID,
+                    --                 ["rootSectionID"] = rootSectionID,
+                    --                 ["link"] = link,
+                    --                 ["journalInstanceID"] = journalInstanceID,
+                    --                 ["dungeonEncounterID"] = dungeonEncounterID,
+                    --                 ["instanceID"] = instanceID,
+                    --             })
+                    --         end
+                    --     end
+                    -- end
 
                     GameTooltip:AddLine(" ")
                     for e, encounter in ipairs(raid.encounters) do

@@ -156,7 +156,7 @@ local dataRaids = {
     -- [1200] = { id = 1200, order = 1, mapId = 2522, encounters = 8, abbr = "VOTI", name = "Vault of the Incarnates" },
     -- [1208] = { id = 1208, order = 2, mapId = 2569, encounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
     -- [1207] = { id = 1208, order = 3, mapId = 2549, encounters = 9, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope" },
-    [1208] = { id = 1208, order = 2, mapId = 2569, numEncounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
+    [1208] = { id = 1208, order = 2, mapId = 2569, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
 }
 
 local dataRaidDifficulties = {
@@ -182,7 +182,7 @@ end
 
 function AlterEgo:GetRaidDifficulties()
     local result = {}
-    for rd, difficulty in pairs(dataRaidDifficulties) do
+    for _, difficulty in pairs(dataRaidDifficulties) do
         table.insert(result, difficulty)
     end
 
@@ -195,12 +195,7 @@ end
 
 function AlterEgo:GetAffixes()
     local result = {}
-    for id, affix in pairs(dataAffixes) do
-        if affix.description == nil then
-            local name, description = C_ChallengeMode.GetAffixInfo(affix.id);
-            affix.name = name
-            affix.description = description
-        end
+    for _, affix in pairs(dataAffixes) do
         table.insert(result, affix)
     end
 
@@ -213,7 +208,7 @@ end
 
 function AlterEgo:GetDungeons()
     local result = {}
-    for d, dungeon in pairs(dataDungeons) do
+    for _, dungeon in pairs(dataDungeons) do
         table.insert(result, dungeon)
     end
 
@@ -226,7 +221,7 @@ end
 
 function AlterEgo:GetRaids()
     local result = {}
-    for r, raid in pairs(dataRaids) do
+    for _, raid in pairs(dataRaids) do
         table.insert(result, raid)
     end
 
@@ -291,7 +286,7 @@ function AlterEgo:GetCharacters(unfiltered)
 end
 
 function AlterEgo:GetDungeonByMapId(mapId)
-    for dungeonId, dungeon in pairs(dataDungeons) do
+    for _, dungeon in pairs(dataDungeons) do
         if dungeon.mapId == mapId then
             return dungeon
         end
@@ -303,6 +298,42 @@ function AlterEgo:UpdateDB()
     self:UpdateCharacterInfo()
     self:UpdateMythicPlus()
     self:UpdateRaidInstances()
+end
+
+function AlterEgo:UpdateGameData()
+    for _, raid in ipairs(dataRaids) do
+        -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info.
+        EJ_SelectInstance(raid.id)
+        raid.encounters = {}
+        for e = 1, raid.numEncounters do
+            local encounterName, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
+            if encounterName ~= nil then
+                table.insert(raid.encounters, {
+                    ["name"] = encounterName,
+                    ["description"] = description,
+                    ["journalEncounterID"] = journalEncounterID,
+                    ["rootSectionID"] = rootSectionID,
+                    ["link"] = link,
+                    ["journalInstanceID"] = journalInstanceID,
+                    ["dungeonEncounterID"] = dungeonEncounterID,
+                    ["instanceID"] = instanceID,
+                })
+            end
+        end
+    end
+
+    for _, dungeon in ipairs(dataDungeons) do
+        local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+        dungeon.name = dungeonName
+        dungeon.time = dungeonTimeLimit
+        dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
+    end
+
+    for _, affix in pairs(dataAffixes) do
+        local name, description = C_ChallengeMode.GetAffixInfo(affix.id);
+        affix.name = name
+        affix.description = description
+    end
 end
 
 function AlterEgo:UpdateRaidInstances()
@@ -459,12 +490,12 @@ function AlterEgo:UpdateMythicPlus()
     do
         wipe(character.mythicplus.dungeons or {})
         for _, dataDungeon in pairs(dataDungeons) do
-            if dataDungeon.texture == nil then
-                local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dataDungeon.id)
-                dataDungeon.name = dungeonName
-                dataDungeon.time = dungeonTimeLimit
-                dataDungeon.texture = dungeonTexture
-            end
+            -- if dataDungeon.texture == nil then
+            --     local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dataDungeon.id)
+            --     dataDungeon.name = dungeonName
+            --     dataDungeon.time = dungeonTimeLimit
+            --     dataDungeon.texture = dungeonTexture
+            -- end
 
             if character.mythicplus.dungeons[dataDungeon.id] == nil then
                 character.mythicplus.dungeons[dataDungeon.id] = {
