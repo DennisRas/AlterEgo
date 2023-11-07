@@ -586,10 +586,6 @@ end
 
 function AlterEgo:CreateUI()
     if self.Window then return end
-
-    local affixes = self:GetAffixes()
-    local characters = self:GetCharacters()
-    local charactersUnfiltered = self:GetCharacters(true)
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
@@ -1041,90 +1037,6 @@ function AlterEgo:UpdateUI()
     -- Characters
     local lastCharacterColumn = nil
     for c, character in ipairs(characters) do
-        local name = "-"
-        local nameColor = "ffffffff"
-        local realm = "-"
-        local realmColor = "ffffffff"
-        local rating = "-"
-        local ratingColor = "ffffffff"
-        local itemLevel = ""
-        local itemLevelTooltip = ""
-        local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
-        local itemLevelColor = "ffffffff"
-        local vaultLevels = ""
-        local currentKeystone = "-"
-        local bestSeasonScore = nil
-        local bestSeasonScoreColor = "ffffffff"
-        local bestSeasonNumber = nil
-
-        if character.info.name ~= nil then
-            name = character.info.name
-        end
-
-        if character.info.realm ~= nil then
-            realm = character.info.realm
-        end
-
-        if character.info.class.file ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-            if classColor ~= nil then
-                nameColor = classColor.GenerateHexColor(classColor)
-            end
-        end
-
-        if character.mythicplus.rating ~= nil then
-            local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
-            if color ~= nil then
-                ratingColor = color.GenerateHexColor(color)
-            end
-            rating = tostring(character.mythicplus.rating)
-        end
-
-        if character.info.ilvl ~= nil then
-            if character.info.ilvl.level ~= nil then
-                itemLevel = tostring(floor(character.info.ilvl.level))
-                itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.info.ilvl.level)
-            end
-            if character.info.ilvl.level ~= nil and character.info.ilvl.equipped ~= nil and character.info.ilvl.level ~= character.info.ilvl.equipped then
-                itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped);
-            end
-            if character.info.ilvl.level ~= nil then
-                itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
-            end
-            if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
-                itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
-            end
-            if character.info.ilvl.color then
-                itemLevelColor = character.info.ilvl.color
-            end
-        end
-
-        -- for _, vault in ipairs(character.vault) do
-        --     local level = "-"
-        --     if vault.level > 0 then
-        --         level = tostring(vault.level)
-        --     end
-        --     vaultLevels = vaultLevels .. level .. "  "
-        -- end
-
-        -- if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
-        --     local dungeon = self:GetDungeonByMapId(character.mythicplus.keystone.mapId)
-        --     if dungeon then
-        --         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
-        --     end
-        -- end
-
-        if character.mythicplus.bestSeasonScore ~= nil then
-            bestSeasonScore = character.mythicplus.bestSeasonScore
-            local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
-            if color ~= nil then
-                bestSeasonScoreColor = color.GenerateHexColor(color)
-            end
-        end
-
-        if character.mythicplus.bestSeasonNumber ~= nil then
-            bestSeasonNumber = character.mythicplus.bestSeasonNumber
-        end
 
         local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.Characters, c)
         SetBackgroundColor(CharacterColumn, 1, 1, 1, c % 2 == 0 and 0.01 or 0)
@@ -1350,27 +1262,6 @@ function AlterEgo:UpdateUI()
                     if expires > 0 then
                         GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", expires)))
                     end
-
-                    -- if raid.encounters == nil then
-                    --     -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info. Can't call this during game load either sigh (bugs out)
-                    --     EJ_SelectInstance(raid.id)
-                    --     raid.encounters = {}
-                    --     for e = 1, raid.numEncounters do
-                    --         local encounterName, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
-                    --         if encounterName ~= nil then
-                    --             table.insert(raid.encounters, {
-                    --                 ["name"] = encounterName,
-                    --                 ["description"] = description,
-                    --                 ["journalEncounterID"] = journalEncounterID,
-                    --                 ["rootSectionID"] = rootSectionID,
-                    --                 ["link"] = link,
-                    --                 ["journalInstanceID"] = journalInstanceID,
-                    --                 ["dungeonEncounterID"] = dungeonEncounterID,
-                    --                 ["instanceID"] = instanceID,
-                    --             })
-                    --         end
-                    --     end
-                    -- end
 
                     GameTooltip:AddLine(" ")
                     for e, encounter in ipairs(raid.encounters) do
