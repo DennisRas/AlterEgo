@@ -1112,8 +1112,25 @@ function AlterEgo:UpdateUI()
                         GameTooltip:SetOwner(CharacterFrame, "ANCHOR_RIGHT")
                         info.OnEnter(character)
                         GameTooltip:Show()
+                        if not info.backgroundColor then
+                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                        end
                     end)
-                    CharacterFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                    CharacterFrame:SetScript("OnLeave", function()
+                        GameTooltip:Hide()
+                        if not info.backgroundColor then
+                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                        end
+                    end)
+                else
+                    if not info.backgroundColor then
+                        CharacterFrame:SetScript("OnEnter", function()
+                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                        end)
+                        CharacterFrame:SetScript("OnLeave", function()
+                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                        end)
+                    end
                 end
                 if info.OnClick then
                     CharacterFrame:SetScript("OnClick", function()
@@ -1307,8 +1324,12 @@ function AlterEgo:UpdateUI()
                         GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
                     end
                     GameTooltip:Show()
+                    SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
                 end)
-                DifficultyFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                DifficultyFrame:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
+                    SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
+                end)
             end
         end
     end
