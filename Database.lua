@@ -421,8 +421,8 @@ function AlterEgo:UpdateMythicPlus()
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
     if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
 
-    local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable()
-    local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
+    local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
+    local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() and C_WeeklyRewards.CanClaimRewards()
     if weeklyRewardAvailable ~= nil then character.mythicplus.weeklyRewardAvailable = weeklyRewardAvailable end
     if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
 
