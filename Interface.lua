@@ -1208,6 +1208,7 @@ function AlterEgo:UpdateUI()
         for d, dungeon in ipairs(dungeons) do
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
 
+            -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
             local scoreColor = HIGHLIGHT_FONT_COLOR
             if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and AE_table_count(character.mythicplus.dungeons[dungeon.id].affixScores)) then
                 scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.mythicplus.dungeons[dungeon.id].rating);
