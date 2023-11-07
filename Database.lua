@@ -31,23 +31,31 @@ local defaultCharacter = {
     raids = {
         savedInstances = {
             -- [1] = {
-            --     ["id"] = lockoutId,
-            --     ["name"] = name,
-            --     ["lockoutId"] = lockoutId,
-            --     ["reset"] = reset,
-            --     ["expires"] = expires,
-            --     ["difficultyId"] = difficultyId,
-            --     ["locked"] = locked,
-            --     ["instanceIDMostSig"] = instanceIDMostSig,
-            --     ["isRaid"] = isRaid,
-            --     ["maxPlayers"] = maxPlayers,
-            --     ["difficultyName"] = difficultyName,
-            --     ["numEncounters"] = numEncounters,
-            --     ["encounterProgress"] = encounterProgress,
-            --     ["extendDisabled"] = extendDisabled,
-            --     ["instanceId"] = instanceId,
-            --     link = GetSavedInstanceChatLink(i),
-            --     ["encounters"] = encounters
+            --     ["id"] = 0,
+            --     ["name"] = "",
+            --     ["lockoutId"] = 0,
+            --     ["reset"] = 0,
+            --     ["difficultyId"] = 0,
+            --     ["locked"] = false,
+            --     ["extended"] = false,
+            --     ["instanceIDMostSig"] = 0,
+            --     ["isRaid"] = true,
+            --     ["maxPlayers"] = 0,
+            --     ["difficultyName"] = "",
+            --     ["numEncounters"] = 0,
+            --     ["encounterProgress"] = 0,
+            --     ["extendDisabled"] = false,
+            --     ["instanceId"] = 0,
+            --     ["link"] = "",
+            --     ["expires"] = 0,
+            --     ["encounters"] = {
+            --         [1] = {
+            --             ["encounterId"] = 0,
+            --             ["bossName"] = "",
+            --             ["fileDataID"] = 0,
+            --             ["killed"] = false
+            --         }
+            --     }
             -- }
         },
     },
@@ -319,21 +327,21 @@ function AlterEgo:UpdateRaidInstances()
             local encounters = {}
             for e = 1, numEncounters do
                 local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(i, e)
-                encounters[e] = {
-                    encounterId = e,
+                table.insert(encounters, {
+                    ["encounterId"] = e,
                     ["bossName"] = bossName,
                     ["fileDataID"] = fileDataID or 0,
                     ["killed"] = killed
-                }
+                })
             end
             character.raids.savedInstances[i] = {
                 ["id"] = lockoutId,
                 ["name"] = name,
                 ["lockoutId"] = lockoutId,
                 ["reset"] = reset,
-                ["expires"] = expires,
                 ["difficultyId"] = difficultyId,
                 ["locked"] = locked,
+                ["extended"] = extended,
                 ["instanceIDMostSig"] = instanceIDMostSig,
                 ["isRaid"] = isRaid,
                 ["maxPlayers"] = maxPlayers,
@@ -342,7 +350,8 @@ function AlterEgo:UpdateRaidInstances()
                 ["encounterProgress"] = encounterProgress,
                 ["extendDisabled"] = extendDisabled,
                 ["instanceId"] = instanceId,
-                link = GetSavedInstanceChatLink(i),
+                ["link"] = GetSavedInstanceChatLink(i),
+                ["expires"] = expires,
                 ["encounters"] = encounters
             }
         end

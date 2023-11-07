@@ -1357,13 +1357,15 @@ function AlterEgo:UpdateUI()
                         local killed = false
                         local color = LIGHTGRAY_FONT_COLOR
                         if character.raids.savedInstances ~= nil then
-                            for k, savedInstance in pairs(character.raids.savedInstances) do
-                                if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
-                                    local savedInstanceEncounter = savedInstance.encounters[e]
-                                    expires = savedInstance.expires
-                                    if savedInstanceEncounter and savedInstanceEncounter.killed then
-                                        killed = true
-                                    end
+                            local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                                return savedInstance.instanceId == raid.mapId and savedInstance.difficultyId == difficulty.id and savedInstance.expires > time()
+                            end)
+                            if savedInstance then
+                                local savedInstanceEncounter = AE_table_find(savedInstance.encounters, function(savedInstanceEncounter)
+                                    return savedInstanceEncounter.encounterId == e and savedInstanceEncounter.killed
+                                end)
+                                if savedInstanceEncounter then
+                                    killed = true
                                 end
                             end
                         end
