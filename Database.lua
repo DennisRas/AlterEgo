@@ -56,7 +56,9 @@ local defaultCharacter = {
         keystone = {
             mapId = 0,
             level = 0,
-            itemId = 0
+            color = "",
+            itemId = 0,
+            itemLink = "",
         },
         weeklyRewardAvailable = false,
         bestSeasonScore = 0,
@@ -411,13 +413,9 @@ function AlterEgo:UpdateMythicPlus()
     end
 
     local runHistory = C_MythicPlus.GetRunHistory(true, true)
-    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
     local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
     if ratingSummary ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
     if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
-    if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = keyStoneMapID end
-    if keyStoneLevel ~= nil then character.mythicplus.keystone.level = keyStoneLevel end
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
     if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
 
@@ -426,7 +424,31 @@ function AlterEgo:UpdateMythicPlus()
     if weeklyRewardAvailable ~= nil then character.mythicplus.weeklyRewardAvailable = weeklyRewardAvailable end
     if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
 
-    -- TODO: Scan bags for keystone item
+    -- Scan bags for keystone item
+    character.mythicplus.keystone = defaultCharacter.mythicplus.keystone
+    for bagId = 0, NUM_BAG_SLOTS do
+        for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
+            local itemId = C_Container.GetContainerItemID(bagId, slotId)
+            if itemId and itemId == 180653 then
+                local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
+                local _, _, mapId, level = strsplit(':', itemLink)
+                character.mythicplus.keystone = {
+                    ["mapId"] = mapId,
+                    ["level"] = tonumber(level),
+                    ["color"] = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
+                    ["itemId"] = itemId,
+                    ["itemLink"] = itemLink,
+                }
+                break
+            end
+        end
+    end
+    if not character.mythicplus.keystone.mapId then
+        local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+        local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+        if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = keyStoneMapID end
+        if keyStoneLevel ~= nil then character.mythicplus.keystone.level = keyStoneLevel end
+    end
 
     if character.vault == nil then
         character.vault = {
