@@ -62,6 +62,7 @@ local defaultCharacter = {
     mythicplus = { -- Mythic Plus
         rating = 0,
         keystone = {
+            dungeonId = 0,
             mapId = 0,
             level = 0,
             color = "",
@@ -419,6 +420,7 @@ end
 
 function AlterEgo:UpdateMythicPlus()
     local character = self:GetCharacter()
+    local dungeons = self:GetDungeons()
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
 
     if not ratingSummary then
@@ -447,24 +449,27 @@ function AlterEgo:UpdateMythicPlus()
                 local itemId = C_Container.GetContainerItemID(bagId, slotId)
                 if itemId and itemId == 180653 then
                     local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
-                    local _, _, mapId, level = strsplit(':', itemLink)
-                    character.mythicplus.keystone = {
-                        ["mapId"] = mapId,
-                        ["level"] = tonumber(level),
-                        ["color"] = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
-                        ["itemId"] = itemId,
-                        ["itemLink"] = itemLink,
-                    }
+                    local _, _, dungeonId, level = strsplit(':', itemLink)
+                    local dungeon = AE_table_get(dungeons, "id", tonumber(dungeonId))
+                    DevTools_Dump(dungeonId)
+                    if dungeon then
+                        character.mythicplus.keystone = {
+                            ["dungeonId"] = tonumber(dungeon.id),
+                            ["mapId"] = tonumber(dungeon.mapId),
+                            ["level"] = tonumber(level),
+                            ["color"] = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
+                            ["itemId"] = tonumber(itemId),
+                            ["itemLink"] = itemLink,
+                        }
+                    end
                     break
                 end
             end
         end
-        if not character.mythicplus.keystone.mapId then
-            local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-            local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-            if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = keyStoneMapID end
-            if keyStoneLevel ~= nil then character.mythicplus.keystone.level = keyStoneLevel end
-        end
+        local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+        local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+        if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) end
+        if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) end
     end
 
     -- Get vault info

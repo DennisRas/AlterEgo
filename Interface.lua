@@ -185,15 +185,40 @@ function AlterEgo:GetCharacterInfo()
             label = "Current Keystone",
             value = function(character)
                 local currentKeystone = "-"
-                if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
+                if character.mythicplus.keystone ~= nil then
                     local dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
                     if dungeon then
                         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
                     end
+                    -- if character.mythicplus.keystone.itemId > 0 and character.mythicplus.keystone.itemLink ~= "" then
+                    --     currentKeystone = character.mythicplus.keystone.itemLink
+                    -- end
                 end
+                -- if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
+                --     local dungeon = AE_table_get(dungeons, "id", character.mythicplus.keystone.mapId)
+                --     if dungeon then
+                --         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
+                --     end
+                -- end
                 return currentKeystone
             end,
             enabled = true,
+            OnEnter = function(character)
+                if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.itemLink ~= "" and character.mythicplus.keystone.itemLink ~= nil then
+                    GameTooltip:SetHyperlink(character.mythicplus.keystone.itemLink)
+                    GameTooltip:AddLine(" ")
+                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                end
+            end,
+            OnClick = function(character)
+                if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.itemLink ~= "" and character.mythicplus.keystone.itemLink ~= nil then
+                    if IsModifiedClick("CHATLINK") then
+                        if not ChatEdit_InsertLink(character.mythicplus.keystone.itemLink) then
+                            ChatFrame_OpenChat(character.mythicplus.keystone.itemLink);
+                        end
+                    end
+                end
+            end,
         },
         {
             label = "Vault",
