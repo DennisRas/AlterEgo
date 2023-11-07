@@ -132,6 +132,8 @@ local defaultCharacter = {
             --     ["level"] = 0,
             --     ["raidString"] = "",
             --     ["id"] = 0,
+            --     ["exampleRewardLink"] = ""
+            --     ["exampleRewardUpgradeLink"] = ""
             -- },
         }
     },
@@ -478,6 +480,13 @@ function AlterEgo:UpdateMythicPlus()
         for i = 1, 3 do
             local slots = C_WeeklyRewards.GetActivities(i)
             for _, slot in ipairs(slots) do
+                slot.exampleRewardLink = ""
+                slot.exampleRewardUpgradeLink = ""
+                if slot.progress >= slot.threshold then
+                    local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(slot.id)
+                    slot.exampleRewardLink = itemLink
+                    slot.exampleRewardUpgradeLink = upgradeItemLink
+                end
                 table.insert(character.vault.slots, slot)
             end
         end

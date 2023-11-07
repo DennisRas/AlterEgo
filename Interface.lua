@@ -258,6 +258,52 @@ function AlterEgo:GetCharacterInfo()
                 end
                 return vaultLevels:trim()
             end,
+            OnEnter = function(character)
+                GameTooltip:AddLine("Vault Progress", 1, 1, 1)
+                if character.vault.slots ~= nil then
+                    local slots = AE_table_filter(character.vault.slots, function(slot)
+                        return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
+                    end)
+                    for s, slot in ipairs(slots) do
+                        local color = LIGHTGRAY_FONT_COLOR
+                        local result = "Locked"
+                        if slot.progress >= slot.threshold then
+                            color = WHITE_FONT_COLOR
+                            if slot.exampleRewardLink then
+                                local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
+                                local currentDifficultyName = GetDifficultyInfo(slot.level)
+                                -- local currentDifficultyName = DifficultyUtil.GetDifficultyName(slot.level);
+                                -- GameTooltip:AddLine(" ")
+                                -- GameTooltip:AddLine(format("%d bosses killed:", slot.threshold))
+                                result = format("%s (%d+)", currentDifficultyName, itemLevel)
+                            else
+                                result = "?"
+                            end
+                        end
+                        GameTooltip:AddDoubleLine(format("%d boss kills:", slot.threshold), result, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
+                    end
+
+                    local incompleteSlots = AE_table_filter(character.vault.slots, function(slot)
+                        return slot.type == Enum.WeeklyRewardChestThresholdType.Raid and slot.progress < slot.threshold
+                    end)
+                    if AE_table_count(incompleteSlots) > 0 then
+                        table.sort(incompleteSlots, function(a, b) return a.threshold < b.threshold end)
+                        GameTooltip:AddLine(" ")
+                        local tooltip = ""
+                        if AE_table_count(incompleteSlots) == AE_table_count(slots) then
+                            tooltip = format("Defeat %d bosses this week to unlock your first Great Vault reward.", incompleteSlots[1].threshold)
+                        else
+                            local diff = incompleteSlots[1].threshold - incompleteSlots[1].progress
+                            if diff == 1 then
+                                tooltip = format("Defeat %d more boss this week to unlock another Great Vault reward.", diff)
+                            else
+                                tooltip = format("Defeat another %d bosses this week to unlock another Great Vault reward.", diff)
+                            end
+                        end
+                        GameTooltip:AddLine(tooltip, nil, nil, nil, true)
+                    end
+                end
+            end,
             enabled = self.db.global.raids.enabled,
         },
         {
