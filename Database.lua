@@ -382,7 +382,6 @@ function AlterEgo:UpdateRaidInstances()
             }
         end
     end
-    -- DevTools_Dump(character.raids)
 end
 
 function AlterEgo:UpdateCharacterInfo()
@@ -453,7 +452,6 @@ function AlterEgo:UpdateMythicPlus()
                     local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
                     local _, _, dungeonId, level = strsplit(':', itemLink)
                     local dungeon = AE_table_get(dungeons, "id", tonumber(dungeonId))
-                    DevTools_Dump(dungeonId)
                     if dungeon then
                         character.mythicplus.keystone = {
                             ["dungeonId"] = tonumber(dungeon.id),
