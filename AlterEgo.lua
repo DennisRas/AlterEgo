@@ -7,6 +7,7 @@ AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
 
 local defaultDB = {
     global = {
+        weeklyReset = 0,
         characters = {},
         minimap = {
             hide = false,

@@ -289,9 +289,21 @@ function AlterEgo:GetCharacters(unfiltered)
 end
 
 function AlterEgo:UpdateDB()
+    self:UpdateWeeklyReset()
     self:UpdateCharacterInfo()
     self:UpdateMythicPlus()
     self:UpdateRaidInstances()
+end
+
+function AlterEgo:UpdateWeeklyReset()
+    local characters = self:GetCharacters()
+    if self.db.global.weeklyReset ~= nil and self.db.global.weeklyReset <= time() then
+        self:Print("Weekly Reset!")
+        for _, character in ipairs(characters) do
+            -- Todo: Run weekly task
+        end
+    end
+    self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
 end
 
 function AlterEgo:UpdateGameData()
