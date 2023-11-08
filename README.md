@@ -1,7 +1,7 @@
-Are you a Mythic Plus enthusiast with multiple characters and alts to manage?  
-With AlterEgo, you'll gain unparalleled control and insight into your Mythic Plus progress, rating, item levels, and Great Vault rewards for all your characters.
+Are you a Mythic+ enthusiast with multiple characters and alts to manage?  
+With AlterEgo, you'll gain unparalleled control and insight into your Mythic+ progress, rating, item levels, and Great Vault rewards for all your characters.
 
-When it comes to Mythic Plus dungeons, AlterEgo is your trusty sidekick. It provides you with detailed information about your highest Mythic Plus key levels completed on each character, making it a breeze to identify your progress across your roster.
+When it comes to Mythic+ dungeons, AlterEgo is your trusty sidekick. It provides you with detailed information about your highest Mythic+ key levels completed on each character, making it a breeze to identify your progress across your roster.
 
 AlterEgo also offers an optional easy-to-read grid overview of your raid progress on all your characters. Quickly identify which bosses you've successfully defeated and where you might need to focus your efforts. Never lose track of your achievements in the raiding world with this feature.
 
@@ -12,9 +12,9 @@ Download AlterEgo today and take control of your gaming experience like never be
 ## Features
 
 - Track data for all of your characters across realms and factions.
-- Track all of your Mythic Plus ratings and season bests.
-- Track all of your Mythic Plus levels for each affix.
-- Track all of your Mythic Plus keystone items.
+- Track all of your Mythic+ ratings and season bests.
+- Track all of your Mythic+ levels for each affix.
+- Track all of your Mythic+ keystone items.
 - Track all of your Raid lockouts and kills.
 - Track your Great Vault progress.
 - Get notified of available Great Vault rewards.
