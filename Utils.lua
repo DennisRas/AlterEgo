@@ -56,6 +56,9 @@ function AE_table_copy(from, to, recursion_check)
     return table
 end
 
+--- Map each item in a table
+---@param tbl table
+---@param callback function
 function AE_table_map(tbl, callback)
     local t = {}
     for ik, iv in pairs(tbl) do
@@ -63,4 +66,14 @@ function AE_table_map(tbl, callback)
         t[fk and fk or ik] = fv
     end
     return t
+end
+
+--- Run a callback on each table item
+---@param tbl table
+---@param callback function
+function AE_table_foreach(tbl, callback)
+    for ik, iv in pairs(tbl) do
+        callback(iv, ik)
+    end
+    return tbl
 end
