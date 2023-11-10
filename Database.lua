@@ -292,18 +292,25 @@ function AlterEgo:GetCharacters(unfiltered)
 end
 
 function AlterEgo:UpdateDB()
-    self:UpdateWeeklyReset()
+    self:TaskWeeklyReset()
     self:UpdateCharacterInfo()
     self:UpdateMythicPlus()
     self:UpdateRaidInstances()
 end
 
-function AlterEgo:UpdateWeeklyReset()
-    local characters = self:GetCharacters()
+function AlterEgo:TaskWeeklyReset()
     if self.db.global.weeklyReset ~= nil and self.db.global.weeklyReset <= time() then
-        self:Print("Weekly Reset!")
-        for _, character in ipairs(characters) do
-            -- Todo: Run weekly task
+        for _, character in ipairs(self:GetCharacters()) do
+            AE_table_foreach(character.vault.slots, function(slot)
+                if slot.progress >= slot.threshold then
+                    character.vault.hasAvailableRewards = true
+                end
+            end)
+            AE_table_foreach(character.mythicplus.runHistory, function(run)
+                run.thisWeek = false
+            end)
+            wipe(character.vault.slots or {})
+            wipe(character.raids.killed or {})
         end
     end
     self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
