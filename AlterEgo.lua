@@ -49,11 +49,7 @@ local libDataObject = {
     end
 }
 
-function AlterEgo:OnInitialize()
-    self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
-    self:RegisterChatCommand("ae", "ToggleWindow")
-    self:RegisterChatCommand("alterego", "ToggleWindow")
-    self:RegisterEvent("PLAYER_LOGIN", "UpdateGameData")
+function AlterEgo:OnEnable()
     self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 3, function()
         self:Print("BAG_UPDATE_DELAYED")
         self:UpdateDB()
@@ -100,6 +96,14 @@ function AlterEgo:OnInitialize()
         RequestRaidInfo()
     end)
 
+    self:UpdateGameData()
     self:UpdateDB()
     self:CreateUI()
+end
+
+function AlterEgo:OnInitialize()
+    self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
+    self:RegisterChatCommand("ae", "ToggleWindow")
+    self:RegisterChatCommand("alterego", "ToggleWindow")
+    -- self:RegisterEvent("PLAYER_LOGIN", "UpdateGameData")
 end

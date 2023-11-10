@@ -30,7 +30,7 @@ local defaultCharacter = {
     },
     raids = {
         killed = {
-            -- [encounterId + "-" + difficultyId] = false,
+            -- [encounterId .. "-" .. difficultyId] = false,
         },
         savedInstances = {
             -- [1] = {
@@ -396,14 +396,17 @@ function AlterEgo:UpdateRaidInstances()
                 local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(instanceIndex, encounterIndex)
                 local encounter = {
                     ["encounterIndex"] = encounterIndex,
-                    ["id"] = raid and raid.encounters[encounterIndex].encounterId or 0,
+                    ["encounterId"] = raid and raid.encounters[encounterIndex].encounterId or 0,
                     ["bossName"] = bossName,
                     ["fileDataID"] = fileDataID or 0,
                     ["killed"] = killed
                 }
                 savedInstance.encounters[encounterIndex] = encounter
-                if encounter.killed and encounter.id then
-                    character.raids.killed[tostring(encounter.id) + "-" + difficultyId] = true
+                if encounter.killed and encounter.encounterId then
+                    if character.raids.killed == nil then
+                        character.raids.killed = {}
+                    end
+                    character.raids.killed[tostring(encounter.encounterId) .. "-" .. tostring(difficultyId)] = true
                 end
             end
             character.raids.savedInstances[instanceIndex] = savedInstance
@@ -569,7 +572,7 @@ end
 function AlterEgo:OnEncounterEnd(encounterID, encounterName, difficultyID, groupSize, success)
     local character = self:GetCharacter()
     if success then
-        character.raids.killed[tostring(encounterID) + "-" + tostring(difficultyID)] = true
+        character.raids.killed[tostring(encounterID) .. "-" .. tostring(difficultyID)] = true
         RequestRaidInfo()
     end
 end
