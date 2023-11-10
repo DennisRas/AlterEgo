@@ -29,6 +29,9 @@ local defaultCharacter = {
         },
     },
     raids = {
+        killed = {
+            -- [encounterId + "-" + difficultyId] = false,
+        },
         savedInstances = {
             -- [1] = {
             --     ["id"] = 0,
@@ -312,19 +315,18 @@ function AlterEgo:UpdateGameData()
         EJ_SelectInstance(raid.id)
         raid.encounters = {}
         for e = 1, raid.numEncounters do
-            local encounterName, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
-            if encounterName ~= nil then
-                table.insert(raid.encounters, {
-                    ["name"] = encounterName,
-                    ["description"] = description,
-                    ["journalEncounterID"] = journalEncounterID,
-                    ["rootSectionID"] = rootSectionID,
-                    ["link"] = link,
-                    ["journalInstanceID"] = journalInstanceID,
-                    ["dungeonEncounterID"] = dungeonEncounterID,
-                    ["instanceID"] = instanceID,
-                })
-            end
+            local name, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
+            local encounter = {
+                ["name"] = name,
+                ["description"] = description,
+                ["journalEncounterID"] = journalEncounterID,
+                ["rootSectionID"] = rootSectionID,
+                ["link"] = link,
+                ["journalInstanceID"] = journalInstanceID,
+                ["dungeonEncounterID"] = dungeonEncounterID,
+                ["instanceID"] = instanceID,
+            }
+            table.insert(raid.encounters, encounter)
         end
     end
 
@@ -345,6 +347,7 @@ end
 
 function AlterEgo:UpdateRaidInstances()
     local character = self:GetCharacter()
+    local raids = self:GetRaids();
     local numInstances = GetNumSavedInstances()
     -- if numInstances == nil then
     --     RequestRaidInfo()
@@ -355,24 +358,11 @@ function AlterEgo:UpdateRaidInstances()
     -- Boss encounter: EJ_GetEncounterInfo(2522)
 
     character.raids.savedInstances = {}
-    if numInstances > 0 then 
-        for i = 1, numInstances do
-            local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceId = GetSavedInstanceInfo(i)
-            local expires = 0
-            if reset and reset > 0 then
-                expires = reset + time()
-            end
-            local encounters = {}
-            for e = 1, numEncounters do
-                local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(i, e)
-                table.insert(encounters, {
-                    ["encounterId"] = e,
-                    ["bossName"] = bossName,
-                    ["fileDataID"] = fileDataID or 0,
-                    ["killed"] = killed
-                })
-            end
-            character.raids.savedInstances[i] = {
+    if numInstances > 0 then
+        for instanceIndex = 1, numInstances do
+            local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceId = GetSavedInstanceInfo(instanceIndex)
+            local raid = AE_table_get(raids, "id", instanceId)
+            local savedInstance = {
                 ["id"] = lockoutId,
                 ["name"] = name,
                 ["lockoutId"] = lockoutId,
@@ -388,10 +378,28 @@ function AlterEgo:UpdateRaidInstances()
                 ["encounterProgress"] = encounterProgress,
                 ["extendDisabled"] = extendDisabled,
                 ["instanceId"] = instanceId,
-                ["link"] = GetSavedInstanceChatLink(i),
-                ["expires"] = expires,
-                ["encounters"] = encounters
+                ["link"] = GetSavedInstanceChatLink(instanceIndex),
+                ["expires"] = 0,
+                ["encounters"] = {}
             }
+            if reset and reset > 0 then
+                savedInstance.expires = reset + time()
+            end
+            for encounterIndex = 1, numEncounters do
+                local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(instanceIndex, encounterIndex)
+                local encounter = {
+                    ["encounterIndex"] = encounterIndex,
+                    ["id"] = raid and raid.encounters[encounterIndex].encounterId or 0,
+                    ["bossName"] = bossName,
+                    ["fileDataID"] = fileDataID or 0,
+                    ["killed"] = killed
+                }
+                savedInstance.encounters[encounterIndex] = encounter
+                if encounter.killed and encounter.id then
+                    character.raids.killed[tostring(encounter.id) + "-" + difficultyId] = true
+                end
+            end
+            character.raids.savedInstances[instanceIndex] = savedInstance
         end
     end
 end
@@ -549,4 +557,12 @@ function AlterEgo:UpdateMythicPlus()
 
     character.lastUpdate = time()
     self:UpdateUI()
+end
+
+function AlterEgo:OnEncounterEnd(encounterID, encounterName, difficultyID, groupSize, success)
+    local character = self:GetCharacter()
+    if success then
+        character.raids.killed[tostring(encounterID) + "-" + tostring(difficultyID)] = true
+        RequestRaidInfo()
+    end
 end

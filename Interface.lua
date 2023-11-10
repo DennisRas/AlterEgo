@@ -1308,29 +1308,43 @@ function AlterEgo:UpdateUI()
             for rd, difficulty in pairs(difficulties) do
                 local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd]
 
-                for e = 1, raid.numEncounters do
-                    local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e]
+                for encounterIndex, encounter in ipairs(raid.encounters) do
+                    local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. encounterIndex]
                     local color = {r = 1, g = 1, b = 1, a = 0.1}
                     local alpha = 0.1
-                    if character.raids.savedInstances ~= nil then
-                        local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
-                            return savedInstance.instanceId == raid.mapId and savedInstance.difficultyId == difficulty.id and savedInstance.expires > time()
-                        end)
-                        if savedInstance then
-                            local savedInstanceEncounter = AE_table_find(savedInstance.encounters, function(savedInstanceEncounter)
-                                return savedInstanceEncounter.encounterId == e and savedInstanceEncounter.killed
-                            end)
-                            if savedInstanceEncounter then
-                                color = difficulty.color
-                                if not self.db.global.raids.colors then
-                                    color = UNCOMMON_GREEN_COLOR
-                                end
-                                alpha = 0.5
-                            end
+                    if character.raids.killed[encounter.id + "-" + difficulty.id] then
+                        color = difficulty.color
+                        if not self.db.global.raids.colors then
+                            color = UNCOMMON_GREEN_COLOR
                         end
+                        alpha = 0.5
                     end
                     SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
                 end
+
+                -- for e = 1, raid.numEncounters do
+                --     local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e]
+                --     local color = {r = 1, g = 1, b = 1, a = 0.1}
+                --     local alpha = 0.1
+                --     if character.raids.savedInstances ~= nil then
+                --         local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                --             return savedInstance.instanceId == raid.mapId and savedInstance.difficultyId == difficulty.id and savedInstance.expires > time()
+                --         end)
+                --         if savedInstance then
+                --             local savedInstanceEncounter = AE_table_find(savedInstance.encounters, function(savedInstanceEncounter)
+                --                 return savedInstanceEncounter.encounterId == e and savedInstanceEncounter.killed
+                --             end)
+                --             if savedInstanceEncounter then
+                --                 color = difficulty.color
+                --                 if not self.db.global.raids.colors then
+                --                     color = UNCOMMON_GREEN_COLOR
+                --                 end
+                --                 alpha = 0.5
+                --             end
+                --         end
+                --     end
+                --     SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
+                -- end
 
                 DifficultyFrame:SetScript("OnEnter", function()
                     GameTooltip:ClearAllPoints()
@@ -1354,19 +1368,24 @@ function AlterEgo:UpdateUI()
                     GameTooltip:AddLine(" ")
                     for e, encounter in ipairs(raid.encounters) do
                         local color = LIGHTGRAY_FONT_COLOR
-                        if character.raids.savedInstances ~= nil then
-                            local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
-                                return savedInstance.instanceId == raid.mapId and savedInstance.difficultyId == difficulty.id and savedInstance.expires > time()
-                            end)
-                            if savedInstance then
-                                local savedInstanceEncounter = AE_table_find(savedInstance.encounters, function(savedInstanceEncounter)
-                                    return savedInstanceEncounter.encounterId == e and savedInstanceEncounter.killed
-                                end)
-                                if savedInstanceEncounter then
-                                    color = GREEN_FONT_COLOR
-                                end
-                            end
+
+                        if character.raids.killed[encounter.id + "-" + difficulty.id] then
+                            color = GREEN_FONT_COLOR
                         end
+
+                        -- if character.raids.savedInstances ~= nil then
+                        --     local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                        --         return savedInstance.instanceId == raid.mapId and savedInstance.difficultyId == difficulty.id and savedInstance.expires > time()
+                        --     end)
+                        --     if savedInstance then
+                        --         local savedInstanceEncounter = AE_table_find(savedInstance.encounters, function(savedInstanceEncounter)
+                        --             return savedInstanceEncounter.encounterId == e and savedInstanceEncounter.killed
+                        --         end)
+                        --         if savedInstanceEncounter then
+                        --             color = GREEN_FONT_COLOR
+                        --         end
+                        --     end
+                        -- end
                         GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
                     end
                     GameTooltip:Show()
