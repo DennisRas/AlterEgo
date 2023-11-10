@@ -1,10 +1,10 @@
 --- Find a table item by callback
 ---@param tbl table
----@param fnc function
+---@param callback function
 ---@return table|nil, number|nil
-function AE_table_find(tbl, fnc)
+function AE_table_find(tbl, callback)
     for i, v in ipairs(tbl) do
-        if fnc(v, i) then return v, i end
+        if callback(v, i) then return v, i end
     end
     return nil, nil
 end
@@ -22,22 +22,22 @@ end
 
 --- Create a new table containing all elements that pass truth test
 ---@param tbl table
----@param fnc function
+---@param callback function
 ---@return table
-function AE_table_filter(tbl, fnc)
+function AE_table_filter(tbl, callback)
     local t = {}
     for i, v in ipairs(tbl) do
-        if fnc(v, i) then table.insert(t, v) end
+        if callback(v, i) then table.insert(t, v) end
     end
     return t
 end
 
 --- Count table items
----@param table table
+---@param tbl table
 ---@return number
-function AE_table_count(table)
+function AE_table_count(tbl)
     local n = 0
-    for _ in pairs(table) do n = n + 1 end
+    for _ in pairs(tbl) do n = n + 1 end
     return n
 end
 
@@ -54,4 +54,13 @@ function AE_table_copy(from, to, recursion_check)
         table[k] = type(v) == 'table' and AE_table_copy(v, nil, recursion_check) or v
     end
     return table
+end
+
+function AE_table_map(tbl, callback)
+    local t = {}
+    for ik, iv in pairs(tbl) do
+        local fv, fk = callback(iv, ik)
+        t[fk and fk or ik] = fv
+    end
+    return t
 end
