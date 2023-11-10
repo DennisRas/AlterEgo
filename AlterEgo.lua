@@ -49,29 +49,6 @@ local libDataObject = {
     end
 }
 
-function AlterEgo:RefreshLockInfo() -- throttled lock update with retry
-    local now = GetTime()
-    if now > (self.lastrefreshlock or 0) + 1 then
-        self.lastrefreshlock = now
-        self:RequestLockInfo()
-    end
-    if now > (self.lastrefreshlocksched or 0) + 120 then
-        -- make sure we update any lockout info (sometimes there's server-selfde delay)
-        self:Print("(self.lastrefreshlocksched or 0)")
-        self.lastrefreshlockshed = now
-        self:ScheduleTimer("RequestLockInfo", 5)
-        self:ScheduleTimer("RequestLockInfo", 30)
-        self:ScheduleTimer("RequestLockInfo", 60)
-        self:ScheduleTimer("RequestLockInfo", 90)
-        self:ScheduleTimer("RequestLockInfo", 120)
-    end
-end
-
-function AlterEgo:RequestLockInfo() -- request lock info from the server immediately
-    RequestRaidInfo()
-    RequestLFDPlayerLockInfo()
-end
-
 function AlterEgo:OnInitialize()
     self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
     self:RegisterChatCommand("ae", "ToggleWindow")

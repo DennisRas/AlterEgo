@@ -264,7 +264,7 @@ function AlterEgo:GetCharacterInfo()
                     local slots = AE_table_filter(character.vault.slots, function(slot)
                         return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
                     end)
-                    for s, slot in ipairs(slots) do
+                    for _, slot in ipairs(slots) do
                         local color = LIGHTGRAY_FONT_COLOR
                         local result = "Locked"
                         if slot.progress >= slot.threshold then
@@ -355,9 +355,9 @@ function AlterEgo:GetCharacterInfo()
                 local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus end)
                 table.sort(slots, function(a, b) return a.index < b.index; end);
                 local lastCompletedIndex = 0;
-                for i, activityInfo in ipairs(slots) do
-                    if activityInfo.progress >= activityInfo.threshold then
-                        lastCompletedIndex = i;
+                for slotIndex, slot in ipairs(slots) do
+                    if slot.progress >= slot.threshold then
+                        lastCompletedIndex = slotIndex;
                     end
                 end
                 if lastCompletedIndex == 0 then
@@ -381,10 +381,10 @@ function AlterEgo:GetCharacterInfo()
                 if countRuns > 0 then
                     GameTooltip:AddLine(" ")
                     table.sort(runs, function(a, b) return a.level > b.level end)
-                    for i, run in ipairs(runs) do
+                    for runIndex, run in ipairs(runs) do
                         local threshold = false
                         for _, slot in ipairs(character.vault.slots) do
-                            if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus and i == slot.threshold then
+                            if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus and runIndex == slot.threshold then
                                 threshold = true
                             end
                         end
@@ -397,7 +397,7 @@ function AlterEgo:GetCharacterInfo()
                                 GameTooltip:AddDoubleLine(dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
                             end
                         end
-                        if i == 8 then
+                        if runIndex == 8 then
                             break
                         end
                     end
@@ -473,9 +473,9 @@ local CreateCharacterColumn = function(parent, index)
     local anchorFrame = CharacterColumn
     do
         local labels = AlterEgo:GetCharacterInfo()
-        for l, info in ipairs(labels) do
-            local CharacterFrame = CreateFrame(info.OnClick and "Button" or "Frame", CharacterColumn:GetName() .. "Info" .. l, CharacterColumn)
-            if l > 1 then
+        for labelIndex, info in ipairs(labels) do
+            local CharacterFrame = CreateFrame(info.OnClick and "Button" or "Frame", CharacterColumn:GetName() .. "Info" .. labelIndex, CharacterColumn)
+            if labelIndex > 1 then
                 CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             else
@@ -505,9 +505,9 @@ local CreateCharacterColumn = function(parent, index)
     SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
 
     -- Affix header icons
-    for a, affix in ipairs(affixes) do
-        local AffixFrame = CreateFrame("Frame", CharacterColumn.AffixHeader:GetName() .. a, CharacterColumn)
-        if a == 1 then
+    for affixIndex, affix in ipairs(affixes) do
+        local AffixFrame = CreateFrame("Frame", CharacterColumn.AffixHeader:GetName() .. affixIndex, CharacterColumn)
+        if affixIndex == 1 then
             AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOPLEFT")
             AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOM")
         else
@@ -530,23 +530,23 @@ local CreateCharacterColumn = function(parent, index)
     end
 
     -- Dungeon rows
-    for d, dungeon in ipairs(dungeons) do
-        local DungeonFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Dungeons" .. d, CharacterColumn)
+    for dungeonIndex in ipairs(dungeons) do
+        local DungeonFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex, CharacterColumn)
         local relativeTo = CharacterColumn.AffixHeader:GetName()
 
-        if d > 1 then
-            relativeTo = CharacterColumn:GetName() .. "Dungeons" .. (d-1)
+        if dungeonIndex > 1 then
+            relativeTo = CharacterColumn:GetName() .. "Dungeons" .. (dungeonIndex-1)
         end
 
         DungeonFrame:SetHeight(sizes.row)
         DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
         DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
-        SetBackgroundColor(DungeonFrame, 1, 1, 1, d % 2 == 0 and 0.01 or 0)
+        SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
 
         -- Affix values
-        for a, affix in ipairs(affixes) do
-            local AffixFrame = CreateFrame("Frame", DungeonFrame:GetName() .. "Affix" .. a, DungeonFrame)
-            if a == 1 then
+        for affixIndex, affix in ipairs(affixes) do
+            local AffixFrame = CreateFrame("Frame", DungeonFrame:GetName() .. "Affix" .. affixIndex, DungeonFrame)
+            if affixIndex == 1 then
                 AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOPLEFT")
                 AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOM")
             else
@@ -569,8 +569,8 @@ local CreateCharacterColumn = function(parent, index)
 
     -- Raid Rows
     local anchorFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. #dungeons]
-    for r, raid in ipairs(raids) do
-        local RaidFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r, CharacterColumn)
+    for raidIndex, raid in ipairs(raids) do
+        local RaidFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex, CharacterColumn)
         RaidFrame:SetHeight(sizes.row)
         RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -590,21 +590,21 @@ local CreateCharacterColumn = function(parent, index)
 
         -- anchorFrame = RaidVault
 
-        for rd, difficulty in pairs(AlterEgo:GetRaidDifficulties()) do
-            local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd, RaidFrame)
+        for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
+            local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
             DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             DifficultyFrame:SetHeight(sizes.row)
-            SetBackgroundColor(DifficultyFrame, 1, 1, 1, rd % 2 == 0 and 0.01 or 0)
+            SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
 
             local previousEncounterFrame = DifficultyFrame
-            for e = 1, raid.numEncounters do
-                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. e, DifficultyFrame)
+            for encounterIndex in ipairs(raid.encounters) do
+                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
                 local size = sizes.column
                 size = size - sizes.padding -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
                 size = size / raid.numEncounters -- box sizes
-                EncounterFrame:SetPoint("LEFT", previousEncounterFrame, e > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
+                EncounterFrame:SetPoint("LEFT", previousEncounterFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
                 EncounterFrame:SetSize(size, sizes.row - 12)
                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                 previousEncounterFrame = EncounterFrame
@@ -954,9 +954,9 @@ function AlterEgo:CreateUI()
     local anchorFrame = self.Window.Body.Sidebar
     do
         local labels = self:GetCharacterInfo()
-        for l, info in ipairs(labels) do
-            local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. l, self.Window.Body.Sidebar)
-            if l > 1 then
+        for labelIndex, info in ipairs(labels) do
+            local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex, self.Window.Body.Sidebar)
+            if labelIndex > 1 then
                 CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             else
@@ -990,12 +990,12 @@ function AlterEgo:CreateUI()
     DungeonHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
 
     -- Dungeon names
-    for d, dungeon in ipairs(dungeons) do
-        local DungeonLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. d, self.Window.Body.Sidebar)
+    for dungeonIndex, dungeon in ipairs(dungeons) do
+        local DungeonLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex, self.Window.Body.Sidebar)
 
-        if d > 1 then
-            DungeonLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (d-1), "BOTTOMLEFT")
-            DungeonLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (d-1), "BOTTOMRIGHT")
+        if dungeonIndex > 1 then
+            DungeonLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (dungeonIndex-1), "BOTTOMLEFT")
+            DungeonLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (dungeonIndex-1), "BOTTOMRIGHT")
         else
             DungeonLabel:SetPoint("TOPLEFT", DungeonHeaderLabel:GetName(), "BOTTOMLEFT")
             DungeonLabel:SetPoint("TOPRIGHT", DungeonHeaderLabel:GetName(), "BOTTOMRIGHT")
@@ -1016,8 +1016,8 @@ function AlterEgo:CreateUI()
 
     -- Raids & Difficulties
     local anchorFrame = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. #dungeons]
-    for r, raid in ipairs(raids) do
-        local RaidHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. r, self.Window.Body.Sidebar)
+    for raidIndex, raid in ipairs(raids) do
+        local RaidHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex, self.Window.Body.Sidebar)
         RaidHeaderLabel:SetHeight(sizes.row)
         RaidHeaderLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         RaidHeaderLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1031,8 +1031,8 @@ function AlterEgo:CreateUI()
 
         anchorFrame = RaidHeaderLabel
 
-        for rd, difficulty in ipairs(difficulties) do
-            local RaidDifficulty = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. r .. "Difficulty" .. rd, RaidHeaderLabel)
+        for difficultyIndex, difficulty in ipairs(difficulties) do
+            local RaidDifficulty = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidHeaderLabel)
 
             RaidDifficulty:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidDifficulty:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1078,8 +1078,8 @@ function AlterEgo:UpdateUI()
     self:HideCharacterColumns()
 
     -- Dungeon names
-    for d, dungeon in ipairs(dungeons) do
-        local DungeonLabel = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. d]
+    for dungeonIndex, dungeon in ipairs(dungeons) do
+        local DungeonLabel = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
         DungeonLabel.Icon:SetTexture(dungeon.icon)
         DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         DungeonLabel.Text:SetText(dungeon.name)
@@ -1096,8 +1096,8 @@ function AlterEgo:UpdateUI()
     end
 
     -- Raids & Difficulties
-    for r, raid in ipairs(raids) do
-        local RaidHeaderLabel = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. r]
+    for raidIndex in ipairs(raids) do
+        local RaidHeaderLabel = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
         if self.db.global.raids.enabled then
             RaidHeaderLabel:Show()
         else
@@ -1107,11 +1107,11 @@ function AlterEgo:UpdateUI()
 
     -- Characters
     local lastCharacterColumn = nil
-    for c, character in ipairs(characters) do
+    for characterIndex, character in ipairs(characters) do
 
-        local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.Characters, c)
-        SetBackgroundColor(CharacterColumn, 1, 1, 1, c % 2 == 0 and 0.01 or 0)
-        if c > 1 then
+        local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.Characters, characterIndex)
+        SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
+        if characterIndex > 1 then
             CharacterColumn:SetPoint("TOPLEFT", lastCharacterColumn, "TOPRIGHT")
             CharacterColumn:SetPoint("BOTTOMLEFT", lastCharacterColumn, "BOTTOMRIGHT")
         else
@@ -1124,13 +1124,13 @@ function AlterEgo:UpdateUI()
         do
             local anchorFrame = self.Window.Body.Sidebar
             local labels = self:GetCharacterInfo()
-            for l, info in ipairs(labels) do
-                local CharacterLabel =_G[self.Window.Body.Sidebar:GetName() .. "Label" .. l]
+            for labelIndex, info in ipairs(labels) do
+                local CharacterLabel =_G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
 
                 if info.enabled ~= nil and not info.enabled then
                     CharacterLabel:Hide()
                 else
-                    if l > 1 then
+                    if labelIndex > 1 then
                         CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                         CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
                     else
@@ -1147,9 +1147,9 @@ function AlterEgo:UpdateUI()
         do
             local anchorFrame = CharacterColumn
             local labels = AlterEgo:GetCharacterInfo()
-            for l, info in ipairs(labels) do
-                local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. l]
-                local CharacterLabel = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. l]
+            for labelIndex, info in ipairs(labels) do
+                local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
+                local CharacterLabel = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
                 CharacterFrame.Text:SetText(info.value(character))
                 if info.OnEnter then
                     CharacterFrame:SetScript("OnEnter", function()
@@ -1187,7 +1187,7 @@ function AlterEgo:UpdateUI()
                 if info.enabled ~= nil and not info.enabled then
                     CharacterFrame:Hide()
                 else
-                    if l > 1 then
+                    if labelIndex > 1 then
                         CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                         CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
                     else
@@ -1201,8 +1201,8 @@ function AlterEgo:UpdateUI()
         end
 
         -- Dungeon rows
-        for d, dungeon in ipairs(dungeons) do
-            local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. d]
+        for dungeonIndex, dungeon in ipairs(dungeons) do
+            local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
 
             -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
             local scoreColor = HIGHLIGHT_FONT_COLOR
@@ -1247,11 +1247,11 @@ function AlterEgo:UpdateUI()
             end)
             DungeonFrame:SetScript("OnLeave", function()
                 GameTooltip:Hide()
-                SetBackgroundColor(DungeonFrame, 1, 1, 1, d % 2 == 0 and 0.01 or 0)
+                SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
             end)
 
-            for a, affix in ipairs(affixes) do
-                local AffixFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. d .. "Affix" .. a]
+            for affixIndex, affix in ipairs(affixes) do
+                local AffixFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex .. "Affix" .. affixIndex]
                 local level = "-"
                 local levelColor = "ffffffff"
                 local tier = ""
@@ -1297,20 +1297,20 @@ function AlterEgo:UpdateUI()
         end
 
         -- Raid Rows
-        for r, raid in ipairs(raids) do
-            local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. r]
+        for raidIndex, raid in ipairs(raids) do
+            local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
             if self.db.global.raids.enabled then
                 RaidFrame:Show()
             else
                 RaidFrame:Hide()
             end
 
-            for rd, difficulty in pairs(difficulties) do
-                local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd]
+            for difficultyIndex, difficulty in pairs(difficulties) do
+                local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex]
 
                 for encounterIndex, encounter in ipairs(raid.encounters) do
-                    local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. r .. "Difficulty" .. rd .. "Encounter" .. encounterIndex]
-                    local color = {r = 1, g = 1, b = 1, a = 0.1}
+                    local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
+                    local color = {r = 1, g = 1, b = 1}
                     local alpha = 0.1
                     if character.raids.killed[encounter.id + "-" + difficulty.id] then
                         color = difficulty.color
@@ -1354,7 +1354,7 @@ function AlterEgo:UpdateUI()
                     GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.name));
                     local expires = 0
                     if character.raids.savedInstances ~= nil then
-                        for k, savedInstance in pairs(character.raids.savedInstances) do
+                        for _, savedInstance in pairs(character.raids.savedInstances) do
                             if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
                                 expires = savedInstance.expires
                             end
@@ -1366,7 +1366,7 @@ function AlterEgo:UpdateUI()
                     end
 
                     GameTooltip:AddLine(" ")
-                    for e, encounter in ipairs(raid.encounters) do
+                    for _, encounter in ipairs(raid.encounters) do
                         local color = LIGHTGRAY_FONT_COLOR
 
                         if character.raids.killed[encounter.id + "-" + difficulty.id] then
