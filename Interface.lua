@@ -1206,23 +1206,18 @@ function AlterEgo:UpdateUI()
 
             -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
             local scoreColor = HIGHLIGHT_FONT_COLOR
-            if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and AE_table_count(character.mythicplus.dungeons[dungeon.id].affixScores)) then
-                scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(character.mythicplus.dungeons[dungeon.id].rating);
-            end
-
+            local characterDungeon = AE_table_get(character.mythicplus.dungeons, "id", dungeon.id)
             DungeonFrame:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
                 GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
-
-                if (character.mythicplus.dungeons[dungeon.id] and character.mythicplus.dungeons[dungeon.id].rating and AE_table_count(character.mythicplus.dungeons[dungeon.id].affixScores)) then
-                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(character.mythicplus.dungeons[dungeon.id].rating)), GREEN_FONT_COLOR);
-                end
-
-                local affixScores = character.mythicplus.dungeons[dungeon.id].affixScores
-                if(affixScores and #affixScores > 0) then
-                    for _, affixInfo in ipairs(affixScores) do
+                if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
+                    if (characterDungeon.rating) then
+                        scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
+                        GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
+                    end
+                    for _, affixInfo in ipairs(characterDungeon.affixScores) do
                         GameTooltip_AddBlankLineToTooltip(GameTooltip);
                         GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
                         GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
@@ -1241,7 +1236,6 @@ function AlterEgo:UpdateUI()
                         end
                     end
                 end
-
                 GameTooltip:Show()
                 SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
             end)
@@ -1256,11 +1250,11 @@ function AlterEgo:UpdateUI()
                 local levelColor = "ffffffff"
                 local tier = ""
 
-                if character.mythicplus.dungeons == nil or character.mythicplus.dungeons[dungeon.id] == nil or character.mythicplus.dungeons[dungeon.id].affixScores == nil then
+                if characterDungeon == nil or characterDungeon.affixScores == nil then
                     level = "-"
                     levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                 else
-                    for _, affixScore in ipairs(character.mythicplus.dungeons[dungeon.id].affixScores) do
+                    for _, affixScore in ipairs(characterDungeon.affixScores) do
                         if affixScore.name == affix.name then
                             level = affixScore.level
 

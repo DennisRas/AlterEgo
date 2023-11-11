@@ -292,10 +292,13 @@ function AlterEgo:GetCharacters(unfiltered)
 end
 
 function AlterEgo:UpdateDB()
+    self:Print("AlterEgo:UpdateDB()")
     self:TaskWeeklyReset()
-    self:UpdateCharacterInfo()
-    self:UpdateMythicPlus()
     self:UpdateRaidInstances()
+    self:UpdateCharacterInfo()
+    self:UpdateKeystoneItem()
+    self:UpdateVault()
+    self:UpdateMythicPlus()
 end
 
 function AlterEgo:TaskWeeklyReset()
@@ -316,7 +319,8 @@ function AlterEgo:TaskWeeklyReset()
     self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
 end
 
-function AlterEgo:UpdateGameData()
+function AlterEgo:loadGameData()
+    self:Print("AlterEgo:UpdateGameData()")
     for _, raid in pairs(dataRaids) do
         -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info.
         EJ_SelectInstance(raid.id)
@@ -349,24 +353,16 @@ function AlterEgo:UpdateGameData()
         affix.name = name
         affix.description = description
     end
-    self:UpdateDB()
 end
 
 function AlterEgo:UpdateRaidInstances()
+    self:Print("AlterEgo:UpdateRaidInstances()")
     local character = self:GetCharacter()
     local raids = self:GetRaids();
-    local numInstances = GetNumSavedInstances()
-    -- if numInstances == nil then
-    --     RequestRaidInfo()
-    --     ---@diagnostic disable-next-line: undefined-field
-    --     return self:ScheduleTimer("UpdateRaidInstances", 3)
-    -- end
-
-    -- Boss encounter: EJ_GetEncounterInfo(2522)
-
+    local numSavedInstances = GetNumSavedInstances()
     character.raids.savedInstances = {}
-    if numInstances > 0 then
-        for instanceIndex = 1, numInstances do
+    if numSavedInstances > 0 then
+        for instanceIndex = 1, numSavedInstances do
             local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceId = GetSavedInstanceInfo(instanceIndex)
             local raid = AE_table_get(raids, "id", instanceId)
             local savedInstance = {
@@ -412,9 +408,11 @@ function AlterEgo:UpdateRaidInstances()
             character.raids.savedInstances[instanceIndex] = savedInstance
         end
     end
+    self:UpdateUI()
 end
 
 function AlterEgo:UpdateCharacterInfo()
+    self:Print("AlterEgo:UpdateCharacterInfo()")
     local character = self:GetCharacter()
     local playerName = UnitName("player")
     local playerRealm = GetRealmName()
@@ -441,30 +439,78 @@ function AlterEgo:UpdateCharacterInfo()
     if avgItemLevel then character.info.ilvl.level = avgItemLevel end
     if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
     if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
-    if itemLevelColorR and itemLevelColorG and itemLevelColorB then
-        character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor()
-    end
-
+    if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
     character.lastUpdate = GetServerTime()
     self:UpdateUI()
 end
 
+function AlterEgo:UpdateKeystoneItem()
+    self:Print("AlterEgo:UpdateKeystoneItem()")
+    local character = self:GetCharacter()
+    local dungeons = self:GetDungeons()
+    character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
+    for bagId = 0, NUM_BAG_SLOTS do
+        for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
+            local itemId = C_Container.GetContainerItemID(bagId, slotId)
+            if itemId and itemId == 180653 then
+                local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
+                local _, _, dungeonId, level = strsplit(':', itemLink)
+                local dungeon = AE_table_get(dungeons, "id", tonumber(dungeonId))
+                if dungeon then
+                    character.mythicplus.keystone = {
+                        ["dungeonId"] = tonumber(dungeon.id),
+                        ["mapId"] = tonumber(dungeon.mapId),
+                        ["level"] = tonumber(level),
+                        ["color"] = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
+                        ["itemId"] = tonumber(itemId),
+                        ["itemLink"] = itemLink,
+                    }
+                end
+                break
+            end
+        end
+    end
+    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) end
+    if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) end
+    self:UpdateUI()
+end
+
+function AlterEgo:UpdateVault()
+    self:Print("AlterEgo:UpdateVault()")
+    local character = self:GetCharacter()
+    wipe(character.vault.slots or {})
+    for i = 1, 3 do
+        local slots = C_WeeklyRewards.GetActivities(i)
+        for _, slot in ipairs(slots) do
+            slot.exampleRewardLink = ""
+            slot.exampleRewardUpgradeLink = ""
+            if slot.progress >= slot.threshold then
+                local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(slot.id)
+                slot.exampleRewardLink = itemLink
+                slot.exampleRewardUpgradeLink = upgradeItemLink
+            end
+            table.insert(character.vault.slots, slot)
+        end
+    end
+    self:UpdateUI()
+end
+
 function AlterEgo:UpdateMythicPlus()
+    self:Print("AlterEgo:UpdateMythicPlus()")
     local character = self:GetCharacter()
     local dungeons = self:GetDungeons()
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
-
     if not ratingSummary then
         C_MythicPlus.RequestMapInfo()
         ---@diagnostic disable-next-line: undefined-field
         return self:ScheduleTimer("UpdateMythicPlus", 2)
     end
-
     local runHistory = C_MythicPlus.GetRunHistory(true, true)
     local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
     local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
     local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() and C_WeeklyRewards.CanClaimRewards()
-
     if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
     if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
@@ -472,100 +518,35 @@ function AlterEgo:UpdateMythicPlus()
     if weeklyRewardAvailable ~= nil then character.mythicplus.weeklyRewardAvailable = weeklyRewardAvailable end
     if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
 
-    -- Scan bags for keystone item
-    do
-        character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
-        for bagId = 0, NUM_BAG_SLOTS do
-            for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
-                local itemId = C_Container.GetContainerItemID(bagId, slotId)
-                if itemId and itemId == 180653 then
-                    local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
-                    local _, _, dungeonId, level = strsplit(':', itemLink)
-                    local dungeon = AE_table_get(dungeons, "id", tonumber(dungeonId))
-                    if dungeon then
-                        character.mythicplus.keystone = {
-                            ["dungeonId"] = tonumber(dungeon.id),
-                            ["mapId"] = tonumber(dungeon.mapId),
-                            ["level"] = tonumber(level),
-                            ["color"] = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
-                            ["itemId"] = tonumber(itemId),
-                            ["itemLink"] = itemLink,
-                        }
-                    end
-                    break
+    wipe(character.mythicplus.dungeons or {})
+    for _, dataDungeon in pairs(dataDungeons) do
+        local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.id);
+        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.id)
+        local dungeon = {
+            id = dataDungeon.id,
+            bestTimedRun = {},
+            bestNotTimedRun = {},
+            affixScores = {},
+            rating = 0,
+            level = 0,
+            finishedSuccess = false,
+            bestOverAllScore = 0
+        }
+        if bestTimedRun ~= nil then dungeon.bestTimedRun = bestTimedRun end
+        if bestNotTimedRun ~= nil then dungeon.bestNotTimedRun = bestNotTimedRun end
+        if affixScores ~= nil then dungeon.affixScores = affixScores end
+        if bestOverAllScore ~= nil then dungeon.bestOverAllScore = bestOverAllScore end
+        if ratingSummary ~= nil and ratingSummary.runs ~= nil then
+            for _, run in ipairs(ratingSummary.runs) do
+                if run.challengeModeID == dataDungeon.id then
+                    dungeon.rating = run.mapScore
+                    dungeon.level = run.bestRunLevel
+                    dungeon.finishedSuccess = run.finishedSuccess
                 end
             end
         end
-        local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-        local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-        if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) end
-        if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) end
+        table.insert(character.mythicplus.dungeons, dungeon)
     end
-
-    -- Get vault info
-    do
-        wipe(character.vault.slots or {})
-        for i = 1, 3 do
-            local slots = C_WeeklyRewards.GetActivities(i)
-            for _, slot in ipairs(slots) do
-                slot.exampleRewardLink = ""
-                slot.exampleRewardUpgradeLink = ""
-                if slot.progress >= slot.threshold then
-                    local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(slot.id)
-                    slot.exampleRewardLink = itemLink
-                    slot.exampleRewardUpgradeLink = upgradeItemLink
-                end
-                table.insert(character.vault.slots, slot)
-            end
-        end
-    end
-
-    -- Get dungeon data
-    do
-        wipe(character.mythicplus.dungeons or {})
-        for _, dataDungeon in pairs(dataDungeons) do
-            -- if dataDungeon.texture == nil then
-            --     local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dataDungeon.id)
-            --     dataDungeon.name = dungeonName
-            --     dataDungeon.time = dungeonTimeLimit
-            --     dataDungeon.texture = dungeonTexture
-            -- end
-
-            if character.mythicplus.dungeons[dataDungeon.id] == nil then
-                character.mythicplus.dungeons[dataDungeon.id] = {
-                    id = dataDungeon.id,
-                    bestTimedRun = {},
-                    bestNotTimedRun = {},
-                    affixScores = {},
-                    rating = 0,
-                    level = 0,
-                    finishedSuccess = false,
-                }
-            end
-
-            local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.id);
-            local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.id)
-            if bestTimedRun ~= nil then character.mythicplus.dungeons[dataDungeon.id].bestTimedRun = bestTimedRun end
-            if bestNotTimedRun ~= nil then character.mythicplus.dungeons[dataDungeon.id].bestNotTimedRun = bestNotTimedRun end
-            if affixScores ~= nil then character.mythicplus.dungeons[dataDungeon.id].affixScores = affixScores end
-            -- if bestOverAllScore ~= nil then character.mythicplus.dungeons[dungeon.id].bestOverAllScore = bestOverAllScore end
-
-            if ratingSummary ~= nil and ratingSummary.runs ~= nil then
-                for _, run in ipairs(ratingSummary.runs) do
-                    if run.challengeModeID == dataDungeon.id then
-                        character.mythicplus.dungeons[dataDungeon.id].rating = run.mapScore
-                        character.mythicplus.dungeons[dataDungeon.id].level = run.bestRunLevel
-                        character.mythicplus.dungeons[dataDungeon.id].finishedSuccess = run.finishedSuccess
-                    end
-                end
-            end
-        end
-    end
-
-    -- local currentWeekBestLevel, weeklyRewardLevel, nextDifficultyWeeklyRewardLevel, nextBestLevel = C_MythicPlus.GetWeeklyChestRewardLevel()
-    -- local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(keyStoneLevel)
-
-    character.lastUpdate = time()
     self:UpdateUI()
 end
 
@@ -575,4 +556,5 @@ function AlterEgo:OnEncounterEnd(encounterID, encounterName, difficultyID, group
         character.raids.killed[tostring(encounterID) .. "-" .. tostring(difficultyID)] = true
         RequestRaidInfo()
     end
+    self:UpdateUI()
 end
