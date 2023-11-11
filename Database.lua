@@ -30,7 +30,7 @@ local defaultCharacter = {
     },
     raids = {
         killed = {
-            -- [encounterId .. "-" .. difficultyId] = false,
+            -- [instanceEncounterID .. "-" .. difficultyId] = true,
         },
         savedInstances = {
             -- [1] = {
@@ -48,12 +48,12 @@ local defaultCharacter = {
             --     ["numEncounters"] = 0,
             --     ["encounterProgress"] = 0,
             --     ["extendDisabled"] = false,
-            --     ["instanceId"] = 0,
+            --     ["instanceID"] = 0,
             --     ["link"] = "",
             --     ["expires"] = 0,
             --     ["encounters"] = {
             --         [1] = {
-            --             ["encounterId"] = 0,
+            --             ["instanceEncounterID"] = 0,
             --             ["bossName"] = "",
             --             ["fileDataID"] = 0,
             --             ["killed"] = false
@@ -65,7 +65,7 @@ local defaultCharacter = {
     mythicplus = { -- Mythic Plus
         rating = 0,
         keystone = {
-            dungeonId = 0,
+            challengeModeID = 0,
             mapId = 0,
             level = 0,
             color = "",
@@ -143,26 +143,25 @@ local defaultCharacter = {
 }
 
 local dataAffixes = {
-    [9] = { id = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas" },
-    [10] = { id = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness" },
+    [9] = { affixID = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas" },
+    [10] = { affixID = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness" },
 }
 
 local dataDungeons = {
-    [206] = { id = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
-    [245] = { id = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
-    [251] = { id = 251, mapId = 1841, time = 0, abbr = "UR", name = "The Underrot" },
-    [403] = { id = 403, mapId = 2451, time = 0, abbr = "UL", name = "Uldaman: Legacy of Tyr" },
-    [404] = { id = 404, mapId = 2519, time = 0, abbr = "NEL", name = "Neltharus" },
-    [405] = { id = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
-    [406] = { id = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
-    [438] = { id = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
+    [206] = { challengeModeID = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
+    [245] = { challengeModeID = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
+    [251] = { challengeModeID = 251, mapId = 1841, time = 0, abbr = "UR", name = "The Underrot" },
+    [403] = { challengeModeID = 403, mapId = 2451, time = 0, abbr = "UL", name = "Uldaman: Legacy of Tyr" },
+    [404] = { challengeModeID = 404, mapId = 2519, time = 0, abbr = "NEL", name = "Neltharus" },
+    [405] = { challengeModeID = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
+    [406] = { challengeModeID = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
+    [438] = { challengeModeID = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
 }
 
 local dataRaids = {
-    -- [1200] = { id = 1200, order = 1, mapId = 2522, encounters = 8, abbr = "VOTI", name = "Vault of the Incarnates" },
-    -- [1208] = { id = 1208, order = 2, mapId = 2569, encounters = 9, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
-    -- [1207] = { id = 1208, order = 3, mapId = 2549, encounters = 9, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope" },
-    [1208] = { id = 1208, order = 2, mapId = 2569, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
+    -- [1200] = { journalInstanceID = 1200, instanceID = 2522, order = 1, encounters = 8, abbr = "VOTI", name = "Vault of the Incarnates" },
+    [1208] = { journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
+    -- [1207] = { journalInstanceID = 1208, instanceID = 2549, order = 3, encounters = 9, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope" },
 }
 
 local dataRaidDifficulties = {
@@ -206,7 +205,7 @@ function AlterEgo:GetAffixes()
     end
 
     table.sort(result, function (a, b)
-        return a.id < b.id
+        return a.affixID < b.affixID
     end)
 
     return result
@@ -323,33 +322,35 @@ function AlterEgo:loadGameData()
     self:Print("AlterEgo:UpdateGameData()")
     for _, raid in pairs(dataRaids) do
         -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info.
-        EJ_SelectInstance(raid.id)
-        raid.encounters = {}
-        for e = 1, raid.numEncounters do
-            local name, description, journalEncounterID, rootSectionID, link, journalInstanceID, dungeonEncounterID, instanceID = EJ_GetEncounterInfoByIndex(e, raid.id)
+        EJ_SelectInstance(raid.journalInstanceID)
+        wipe(raid.encounters or {})
+        for encounterIndex = 1, raid.numEncounters do
+            -- https://i.imgur.com/qZd9C7T.png
+            local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
             local encounter = {
-                ["name"] = name,
-                ["description"] = description,
-                ["journalEncounterID"] = journalEncounterID,
-                ["rootSectionID"] = rootSectionID,
-                ["link"] = link,
-                ["journalInstanceID"] = journalInstanceID,
-                ["dungeonEncounterID"] = dungeonEncounterID,
-                ["instanceID"] = instanceID,
+                index = encounterIndex,
+                name = name,
+                description = description,
+                journalEncounterID = journalEncounterID,
+                journalEncounterSectionID = journalEncounterSectionID,
+                journalLink = journalLink,
+                journalInstanceID = journalInstanceID,
+                instanceEncounterID = instanceEncounterID,
+                instanceID = instanceID,
             }
-            table.insert(raid.encounters, encounter)
+            raid.encounters[encounterIndex] = encounter
         end
     end
 
     for _, dungeon in pairs(dataDungeons) do
-        local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+        local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
         dungeon.name = dungeonName
         dungeon.time = dungeonTimeLimit
         dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
     end
 
     for _, affix in pairs(dataAffixes) do
-        local name, description = C_ChallengeMode.GetAffixInfo(affix.id);
+        local name, description = C_ChallengeMode.GetAffixInfo(affix.affixID);
         affix.name = name
         affix.description = description
     end
@@ -362,50 +363,56 @@ function AlterEgo:UpdateRaidInstances()
     local numSavedInstances = GetNumSavedInstances()
     character.raids.savedInstances = {}
     if numSavedInstances > 0 then
-        for instanceIndex = 1, numSavedInstances do
-            local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceId = GetSavedInstanceInfo(instanceIndex)
-            local raid = AE_table_get(raids, "id", instanceId)
+        for savedInstanceIndex = 1, numSavedInstances do
+            local name, lockoutId, reset, difficultyId, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
+            local raid = AE_table_get(raids, "instanceID", instanceID)
             local savedInstance = {
-                ["id"] = lockoutId,
-                ["name"] = name,
-                ["lockoutId"] = lockoutId,
-                ["reset"] = reset,
-                ["difficultyId"] = difficultyId,
-                ["locked"] = locked,
-                ["extended"] = extended,
-                ["instanceIDMostSig"] = instanceIDMostSig,
-                ["isRaid"] = isRaid,
-                ["maxPlayers"] = maxPlayers,
-                ["difficultyName"] = difficultyName,
-                ["numEncounters"] = numEncounters,
-                ["encounterProgress"] = encounterProgress,
-                ["extendDisabled"] = extendDisabled,
-                ["instanceId"] = instanceId,
-                ["link"] = GetSavedInstanceChatLink(instanceIndex),
-                ["expires"] = 0,
-                ["encounters"] = {}
+                index = savedInstanceIndex,
+                id = lockoutId,
+                name = name,
+                lockoutId = lockoutId,
+                reset = reset,
+                difficultyId = difficultyId,
+                locked = locked,
+                extended = extended,
+                instanceIDMostSig = instanceIDMostSig,
+                isRaid = isRaid,
+                maxPlayers = maxPlayers,
+                difficultyName = difficultyName,
+                numEncounters = numEncounters,
+                encounterProgress = encounterProgress,
+                extendDisabled = extendDisabled,
+                instanceID = instanceID,
+                link = GetSavedInstanceChatLink(savedInstanceIndex),
+                expires = 0,
+                encounters = {}
             }
             if reset and reset > 0 then
                 savedInstance.expires = reset + time()
             end
             for encounterIndex = 1, numEncounters do
-                local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(instanceIndex, encounterIndex)
+                local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
+                local instanceEncounterID = 0
+                if raid then
+                    local raidEncounter = AE_table_get(raid.encounters, "index", encounterIndex)
+                    if raidEncounter then
+                        instanceEncounterID = raidEncounter.instanceEncounterID
+                    end
+                end
                 local encounter = {
-                    ["encounterIndex"] = encounterIndex,
-                    ["encounterId"] = raid and raid.encounters[encounterIndex].encounterId or 0,
-                    ["bossName"] = bossName,
-                    ["fileDataID"] = fileDataID or 0,
-                    ["killed"] = killed
+                    index = encounterIndex,
+                    instanceEncounterID = instanceEncounterID,
+                    bossName = bossName,
+                    fileDataID = fileDataID or 0,
+                    killed = killed
                 }
                 savedInstance.encounters[encounterIndex] = encounter
-                if encounter.killed and encounter.encounterId then
-                    if character.raids.killed == nil then
-                        character.raids.killed = {}
-                    end
-                    character.raids.killed[tostring(encounter.encounterId) .. "-" .. tostring(difficultyId)] = true
+                if encounter.killed and savedInstance.expires > 0 and instanceEncounterID > 0 then
+                    character.raids.killed = character.raids.killed or {}
+                    character.raids.killed[tostring(instanceEncounterID) .. "-" .. tostring(difficultyId)] = true
                 end
             end
-            character.raids.savedInstances[instanceIndex] = savedInstance
+            character.raids.savedInstances[savedInstanceIndex] = savedInstance
         end
     end
     self:UpdateUI()
@@ -454,16 +461,17 @@ function AlterEgo:UpdateKeystoneItem()
             local itemId = C_Container.GetContainerItemID(bagId, slotId)
             if itemId and itemId == 180653 then
                 local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
-                local _, _, dungeonId, level = strsplit(':', itemLink)
-                local dungeon = AE_table_get(dungeons, "id", tonumber(dungeonId))
+                DevTools_Dump(itemLink)
+                local _, _, challengeModeID, level = strsplit(':', itemLink)
+                local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
                 if dungeon then
                     character.mythicplus.keystone = {
-                        ["dungeonId"] = tonumber(dungeon.id),
-                        ["mapId"] = tonumber(dungeon.mapId),
-                        ["level"] = tonumber(level),
-                        ["color"] = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
-                        ["itemId"] = tonumber(itemId),
-                        ["itemLink"] = itemLink,
+                        challengeModeID = tonumber(dungeon.challengeModeID),
+                        mapId = tonumber(dungeon.mapId),
+                        level = tonumber(level),
+                        color = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
+                        itemId = tonumber(itemId),
+                        itemLink = itemLink,
                     }
                 end
                 break
@@ -520,10 +528,10 @@ function AlterEgo:UpdateMythicPlus()
 
     wipe(character.mythicplus.dungeons or {})
     for _, dataDungeon in pairs(dataDungeons) do
-        local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.id);
-        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.id)
+        local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID);
+        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
         local dungeon = {
-            id = dataDungeon.id,
+            challengeModeID = dataDungeon.challengeModeID,
             bestTimedRun = {},
             bestNotTimedRun = {},
             affixScores = {},
@@ -538,7 +546,7 @@ function AlterEgo:UpdateMythicPlus()
         if bestOverAllScore ~= nil then dungeon.bestOverAllScore = bestOverAllScore end
         if ratingSummary ~= nil and ratingSummary.runs ~= nil then
             for _, run in ipairs(ratingSummary.runs) do
-                if run.challengeModeID == dataDungeon.id then
+                if run.challengeModeID == dataDungeon.challengeModeID then
                     dungeon.rating = run.mapScore
                     dungeon.level = run.bestRunLevel
                     dungeon.finishedSuccess = run.finishedSuccess
@@ -550,10 +558,10 @@ function AlterEgo:UpdateMythicPlus()
     self:UpdateUI()
 end
 
-function AlterEgo:OnEncounterEnd(encounterID, encounterName, difficultyID, groupSize, success)
+function AlterEgo:OnEncounterEnd(instanceEncounterID, encounterName, difficultyId, groupSize, success)
     local character = self:GetCharacter()
     if success then
-        character.raids.killed[tostring(encounterID) .. "-" .. tostring(difficultyID)] = true
+        character.raids.killed[tostring(instanceEncounterID) .. "-" .. tostring(difficultyId)] = true
         RequestRaidInfo()
     end
     self:UpdateUI()

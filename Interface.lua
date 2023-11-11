@@ -142,7 +142,7 @@ function AlterEgo:GetCharacterInfo()
                 if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
                     GameTooltip:AddLine(" ")
                     for _, dungeon in pairs(character.mythicplus.dungeons) do
-                        local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.id)
+                        local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
                         if dungeonName ~= nil then
                             GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(dungeon.level), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
                         end
@@ -156,7 +156,7 @@ function AlterEgo:GetCharacterInfo()
                     if IsModifiedClick("CHATLINK") then
                         local dungeonScoreDungeonTable = {};
                         for _, dungeon in pairs(character.mythicplus.dungeons) do
-                            table.insert(dungeonScoreDungeonTable, dungeon.id);
+                            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
                             table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
                             table.insert(dungeonScoreDungeonTable, dungeon.level);
                         end
@@ -195,7 +195,7 @@ function AlterEgo:GetCharacterInfo()
                     -- end
                 end
                 -- if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
-                --     local dungeon = AE_table_get(dungeons, "id", character.mythicplus.keystone.mapId)
+                --     local dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.mapId)
                 --     if dungeon then
                 --         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
                 --     end
@@ -388,7 +388,7 @@ function AlterEgo:GetCharacterInfo()
                                 threshold = true
                             end
                         end
-                        local dungeon = AE_table_get(dungeons, "id", run.mapChallengeModeID)
+                        local dungeon = AE_table_get(dungeons, "challengeModeID", run.mapChallengeModeID)
                         if dungeon then
                             local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
                             if threshold then
@@ -1206,7 +1206,7 @@ function AlterEgo:UpdateUI()
 
             -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
             local scoreColor = HIGHLIGHT_FONT_COLOR
-            local characterDungeon = AE_table_get(character.mythicplus.dungeons, "id", dungeon.id)
+            local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
             DungeonFrame:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
@@ -1306,7 +1306,7 @@ function AlterEgo:UpdateUI()
                     local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
                     local color = {r = 1, g = 1, b = 1}
                     local alpha = 0.1
-                    if encounter.encounterId and character.raids.killed[encounter.encounterId .. "-" .. difficulty.id] then
+                    if encounter.instanceEncounterID and character.raids.killed and character.raids.killed[encounter.instanceEncounterID .. "-" .. difficulty.id] then
                         color = difficulty.color
                         if not self.db.global.raids.colors then
                             color = UNCOMMON_GREEN_COLOR
@@ -1338,7 +1338,7 @@ function AlterEgo:UpdateUI()
                     GameTooltip:AddLine(" ")
                     for _, encounter in ipairs(raid.encounters) do
                         local color = LIGHTGRAY_FONT_COLOR
-                        if character.raids.killed and character.raids.killed[tostring(encounter.encounterId) .. "-" .. tostring(difficulty.id)] then
+                        if character.raids.killed and character.raids.killed[tostring(encounter.instanceEncounterID) .. "-" .. tostring(difficulty.id)] then
                             color = GREEN_FONT_COLOR
                         end
                         GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
