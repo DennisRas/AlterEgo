@@ -67,6 +67,7 @@ function AlterEgo:OnEnable()
     self:RegisterEvent("WEEKLY_REWARDS_UPDATE", "UpdateVault")
     self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, "UpdateRaidInstances")
     self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, "UpdateMythicPlus")
+    self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
 
     C_Timer.After(2, function()
         C_MythicPlus.RequestMapInfo()
