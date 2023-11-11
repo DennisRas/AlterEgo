@@ -258,7 +258,7 @@ function AlterEgo:GetCharacterInfo()
                                 if self.db.global.raids.colors and dataDifficulty and dataDifficulty.color then
                                     nameColor = dataDifficulty.color
                                 else
-                                    nameColor = GREEN_FONT_COLOR
+                                    nameColor = UNCOMMON_GREEN_COLOR
                                 end
                             end
                             vaultLevels = vaultLevels .. WrapTextInColorCode(name, nameColor:GenerateHexColor()) .. "  "
@@ -327,10 +327,10 @@ function AlterEgo:GetCharacterInfo()
                     for _, slot in ipairs(character.vault.slots) do
                         if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus then
                             local level = "-"
-                            local color = GREEN_FONT_COLOR
+                            local color = LIGHTGRAY_FONT_COLOR
                             if slot.level > 0 then
                                 level = tostring(slot.level)
-                                color = GREEN_FONT_COLOR
+                                color = UNCOMMON_GREEN_COLOR
                             end
                             vaultLevels = vaultLevels .. WrapTextInColorCode(level, color:GenerateHexColor()) .. "  "
                         end
