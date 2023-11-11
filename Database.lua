@@ -151,7 +151,7 @@ local dataDungeons = {
     [206] = { seasonID = 2, challengeModeID = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
     [245] = { seasonID = 2, challengeModeID = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
     [251] = { seasonID = 2, challengeModeID = 251, mapId = 1841, time = 0, abbr = "UNDR", name = "The Underrot" },
-    [403] = { seasonID = 2, challengeModeID = 403, mapId = 2451, time = 0, abbr = "ULD", name = "Uldaman: Legacy of Tyr", short = "Uldaman" },
+    [403] = { seasonID = 2, challengeModeID = 403, mapId = 2451, time = 0, abbr = "ULD", name = "Uldaman: Legacy of Tyr" },
     [404] = { seasonID = 2, challengeModeID = 404, mapId = 2519, time = 0, abbr = "NELT", name = "Neltharus" },
     [405] = { seasonID = 2, challengeModeID = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
     [406] = { seasonID = 2, challengeModeID = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
