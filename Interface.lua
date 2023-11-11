@@ -1235,8 +1235,13 @@ function AlterEgo:UpdateUI()
             local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
 
             -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
-            local scoreColor = HIGHLIGHT_FONT_COLOR
             local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+            local scoreColor = HIGHLIGHT_FONT_COLOR
+            if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
+                if (characterDungeon.rating) then
+                    scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
+                end
+            end
             DungeonFrame:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
@@ -1244,7 +1249,6 @@ function AlterEgo:UpdateUI()
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
                 if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
                     if (characterDungeon.rating) then
-                        scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
                         GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
                     end
                     for _, affixInfo in ipairs(characterDungeon.affixScores) do
