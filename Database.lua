@@ -510,7 +510,7 @@ function AlterEgo:UpdateMythicPlus()
     local runHistory = C_MythicPlus.GetRunHistory(true, true)
     local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
     local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
-    local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() and C_WeeklyRewards.CanClaimRewards()
+    local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
     if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
     if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
