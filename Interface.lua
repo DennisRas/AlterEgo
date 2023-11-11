@@ -271,11 +271,12 @@ function AlterEgo:GetCharacterInfo()
                             color = WHITE_FONT_COLOR
                             if slot.exampleRewardLink then
                                 local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
-                                local currentDifficultyName = GetDifficultyInfo(slot.level)
-                                -- local currentDifficultyName = DifficultyUtil.GetDifficultyName(slot.level);
-                                -- GameTooltip:AddLine(" ")
-                                -- GameTooltip:AddLine(format("%d bosses killed:", slot.threshold))
-                                result = format("%s (%d+)", currentDifficultyName, itemLevel)
+                                local difficultyName = GetDifficultyInfo(slot.level)
+                                local dataDifficulty = AE_table_get(self:GetRaidDifficulties(), "id", slot.level)
+                                if dataDifficulty then
+                                    difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
+                                end
+                                result = format("%s (%d+)", difficultyName, itemLevel)
                             else
                                 result = "?"
                             end
@@ -1007,7 +1008,7 @@ function AlterEgo:CreateUI()
         DungeonLabel.Text:SetPoint("BOTTOMRIGHT", DungeonLabel, "BOTTOMRIGHT", -sizes.padding, 3)
         DungeonLabel.Text:SetJustifyH("LEFT")
         DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        DungeonLabel.Text:SetText(dungeon.name)
+        DungeonLabel.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
         DungeonLabel.Icon = DungeonLabel:CreateTexture(DungeonLabel:GetName() .. "Icon", "ARTWORK")
         DungeonLabel.Icon:SetSize(16, 16)
         DungeonLabel.Icon:SetPoint("LEFT", DungeonLabel, "LEFT", sizes.padding, 0)
@@ -1026,13 +1027,29 @@ function AlterEgo:CreateUI()
         RaidHeaderLabel.Text:SetPoint("BOTTOMRIGHT", RaidHeaderLabel, "BOTTOMRIGHT", -sizes.padding, 0)
         RaidHeaderLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
         RaidHeaderLabel.Text:SetJustifyH("LEFT")
-        RaidHeaderLabel.Text:SetText(raid.name)
+        RaidHeaderLabel.Text:SetText(raid.short and raid.short or raid.name)
         RaidHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        RaidHeaderLabel:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(RaidHeaderLabel, "ANCHOR_RIGHT")
+            GameTooltip:SetText(raid.name, 1, 1, 1);
+            GameTooltip:Show()
+        end)
+        RaidHeaderLabel:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
         anchorFrame = RaidHeaderLabel
 
         for difficultyIndex, difficulty in ipairs(difficulties) do
             local RaidDifficulty = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidHeaderLabel)
+            RaidDifficulty:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(RaidDifficulty, "ANCHOR_RIGHT")
+                GameTooltip:SetText(difficulty.name, 1, 1, 1);
+                GameTooltip:Show()
+            end)
+            RaidDifficulty:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
             RaidDifficulty:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidDifficulty:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1043,7 +1060,7 @@ function AlterEgo:CreateUI()
             RaidDifficulty.Text:SetPoint("BOTTOMRIGHT", RaidDifficulty, "BOTTOMRIGHT", -sizes.padding, 3)
             RaidDifficulty.Text:SetJustifyH("LEFT")
             RaidDifficulty.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-            RaidDifficulty.Text:SetText(difficulty.name)
+            RaidDifficulty.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
             -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
             -- RaidLabel.Icon:SetSize(16, 16)
             -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", sizes.padding, 0)
@@ -1082,7 +1099,7 @@ function AlterEgo:UpdateUI()
         local DungeonLabel = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
         DungeonLabel.Icon:SetTexture(dungeon.icon)
         DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        DungeonLabel.Text:SetText(dungeon.name)
+        DungeonLabel.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
         DungeonLabel.Icon:SetTexture(tostring(dungeon.texture))
         DungeonLabel:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
@@ -1091,11 +1108,10 @@ function AlterEgo:UpdateUI()
             GameTooltip:SetText(dungeon.name, 1, 1, 1);
             GameTooltip:Show()
         end)
-
         DungeonLabel:SetScript("OnLeave", function() GameTooltip:Hide() end)
     end
 
-    -- Raids & Difficulties
+    -- Raids
     for raidIndex in ipairs(raids) do
         local RaidHeaderLabel = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
         if self.db.global.raids.enabled then
@@ -1321,7 +1337,7 @@ function AlterEgo:UpdateUI()
                     GameTooltip:ClearLines()
                     GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
                     GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
-                    GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.name));
+                    GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
                     local expires = 0
                     if character.raids.savedInstances ~= nil then
                         for _, savedInstance in pairs(character.raids.savedInstances) do

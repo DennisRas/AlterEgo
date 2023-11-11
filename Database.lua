@@ -151,7 +151,7 @@ local dataDungeons = {
     [206] = { seasonID = 2, challengeModeID = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
     [245] = { seasonID = 2, challengeModeID = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
     [251] = { seasonID = 2, challengeModeID = 251, mapId = 1841, time = 0, abbr = "UNDR", name = "The Underrot" },
-    [403] = { seasonID = 2, challengeModeID = 403, mapId = 2451, time = 0, abbr = "ULD", name = "Uldaman: Legacy of Tyr" },
+    [403] = { seasonID = 2, challengeModeID = 403, mapId = 2451, time = 0, abbr = "ULD", name = "Uldaman: Legacy of Tyr", short = "Uldaman" },
     [404] = { seasonID = 2, challengeModeID = 404, mapId = 2519, time = 0, abbr = "NELT", name = "Neltharus" },
     [405] = { seasonID = 2, challengeModeID = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
     [406] = { seasonID = 2, challengeModeID = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
@@ -162,8 +162,8 @@ local dataDungeons = {
     [244] = { seasonID = 3, challengeModeID = 244, mapId = 1763, time = 0, abbr = "AD", name = "Atal'Dazar" },
     [248] = { seasonID = 3, challengeModeID = 248, mapId = 1862, time = 0, abbr = "WM", name = "Waycrest Manor" },
     [456] = { seasonID = 3, challengeModeID = 456, mapId = 643, time = 0, abbr = "TOTT", name = "Throne of the Tides" },
-    [463] = { seasonID = 3, challengeModeID = 463, mapId = 2579, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall" },
-    [464] = { seasonID = 3, challengeModeID = 464, mapId = 2579, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise" },
+    [463] = { seasonID = 3, challengeModeID = 463, mapId = 2579, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall" },
+    [464] = { seasonID = 3, challengeModeID = 464, mapId = 2579, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise", short = "DOTI: Murozond's Rise" },
 }
 
 local dataRaids = {
@@ -176,7 +176,7 @@ local dataRaidDifficulties = {
     [14] = { id = 14, color = RARE_BLUE_COLOR, order = 2, abbr = "NM", name = "Normal" },
     [15] = { id = 15, color = EPIC_PURPLE_COLOR, order = 3, abbr = "HC", name = "Heroic" },
     [16] = { id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic" },
-    [17] = { id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid" },
+    [17] = { id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR" },
 }
 
 function AlterEgo:GetCharacter(playerGUID)
