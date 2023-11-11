@@ -173,7 +173,7 @@ local dataRaids = {
 }
 
 local dataRaidDifficulties = {
-    [14] = { id = 14, color = RARE_BLUE_COLOR, order = 2, abbr = "NM", name = "Normal" },
+    [14] = { id = 14, color = RARE_BLUE_COLOR, order = 2, abbr = "N", name = "Normal" },
     [15] = { id = 15, color = EPIC_PURPLE_COLOR, order = 3, abbr = "HC", name = "Heroic" },
     [16] = { id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic" },
     [17] = { id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR" },
