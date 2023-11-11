@@ -1325,7 +1325,7 @@ function AlterEgo:UpdateUI()
                     local expires = 0
                     if character.raids.savedInstances ~= nil then
                         for _, savedInstance in pairs(character.raids.savedInstances) do
-                            if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyId == difficulty.id then
+                            if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyID == difficulty.id then
                                 expires = savedInstance.expires
                             end
                         end
