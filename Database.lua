@@ -252,7 +252,9 @@ end
 function AlterEgo:GetCharacters(unfiltered)
     local characters = {}
     for _, character in pairs(self.db.global.characters) do
-        table.insert(characters, character)
+        if character.info.level ~= nil and character.info.level == 70 then
+            table.insert(characters, character)
+        end
     end
 
     -- Sorting
@@ -285,9 +287,6 @@ function AlterEgo:GetCharacters(unfiltered)
     local charactersFiltered = {}
     for _, character in ipairs(characters) do
         local keep = true
-        if character.info.level == nil or character.info.level < 70 then
-            keep = false
-        end
         if not character.enabled then
             keep = false
         end
