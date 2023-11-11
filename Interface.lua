@@ -658,10 +658,14 @@ end
 
 function AlterEgo:GetWindowSize()
     local characters = self:GetCharacters()
+    local numCharacters = AE_table_count(characters)
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
     local width = sizes.sidebar.width + AE_table_count(characters) * sizes.column
+    if numCharacters == 0 then
+        width = sizes.sidebar.width + sizes.column * 2
+    end
     local raidHeight = 0
     if self.db.global.raids.enabled then
         raidHeight = AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row
@@ -957,6 +961,15 @@ function AlterEgo:CreateUI()
     self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
     self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
     SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
+    self.Window.Body.NoCharacterText = self.Window.Body:CreateFontString(self.Window.Body:GetName() .. "NoCharacterText", "OVERLAY")
+    self.Window.Body.NoCharacterText:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", 50, -50)
+    self.Window.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT", -50, 50)
+    self.Window.Body.NoCharacterText:SetJustifyH("CENTER")
+    self.Window.Body.NoCharacterText:SetJustifyV("CENTER")
+    self.Window.Body.NoCharacterText:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    self.Window.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+    self.Window.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
+    self.Window.Body.NoCharacterText:Hide()
 
     -- Sidebar
     self.Window.Body.Sidebar = CreateFrame("Frame", self.Window.Body:GetName() .. "Sidebar", self.Window.Body)
@@ -1097,14 +1110,23 @@ end
 function AlterEgo:UpdateUI()
     if not self.Window then return end
 
-    self.Window:SetSize(self:GetWindowSize())
-
     local affixes = self:GetAffixes()
     local characters = self:GetCharacters()
+    local numCharacters = AE_table_count(self:GetCharacters())
     local charactersUnfiltered = self:GetCharacters(true)
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
+
+    if numCharacters == 0 then
+        self.Window:SetSize(300, 300)
+        self.Window.Body.Sidebar:Hide()
+        self.Window.Body.NoCharacterText:Show()
+    else
+        self.Window:SetSize(self:GetWindowSize())
+        self.Window.Body.Sidebar:Show()
+        self.Window.Body.NoCharacterText:Hide()
+    end
 
     self:HideCharacterColumns()
 
