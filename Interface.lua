@@ -659,27 +659,53 @@ function AlterEgo:ToggleWindow()
     end
 end
 
+function AlterEgo:GetMaxWindowWidth()
+    -- return GetScreenWidth() - 100
+    return 400
+end
+
+function AlterEgo:IsScrollbarNeeded()
+    local characters = self:GetCharacters()
+    local numCharacters = AE_table_count(characters)
+    local screenWidth = GetScreenWidth()
+
+    return numCharacters > 0 and sizes.sidebar.width + numCharacters * sizes.column > self:GetMaxWindowWidth()
+end
+
 function AlterEgo:GetWindowSize()
     local characters = self:GetCharacters()
     local numCharacters = AE_table_count(characters)
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
-    local width = sizes.sidebar.width + AE_table_count(characters) * sizes.column
-    local maxWidth = GetScreenWidth() - 100
+    local width = 0
+    local maxWidth = self:GetMaxWindowWidth()
     local height = 0
+
+    -- Width
     if numCharacters == 0 then
-        width = sizes.sidebar.width + sizes.column * 2
+        width = 500
+    else
+        width = width + sizes.sidebar.width
+        width = width + numCharacters * sizes.column
     end
+
     if width > maxWidth then
         width = maxWidth
+        if numCharacters > 0 then
+            height = height + sizes.footer.height -- Shoes?
+        end
     end
-    local raidHeight = 0
+
+    -- Height
+    height = height + sizes.titlebar.height -- Titlebar duh
+    height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled end)) * sizes.row -- Character info
+    height = height + sizes.row -- DungeonHeader
+    height = height + AE_table_count(dungeons) * sizes.row -- Dungeon rows
     if self.db.global.raids.enabled then
-        raidHeight = AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row
+        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row -- Raids
     end
-    height = height + sizes.footer.height
-    height = height + sizes.titlebar.height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(info) return info.enabled == nil or info.enabled end)) * sizes.row + sizes.row + AE_table_count(dungeons) * sizes.row + raidHeight
+
     return width, height
 end
 
@@ -688,6 +714,8 @@ function AlterEgo:CreateUI()
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
+    local labels = self:GetCharacterInfo()
+    local anchorFrame
 
     self.Window = CreateFrame("Frame", "AlterEgoWindow", UIParent)
     self.Window:SetFrameStrata("HIGH")
@@ -696,411 +724,406 @@ function AlterEgo:CreateUI()
     self.Window:SetPoint("CENTER")
     SetBackgroundColor(self.Window, colors.dark:GetRGBA())
 
-    -- Border
-    self.Window.Border = CreateFrame("Frame", self.Window:GetName() .. "Border", self.Window, "BackdropTemplate")
-    self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
-    self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
-    self.Window.Border:SetBackdrop({
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        edgeSize = 16,
-        insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border },
-    })
-    self.Window.Border:SetBackdropBorderColor(0, 0, 0, .5)
-    self.Window.Border:Show()
+    do -- Border
+        self.Window.Border = CreateFrame("Frame", self.Window:GetName() .. "Border", self.Window, "BackdropTemplate")
+        self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
+        self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
+        self.Window.Border:SetBackdrop({
+            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+            edgeSize = 16,
+            insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border },
+        })
+        self.Window.Border:SetBackdropBorderColor(0, 0, 0, .5)
+        self.Window.Border:Show()
+    end
 
-    -- TitleBar
-    self.Window.TitleBar = CreateFrame("Frame", self.Window:GetName() .. "TitleBar", self.Window)
-    self.Window.TitleBar:EnableMouse(true)
-    self.Window.TitleBar:RegisterForDrag("LeftButton")
-    self.Window.TitleBar:SetScript("OnDragStart", function() self.Window:StartMoving() end)
-    self.Window.TitleBar:SetScript("OnDragStop", function() self.Window:StopMovingOrSizing() end)
-    self.Window.TitleBar:SetPoint("TOPLEFT", self.Window, "TOPLEFT")
-    self.Window.TitleBar:SetPoint("TOPRIGHT", self.Window, "TOPRIGHT")
-    self.Window.TitleBar:SetHeight(sizes.titlebar.height)
-    SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.5)
-    self.Window.TitleBar.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 6, 0)
-    self.Window.TitleBar.Icon:SetSize(20, 20)
-    self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/LogoTransparent.blp")
-    self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString(self.Window.TitleBar:GetName() .. "Text", "OVERLAY")
-    self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + sizes.padding, -1)
-    self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
-    self.Window.TitleBar.Text:SetText("AlterEgo")
-
-    self.Window.TitleBar.CloseButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "CloseButton", self.Window.TitleBar)
-    self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", 0, 0)
-    self.Window.TitleBar.CloseButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-    self.Window.TitleBar.CloseButton:RegisterForClicks("AnyUp")
-    self.Window.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
-    self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
-    self.Window.TitleBar.CloseButton.Icon:SetSize(10, 10)
-    self.Window.TitleBar.CloseButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Close.blp")
-    self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    self.Window.TitleBar.CloseButton:SetScript("OnEnter", function()
-        self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-        SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05)
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self.Window.TitleBar.CloseButton, "ANCHOR_TOP")
-        GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:Show()
-    end)
-    self.Window.TitleBar.CloseButton:SetScript("OnLeave", function()
+    do -- TitleBar
+        self.Window.TitleBar = CreateFrame("Frame", self.Window:GetName() .. "TitleBar", self.Window)
+        self.Window.TitleBar:EnableMouse(true)
+        self.Window.TitleBar:RegisterForDrag("LeftButton")
+        self.Window.TitleBar:SetScript("OnDragStart", function() self.Window:StartMoving() end)
+        self.Window.TitleBar:SetScript("OnDragStop", function() self.Window:StopMovingOrSizing() end)
+        self.Window.TitleBar:SetPoint("TOPLEFT", self.Window, "TOPLEFT")
+        self.Window.TitleBar:SetPoint("TOPRIGHT", self.Window, "TOPRIGHT")
+        self.Window.TitleBar:SetHeight(sizes.titlebar.height)
+        SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.5)
+        self.Window.TitleBar.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar:GetName() .. "Icon", "ARTWORK")
+        self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 6, 0)
+        self.Window.TitleBar.Icon:SetSize(20, 20)
+        self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/LogoTransparent.blp")
+        self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString(self.Window.TitleBar:GetName() .. "Text", "OVERLAY")
+        self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + sizes.padding, -1)
+        self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
+        self.Window.TitleBar.Text:SetText("AlterEgo")
+        self.Window.TitleBar.CloseButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "CloseButton", self.Window.TitleBar)
+        self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", 0, 0)
+        self.Window.TitleBar.CloseButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+        self.Window.TitleBar.CloseButton:RegisterForClicks("AnyUp")
+        self.Window.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
+        self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
+        self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
+        self.Window.TitleBar.CloseButton.Icon:SetSize(10, 10)
+        self.Window.TitleBar.CloseButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Close.blp")
         self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
-        GameTooltip:Hide()
-    end)
-
-    self.Window.TitleBar.SettingsButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "SettingsButton", self.Window.TitleBar)
-    self.Window.TitleBar.SettingsButton:SetPoint("RIGHT", self.Window.TitleBar.CloseButton, "LEFT", 0, 0)
-    self.Window.TitleBar.SettingsButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-    self.Window.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
-    self.Window.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SettingsButton.Dropdown) end)
-    self.Window.TitleBar.SettingsButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.SettingsButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER")
-    self.Window.TitleBar.SettingsButton.Icon:SetSize(12, 12)
-    self.Window.TitleBar.SettingsButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Settings.blp")
-    self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    self.Window.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SettingsButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
-    self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -8)
-    UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
-    UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function()
-        UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-            text = "Show the minimap button",
-            checked = not self.db.global.minimap.hide,
-            isNotRadio = true,
-            tooltipTitle = "Show the minimap button",
-            tooltipText = "It does get crowded around the minimap sometimes.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.minimap.hide = checked
-                self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-            end
-        })
-        UIDropDownMenu_AddButton({
-            text = "Lock the minimap button",
-            checked = self.db.global.minimap.lock,
-            isNotRadio = true,
-            tooltipTitle = "Lock the minimap button",
-            tooltipText = "No more moving the button around accidentally!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.minimap.lock = not checked
-                self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-            end
-        })
-        UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-            text = "Show characters with zero rating",
-            checked = self.db.global.showZeroRatedCharacters,
-            isNotRadio = true,
-            tooltipTitle = "Show characters with zero rating",
-            tooltipText = "Too many alts?",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.showZeroRatedCharacters = not checked
-                self:UpdateUI()
-            end
-        })
-        UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-            text = "Show tier icons",
-            checked = self.db.global.showTiers,
-            isNotRadio = true,
-            tooltipTitle = "Show tier icons",
-            tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.showTiers = not checked
-                self:UpdateUI()
-            end
-        }) 
-        UIDropDownMenu_AddButton({
-            text = "Show colors on dungeon scores",
-            checked = self.db.global.showAffixColors,
-            isNotRadio = true,
-            tooltipTitle = "Show colors on dungeon scores",
-            tooltipText = "Show some colors!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.showAffixColors = not checked
-                self:UpdateUI()
-            end
-        })
-        UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-            text = "Show the current raid tier",
-            checked = self.db.global.raids and self.db.global.raids.enabled,
-            isNotRadio = true,
-            tooltipTitle = "Show the current raid tier",
-            tooltipText = "Because Mythic Plus ain't enough!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.raids.enabled = not checked
-                self:UpdateUI()
-            end
-        })
-        UIDropDownMenu_AddButton({
-            text = "Show different colors per difficulty",
-            checked = self.db.global.raids and self.db.global.raids.colors,
-            isNotRadio = true,
-            tooltipTitle = "Show different colors per difficulty",
-            tooltipText = "Argharhggh! So much greeeen!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-                self.db.global.raids.colors = not checked
-                self:UpdateUI()
-            end
-        })
-    end, "MENU")
-    self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
-        self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-        SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0.05)
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self.Window.TitleBar.SettingsButton, "ANCHOR_TOP")
-        GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:Show()
-    end)
-    self.Window.TitleBar.SettingsButton:SetScript("OnLeave", function()
-        self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0)
-        GameTooltip:Hide()
-    end)
-
-    self.Window.TitleBar.SortingButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Sorting", self.Window.TitleBar)
-    self.Window.TitleBar.SortingButton:SetPoint("RIGHT", self.Window.TitleBar.SettingsButton, "LEFT", 0, 0)
-    self.Window.TitleBar.SortingButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-    self.Window.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SortingButton.Dropdown) end)
-    self.Window.TitleBar.SortingButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.SortingButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER")
-    self.Window.TitleBar.SortingButton.Icon:SetSize(16, 16)
-    self.Window.TitleBar.SortingButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp")
-    self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    self.Window.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SortingButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
-    self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -8)
-    UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
-    UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function()
-        for _, option in ipairs(sortingOptions) do
-            UIDropDownMenu_AddButton({
-                text = option.text,
-                checked = self.db.global.sorting == option.value,
-                arg1 = option.value,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.sorting = arg1
-                    self:UpdateUI()
-                end
-            })
-        end
-    end, "MENU")
-    self.Window.TitleBar.SortingButton:SetScript("OnEnter", function()
-        self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-        SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0.05)
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self.Window.TitleBar.SortingButton, "ANCHOR_TOP")
-        GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:Show()
-    end)
-    self.Window.TitleBar.SortingButton:SetScript("OnLeave", function()
-        self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0)
-        GameTooltip:Hide()
-    end)
-
-    self.Window.TitleBar.CharactersButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Characters", self.Window.TitleBar)
-    self.Window.TitleBar.CharactersButton:SetPoint("RIGHT", self.Window.TitleBar.SortingButton, "LEFT", 0, 0)
-    self.Window.TitleBar.CharactersButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-    self.Window.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.CharactersButton.Dropdown) end)
-    self.Window.TitleBar.CharactersButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
-    self.Window.TitleBar.CharactersButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER")
-    self.Window.TitleBar.CharactersButton.Icon:SetSize(14, 14)
-    self.Window.TitleBar.CharactersButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Characters.blp")
-    self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    self.Window.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.CharactersButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
-    self.Window.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER", 0, -8)
-    UIDropDownMenu_SetWidth(self.Window.TitleBar.CharactersButton.Dropdown, sizes.titlebar.height)
-    UIDropDownMenu_Initialize(self.Window.TitleBar.CharactersButton.Dropdown, function()
-        local charactersUnfilteredList = self:GetCharacters(true)
-        for _, character in ipairs(charactersUnfilteredList) do
-            local nameColor = "ffffffff"
-            if character.info.class.file ~= nil then
-                local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-                if classColor ~= nil then
-                    nameColor = classColor.GenerateHexColor(classColor)
-                end
-            end
-            UIDropDownMenu_AddButton({
-                text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
-                checked = character.enabled,
-                isNotRadio = true,
-                arg1 = character.GUID,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.characters[arg1].enabled = not checked
-                    self:UpdateUI()
-                end
-            })
-        end
-    end, "MENU")
-    self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
-        self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-        SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0.05)
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self.Window.TitleBar.CharactersButton, "ANCHOR_TOP")
-        GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
-        GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:Show()
-    end)
-    self.Window.TitleBar.CharactersButton:SetScript("OnLeave", function()
-        self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0)
-        GameTooltip:Hide()
-    end)
-
-    self.Window.NoCharacterText = self.Window:CreateFontString(self.Window:GetName() .. "NoCharacterText", "OVERLAY")
-    self.Window.NoCharacterText:SetPoint("TOPLEFT", self.Window, "TOPLEFT", 50, -50)
-    self.Window.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", -50, 50)
-    self.Window.NoCharacterText:SetJustifyH("CENTER")
-    self.Window.NoCharacterText:SetJustifyV("CENTER")
-    self.Window.NoCharacterText:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    self.Window.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
-    self.Window.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
-    self.Window.NoCharacterText:Hide()
-
-    -- Body
-    self.Window.Body = CreateFrame("Frame", self.Window:GetName() .. "Body", self.Window)
-    self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")
-    self.Window.Body:SetPoint("TOPRIGHT", self.Window.TitleBar, "BOTTOMRIGHT")
-    SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
-
-    -- Sidebar
-    self.Window.Body.Sidebar = CreateFrame("Frame", self.Window.Body:GetName() .. "Sidebar", self.Window.Body)
-    self.Window.Body.Sidebar:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT")
-    self.Window.Body.Sidebar:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT")
-    self.Window.Body.Sidebar:SetWidth(sizes.sidebar.width)
-    SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.3)
-
-    -- Character info
-    local anchorFrame = self.Window.Body.Sidebar
-    do
-        local labels = self:GetCharacterInfo()
-        for labelIndex, info in ipairs(labels) do
-            local CharacterLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex, self.Window.Body.Sidebar)
-            if labelIndex > 1 then
-                CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-            else
-                CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-                CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
-            end
-
-            CharacterLabel:SetHeight(sizes.row)
-            CharacterLabel.Text = CharacterLabel:CreateFontString(CharacterLabel:GetName() .. "Text", "OVERLAY")
-            CharacterLabel.Text:SetPoint("LEFT", CharacterLabel, "LEFT", sizes.padding, 0)
-            CharacterLabel.Text:SetPoint("RIGHT", CharacterLabel, "RIGHT", -sizes.padding, 0)
-            CharacterLabel.Text:SetJustifyH("LEFT")
-            CharacterLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-            CharacterLabel.Text:SetText(info.label)
-            CharacterLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
-
-            anchorFrame = CharacterLabel
-        end
-    end
-
-    local DungeonHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "DungeonHeaderLabel", self.Window.Body.Sidebar)
-    DungeonHeaderLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-    DungeonHeaderLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    DungeonHeaderLabel:SetHeight(sizes.row)
-    DungeonHeaderLabel.Text = DungeonHeaderLabel:CreateFontString(DungeonHeaderLabel:GetName() .. "Text", "OVERLAY")
-    DungeonHeaderLabel.Text:SetPoint("TOPLEFT", DungeonHeaderLabel, "TOPLEFT", sizes.padding, 0)
-    DungeonHeaderLabel.Text:SetPoint("BOTTOMRIGHT", DungeonHeaderLabel, "BOTTOMRIGHT", -sizes.padding, 0)
-    DungeonHeaderLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    DungeonHeaderLabel.Text:SetJustifyH("LEFT")
-    DungeonHeaderLabel.Text:SetText("Mythic Plus")
-    DungeonHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
-
-    -- Dungeon names
-    for dungeonIndex, dungeon in ipairs(dungeons) do
-        local DungeonLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex, self.Window.Body.Sidebar)
-
-        if dungeonIndex > 1 then
-            DungeonLabel:SetPoint("TOPLEFT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (dungeonIndex-1), "BOTTOMLEFT")
-            DungeonLabel:SetPoint("TOPRIGHT", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. (dungeonIndex-1), "BOTTOMRIGHT")
-        else
-            DungeonLabel:SetPoint("TOPLEFT", DungeonHeaderLabel:GetName(), "BOTTOMLEFT")
-            DungeonLabel:SetPoint("TOPRIGHT", DungeonHeaderLabel:GetName(), "BOTTOMRIGHT")
-        end
-
-        DungeonLabel:SetHeight(sizes.row)
-        DungeonLabel.Text = DungeonLabel:CreateFontString(DungeonLabel:GetName() .. "Text", "OVERLAY")
-        DungeonLabel.Text:SetPoint("TOPLEFT", DungeonLabel, "TOPLEFT", 16 + sizes.padding * 2, -3)
-        DungeonLabel.Text:SetPoint("BOTTOMRIGHT", DungeonLabel, "BOTTOMRIGHT", -sizes.padding, 3)
-        DungeonLabel.Text:SetJustifyH("LEFT")
-        DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        DungeonLabel.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
-        DungeonLabel.Icon = DungeonLabel:CreateTexture(DungeonLabel:GetName() .. "Icon", "ARTWORK")
-        DungeonLabel.Icon:SetSize(16, 16)
-        DungeonLabel.Icon:SetPoint("LEFT", DungeonLabel, "LEFT", sizes.padding, 0)
-        DungeonLabel.Icon:SetTexture(dungeon.icon)
-    end
-
-    -- Raids & Difficulties
-    local anchorFrame = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. #dungeons]
-    for raidIndex, raid in ipairs(raids) do
-        local RaidHeaderLabel = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex, self.Window.Body.Sidebar)
-        RaidHeaderLabel:SetHeight(sizes.row)
-        RaidHeaderLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        RaidHeaderLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        RaidHeaderLabel.Text = RaidHeaderLabel:CreateFontString(RaidHeaderLabel:GetName() .. "Text", "OVERLAY")
-        RaidHeaderLabel.Text:SetPoint("TOPLEFT", RaidHeaderLabel, "TOPLEFT", sizes.padding, 0)
-        RaidHeaderLabel.Text:SetPoint("BOTTOMRIGHT", RaidHeaderLabel, "BOTTOMRIGHT", -sizes.padding, 0)
-        RaidHeaderLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        RaidHeaderLabel.Text:SetJustifyH("LEFT")
-        RaidHeaderLabel.Text:SetText(raid.short and raid.short or raid.name)
-        RaidHeaderLabel.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        RaidHeaderLabel:SetScript("OnEnter", function()
+        self.Window.TitleBar.CloseButton:SetScript("OnEnter", function()
+            self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05)
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(RaidHeaderLabel, "ANCHOR_RIGHT")
-            GameTooltip:SetText(raid.name, 1, 1, 1);
+            GameTooltip:SetOwner(self.Window.TitleBar.CloseButton, "ANCHOR_TOP")
+            GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
+            GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:Show()
         end)
-        RaidHeaderLabel:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        self.Window.TitleBar.CloseButton:SetScript("OnLeave", function()
+            self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
+            GameTooltip:Hide()
+        end)
+        self.Window.TitleBar.SettingsButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "SettingsButton", self.Window.TitleBar)
+        self.Window.TitleBar.SettingsButton:SetPoint("RIGHT", self.Window.TitleBar.CloseButton, "LEFT", 0, 0)
+        self.Window.TitleBar.SettingsButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+        self.Window.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
+        self.Window.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SettingsButton.Dropdown) end)
+        self.Window.TitleBar.SettingsButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
+        self.Window.TitleBar.SettingsButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER")
+        self.Window.TitleBar.SettingsButton.Icon:SetSize(12, 12)
+        self.Window.TitleBar.SettingsButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Settings.blp")
+        self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self.Window.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SettingsButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
+        self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -8)
+        UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
+        UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function()
+            UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+                text = "Show the minimap button",
+                checked = not self.db.global.minimap.hide,
+                isNotRadio = true,
+                tooltipTitle = "Show the minimap button",
+                tooltipText = "It does get crowded around the minimap sometimes.",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.minimap.hide = checked
+                    self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                end
+            })
+            UIDropDownMenu_AddButton({
+                text = "Lock the minimap button",
+                checked = self.db.global.minimap.lock,
+                isNotRadio = true,
+                tooltipTitle = "Lock the minimap button",
+                tooltipText = "No more moving the button around accidentally!",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.minimap.lock = not checked
+                    self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                end
+            })
+            UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+                text = "Show characters with zero rating",
+                checked = self.db.global.showZeroRatedCharacters,
+                isNotRadio = true,
+                tooltipTitle = "Show characters with zero rating",
+                tooltipText = "Too many alts?",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.showZeroRatedCharacters = not checked
+                    self:UpdateUI()
+                end
+            })
+            UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+                text = "Show tier icons",
+                checked = self.db.global.showTiers,
+                isNotRadio = true,
+                tooltipTitle = "Show tier icons",
+                tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid.",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.showTiers = not checked
+                    self:UpdateUI()
+                end
+            }) 
+            UIDropDownMenu_AddButton({
+                text = "Show colors on dungeon scores",
+                checked = self.db.global.showAffixColors,
+                isNotRadio = true,
+                tooltipTitle = "Show colors on dungeon scores",
+                tooltipText = "Show some colors!",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.showAffixColors = not checked
+                    self:UpdateUI()
+                end
+            })
+            UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+                text = "Show the current raid tier",
+                checked = self.db.global.raids and self.db.global.raids.enabled,
+                isNotRadio = true,
+                tooltipTitle = "Show the current raid tier",
+                tooltipText = "Because Mythic Plus ain't enough!",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.raids.enabled = not checked
+                    self:UpdateUI()
+                end
+            })
+            UIDropDownMenu_AddButton({
+                text = "Show different colors per difficulty",
+                checked = self.db.global.raids and self.db.global.raids.colors,
+                isNotRadio = true,
+                tooltipTitle = "Show different colors per difficulty",
+                tooltipText = "Argharhggh! So much greeeen!",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                    self.db.global.raids.colors = not checked
+                    self:UpdateUI()
+                end
+            })
+        end, "MENU")
+        self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
+            self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0.05)
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(self.Window.TitleBar.SettingsButton, "ANCHOR_TOP")
+            GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
+            GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            GameTooltip:Show()
+        end)
+        self.Window.TitleBar.SettingsButton:SetScript("OnLeave", function()
+            self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0)
+            GameTooltip:Hide()
+        end)
+        self.Window.TitleBar.SortingButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Sorting", self.Window.TitleBar)
+        self.Window.TitleBar.SortingButton:SetPoint("RIGHT", self.Window.TitleBar.SettingsButton, "LEFT", 0, 0)
+        self.Window.TitleBar.SortingButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+        self.Window.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SortingButton.Dropdown) end)
+        self.Window.TitleBar.SortingButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
+        self.Window.TitleBar.SortingButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER")
+        self.Window.TitleBar.SortingButton.Icon:SetSize(16, 16)
+        self.Window.TitleBar.SortingButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp")
+        self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self.Window.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SortingButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
+        self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -8)
+        UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
+        UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function()
+            for _, option in ipairs(sortingOptions) do
+                UIDropDownMenu_AddButton({
+                    text = option.text,
+                    checked = self.db.global.sorting == option.value,
+                    arg1 = option.value,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.sorting = arg1
+                        self:UpdateUI()
+                    end
+                })
+            end
+        end, "MENU")
+        self.Window.TitleBar.SortingButton:SetScript("OnEnter", function()
+            self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0.05)
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(self.Window.TitleBar.SortingButton, "ANCHOR_TOP")
+            GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
+            GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            GameTooltip:Show()
+        end)
+        self.Window.TitleBar.SortingButton:SetScript("OnLeave", function()
+            self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0)
+            GameTooltip:Hide()
+        end)
+        self.Window.TitleBar.CharactersButton = CreateFrame("Button", self.Window.TitleBar:GetName() .. "Characters", self.Window.TitleBar)
+        self.Window.TitleBar.CharactersButton:SetPoint("RIGHT", self.Window.TitleBar.SortingButton, "LEFT", 0, 0)
+        self.Window.TitleBar.CharactersButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+        self.Window.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.CharactersButton.Dropdown) end)
+        self.Window.TitleBar.CharactersButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
+        self.Window.TitleBar.CharactersButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER")
+        self.Window.TitleBar.CharactersButton.Icon:SetSize(14, 14)
+        self.Window.TitleBar.CharactersButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Characters.blp")
+        self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self.Window.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.CharactersButton:GetName() .. "Dropdown", UIParent, "UIDropDownMenuTemplate")
+        self.Window.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER", 0, -8)
+        UIDropDownMenu_SetWidth(self.Window.TitleBar.CharactersButton.Dropdown, sizes.titlebar.height)
+        UIDropDownMenu_Initialize(self.Window.TitleBar.CharactersButton.Dropdown, function()
+            local charactersUnfilteredList = self:GetCharacters(true)
+            for _, character in ipairs(charactersUnfilteredList) do
+                local nameColor = "ffffffff"
+                if character.info.class.file ~= nil then
+                    local classColor = C_ClassColor.GetClassColor(character.info.class.file)
+                    if classColor ~= nil then
+                        nameColor = classColor.GenerateHexColor(classColor)
+                    end
+                end
+                UIDropDownMenu_AddButton({
+                    text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
+                    checked = character.enabled,
+                    isNotRadio = true,
+                    arg1 = character.GUID,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.characters[arg1].enabled = not checked
+                        self:UpdateUI()
+                    end
+                })
+            end
+        end, "MENU")
+        self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
+            self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0.05)
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(self.Window.TitleBar.CharactersButton, "ANCHOR_TOP")
+            GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
+            GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            GameTooltip:Show()
+        end)
+        self.Window.TitleBar.CharactersButton:SetScript("OnLeave", function()
+            self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0)
+            GameTooltip:Hide()
+        end)
+    end
 
-        anchorFrame = RaidHeaderLabel
+    do -- Body
+        self.Window.Body = CreateFrame("Frame", self.Window:GetName() .. "Body", self.Window)
+        self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")
+        self.Window.Body:SetPoint("TOPRIGHT", self.Window.TitleBar, "BOTTOMRIGHT")
+        SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
+    end
 
-        for difficultyIndex, difficulty in ipairs(difficulties) do
-            local RaidDifficulty = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidHeaderLabel)
-            RaidDifficulty:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
-                GameTooltip:SetOwner(RaidDifficulty, "ANCHOR_RIGHT")
-                GameTooltip:SetText(difficulty.name, 1, 1, 1);
-                GameTooltip:Show()
-            end)
-            RaidDifficulty:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    do -- No characters enabled
+        self.Window.Body.NoCharacterText = self.Window:CreateFontString(self.Window.Body:GetName() .. "NoCharacterText", "ARTWORK")
+        self.Window.Body.NoCharacterText:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", 50, -50)
+        self.Window.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT", -50, 50)
+        self.Window.Body.NoCharacterText:SetJustifyH("CENTER")
+        self.Window.Body.NoCharacterText:SetJustifyV("CENTER")
+        self.Window.Body.NoCharacterText:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+        self.Window.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+        self.Window.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.Window.Body.NoCharacterText:Hide()
+    end
 
-            RaidDifficulty:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-            RaidDifficulty:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+    do -- Sidebar
+        self.Window.Body.Sidebar = CreateFrame("Frame", self.Window.Body:GetName() .. "Sidebar", self.Window.Body)
+        self.Window.Body.Sidebar:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT")
+        self.Window.Body.Sidebar:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT")
+        self.Window.Body.Sidebar:SetWidth(sizes.sidebar.width)
+        SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.3)
+        anchorFrame = self.Window.Body.Sidebar
+    end
 
-            RaidDifficulty:SetHeight(sizes.row)
-            RaidDifficulty.Text = RaidDifficulty:CreateFontString(RaidDifficulty:GetName() .. "Text", "OVERLAY")
-            RaidDifficulty.Text:SetPoint("TOPLEFT", RaidDifficulty, "TOPLEFT", sizes.padding, -3)
-            RaidDifficulty.Text:SetPoint("BOTTOMRIGHT", RaidDifficulty, "BOTTOMRIGHT", -sizes.padding, 3)
-            RaidDifficulty.Text:SetJustifyH("LEFT")
-            RaidDifficulty.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-            RaidDifficulty.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
-            -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
-            -- RaidLabel.Icon:SetSize(16, 16)
-            -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", sizes.padding, 0)
-            -- RaidLabel.Icon:SetTexture(raid.icon)
-            anchorFrame = RaidDifficulty
+    do -- Character info
+        for labelIndex, info in ipairs(labels) do
+            local Label = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex, self.Window.Body.Sidebar)
+            if labelIndex > 1 then
+                Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+            else
+                Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+            end
+            Label:SetHeight(sizes.row)
+            Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
+            Label.Text:SetPoint("LEFT", Label, "LEFT", sizes.padding, 0)
+            Label.Text:SetPoint("RIGHT", Label, "RIGHT", -sizes.padding, 0)
+            Label.Text:SetJustifyH("LEFT")
+            Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            Label.Text:SetText(info.label)
+            Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+            anchorFrame = Label
+        end
+    end
+
+    do -- Dungeons Label
+        local Label = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "MythicPlusLabel", self.Window.Body.Sidebar)
+        Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+        Label:SetHeight(sizes.row)
+        Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
+        Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", sizes.padding, 0)
+        Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 0)
+        Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+        Label.Text:SetJustifyH("LEFT")
+        Label.Text:SetText("Mythic Plus")
+        Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        anchorFrame = Label
+    end
+
+    do -- Dungeon names
+        for dungeonIndex, dungeon in ipairs(dungeons) do
+            local Label = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex, self.Window.Body.Sidebar)
+            Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
+            Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
+            Label:SetHeight(sizes.row)
+            Label.Icon = Label:CreateTexture(Label:GetName() .. "Icon", "ARTWORK")
+            Label.Icon:SetSize(16, 16)
+            Label.Icon:SetPoint("LEFT", Label, "LEFT", sizes.padding, 0)
+            Label.Icon:SetTexture(dungeon.icon)
+            Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
+            Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", 16 + sizes.padding * 2, -3)
+            Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 3)
+            Label.Text:SetJustifyH("LEFT")
+            Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
+            anchorFrame = Label
+        end
+    end
+
+    do -- Raids & Difficulties
+        for raidIndex, raid in ipairs(raids) do
+            do
+                local Label = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex, self.Window.Body.Sidebar)
+                Label:SetHeight(sizes.row)
+                Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                Label:SetScript("OnEnter", function()
+                    GameTooltip:ClearAllPoints()
+                    GameTooltip:ClearLines()
+                    GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(raid.name, 1, 1, 1);
+                    GameTooltip:Show()
+                end)
+                Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
+                Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", sizes.padding, 0)
+                Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 0)
+                Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+                Label.Text:SetJustifyH("LEFT")
+                Label.Text:SetText(raid.short and raid.short or raid.name)
+                Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+                anchorFrame = Label
+            end
+
+            for difficultyIndex, difficulty in ipairs(difficulties) do
+                local Label = CreateFrame("Frame", self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, self.Window.Body.Sidebar)
+                Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                Label:SetHeight(sizes.row)
+                Label:SetScript("OnEnter", function()
+                    GameTooltip:ClearAllPoints()
+                    GameTooltip:ClearLines()
+                    GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(difficulty.name, 1, 1, 1);
+                    GameTooltip:Show()
+                end)
+                Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
+                Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", sizes.padding, -3)
+                Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 3)
+                Label.Text:SetJustifyH("LEFT")
+                Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+                Label.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
+                -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
+                -- RaidLabel.Icon:SetSize(16, 16)
+                -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", sizes.padding, 0)
+                -- RaidLabel.Icon:SetTexture(raid.icon)
+                anchorFrame = Label
+            end
         end
     end
 
@@ -1109,7 +1132,7 @@ function AlterEgo:CreateUI()
     self.Window.Body.ScrollFrame:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT", sizes.sidebar.width, 0)
     self.Window.Body.ScrollFrame:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT")
     self.Window.Body.ScrollFrame:SetPoint("TOPRIGHT", self.Window.Body, "TOPRIGHT")
-    self.Window.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", self.Window.Body.ScrollFrame:GetName() .. "Characters", self.Window.Body.ScrollFrame)
+    self.Window.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", self.Window.Body.ScrollFrame:GetName() .. "ScrollChild", self.Window.Body.ScrollFrame)
     self.Window.Body.ScrollFrame:SetScrollChild(self.Window.Body.ScrollFrame.ScrollChild)
 
     self.Window.Footer = CreateFrame("Frame", self.Window:GetName() .. "Footer", self.Window)
@@ -1119,7 +1142,7 @@ function AlterEgo:CreateUI()
     SetBackgroundColor(self.Window.Footer, 0, 0, 0, .3)
 
     self.Window.Footer.Scrollbar = CreateFrame("Slider", self.Window.Footer:GetName() .. "Scrollbar", self.Window.Footer, "UISliderTemplate")
-    self.Window.Footer.Scrollbar:SetPoint("TOPLEFT", self.Window.Footer, "TOPLEFT", sizes.sidebar.width + sizes.padding / 2, 0)
+    self.Window.Footer.Scrollbar:SetPoint("TOPLEFT", self.Window.Footer, "TOPLEFT", sizes.sidebar.width, 0)
     self.Window.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", self.Window.Footer, "BOTTOMRIGHT", -sizes.padding / 2, 0)
     self.Window.Footer.Scrollbar:SetMinMaxValues(0, 100)
     self.Window.Footer.Scrollbar:SetValue(0)
@@ -1159,308 +1182,307 @@ function AlterEgo:UpdateUI()
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
+    local labels = self:GetCharacterInfo()
+    local anchorFrame
 
     if numCharacters == 0 then
         self.Window.Body:Hide()
         self.Window.Footer:Hide()
-        self.Window.NoCharacterText:Show()
+        self.Window.Body.NoCharacterText:Show()
     else
         self.Window.Body:Show()
         self.Window.Footer:Show()
-        self.Window.NoCharacterText:Hide()
+        self.Window.Body.NoCharacterText:Hide()
     end
 
     self.Window:SetSize(self:GetWindowSize())
     self.Window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * sizes.column, self.Window.Body.ScrollFrame:GetHeight())
-    self.Window.Footer.Scrollbar.thumb:SetWidth(self.Window.Footer.Scrollbar:GetWidth() / 10)
 
-    if self.Window.Body.ScrollFrame.ScrollChild:GetWidth() > self.Window.Body.ScrollFrame:GetWidth() then
+    if self:IsScrollbarNeeded() then
         self.Window.Footer.Scrollbar:SetMinMaxValues(0, self.Window.Body.ScrollFrame.ScrollChild:GetWidth() - self.Window.Body.ScrollFrame:GetWidth())
-        self.Window.Footer.Scrollbar:Show()
+        self.Window.Footer.Scrollbar.thumb:SetWidth(self.Window.Footer.Scrollbar:GetWidth() / 10)
+        self.Window.Body:SetPoint("BOTTOMLEFT", self.Window.Footer, "TOPLEFT")
+        self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window.Footer, "TOPRIGHT")
+        self.Window.Footer:Show()
     else
         self.Window.Body.ScrollFrame:SetHorizontalScroll(0)
-        self.Window.Footer.Scrollbar:Hide()
+        self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
+        self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
+        self.Window.Footer:Hide()
     end
 
     self:HideCharacterColumns()
 
-    -- Dungeon names
-    for dungeonIndex, dungeon in ipairs(dungeons) do
-        local DungeonLabel = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
-        DungeonLabel.Icon:SetTexture(dungeon.icon)
-        DungeonLabel.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        DungeonLabel.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
-        DungeonLabel.Icon:SetTexture(tostring(dungeon.texture))
-        DungeonLabel:SetScript("OnEnter", function()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(DungeonLabel, "ANCHOR_RIGHT")
-            GameTooltip:SetText(dungeon.name, 1, 1, 1);
-            GameTooltip:Show()
-        end)
-        DungeonLabel:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    end
-
-    -- Raids
-    for raidIndex in ipairs(raids) do
-        local RaidHeaderLabel = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
-        if self.db.global.raids.enabled then
-            RaidHeaderLabel:Show()
-        else
-            RaidHeaderLabel:Hide()
+    -- Character Labels
+    do
+        anchorFrame = self.Window.Body.Sidebar
+        for labelIndex, info in ipairs(labels) do
+            local Label =_G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
+            if info.enabled ~= nil and not info.enabled then
+                Label:Hide()
+            else
+                if labelIndex > 1 then
+                    Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                    Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                else
+                    Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                    Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+                end
+                Label:Show()
+                anchorFrame = Label
+            end
         end
     end
 
-    -- Characters
-    local lastCharacterColumn = nil
-    for characterIndex, character in ipairs(characters) do
-
-        local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.ScrollChild, characterIndex)
-        SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
-        if characterIndex > 1 then
-            CharacterColumn:SetPoint("TOPLEFT", lastCharacterColumn, "TOPRIGHT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", lastCharacterColumn, "BOTTOMRIGHT")
-        else
-            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.ScrollChild:GetName(), "TOPLEFT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.ScrollChild:GetName(), "BOTTOMLEFT")
-        end
-        lastCharacterColumn = CharacterColumn
-
-        -- Character Labels
-        do
-            local anchorFrame = self.Window.Body.Sidebar
-            local labels = self:GetCharacterInfo()
-            for labelIndex, info in ipairs(labels) do
-                local CharacterLabel =_G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
-
-                if info.enabled ~= nil and not info.enabled then
-                    CharacterLabel:Hide()
-                else
-                    if labelIndex > 1 then
-                        CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                        CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                    else
-                        CharacterLabel:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-                        CharacterLabel:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
-                    end
-                    anchorFrame = CharacterLabel
-                    CharacterLabel:Show()
-                end
-            end
-        end
-
-        -- Character info
-        do
-            local anchorFrame = CharacterColumn
-            local labels = AlterEgo:GetCharacterInfo()
-            for labelIndex, info in ipairs(labels) do
-                local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
-                local CharacterLabel = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
-                CharacterFrame.Text:SetText(info.value(character))
-                if info.OnEnter then
-                    CharacterFrame:SetScript("OnEnter", function()
-                        GameTooltip:ClearAllPoints()
-                        GameTooltip:ClearLines()
-                        GameTooltip:SetOwner(CharacterFrame, "ANCHOR_RIGHT")
-                        info.OnEnter(character)
-                        GameTooltip:Show()
-                        if not info.backgroundColor then
-                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
-                        end
-                    end)
-                    CharacterFrame:SetScript("OnLeave", function()
-                        GameTooltip:Hide()
-                        if not info.backgroundColor then
-                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
-                        end
-                    end)
-                else
-                    if not info.backgroundColor then
-                        CharacterFrame:SetScript("OnEnter", function()
-                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
-                        end)
-                        CharacterFrame:SetScript("OnLeave", function()
-                            SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
-                        end)
-                    end
-                end
-                if info.OnClick then
-                    CharacterFrame:SetScript("OnClick", function()
-                        info.OnClick(character)
-                    end)
-                end
-
-                if info.enabled ~= nil and not info.enabled then
-                    CharacterFrame:Hide()
-                else
-                    if labelIndex > 1 then
-                        CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                        CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                    else
-                        CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-                        CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
-                    end
-                    anchorFrame = CharacterFrame
-                    CharacterFrame:Show()
-                end
-            end
-        end
-
-        -- Dungeon rows
+    do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
-            local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
-
-            -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
-            local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
-            local scoreColor = HIGHLIGHT_FONT_COLOR
-            if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
-                if (characterDungeon.rating) then
-                    scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
-                end
-            end
-            DungeonFrame:SetScript("OnEnter", function()
+            local Label = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
+            Label.Icon:SetTexture(dungeon.icon)
+            Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
+            Label.Icon:SetTexture(tostring(dungeon.texture))
+            Label:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
-                GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
+                GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
-                if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
-                    if (characterDungeon.rating) then
-                        GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
-                    end
-                    for _, affixInfo in ipairs(characterDungeon.affixScores) do
-                        GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                        GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
-                        GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
-                        if(affixInfo.overTime) then
-                            if(affixInfo.durationSec >= SECONDS_PER_HOUR) then
-                                GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, true)), LIGHTGRAY_FONT_COLOR);
-                            else
-                                GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, false)), LIGHTGRAY_FONT_COLOR);
-                            end
-                        else
-                            if(affixInfo.durationSec >= SECONDS_PER_HOUR) then
-                                GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, true), HIGHLIGHT_FONT_COLOR);
-                            else
-                                GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, false), HIGHLIGHT_FONT_COLOR);
-                            end
-                        end
-                    end
-                end
                 GameTooltip:Show()
-                SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
             end)
-            DungeonFrame:SetScript("OnLeave", function()
-                GameTooltip:Hide()
-                SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-            end)
+            Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end
+    end
 
-            for affixIndex, affix in ipairs(affixes) do
-                local AffixFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex .. "Affix" .. affixIndex]
-                local level = "-"
-                local levelColor = "ffffffff"
-                local tier = ""
-
-                if characterDungeon == nil or characterDungeon.affixScores == nil then
-                    level = "-"
-                    levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                else
-                    for _, affixScore in ipairs(characterDungeon.affixScores) do
-                        if affixScore.name == affix.name then
-                            level = affixScore.level
-
-                            if affixScore.durationSec <= dungeon.time * 0.6 then
-                                tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                            elseif affixScore.durationSec <= dungeon.time * 0.8 then
-                                tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                            elseif affixScore.durationSec <= dungeon.time then
-                                tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                            end
-
-                            if tier == "" then
-                                levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                            elseif self.db.global.showAffixColors then
-                                levelColor = scoreColor:GenerateHexColor()
-                            end
-                        end
-                    end
-                end
-
-                AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
-                AffixFrame.Tier:SetText(tier)
-
-                if self.db.global.showTiers then
-                    AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-                    AffixFrame.Text:SetJustifyH("RIGHT")
-                    AffixFrame.Tier:Show()
-                else
-                    AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-                    AffixFrame.Text:SetJustifyH("CENTER")
-                    AffixFrame.Tier:Hide()
-                end
+    do -- Raids
+        for raidIndex in ipairs(raids) do
+            local Label = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
+            if self.db.global.raids.enabled then
+                Label:Show()
+            else
+                Label:Hide()
             end
         end
+    end
 
-        -- Raid Rows
-        for raidIndex, raid in ipairs(raids) do
-            local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
-            if self.db.global.raids.enabled then
-                RaidFrame:Show()
+    do -- Characters
+        anchorFrame = self.Window.Body.ScrollFrame.ScrollChild
+        for characterIndex, character in ipairs(characters) do
+            local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.ScrollChild, characterIndex)
+            if characterIndex > 1 then
+                CharacterColumn:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT")
+                CharacterColumn:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMRIGHT")
             else
-                RaidFrame:Hide()
+                CharacterColumn:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                CharacterColumn:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMLEFT")
+            end
+            SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
+            anchorFrame = CharacterColumn
+
+            do -- Character info
+                anchorFrame = CharacterColumn
+                for labelIndex, info in ipairs(labels) do
+                    local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
+                    CharacterFrame.Text:SetText(info.value(character))
+                    if info.OnEnter then
+                        CharacterFrame:SetScript("OnEnter", function()
+                            GameTooltip:ClearAllPoints()
+                            GameTooltip:ClearLines()
+                            GameTooltip:SetOwner(CharacterFrame, "ANCHOR_RIGHT")
+                            info.OnEnter(character)
+                            GameTooltip:Show()
+                            if not info.backgroundColor then
+                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                            end
+                        end)
+                        CharacterFrame:SetScript("OnLeave", function()
+                            GameTooltip:Hide()
+                            if not info.backgroundColor then
+                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                            end
+                        end)
+                    else
+                        if not info.backgroundColor then
+                            CharacterFrame:SetScript("OnEnter", function()
+                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                            end)
+                            CharacterFrame:SetScript("OnLeave", function()
+                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                            end)
+                        end
+                    end
+                    if info.OnClick then
+                        CharacterFrame:SetScript("OnClick", function()
+                            info.OnClick(character)
+                        end)
+                    end
+                    if info.enabled ~= nil and not info.enabled then
+                        CharacterFrame:Hide()
+                    else
+                        if labelIndex > 1 then
+                            CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                            CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                        else
+                            CharacterFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                            CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+                        end
+                        anchorFrame = CharacterFrame
+                        CharacterFrame:Show()
+                    end
+                end
             end
 
-            for difficultyIndex, difficulty in pairs(difficulties) do
-                local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex]
-
-                for encounterIndex, encounter in ipairs(raid.encounters) do
-                    local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
-                    local color = {r = 1, g = 1, b = 1}
-                    local alpha = 0.1
-                    if encounter.instanceEncounterID and character.raids.killed and character.raids.killed[encounter.instanceEncounterID .. "-" .. difficulty.id] then
-                        color = UNCOMMON_GREEN_COLOR
-                        if self.db.global.raids.colors then
-                            color = difficulty.color
+            do -- Dungeon rows
+                -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
+                for dungeonIndex, dungeon in ipairs(dungeons) do
+                    local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
+                    local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+                    local scoreColor = HIGHLIGHT_FONT_COLOR
+                    if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
+                        if (characterDungeon.rating) then
+                            scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
                         end
-                        alpha = 0.5
                     end
-                    SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
-                end
-
-                DifficultyFrame:SetScript("OnEnter", function()
-                    GameTooltip:ClearAllPoints()
-                    GameTooltip:ClearLines()
-                    GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
-                    GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
-                    GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
-                    local expires = 0
-                    if character.raids.savedInstances ~= nil then
-                        for _, savedInstance in pairs(character.raids.savedInstances) do
-                            if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyID == difficulty.id then
-                                expires = savedInstance.expires
+                    DungeonFrame:SetScript("OnEnter", function()
+                        GameTooltip:ClearAllPoints()
+                        GameTooltip:ClearLines()
+                        GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
+                        GameTooltip:SetText(dungeon.name, 1, 1, 1);
+                        if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
+                            if (characterDungeon.rating) then
+                                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
+                            end
+                            for _, affixInfo in ipairs(characterDungeon.affixScores) do
+                                GameTooltip_AddBlankLineToTooltip(GameTooltip);
+                                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
+                                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
+                                if(affixInfo.overTime) then
+                                    if(affixInfo.durationSec >= SECONDS_PER_HOUR) then
+                                        GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, true)), LIGHTGRAY_FONT_COLOR);
+                                    else
+                                        GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, false)), LIGHTGRAY_FONT_COLOR);
+                                    end
+                                else
+                                    if(affixInfo.durationSec >= SECONDS_PER_HOUR) then
+                                        GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, true), HIGHLIGHT_FONT_COLOR);
+                                    else
+                                        GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, false), HIGHLIGHT_FONT_COLOR);
+                                    end
+                                end
                             end
                         end
-                    end
+                        GameTooltip:Show()
+                        SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
+                    end)
+                    DungeonFrame:SetScript("OnLeave", function()
+                        GameTooltip:Hide()
+                        SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+                    end)
 
-                    if expires > 0 then
-                        GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", expires)))
-                    end
+                    for affixIndex, affix in ipairs(affixes) do
+                        local AffixFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex .. "Affix" .. affixIndex]
+                        local level = "-"
+                        local levelColor = "ffffffff"
+                        local tier = ""
 
-                    GameTooltip:AddLine(" ")
-                    for _, encounter in ipairs(raid.encounters) do
-                        local color = LIGHTGRAY_FONT_COLOR
-                        if character.raids.killed and character.raids.killed[tostring(encounter.instanceEncounterID) .. "-" .. tostring(difficulty.id)] then
-                            color = GREEN_FONT_COLOR
+                        if characterDungeon == nil or characterDungeon.affixScores == nil then
+                            level = "-"
+                            levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                        else
+                            for _, affixScore in ipairs(characterDungeon.affixScores) do
+                                if affixScore.name == affix.name then
+                                    level = affixScore.level
+
+                                    if affixScore.durationSec <= dungeon.time * 0.6 then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                                    elseif affixScore.durationSec <= dungeon.time * 0.8 then
+                                        tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                                    elseif affixScore.durationSec <= dungeon.time then
+                                        tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                                    end
+
+                                    if tier == "" then
+                                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                                    elseif self.db.global.showAffixColors then
+                                        levelColor = scoreColor:GenerateHexColor()
+                                    end
+                                end
+                            end
                         end
-                        GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
+
+                        AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
+                        AffixFrame.Tier:SetText(tier)
+
+                        if self.db.global.showTiers then
+                            AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
+                            AffixFrame.Text:SetJustifyH("RIGHT")
+                            AffixFrame.Tier:Show()
+                        else
+                            AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
+                            AffixFrame.Text:SetJustifyH("CENTER")
+                            AffixFrame.Tier:Hide()
+                        end
                     end
-                    GameTooltip:Show()
-                    SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
-                end)
-                DifficultyFrame:SetScript("OnLeave", function()
-                    GameTooltip:Hide()
-                    SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
-                end)
+                end
             end
+
+            do -- Raid Rows
+                for raidIndex, raid in ipairs(raids) do
+                    local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
+                    if self.db.global.raids.enabled then
+                        RaidFrame:Show()
+                    else
+                        RaidFrame:Hide()
+                    end
+                    for difficultyIndex, difficulty in pairs(difficulties) do
+                        local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex]
+                        DifficultyFrame:SetScript("OnEnter", function()
+                            GameTooltip:ClearAllPoints()
+                            GameTooltip:ClearLines()
+                            GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
+                            GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
+                            GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
+                            local expires = 0
+                            if character.raids.savedInstances ~= nil then
+                                for _, savedInstance in pairs(character.raids.savedInstances) do
+                                    if savedInstance.instanceId == raid.mapId and savedInstance.expires > time() and savedInstance.difficultyID == difficulty.id then
+                                        expires = savedInstance.expires
+                                    end
+                                end
+                            end
+                            if expires > 0 then
+                                GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", expires)))
+                            end
+                            GameTooltip:AddLine(" ")
+                            for _, encounter in ipairs(raid.encounters) do
+                                local color = LIGHTGRAY_FONT_COLOR
+                                if character.raids.killed and character.raids.killed[tostring(encounter.instanceEncounterID) .. "-" .. tostring(difficulty.id)] then
+                                    color = GREEN_FONT_COLOR
+                                end
+                                GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
+                            end
+                            GameTooltip:Show()
+                            SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
+                        end)
+                        DifficultyFrame:SetScript("OnLeave", function()
+                            GameTooltip:Hide()
+                            SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
+                        end)
+                        for encounterIndex, encounter in ipairs(raid.encounters) do
+                            local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
+                            local color = {r = 1, g = 1, b = 1}
+                            local alpha = 0.1
+                            if encounter.instanceEncounterID and character.raids.killed and character.raids.killed[encounter.instanceEncounterID .. "-" .. difficulty.id] then
+                                color = UNCOMMON_GREEN_COLOR
+                                if self.db.global.raids.colors then
+                                    color = difficulty.color
+                                end
+                                alpha = 0.5
+                            end
+                            SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
+                        end
+                    end
+                end
+            end
+            anchorFrame = CharacterColumn
         end
     end
 end
