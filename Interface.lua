@@ -442,6 +442,9 @@ local sizes = {
     titlebar = {
         height = 30
     },
+    footer = {
+        height = 16
+    },
     sidebar = {
         width = 150,
         collapsedWidth = 30
@@ -663,14 +666,20 @@ function AlterEgo:GetWindowSize()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
     local width = sizes.sidebar.width + AE_table_count(characters) * sizes.column
+    local maxWidth = GetScreenWidth() - 100
+    local height = 0
     if numCharacters == 0 then
         width = sizes.sidebar.width + sizes.column * 2
+    end
+    if width > maxWidth then
+        width = maxWidth
     end
     local raidHeight = 0
     if self.db.global.raids.enabled then
         raidHeight = AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row
     end
-    local height = sizes.titlebar.height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(info) return info.enabled == nil or info.enabled end)) * sizes.row + sizes.row + AE_table_count(dungeons) * sizes.row + raidHeight
+    height = height + sizes.footer.height
+    height = height + sizes.titlebar.height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(info) return info.enabled == nil or info.enabled end)) * sizes.row + sizes.row + AE_table_count(dungeons) * sizes.row + raidHeight
     return width, height
 end
 
@@ -958,8 +967,6 @@ function AlterEgo:CreateUI()
     self.Window.Body = CreateFrame("Frame", self.Window:GetName() .. "Body", self.Window)
     self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")
     self.Window.Body:SetPoint("TOPRIGHT", self.Window.TitleBar, "BOTTOMRIGHT")
-    self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
-    self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
     SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
     self.Window.Body.NoCharacterText = self.Window.Body:CreateFontString(self.Window.Body:GetName() .. "NoCharacterText", "OVERLAY")
     self.Window.Body.NoCharacterText:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", 50, -50)
@@ -1096,14 +1103,48 @@ function AlterEgo:CreateUI()
         end
     end
 
-    self.Window.Body.ScrollFrame = CreateFrame("Frame", self.Window.Body:GetName() .. "ScrollFrame", self.Window.Body)
+    self.Window.Body.ScrollFrame = CreateFrame("ScrollFrame", self.Window.Body:GetName() .. "ScrollFrame", self.Window.Body)
     self.Window.Body.ScrollFrame:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", sizes.sidebar.width, 0)
     self.Window.Body.ScrollFrame:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT", sizes.sidebar.width, 0)
     self.Window.Body.ScrollFrame:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT")
     self.Window.Body.ScrollFrame:SetPoint("TOPRIGHT", self.Window.Body, "TOPRIGHT")
-    self.Window.Body.ScrollFrame.Characters = CreateFrame("Frame", self.Window.Body.ScrollFrame:GetName() .. "Characters", self.Window.Body.ScrollFrame)
-    self.Window.Body.ScrollFrame.Characters:SetAllPoints()
+    self.Window.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", self.Window.Body.ScrollFrame:GetName() .. "Characters", self.Window.Body.ScrollFrame)
+    self.Window.Body.ScrollFrame:SetScrollChild(self.Window.Body.ScrollFrame.ScrollChild)
 
+    self.Window.Footer = CreateFrame("Frame", self.Window:GetName() .. "Footer", self.Window)
+    self.Window.Footer:SetHeight(sizes.footer.height)
+    self.Window.Footer:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
+    self.Window.Footer:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
+    SetBackgroundColor(self.Window.Footer, 0, 0, 0, .3)
+
+    self.Window.Footer.Scrollbar = CreateFrame("Slider", self.Window.Footer:GetName() .. "Scrollbar", self.Window.Footer, "UISliderTemplate")
+    self.Window.Footer.Scrollbar:SetPoint("TOPLEFT", self.Window.Footer, "TOPLEFT", sizes.sidebar.width + sizes.padding / 2, 0)
+    self.Window.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", self.Window.Footer, "BOTTOMRIGHT", -sizes.padding / 2, 0)
+    self.Window.Footer.Scrollbar:SetMinMaxValues(0, 100)
+    self.Window.Footer.Scrollbar:SetValue(0)
+    self.Window.Footer.Scrollbar:SetValueStep(1)
+    self.Window.Footer.Scrollbar:SetOrientation("HORIZONTAL")
+    self.Window.Footer.Scrollbar:SetObeyStepOnDrag(true)
+    self.Window.Footer.Scrollbar.NineSlice:Hide()
+    self.Window.Footer.Scrollbar.thumb = self.Window.Footer.Scrollbar:GetThumbTexture()
+    self.Window.Footer.Scrollbar.thumb:SetPoint("CENTER")
+    self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
+    self.Window.Footer.Scrollbar.thumb:SetHeight(sizes.footer.height - 10)
+    self.Window.Footer.Scrollbar:SetScript("OnValueChanged", function (_, value)
+        self.Window.Body.ScrollFrame:SetHorizontalScroll(value)
+    end)
+    self.Window.Footer.Scrollbar:SetScript("OnEnter", function()
+        self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.2)
+    end)
+    self.Window.Footer.Scrollbar:SetScript("OnLeave", function()
+        self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
+    end)
+    self.Window.Body.ScrollFrame:SetScript("OnMouseWheel", function(_, delta)
+        self.Window.Footer.Scrollbar:SetValue(self.Window.Footer.Scrollbar:GetValue() - delta * ((self.Window.Body.ScrollFrame.ScrollChild:GetWidth() - self.Window.Body.ScrollFrame:GetWidth()) * 0.1))
+    end)
+
+    self.Window.Body:SetPoint("BOTTOMLEFT", self.Window.Footer, "TOPLEFT")
+    self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window.Footer, "TOPRIGHT")
     self:UpdateUI()
 end
 
@@ -1126,6 +1167,17 @@ function AlterEgo:UpdateUI()
         self.Window:SetSize(self:GetWindowSize())
         self.Window.Body.Sidebar:Show()
         self.Window.Body.NoCharacterText:Hide()
+    end
+
+    self.Window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * sizes.column, self.Window.Body.ScrollFrame:GetHeight())
+    self.Window.Footer.Scrollbar.thumb:SetWidth(self.Window.Footer.Scrollbar:GetWidth() / 10)
+
+    if self.Window.Body.ScrollFrame.ScrollChild:GetWidth() > self.Window.Body.ScrollFrame:GetWidth() then
+        self.Window.Footer.Scrollbar:SetMinMaxValues(0, self.Window.Body.ScrollFrame.ScrollChild:GetWidth() - self.Window.Body.ScrollFrame:GetWidth())
+        self.Window.Footer.Scrollbar:Show()
+    else
+        self.Window.Body.ScrollFrame:SetHorizontalScroll(0)
+        self.Window.Footer.Scrollbar:Hide()
     end
 
     self:HideCharacterColumns()
@@ -1161,14 +1213,14 @@ function AlterEgo:UpdateUI()
     local lastCharacterColumn = nil
     for characterIndex, character in ipairs(characters) do
 
-        local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.Characters, characterIndex)
+        local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.ScrollChild, characterIndex)
         SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
         if characterIndex > 1 then
             CharacterColumn:SetPoint("TOPLEFT", lastCharacterColumn, "TOPRIGHT")
             CharacterColumn:SetPoint("BOTTOMLEFT", lastCharacterColumn, "BOTTOMRIGHT")
         else
-            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "TOPLEFT")
-            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.Characters:GetName(), "BOTTOMLEFT")
+            CharacterColumn:SetPoint("TOPLEFT", self.Window.Body.ScrollFrame.ScrollChild:GetName(), "TOPLEFT")
+            CharacterColumn:SetPoint("BOTTOMLEFT", self.Window.Body.ScrollFrame.ScrollChild:GetName(), "BOTTOMLEFT")
         end
         lastCharacterColumn = CharacterColumn
 
