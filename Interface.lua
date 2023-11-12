@@ -660,15 +660,12 @@ function AlterEgo:ToggleWindow()
 end
 
 function AlterEgo:GetMaxWindowWidth()
-    -- return GetScreenWidth() - 100
-    return 400
+    return GetScreenWidth() - 100
 end
 
 function AlterEgo:IsScrollbarNeeded()
     local characters = self:GetCharacters()
     local numCharacters = AE_table_count(characters)
-    local screenWidth = GetScreenWidth()
-
     return numCharacters > 0 and sizes.sidebar.width + numCharacters * sizes.column > self:GetMaxWindowWidth()
 end
 
