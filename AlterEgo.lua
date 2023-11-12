@@ -75,6 +75,6 @@ function AlterEgo:OnEnable()
     end)
 
     self:loadGameData()
-    self:UpdateDB()
     self:CreateUI()
+    self:UpdateDB()
 end
