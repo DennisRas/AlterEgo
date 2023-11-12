@@ -479,16 +479,17 @@ local function SetBackgroundColor(parent, r, g, b, a)
 end
 
 local CreateCharacterColumn = function(parent, index)
-    local CharacterColumn = CreateFrame("Frame", "$parentCharacterColumn" .. index, parent)
     local affixes = AlterEgo:GetAffixes()
     local dungeons = AlterEgo:GetDungeons()
     local raids = AlterEgo:GetRaids()
+    local anchorFrame
 
+    local CharacterColumn = CreateFrame("Frame", "$parentCharacterColumn" .. index, parent)
     CharacterColumn:SetWidth(sizes.column)
     SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
+    anchorFrame = CharacterColumn
 
     -- Character info
-    local anchorFrame = CharacterColumn
     do
         local labels = AlterEgo:GetCharacterInfo()
         for labelIndex, info in ipairs(labels) do
@@ -521,6 +522,7 @@ local CreateCharacterColumn = function(parent, index)
     CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
     CharacterColumn.AffixHeader:SetHeight(sizes.row)
     SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
+    anchorFrame = CharacterColumn.AffixHeader
 
     -- Affix header icons
     for affixIndex, affix in ipairs(affixes) do
@@ -550,26 +552,21 @@ local CreateCharacterColumn = function(parent, index)
     -- Dungeon rows
     for dungeonIndex in ipairs(dungeons) do
         local DungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, CharacterColumn)
-        local relativeTo = CharacterColumn.AffixHeader:GetName()
-
-        if dungeonIndex > 1 then
-            relativeTo = CharacterColumn:GetName() .. "Dungeons" .. (dungeonIndex-1)
-        end
-
         DungeonFrame:SetHeight(sizes.row)
-        DungeonFrame:SetPoint("TOPLEFT", relativeTo, "BOTTOMLEFT")
-        DungeonFrame:SetPoint("TOPRIGHT", relativeTo, "BOTTOMRIGHT")
+        DungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        DungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
         SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+        anchorFrame = DungeonFrame
 
         -- Affix values
         for affixIndex, affix in ipairs(affixes) do
             local AffixFrame = CreateFrame("Frame", "$parentAffix" .. affixIndex, DungeonFrame)
             if affixIndex == 1 then
-                AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOPLEFT")
-                AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOM")
+                AffixFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+                AffixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOM")
             else
-                AffixFrame:SetPoint("TOPLEFT", DungeonFrame:GetName(), "TOP")
-                AffixFrame:SetPoint("BOTTOMRIGHT", DungeonFrame:GetName(), "BOTTOMRIGHT")
+                AffixFrame:SetPoint("TOPLEFT", anchorFrame, "TOP")
+                AffixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT")
             end
 
             AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
@@ -583,30 +580,17 @@ local CreateCharacterColumn = function(parent, index)
             AffixFrame.Tier:SetFont(assets.font.file, assets.font.size, assets.font.flags)
             AffixFrame.Tier:SetJustifyH("LEFT")
         end
+        anchorFrame = DungeonFrame
     end
 
     -- Raid Rows
-    local anchorFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. #dungeons]
     for raidIndex, raid in ipairs(raids) do
         local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, CharacterColumn)
         RaidFrame:SetHeight(sizes.row)
         RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
         SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
-
         anchorFrame = RaidFrame
-
-        -- local RaidVault = CreateFrame("Frame", "$parentRaid" .. r .. "Vault", CharacterColumn)
-        -- RaidVault:SetHeight(sizes.row)
-        -- RaidVault:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        -- RaidVault:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        -- RaidVault.Text = RaidVault:CreateFontString(RaidVault:GetName() .. "Text", "OVERLAY")
-        -- RaidVault.Text:SetPoint("TOPLEFT", RaidVault, "TOPLEFT", 1, -1)
-        -- RaidVault.Text:SetPoint("BOTTOMRIGHT", RaidVault, "BOTTOMRIGHT", -1, 1)
-        -- RaidVault.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        -- RaidVault.Text:SetJustifyH("CENTER")
-
-        -- anchorFrame = RaidVault
 
         for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
             local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
@@ -614,18 +598,18 @@ local CreateCharacterColumn = function(parent, index)
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             DifficultyFrame:SetHeight(sizes.row)
             SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+            anchorFrame = DifficultyFrame
 
-            local previousEncounterFrame = DifficultyFrame
             for encounterIndex in ipairs(raid.encounters) do
                 local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
                 local size = sizes.column
                 size = size - sizes.padding -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
                 size = size / raid.numEncounters -- box sizes
-                EncounterFrame:SetPoint("LEFT", previousEncounterFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
+                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
                 EncounterFrame:SetSize(size, sizes.row - 12)
                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
-                previousEncounterFrame = EncounterFrame
+                anchorFrame = EncounterFrame
             end
             anchorFrame = DifficultyFrame
         end
@@ -639,7 +623,6 @@ function AlterEgo:GetCharacterColumn(parent, index)
     if CharacterColumns[index] == nil then
         CharacterColumns[index] = CreateCharacterColumn(parent, index)
     end
-
     CharacterColumns[index]:Show()
     return CharacterColumns[index]
 end
@@ -686,7 +669,6 @@ function AlterEgo:GetWindowSize()
         width = width + sizes.sidebar.width
         width = width + numCharacters * sizes.column
     end
-
     if width > maxWidth then
         width = maxWidth
         if numCharacters > 0 then
@@ -725,11 +707,7 @@ function AlterEgo:CreateUI()
         self.Window.Border = CreateFrame("Frame", "$parentBorder", self.Window, "BackdropTemplate")
         self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
         self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
-        self.Window.Border:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border },
-        })
+        self.Window.Border:SetBackdrop({ edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border } })
         self.Window.Border:SetBackdropBorderColor(0, 0, 0, .5)
         self.Window.Border:Show()
     end
@@ -994,7 +972,7 @@ function AlterEgo:CreateUI()
     end
 
     do -- No characters enabled
-        self.Window.Body.NoCharacterText = self.Window:CreateFontString("$parentNoCharacterText", "ARTWORK")
+        self.Window.Body.NoCharacterText = self.Window.Body:CreateFontString("$parentNoCharacterText", "ARTWORK")
         self.Window.Body.NoCharacterText:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", 50, -50)
         self.Window.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT", -50, 50)
         self.Window.Body.NoCharacterText:SetJustifyH("CENTER")
@@ -1183,11 +1161,13 @@ function AlterEgo:UpdateUI()
     local anchorFrame
 
     if numCharacters == 0 then
-        self.Window.Body:Hide()
+        self.Window.Body.Sidebar:Hide()
+        self.Window.Body.ScrollFrame:Hide()
         self.Window.Footer:Hide()
         self.Window.Body.NoCharacterText:Show()
     else
-        self.Window.Body:Show()
+        self.Window.Body.Sidebar:Show()
+        self.Window.Body.ScrollFrame:Show()
         self.Window.Footer:Show()
         self.Window.Body.NoCharacterText:Hide()
     end
