@@ -963,20 +963,21 @@ function AlterEgo:CreateUI()
         GameTooltip:Hide()
     end)
 
+    self.Window.NoCharacterText = self.Window:CreateFontString(self.Window:GetName() .. "NoCharacterText", "OVERLAY")
+    self.Window.NoCharacterText:SetPoint("TOPLEFT", self.Window, "TOPLEFT", 50, -50)
+    self.Window.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", -50, 50)
+    self.Window.NoCharacterText:SetJustifyH("CENTER")
+    self.Window.NoCharacterText:SetJustifyV("CENTER")
+    self.Window.NoCharacterText:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+    self.Window.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+    self.Window.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
+    self.Window.NoCharacterText:Hide()
+
     -- Body
     self.Window.Body = CreateFrame("Frame", self.Window:GetName() .. "Body", self.Window)
     self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")
     self.Window.Body:SetPoint("TOPRIGHT", self.Window.TitleBar, "BOTTOMRIGHT")
     SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
-    self.Window.Body.NoCharacterText = self.Window.Body:CreateFontString(self.Window.Body:GetName() .. "NoCharacterText", "OVERLAY")
-    self.Window.Body.NoCharacterText:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", 50, -50)
-    self.Window.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT", -50, 50)
-    self.Window.Body.NoCharacterText:SetJustifyH("CENTER")
-    self.Window.Body.NoCharacterText:SetJustifyV("CENTER")
-    self.Window.Body.NoCharacterText:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-    self.Window.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
-    self.Window.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
-    self.Window.Body.NoCharacterText:Hide()
 
     -- Sidebar
     self.Window.Body.Sidebar = CreateFrame("Frame", self.Window.Body:GetName() .. "Sidebar", self.Window.Body)
@@ -1160,15 +1161,16 @@ function AlterEgo:UpdateUI()
     local difficulties = self:GetRaidDifficulties()
 
     if numCharacters == 0 then
-        self.Window:SetSize(300, 300)
-        self.Window.Body.Sidebar:Hide()
-        self.Window.Body.NoCharacterText:Show()
+        self.Window.Body:Hide()
+        self.Window.Footer:Hide()
+        self.Window.NoCharacterText:Show()
     else
-        self.Window:SetSize(self:GetWindowSize())
-        self.Window.Body.Sidebar:Show()
-        self.Window.Body.NoCharacterText:Hide()
+        self.Window.Body:Show()
+        self.Window.Footer:Show()
+        self.Window.NoCharacterText:Hide()
     end
 
+    self.Window:SetSize(self:GetWindowSize())
     self.Window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * sizes.column, self.Window.Body.ScrollFrame:GetHeight())
     self.Window.Footer.Scrollbar.thumb:SetWidth(self.Window.Footer.Scrollbar:GetWidth() / 10)
 
