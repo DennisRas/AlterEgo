@@ -11,6 +11,7 @@ local defaultDB = {
         weeklyReset = 0,
         characters = {},
         minimap = {
+            minimapPos = 195,
             hide = false,
             lock = false
         },
