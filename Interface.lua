@@ -268,7 +268,7 @@ function AlterEgo:GetCharacterInfo()
                 if vaultLevels == "" then
                     vaultLevels = WrapTextInColorCode("-  -  -", LIGHTGRAY_FONT_COLOR:GenerateHexColor())
                 end
-                return vaultLevels:trim()
+                return strtrim(vaultLevels)
             end,
             OnEnter = function(character)
                 GameTooltip:AddLine("Vault Progress", 1, 1, 1)
@@ -339,7 +339,7 @@ function AlterEgo:GetCharacterInfo()
                 if vaultLevels == "" then
                     vaultLevels = WrapTextInColorCode("-  -  -", LIGHTGRAY_FONT_COLOR:GenerateHexColor())
                 end
-                return vaultLevels:trim()
+                return strtrim(vaultLevels)
             end,
             OnEnter = function(character)
                 local runs = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
