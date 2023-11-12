@@ -1051,53 +1051,51 @@ function AlterEgo:CreateUI()
 
     do -- Raids & Difficulties
         for raidIndex, raid in ipairs(raids) do
-            do
-                local Label = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.Window.Body.Sidebar)
-                Label:SetHeight(sizes.row)
-                Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                Label:SetScript("OnEnter", function()
-                    GameTooltip:ClearAllPoints()
-                    GameTooltip:ClearLines()
-                    GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(raid.name, 1, 1, 1);
-                    GameTooltip:Show()
-                end)
-                Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
-                Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-                Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", sizes.padding, 0)
-                Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 0)
-                Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-                Label.Text:SetJustifyH("LEFT")
-                Label.Text:SetText(raid.short and raid.short or raid.name)
-                Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
-                anchorFrame = Label
-            end
+            local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.Window.Body.Sidebar)
+            RaidFrame:SetHeight(sizes.row)
+            RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+            RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+            RaidFrame:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(RaidFrame, "ANCHOR_RIGHT")
+                GameTooltip:SetText(raid.name, 1, 1, 1);
+                GameTooltip:Show()
+            end)
+            RaidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
+            RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", sizes.padding, 0)
+            RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -sizes.padding, 0)
+            RaidFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            RaidFrame.Text:SetJustifyH("LEFT")
+            RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
+            RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+            anchorFrame = RaidFrame
 
             for difficultyIndex, difficulty in ipairs(difficulties) do
-                local Label = CreateFrame("Frame", "$parentRaid" .. raidIndex .. "Difficulty" .. difficultyIndex, self.Window.Body.Sidebar)
-                Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                Label:SetHeight(sizes.row)
-                Label:SetScript("OnEnter", function()
+                local DifficultFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+                DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                DifficultFrame:SetHeight(sizes.row)
+                DifficultFrame:SetScript("OnEnter", function()
                     GameTooltip:ClearAllPoints()
                     GameTooltip:ClearLines()
-                    GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
+                    GameTooltip:SetOwner(DifficultFrame, "ANCHOR_RIGHT")
                     GameTooltip:SetText(difficulty.name, 1, 1, 1);
                     GameTooltip:Show()
                 end)
-                Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
-                Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-                Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", sizes.padding, -3)
-                Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 3)
-                Label.Text:SetJustifyH("LEFT")
-                Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-                Label.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
+                DifficultFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                DifficultFrame.Text = DifficultFrame:CreateFontString(DifficultFrame:GetName() .. "Text", "OVERLAY")
+                DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", sizes.padding, -3)
+                DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -sizes.padding, 3)
+                DifficultFrame.Text:SetJustifyH("LEFT")
+                DifficultFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+                DifficultFrame.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
                 -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
                 -- RaidLabel.Icon:SetSize(16, 16)
                 -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", sizes.padding, 0)
                 -- RaidLabel.Icon:SetTexture(raid.icon)
-                anchorFrame = Label
+                anchorFrame = DifficultFrame
             end
         end
     end
