@@ -302,7 +302,6 @@ function AlterEgo:GetCharacters(unfiltered)
 end
 
 function AlterEgo:UpdateDB()
-    self:Print("AlterEgo:UpdateDB()")
     self:TaskWeeklyReset()
     self:UpdateRaidInstances()
     self:UpdateCharacterInfo()
@@ -330,7 +329,6 @@ function AlterEgo:TaskWeeklyReset()
 end
 
 function AlterEgo:loadGameData()
-    self:Print("AlterEgo:UpdateGameData()")
     for _, raid in pairs(dataRaids) do
         -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info.
         EJ_SelectInstance(raid.journalInstanceID)
@@ -367,7 +365,6 @@ function AlterEgo:loadGameData()
 end
 
 function AlterEgo:UpdateRaidInstances()
-    self:Print("AlterEgo:UpdateRaidInstances()")
     local character = self:GetCharacter()
     local raids = self:GetRaids();
     local numSavedInstances = GetNumSavedInstances()
@@ -429,7 +426,6 @@ function AlterEgo:UpdateRaidInstances()
 end
 
 function AlterEgo:UpdateCharacterInfo()
-    self:Print("AlterEgo:UpdateCharacterInfo()")
     local character = self:GetCharacter()
     local playerName = UnitName("player")
     local playerRealm = GetRealmName()
@@ -462,7 +458,6 @@ function AlterEgo:UpdateCharacterInfo()
 end
 
 function AlterEgo:UpdateKeystoneItem()
-    self:Print("AlterEgo:UpdateKeystoneItem()")
     local character = self:GetCharacter()
     local dungeons = self:GetDungeons()
     character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
@@ -495,7 +490,6 @@ function AlterEgo:UpdateKeystoneItem()
 end
 
 function AlterEgo:UpdateVault()
-    self:Print("AlterEgo:UpdateVault()")
     local character = self:GetCharacter()
     wipe(character.vault.slots or {})
     for i = 1, 3 do
@@ -515,7 +509,6 @@ function AlterEgo:UpdateVault()
 end
 
 function AlterEgo:UpdateMythicPlus()
-    self:Print("AlterEgo:UpdateMythicPlus()")
     local character = self:GetCharacter()
     local dungeons = self:GetDungeons()
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
