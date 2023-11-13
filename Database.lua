@@ -534,7 +534,7 @@ function AlterEgo:UpdateMythicPlus()
     if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
 
     wipe(character.mythicplus.dungeons or {})
-    for _, dataDungeon in pairs(dataDungeons) do
+    for _, dataDungeon in pairs(dungeons) do
         local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID);
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
         local dungeon = {
