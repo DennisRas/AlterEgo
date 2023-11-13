@@ -219,10 +219,15 @@ function AlterEgo:GetAffixes()
     return result
 end
 
+-- Temp fix until a better solution, since C_MythicPlus.GetCurrentUIDisplaySeason() isn't ready on init
+function AlterEgo:GetSeason()
+    return 2
+end
+
 function AlterEgo:GetDungeons()
     local result = {}
     for _, dungeon in pairs(dataDungeons) do
-        if dungeon.seasonID == C_MythicPlus.GetCurrentUIDisplaySeason() then
+        if dungeon.seasonID == self:GetSeason() then
             table.insert(result, dungeon)
         end
     end
@@ -237,7 +242,7 @@ end
 function AlterEgo:GetRaids()
     local result = {}
     for _, raid in pairs(dataRaids) do
-        if raid.seasonID == C_MythicPlus.GetCurrentUIDisplaySeason() then
+        if raid.seasonID == self:GetSeason() then
             table.insert(result, raid)
         end
     end
