@@ -702,6 +702,7 @@ function AlterEgo:CreateUI()
     self.Window:SetMovable(true)
     self.Window:SetPoint("CENTER")
     SetBackgroundColor(self.Window, colors.dark:GetRGBA())
+    table.insert(UISpecialFrames, self.Window:GetName())
 
     do -- Border
         self.Window.Border = CreateFrame("Frame", "$parentBorder", self.Window, "BackdropTemplate")
@@ -1441,10 +1442,22 @@ function AlterEgo:UpdateUI()
                             GameTooltip:Hide()
                             SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
                         end)
+                        anchorFrame = DifficultyFrame
                         for encounterIndex, encounter in ipairs(raid.encounters) do
-                            local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
                             local color = {r = 1, g = 1, b = 1}
                             local alpha = 0.1
+                            local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
+                            if not EncounterFrame then
+                                EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                                local size = sizes.column
+                                size = size - sizes.padding -- left/right cell padding
+                                size = size - (raid.numEncounters - 1) * 4 -- gaps
+                                size = size / raid.numEncounters -- box sizes
+                                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
+                                EncounterFrame:SetSize(size, sizes.row - 12)
+                                SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+                                anchorFrame = EncounterFrame
+                            end
                             if encounter.instanceEncounterID and character.raids.killed and character.raids.killed[encounter.instanceEncounterID .. "-" .. difficulty.id] then
                                 color = UNCOMMON_GREEN_COLOR
                                 if self.db.global.raids.colors then
@@ -1454,6 +1467,7 @@ function AlterEgo:UpdateUI()
                             end
                             SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
                         end
+                        anchorFrame = CharacterColumn
                     end
                 end
             end

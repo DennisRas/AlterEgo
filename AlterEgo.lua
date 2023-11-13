@@ -57,6 +57,7 @@ function AlterEgo:OnInitialize()
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
+    self:CreateUI()
 end
 
 function AlterEgo:OnEnable()
@@ -77,6 +78,5 @@ function AlterEgo:OnEnable()
     end)
 
     self:loadGameData()
-    self:CreateUI()
     self:UpdateDB()
 end
