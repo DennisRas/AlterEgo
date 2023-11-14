@@ -281,7 +281,7 @@ function AlterEgo:GetCharacterInfo()
                         local result = "Locked"
                         if slot.progress >= slot.threshold then
                             color = WHITE_FONT_COLOR
-                            if slot.exampleRewardLink then
+                            if slot.exampleRewardLink ~= nil and slot.exampleRewardLink ~= "" then
                                 local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
                                 local difficultyName = GetDifficultyInfo(slot.level)
                                 local dataDifficulty = AE_table_get(self:GetRaidDifficulties(), "id", slot.level)
