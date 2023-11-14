@@ -325,7 +325,7 @@ function AlterEgo:GetCharacterInfo()
                 local vaultLevels = ""
                 if character.vault.slots ~= nil then
                     for _, slot in ipairs(character.vault.slots) do
-                        if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus then
+                        if slot.type == Enum.WeeklyRewardChestThresholdType.Activities then
                             local level = "-"
                             local color = LIGHTGRAY_FONT_COLOR
                             if slot.level > 0 then
@@ -366,8 +366,7 @@ function AlterEgo:GetCharacterInfo()
                     return lowestLevel, lowestCount;
                 end
 
-                -- local runHistory = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.MythicPlus);
-                local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus end)
+                local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
                 table.sort(slots, function(a, b) return a.index < b.index; end);
                 local lastCompletedIndex = 0;
                 for slotIndex, slot in ipairs(slots) do
@@ -399,7 +398,7 @@ function AlterEgo:GetCharacterInfo()
                     for runIndex, run in ipairs(runs) do
                         local threshold = false
                         for _, slot in ipairs(character.vault.slots) do
-                            if slot.type == Enum.WeeklyRewardChestThresholdType.MythicPlus and runIndex == slot.threshold then
+                            if slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold then
                                 threshold = true
                             end
                         end
