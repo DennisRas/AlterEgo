@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.2 - 2023-11-14
+
+### Updated
+
+- Changed raids and dungeons to Season 3 - Good luck and have fun :-)
+- Mythic+ and Raid data should be reset once the new season begins
+
+### Fixed
+
+- Removed the invisible dropdown buttons, so they can't be clicked when window is hidden
+- The vault values have been updated to work with the new Dungeons row in the Great Vault
+- Fixed a couple of string bugs in tooltips
+
 ## v1.0.1 - 2023-11-13
 
 ### Added
