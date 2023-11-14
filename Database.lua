@@ -2,6 +2,7 @@
 local defaultCharacter = {
     GUID = "",
     lastUpdate = 0,
+    currentSeason = 0,
     enabled = true,
     info = {
         name = "",
@@ -526,6 +527,19 @@ function AlterEgo:UpdateMythicPlus()
     local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
     local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
     local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
+    local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+
+    if currentSeason then
+        for _, char in pairs(self.db.global.characters) do
+            if char.currentSeason == nil or char.currentSeason < currentSeason then
+                wipe(char.mythicplus.runHistory or {})
+                wipe(char.mythicplus.dungeons or {})
+                char.mythicplus.rating = 0
+                char.currentSeason = currentSeason
+            end
+        end
+    end
+
     if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
     if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
