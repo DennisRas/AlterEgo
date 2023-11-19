@@ -1316,7 +1316,10 @@ function AlterEgo:UpdateUI()
                     local scoreColor = HIGHLIGHT_FONT_COLOR
                     if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
                         if (characterDungeon.rating) then
-                            scoreColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
+                            local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
+                            if color then
+                                scoreColor = color
+                            end
                         end
                     end
                     DungeonFrame:SetScript("OnEnter", function()

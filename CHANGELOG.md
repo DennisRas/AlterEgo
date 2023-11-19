@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.3 - 2023-11-19
+
+### Fixed
+
+- Fixed an error regarding the colors of the dungeon key levels
+
 ## v1.0.2 - 2023-11-14
 
 ### Updated
