@@ -6,6 +6,10 @@
 
 - Added keybinding to show/hide the addon window
 
+### Updated
+
+- Changed the dungeon names in the vault tooltips to make the tooltip smaller
+
 ### Fixed
 
 - Fixed an error regarding the colors of the dungeon key levels
