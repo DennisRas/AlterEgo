@@ -13,6 +13,7 @@
 ### Fixed
 
 - Fixed an error regarding the colors of the dungeon key levels
+- Fixed an issue with the keystone not updating when manually reducing the keystone level
 
 ## v1.0.2 - 2023-11-14
 

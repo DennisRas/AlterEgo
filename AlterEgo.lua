@@ -62,7 +62,7 @@ function AlterEgo:OnInitialize()
 end
 
 function AlterEgo:OnEnable()
-    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 2, function()
+    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 2, function()
         self:UpdateCharacterInfo()
         self:UpdateKeystoneItem()
     end)
