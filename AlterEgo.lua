@@ -58,6 +58,7 @@ function AlterEgo:OnInitialize()
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
     self:CreateUI()
+    _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
 end
 
 function AlterEgo:OnEnable()

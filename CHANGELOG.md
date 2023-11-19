@@ -2,6 +2,10 @@
 
 ## v1.0.3 - 2023-11-19
 
+### Added
+
+- Added keybinding to show/hide the addon window
+
 ### Fixed
 
 - Fixed an error regarding the colors of the dungeon key levels
