@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.4 - 2023-11-22
+
+### Fixed
+
+- The keystone info no longer disappears if it's destroyed or moved to the bank
+
 ## v1.0.3 - 2023-11-19
 
 ### Added

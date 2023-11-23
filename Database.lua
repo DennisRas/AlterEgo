@@ -466,7 +466,7 @@ end
 function AlterEgo:UpdateKeystoneItem()
     local character = self:GetCharacter()
     local dungeons = self:GetDungeons()
-    character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
+    -- character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
     for bagId = 0, NUM_BAG_SLOTS do
         for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
             local itemId = C_Container.GetContainerItemID(bagId, slotId)
