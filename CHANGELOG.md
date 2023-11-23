@@ -6,6 +6,7 @@
 
 - The keystone info no longer disappears if it's destroyed or moved to the bank
 - The keystone should now show the correct DOTI abbreviation name
+- Fixed a bug where all keystones didn't clear after the weekly reset
 
 ## v1.0.3 - 2023-11-19
 

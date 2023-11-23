@@ -317,8 +317,8 @@ function AlterEgo:UpdateDB()
 end
 
 function AlterEgo:TaskWeeklyReset()
-    if self.db.global.weeklyReset ~= nil and self.db.global.weeklyReset <= time() then
-        for _, character in ipairs(self:GetCharacters()) do
+    if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
+        AE_table_foreach(self.db.global.characters, function(character)
             AE_table_foreach(character.vault.slots, function(slot)
                 if slot.progress >= slot.threshold then
                     character.vault.hasAvailableRewards = true
@@ -329,7 +329,8 @@ function AlterEgo:TaskWeeklyReset()
             end)
             wipe(character.vault.slots or {})
             wipe(character.raids.killed or {})
-        end
+            wipe(character.mythicplus.keystone or {})
+        end)
     end
     self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
 end
