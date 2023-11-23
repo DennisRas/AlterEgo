@@ -184,34 +184,33 @@ function AlterEgo:GetCharacterInfo()
         {
             label = "Current Keystone",
             value = function(character)
-                local currentKeystone = "-"
+                local currentKeystone = WrapTextInColorCode("-", LIGHTGRAY_FONT_COLOR:GenerateHexColor())
                 if character.mythicplus.keystone ~= nil then
-                    local dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
-                    if dungeon then
-                        currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
+                    local dungeon
+                    if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
+                        dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+                    elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
+                        dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
                     end
-                    -- if character.mythicplus.keystone.itemId > 0 and character.mythicplus.keystone.itemLink ~= "" then
-                    --     currentKeystone = character.mythicplus.keystone.itemLink
-                    -- end
+                    if dungeon then
+                        currentKeystone = dungeon.abbr
+                        if type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
+                            currentKeystone = currentKeystone .. " +" .. tostring(character.mythicplus.keystone.level)
+                        end
+                    end
                 end
-                -- if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.mapId ~= nil and character.mythicplus.keystone.level ~= nil then
-                --     local dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.mapId)
-                --     if dungeon then
-                --         currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
-                --     end
-                -- end
                 return currentKeystone
             end,
             enabled = true,
             OnEnter = function(character)
-                if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.itemLink ~= "" and character.mythicplus.keystone.itemLink ~= nil then
+                if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
                     GameTooltip:SetHyperlink(character.mythicplus.keystone.itemLink)
                     GameTooltip:AddLine(" ")
                     GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
                 end
             end,
             OnClick = function(character)
-                if character.mythicplus.keystone ~= nil and character.mythicplus.keystone.itemLink ~= "" and character.mythicplus.keystone.itemLink ~= nil then
+                if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
                     if IsModifiedClick("CHATLINK") then
                         if not ChatEdit_InsertLink(character.mythicplus.keystone.itemLink) then
                             ChatFrame_OpenChat(character.mythicplus.keystone.itemLink);

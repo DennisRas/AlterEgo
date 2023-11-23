@@ -5,6 +5,7 @@
 ### Fixed
 
 - The keystone info no longer disappears if it's destroyed or moved to the bank
+- The keystone should now show the correct DOTI abbreviation name
 
 ## v1.0.3 - 2023-11-19
 
