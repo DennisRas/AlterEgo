@@ -4,10 +4,9 @@ AlterEgo.Libs = {}
 AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
 AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
-
-local defaultDB = {
+AlterEgo.defaultDB = {
     global = {
-        dbVersion = 1,
+        dbVersion = 2,
         weeklyReset = 0,
         characters = {},
         minimap = {
@@ -52,7 +51,7 @@ local libDataObject = {
 }
 
 function AlterEgo:OnInitialize()
-    self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
+    self.db = self.Libs.AceDB:New("AlterEgoDB", AlterEgo.defaultDB, true)
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
     self:RegisterChatCommand("ae", "ToggleWindow")
@@ -78,6 +77,7 @@ function AlterEgo:OnEnable()
         RequestRaidInfo()
     end)
 
+    self:MigrateDB()
     self:loadGameData()
     self:UpdateDB()
 end

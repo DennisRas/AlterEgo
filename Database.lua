@@ -30,9 +30,6 @@ local defaultCharacter = {
         },
     },
     raids = {
-        killed = {
-            -- [instanceEncounterID .. "-" .. difficultyID] = true,
-        },
         savedInstances = {
             -- [1] = {
             --     ["id"] = 0,
@@ -316,6 +313,26 @@ function AlterEgo:UpdateDB()
     self:UpdateMythicPlus()
 end
 
+function AlterEgo:MigrateDB()
+    if self.db.global.dbVersion < AlterEgo.defaultDB.global.dbVersion then
+        if self.db.global.dbVersion == 1 then
+            for characterIndex in pairs(self.db.global.characters) do
+                self.db.global.characters[characterIndex].raids.killed = nil
+                if self.db.global.characters[characterIndex].raids.savedInstances then
+                    for savedInstanceIndex, savedInstance in ipairs(self.db.global.characters[characterIndex].raids.savedInstances) do
+                        if savedInstance.instanceID == 2549 and savedInstance.encounters then
+                            savedInstance.encounters[4].instanceEncounterID = 2731
+                            savedInstance.encounters[5].instanceEncounterID = 2728
+                        end
+                    end
+                end
+            end
+            self.db.global.dbVersion = 2
+        end
+        self:MigrateDB()
+    end
+end
+
 function AlterEgo:TaskWeeklyReset()
     if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
         AE_table_foreach(self.db.global.characters, function(character)
@@ -328,7 +345,6 @@ function AlterEgo:TaskWeeklyReset()
                 run.thisWeek = false
             end)
             wipe(character.vault.slots or {})
-            wipe(character.raids.killed or {})
             wipe(character.mythicplus.keystone or {})
         end)
     end
@@ -408,7 +424,7 @@ function AlterEgo:UpdateRaidInstances()
                 local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
                 local instanceEncounterID = 0
                 if raid then
-                    local raidEncounter = AE_table_get(raid.encounters, "index", encounterIndex)
+                    local raidEncounter = AE_table_get(raid.encounters, "name", bossName)
                     if raidEncounter then
                         instanceEncounterID = raidEncounter.instanceEncounterID
                     end
@@ -421,10 +437,6 @@ function AlterEgo:UpdateRaidInstances()
                     killed = killed
                 }
                 savedInstance.encounters[encounterIndex] = encounter
-                if encounter.killed and savedInstance.expires > 0 and instanceEncounterID > 0 then
-                    character.raids.killed = character.raids.killed or {}
-                    character.raids.killed[tostring(instanceEncounterID) .. "-" .. tostring(difficultyID)] = true
-                end
             end
             character.raids.savedInstances[savedInstanceIndex] = savedInstance
         end
@@ -583,7 +595,6 @@ end
 function AlterEgo:OnEncounterEnd(instanceEncounterID, encounterName, difficultyID, groupSize, success)
     local character = self:GetCharacter()
     if success then
-        character.raids.killed[tostring(instanceEncounterID) .. "-" .. tostring(difficultyID)] = true
         RequestRaidInfo()
     end
     self:UpdateUI()
