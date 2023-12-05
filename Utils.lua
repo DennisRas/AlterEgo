@@ -51,7 +51,7 @@ function AE_table_copy(from, to, recursion_check)
     if recursion_check[from] then return "<recursion>" end
     recursion_check[from] = true
     for k, v in pairs(from) do
-        table[k] = type(v) == 'table' and AE_table_copy(v, nil, recursion_check) or v
+        table[k] = type(v) == "table" and AE_table_copy(v, nil, recursion_check) or v
     end
     return table
 end

@@ -32,7 +32,7 @@ function AlterEgo:GetCharacterInfo()
                 end
                 GameTooltip:AddLine("|c" .. nameColor .. name .. "|r");
                 GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1);
-                if character.info.factionGroup ~= nil and character.info.factionGroup.localized~= nil then
+                if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
                     GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
                 end
                 if character.lastUpdate ~= nil then
@@ -84,7 +84,7 @@ function AlterEgo:GetCharacterInfo()
                         itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
                     end
                     if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
-                        itemLevelTooltip2 = itemLevelTooltip2.."\n\n"..STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
+                        itemLevelTooltip2 = itemLevelTooltip2 .. "\n\n" .. STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
                     end
                 end
                 GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
@@ -425,6 +425,7 @@ function AlterEgo:GetCharacterInfo()
         },
     }
 end
+
 local assets = {
     font = {
         file = "Fonts\\FRIZQT__.TTF",
@@ -455,15 +456,15 @@ local colors = {
 }
 
 local sortingOptions = {
-    {value = "lastUpdate", text = "Recently played"},
-    {value = "name.asc", text = "Name (A-Z)"},
-    {value = "name.desc", text = "Name (Z-A)"},
-    {value = "realm.asc", text = "Realm (A-Z)"},
-    {value = "realm.desc", text = "Realm (Z-A)"},
-    {value = "rating.asc", text = "Rating (Lowest)"},
+    {value = "lastUpdate",  text = "Recently played"},
+    {value = "name.asc",    text = "Name (A-Z)"},
+    {value = "name.desc",   text = "Name (Z-A)"},
+    {value = "realm.asc",   text = "Realm (A-Z)"},
+    {value = "realm.desc",  text = "Realm (Z-A)"},
+    {value = "rating.asc",  text = "Rating (Lowest)"},
     {value = "rating.desc", text = "Rating (Highest)"},
-    {value = "ilvl.asc", text = "Item Level (Lowest)"},
-    {value = "ilvl.desc", text = "Item Level (Highest)"},
+    {value = "ilvl.asc",    text = "Item Level (Lowest)"},
+    {value = "ilvl.desc",   text = "Item Level (Highest)"},
 }
 
 local function SetBackgroundColor(parent, r, g, b, a)
@@ -601,9 +602,9 @@ local CreateCharacterColumn = function(parent, index)
             for encounterIndex in ipairs(raid.encounters) do
                 local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
                 local size = sizes.column
-                size = size - sizes.padding -- left/right cell padding
+                size = size - sizes.padding                -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
-                size = size / raid.numEncounters -- box sizes
+                size = size / raid.numEncounters           -- box sizes
                 EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
                 EncounterFrame:SetSize(size, sizes.row - 12)
                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
@@ -675,12 +676,12 @@ function AlterEgo:GetWindowSize()
     end
 
     -- Height
-    height = height + sizes.titlebar.height -- Titlebar duh
+    height = height + sizes.titlebar.height                                                                                                                  -- Titlebar duh
     height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled end)) * sizes.row -- Character info
-    height = height + sizes.row -- DungeonHeader
-    height = height + AE_table_count(dungeons) * sizes.row -- Dungeon rows
+    height = height + sizes.row                                                                                                                              -- DungeonHeader
+    height = height + AE_table_count(dungeons) * sizes.row                                                                                                   -- Dungeon rows
     if self.db.global.raids.enabled then
-        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row -- Raids
+        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row                                                             -- Raids
     end
 
     return width, height
@@ -706,7 +707,7 @@ function AlterEgo:CreateUI()
         self.Window.Border = CreateFrame("Frame", "$parentBorder", self.Window, "BackdropTemplate")
         self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
         self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
-        self.Window.Border:SetBackdrop({ edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = { left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border } })
+        self.Window.Border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border}})
         self.Window.Border:SetBackdropBorderColor(0, 0, 0, .5)
         self.Window.Border:Show()
     end
@@ -768,96 +769,100 @@ function AlterEgo:CreateUI()
         self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -8)
         self.Window.TitleBar.SettingsButton.Dropdown.Button:Hide()
         UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
-        UIDropDownMenu_Initialize(self.Window.TitleBar.SettingsButton.Dropdown, function()
-            UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
-            UIDropDownMenu_AddButton({
-                text = "Show the minimap button",
-                checked = not self.db.global.minimap.hide,
-                isNotRadio = true,
-                tooltipTitle = "Show the minimap button",
-                tooltipText = "It does get crowded around the minimap sometimes.",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.minimap.hide = checked
-                    self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                end
-            })
-            UIDropDownMenu_AddButton({
-                text = "Lock the minimap button",
-                checked = self.db.global.minimap.lock,
-                isNotRadio = true,
-                tooltipTitle = "Lock the minimap button",
-                tooltipText = "No more moving the button around accidentally!",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.minimap.lock = not checked
-                    self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                end
-            })
-            UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
-            UIDropDownMenu_AddButton({
-                text = "Show characters with zero rating",
-                checked = self.db.global.showZeroRatedCharacters,
-                isNotRadio = true,
-                tooltipTitle = "Show characters with zero rating",
-                tooltipText = "Too many alts?",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.showZeroRatedCharacters = not checked
-                    self:UpdateUI()
-                end
-            })
-            UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-            UIDropDownMenu_AddButton({
-                text = "Show tier icons",
-                checked = self.db.global.showTiers,
-                isNotRadio = true,
-                tooltipTitle = "Show tier icons",
-                tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid.",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.showTiers = not checked
-                    self:UpdateUI()
-                end
-            }) 
-            UIDropDownMenu_AddButton({
-                text = "Show colors on dungeon scores",
-                checked = self.db.global.showAffixColors,
-                isNotRadio = true,
-                tooltipTitle = "Show colors on dungeon scores",
-                tooltipText = "Show some colors!",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.showAffixColors = not checked
-                    self:UpdateUI()
-                end
-            })
-            UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
-            UIDropDownMenu_AddButton({
-                text = "Show the current raid tier",
-                checked = self.db.global.raids and self.db.global.raids.enabled,
-                isNotRadio = true,
-                tooltipTitle = "Show the current raid tier",
-                tooltipText = "Because Mythic Plus ain't enough!",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.raids.enabled = not checked
-                    self:UpdateUI()
-                end
-            })
-            UIDropDownMenu_AddButton({
-                text = "Show different colors per difficulty",
-                checked = self.db.global.raids and self.db.global.raids.colors,
-                isNotRadio = true,
-                tooltipTitle = "Show different colors per difficulty",
-                tooltipText = "Argharhggh! So much greeeen!",
-                tooltipOnButton = true,
-                func = function(button, arg1, arg2, checked)
-                    self.db.global.raids.colors = not checked
-                    self:UpdateUI()
-                end
-            })
-        end, "MENU")
+        UIDropDownMenu_Initialize(
+            self.Window.TitleBar.SettingsButton.Dropdown,
+            function()
+                UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show the minimap button",
+                    checked = not self.db.global.minimap.hide,
+                    isNotRadio = true,
+                    tooltipTitle = "Show the minimap button",
+                    tooltipText = "It does get crowded around the minimap sometimes.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.minimap.hide = checked
+                        self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Lock the minimap button",
+                    checked = self.db.global.minimap.lock,
+                    isNotRadio = true,
+                    tooltipTitle = "Lock the minimap button",
+                    tooltipText = "No more moving the button around accidentally!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.minimap.lock = not checked
+                        self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                    end
+                })
+                UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show characters with zero rating",
+                    checked = self.db.global.showZeroRatedCharacters,
+                    isNotRadio = true,
+                    tooltipTitle = "Show characters with zero rating",
+                    tooltipText = "Too many alts?",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showZeroRatedCharacters = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show tier icons",
+                    checked = self.db.global.showTiers,
+                    isNotRadio = true,
+                    tooltipTitle = "Show tier icons",
+                    tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showTiers = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Show colors on dungeon scores",
+                    checked = self.db.global.showAffixColors,
+                    isNotRadio = true,
+                    tooltipTitle = "Show colors on dungeon scores",
+                    tooltipText = "Show some colors!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showAffixColors = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show the current raid tier",
+                    checked = self.db.global.raids and self.db.global.raids.enabled,
+                    isNotRadio = true,
+                    tooltipTitle = "Show the current raid tier",
+                    tooltipText = "Because Mythic Plus ain't enough!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.raids.enabled = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Show different colors per difficulty",
+                    checked = self.db.global.raids and self.db.global.raids.colors,
+                    isNotRadio = true,
+                    tooltipTitle = "Show different colors per difficulty",
+                    tooltipText = "Argharhggh! So much greeeen!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.raids.colors = not checked
+                        self:UpdateUI()
+                    end
+                })
+            end,
+            "MENU"
+        )
         self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
             self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
             SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0.05)
@@ -886,19 +891,23 @@ function AlterEgo:CreateUI()
         self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -8)
         self.Window.TitleBar.SortingButton.Dropdown.Button:Hide()
         UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
-        UIDropDownMenu_Initialize(self.Window.TitleBar.SortingButton.Dropdown, function()
-            for _, option in ipairs(sortingOptions) do
-                UIDropDownMenu_AddButton({
-                    text = option.text,
-                    checked = self.db.global.sorting == option.value,
-                    arg1 = option.value,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.sorting = arg1
-                        self:UpdateUI()
-                    end
-                })
-            end
-        end, "MENU")
+        UIDropDownMenu_Initialize(
+            self.Window.TitleBar.SortingButton.Dropdown,
+            function()
+                for _, option in ipairs(sortingOptions) do
+                    UIDropDownMenu_AddButton({
+                        text = option.text,
+                        checked = self.db.global.sorting == option.value,
+                        arg1 = option.value,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.sorting = arg1
+                            self:UpdateUI()
+                        end
+                    })
+                end
+            end,
+            "MENU"
+        )
         self.Window.TitleBar.SortingButton:SetScript("OnEnter", function()
             self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
             SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0.05)
@@ -927,28 +936,32 @@ function AlterEgo:CreateUI()
         self.Window.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER", 0, -8)
         self.Window.TitleBar.CharactersButton.Dropdown.Button:Hide()
         UIDropDownMenu_SetWidth(self.Window.TitleBar.CharactersButton.Dropdown, sizes.titlebar.height)
-        UIDropDownMenu_Initialize(self.Window.TitleBar.CharactersButton.Dropdown, function()
-            local charactersUnfilteredList = self:GetCharacters(true)
-            for _, character in ipairs(charactersUnfilteredList) do
-                local nameColor = "ffffffff"
-                if character.info.class.file ~= nil then
-                    local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-                    if classColor ~= nil then
-                        nameColor = classColor.GenerateHexColor(classColor)
+        UIDropDownMenu_Initialize(
+            self.Window.TitleBar.CharactersButton.Dropdown,
+            function()
+                local charactersUnfilteredList = self:GetCharacters(true)
+                for _, character in ipairs(charactersUnfilteredList) do
+                    local nameColor = "ffffffff"
+                    if character.info.class.file ~= nil then
+                        local classColor = C_ClassColor.GetClassColor(character.info.class.file)
+                        if classColor ~= nil then
+                            nameColor = classColor.GenerateHexColor(classColor)
+                        end
                     end
+                    UIDropDownMenu_AddButton({
+                        text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
+                        checked = character.enabled,
+                        isNotRadio = true,
+                        arg1 = character.GUID,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.characters[arg1].enabled = not checked
+                            self:UpdateUI()
+                        end
+                    })
                 end
-                UIDropDownMenu_AddButton({
-                    text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
-                    checked = character.enabled,
-                    isNotRadio = true,
-                    arg1 = character.GUID,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.characters[arg1].enabled = not checked
-                        self:UpdateUI()
-                    end
-                })
-            end
-        end, "MENU")
+            end,
+            "MENU"
+        )
         self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
             self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
             SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0.05)
@@ -1129,7 +1142,7 @@ function AlterEgo:CreateUI()
     self.Window.Footer.Scrollbar.thumb:SetPoint("CENTER")
     self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
     self.Window.Footer.Scrollbar.thumb:SetHeight(sizes.footer.height - 10)
-    self.Window.Footer.Scrollbar:SetScript("OnValueChanged", function (_, value)
+    self.Window.Footer.Scrollbar:SetScript("OnValueChanged", function(_, value)
         self.Window.Body.ScrollFrame:SetHorizontalScroll(value)
     end)
     self.Window.Footer.Scrollbar:SetScript("OnEnter", function()
@@ -1194,7 +1207,7 @@ function AlterEgo:UpdateUI()
     do
         anchorFrame = self.Window.Body.Sidebar
         for labelIndex, info in ipairs(labels) do
-            local Label =_G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
+            local Label = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
             if info.enabled ~= nil and not info.enabled then
                 Label:Hide()
             else
@@ -1310,7 +1323,7 @@ function AlterEgo:UpdateUI()
             do -- Dungeon rows
                 -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
                 for dungeonIndex, dungeon in ipairs(dungeons) do
-                    local DungeonFrame =  _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
+                    local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
                     local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
                     local scoreColor = HIGHLIGHT_FONT_COLOR
                     if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
@@ -1334,14 +1347,14 @@ function AlterEgo:UpdateUI()
                                 GameTooltip_AddBlankLineToTooltip(GameTooltip);
                                 GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
                                 GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
-                                if(affixInfo.overTime) then
-                                    if(affixInfo.durationSec >= SECONDS_PER_HOUR) then
+                                if (affixInfo.overTime) then
+                                    if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
                                         GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, true)), LIGHTGRAY_FONT_COLOR);
                                     else
                                         GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, false)), LIGHTGRAY_FONT_COLOR);
                                     end
                                 else
-                                    if(affixInfo.durationSec >= SECONDS_PER_HOUR) then
+                                    if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
                                         GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, true), HIGHLIGHT_FONT_COLOR);
                                     else
                                         GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, false), HIGHLIGHT_FONT_COLOR);
@@ -1374,9 +1387,9 @@ function AlterEgo:UpdateUI()
                                     if affixScore.durationSec <= dungeon.time * 0.6 then
                                         tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
                                     elseif affixScore.durationSec <= dungeon.time * 0.8 then
-                                        tier =  "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
                                     elseif affixScore.durationSec <= dungeon.time then
-                                        tier =  "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
                                     end
 
                                     if tier == "" then
@@ -1461,9 +1474,9 @@ function AlterEgo:UpdateUI()
                             if not EncounterFrame then
                                 EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
                                 local size = sizes.column
-                                size = size - sizes.padding -- left/right cell padding
+                                size = size - sizes.padding                -- left/right cell padding
                                 size = size - (raid.numEncounters - 1) * 4 -- gaps
-                                size = size / raid.numEncounters -- box sizes
+                                size = size / raid.numEncounters           -- box sizes
                                 EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
                                 EncounterFrame:SetSize(size, sizes.row - 12)
                                 SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)

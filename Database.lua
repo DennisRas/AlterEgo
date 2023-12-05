@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field
+local dbVersion = 2
 local defaultCharacter = {
     GUID = "",
     lastUpdate = 0,
@@ -141,8 +141,8 @@ local defaultCharacter = {
 }
 
 local dataAffixes = {
-    [9] = { affixID = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas" },
-    [10] = { affixID = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness" },
+    [9]  = {affixID = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas"},
+    [10] = {affixID = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness"},
 }
 
 local dataDungeons = {
@@ -154,27 +154,27 @@ local dataDungeons = {
     -- [405] = { seasonID = 2, challengeModeID = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
     -- [406] = { seasonID = 2, challengeModeID = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
     -- [438] = { seasonID = 2, challengeModeID = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
-    [168] = { seasonID = 3, challengeModeID = 168, mapId = 1279, time = 0, abbr = "EB", name = "The Everbloom" },
-    [198] = { seasonID = 3, challengeModeID = 198, mapId = 1466, time = 0, abbr = "DHT", name = "Darkheart Thicket" },
-    [199] = { seasonID = 3, challengeModeID = 199, mapId = 1501, time = 0, abbr = "BRH", name = "Black Rook Hold" },
-    [244] = { seasonID = 3, challengeModeID = 244, mapId = 1763, time = 0, abbr = "AD", name = "Atal'Dazar" },
-    [248] = { seasonID = 3, challengeModeID = 248, mapId = 1862, time = 0, abbr = "WM", name = "Waycrest Manor" },
-    [456] = { seasonID = 3, challengeModeID = 456, mapId = 643, time = 0, abbr = "TOTT", name = "Throne of the Tides" },
-    [463] = { seasonID = 3, challengeModeID = 463, mapId = 2579, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall" },
-    [464] = { seasonID = 3, challengeModeID = 464, mapId = 2579, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise", short = "DOTI: Murozond's Rise" },
+    [168] = {seasonID = 3, challengeModeID = 168, mapId = 1279, time = 0, abbr = "EB", name = "The Everbloom"},
+    [198] = {seasonID = 3, challengeModeID = 198, mapId = 1466, time = 0, abbr = "DHT", name = "Darkheart Thicket"},
+    [199] = {seasonID = 3, challengeModeID = 199, mapId = 1501, time = 0, abbr = "BRH", name = "Black Rook Hold"},
+    [244] = {seasonID = 3, challengeModeID = 244, mapId = 1763, time = 0, abbr = "AD", name = "Atal'Dazar"},
+    [248] = {seasonID = 3, challengeModeID = 248, mapId = 1862, time = 0, abbr = "WM", name = "Waycrest Manor"},
+    [456] = {seasonID = 3, challengeModeID = 456, mapId = 643, time = 0, abbr = "TOTT", name = "Throne of the Tides"},
+    [463] = {seasonID = 3, challengeModeID = 463, mapId = 2579, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
+    [464] = {seasonID = 3, challengeModeID = 464, mapId = 2579, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise", short = "DOTI: Murozond's Rise"},
 }
 
 local dataRaids = {
     -- [1200] = { seasonID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates" },
     -- [1208] = { seasonID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
-    [1207] = { seasonID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope" },
+    [1207] = {seasonID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
 }
 
 local dataRaidDifficulties = {
-    [14] = { id = 14, color = RARE_BLUE_COLOR, order = 2, abbr = "N", name = "Normal" },
-    [15] = { id = 15, color = EPIC_PURPLE_COLOR, order = 3, abbr = "HC", name = "Heroic" },
-    [16] = { id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic" },
-    [17] = { id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR" },
+    [14] = {id = 14, color = RARE_BLUE_COLOR, order = 2, abbr = "N", name = "Normal"},
+    [15] = {id = 15, color = EPIC_PURPLE_COLOR, order = 3, abbr = "HC", name = "Heroic"},
+    [16] = {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic"},
+    [17] = {id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
 }
 
 -- Temp fix until a better solution, since C_MythicPlus.GetCurrentUIDisplaySeason() isn't ready on init
@@ -360,8 +360,7 @@ function AlterEgo:loadGameData()
         EJ_SelectInstance(raid.journalInstanceID)
         wipe(raid.encounters or {})
         for encounterIndex = 1, raid.numEncounters do
-            local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID =
-            EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+            local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
             local encounter = {
                 index = encounterIndex,
                 name = name,
@@ -381,8 +380,7 @@ function AlterEgo:loadGameData()
         local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
         dungeon.name = dungeonName
         dungeon.time = dungeonTimeLimit
-        dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or
-        "Interface/Icons/achievement_bg_wineos_underxminutes"
+        dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
     end
 
     for _, affix in pairs(dataAffixes) do
@@ -399,8 +397,7 @@ function AlterEgo:UpdateRaidInstances()
     character.raids.savedInstances = {}
     if numSavedInstances > 0 then
         for savedInstanceIndex = 1, numSavedInstances do
-            local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID =
-            GetSavedInstanceInfo(savedInstanceIndex)
+            local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
             local raid = AE_table_get(raids, "instanceID", instanceID)
             local savedInstance = {
                 index = savedInstanceIndex,
@@ -471,15 +468,13 @@ function AlterEgo:UpdateCharacterInfo()
     if playerClassName then character.info.class.name = playerClassName end
     if playerClassFile then character.info.class.file = playerClassFile end
     if playerClassID then character.info.class.id = playerClassID end
-    if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = defaultCharacter.info
-        .factionGroup end
+    if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = defaultCharacter.info.factionGroup end
     if playerFactionGroupEnglish then character.info.factionGroup.english = playerFactionGroupEnglish end
     if playerFactionGroupLocalized then character.info.factionGroup.localized = playerFactionGroupLocalized end
     if avgItemLevel then character.info.ilvl.level = avgItemLevel end
     if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
     if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
-    if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(
-        itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
+    if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
     character.lastUpdate = GetServerTime()
     self:UpdateUI()
 end
@@ -493,7 +488,7 @@ function AlterEgo:UpdateKeystoneItem()
             local itemId = C_Container.GetContainerItemID(bagId, slotId)
             if itemId and itemId == 180653 then
                 local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
-                local _, _, challengeModeID, level = strsplit(':', itemLink)
+                local _, _, challengeModeID, level = strsplit(":", itemLink)
                 local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
                 if dungeon then
                     character.mythicplus.keystone = {
@@ -561,8 +556,7 @@ function AlterEgo:UpdateMythicPlus()
         end
     end
 
-    if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary
-        .currentSeasonScore end
+    if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
     if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
     if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
@@ -602,7 +596,6 @@ function AlterEgo:UpdateMythicPlus()
 end
 
 function AlterEgo:OnEncounterEnd(instanceEncounterID, encounterName, difficultyID, groupSize, success)
-    local character = self:GetCharacter()
     if success then
         RequestRaidInfo()
     end
