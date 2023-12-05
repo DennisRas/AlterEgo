@@ -1,4 +1,29 @@
 local dbVersion = 2
+local defaultDB = {
+    global = {
+        weeklyReset = 0,
+        characters = {},
+        minimap = {
+            minimapPos = 195,
+            hide = false,
+            lock = false
+        },
+        sorting = "lastUpdate",
+        showTiers = true,
+        showAffixColors = false,
+        showZeroRatedCharacters = true,
+        raids = {
+            enabled = false,
+            colors = false,
+            currentTierOnly = true,
+            lfr = true,
+            normal = true,
+            heroic = true,
+            mythic = true,
+            boxes = false
+        }
+    }
+}
 local defaultCharacter = {
     GUID = "",
     lastUpdate = 0,
@@ -176,6 +201,10 @@ local dataRaidDifficulties = {
     [16] = {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic"},
     [17] = {id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
 }
+
+function AlterEgo:InitDB()
+    self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
+end
 
 -- Temp fix until a better solution, since C_MythicPlus.GetCurrentUIDisplaySeason() isn't ready on init
 function AlterEgo:GetSeason()

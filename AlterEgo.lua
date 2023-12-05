@@ -3,31 +3,6 @@ AlterEgo.Libs = {}
 AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
 AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
-AlterEgo.defaultDB = {
-    global = {
-        weeklyReset = 0,
-        characters = {},
-        minimap = {
-            minimapPos = 195,
-            hide = false,
-            lock = false
-        },
-        sorting = "lastUpdate",
-        showTiers = true,
-        showAffixColors = false,
-        showZeroRatedCharacters = true,
-        raids = {
-            enabled = false,
-            colors = false,
-            currentTierOnly = true,
-            lfr = true,
-            normal = true,
-            heroic = true,
-            mythic = true,
-            boxes = false
-        }
-    }
-}
 
 local libDataObject = {
     label = "AlterEgo",
@@ -49,7 +24,7 @@ local libDataObject = {
 }
 
 function AlterEgo:OnInitialize()
-    self.db = self.Libs.AceDB:New("AlterEgoDB", AlterEgo.defaultDB, true)
+    self:InitDB()
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
     self:RegisterChatCommand("ae", "ToggleWindow")
