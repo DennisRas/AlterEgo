@@ -2,6 +2,10 @@
 
 ## v1.0.5 - 2023-12-05
 
+### Updated
+
+- Raid progress is now enabled by default on first use
+
 ### Fixed
 
 - Fixed a bug showing incorrect kills for the Council and Larodar encounters
