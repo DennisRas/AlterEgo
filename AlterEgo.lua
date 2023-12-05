@@ -6,7 +6,6 @@ AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
 AlterEgo.defaultDB = {
     global = {
-        dbVersion = 2,
         weeklyReset = 0,
         characters = {},
         minimap = {

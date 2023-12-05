@@ -317,15 +317,15 @@ function AlterEgo:MigrateDB()
     if type(self.db.global.dbVersion) ~= "number" then
         self.db.global.dbVersion = 1
     end
-    if self.db.global.dbVersion < AlterEgo.defaultDB.global.dbVersion then
+    if self.db.global.dbVersion < dbVersion then
         if self.db.global.dbVersion == 1 then
             for characterIndex in pairs(self.db.global.characters) do
                 self.db.global.characters[characterIndex].raids.killed = nil
                 if self.db.global.characters[characterIndex].raids.savedInstances then
                     for savedInstanceIndex, savedInstance in ipairs(self.db.global.characters[characterIndex].raids.savedInstances) do
                         if savedInstance.instanceID == 2549 and savedInstance.encounters then
-                            savedInstance.encounters[4].instanceEncounterID = 2731
-                            savedInstance.encounters[5].instanceEncounterID = 2728
+                            self.db.global.characters[characterIndex].raids.savedInstances[savedInstanceIndex].encounters[4].instanceEncounterID = 2731
+                            self.db.global.characters[characterIndex].raids.savedInstances[savedInstanceIndex].encounters[5].instanceEncounterID = 2728
                         end
                     end
                 end
