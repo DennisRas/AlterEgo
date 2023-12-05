@@ -2,6 +2,10 @@
 
 ## v1.0.5 - 2023-12-05
 
+### Added
+
+- Added an icon to the AddOn List
+
 ### Updated
 
 - Raid progress is now enabled by default on first use

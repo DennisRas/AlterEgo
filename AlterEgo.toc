@@ -2,6 +2,7 @@
 ## Title: AlterEgo
 ## Notes: Mythic Plus tracker for all of your characters
 ## Version: 0.1.0
+## IconTexture: Interface\AddOns\AlterEgo\Media\LogoTransparent.blp
 
 ## SavedVariables: AlterEgoDB
 
