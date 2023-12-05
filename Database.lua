@@ -202,7 +202,7 @@ function AlterEgo:GetRaidDifficulties()
         table.insert(result, difficulty)
     end
 
-    table.sort(result, function (a, b)
+    table.sort(result, function(a, b)
         return a.order < b.order
     end)
 
@@ -215,7 +215,7 @@ function AlterEgo:GetAffixes()
         table.insert(result, affix)
     end
 
-    table.sort(result, function (a, b)
+    table.sort(result, function(a, b)
         return a.affixID < b.affixID
     end)
 
@@ -230,7 +230,7 @@ function AlterEgo:GetDungeons()
         end
     end
 
-    table.sort(result, function (a, b)
+    table.sort(result, function(a, b)
         return a.name < b.name
     end)
 
@@ -245,7 +245,7 @@ function AlterEgo:GetRaids()
         end
     end
 
-    table.sort(result, function (a, b)
+    table.sort(result, function(a, b)
         return a.order < b.order
     end)
 
@@ -261,7 +261,7 @@ function AlterEgo:GetCharacters(unfiltered)
     end
 
     -- Sorting
-    table.sort(characters, function (a, b)
+    table.sort(characters, function(a, b)
         if self.db.global.sorting == "name.asc" then
             return a.info.name < b.info.name
         elseif self.db.global.sorting == "name.desc" then
@@ -314,6 +314,9 @@ function AlterEgo:UpdateDB()
 end
 
 function AlterEgo:MigrateDB()
+    if type(self.db.global.dbVersion) ~= "number" then
+        self.db.global.dbVersion = 1
+    end
     if self.db.global.dbVersion < AlterEgo.defaultDB.global.dbVersion then
         if self.db.global.dbVersion == 1 then
             for characterIndex in pairs(self.db.global.characters) do
@@ -357,7 +360,8 @@ function AlterEgo:loadGameData()
         EJ_SelectInstance(raid.journalInstanceID)
         wipe(raid.encounters or {})
         for encounterIndex = 1, raid.numEncounters do
-            local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+            local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID =
+            EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
             local encounter = {
                 index = encounterIndex,
                 name = name,
@@ -377,7 +381,8 @@ function AlterEgo:loadGameData()
         local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
         dungeon.name = dungeonName
         dungeon.time = dungeonTimeLimit
-        dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
+        dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or
+        "Interface/Icons/achievement_bg_wineos_underxminutes"
     end
 
     for _, affix in pairs(dataAffixes) do
@@ -394,7 +399,8 @@ function AlterEgo:UpdateRaidInstances()
     character.raids.savedInstances = {}
     if numSavedInstances > 0 then
         for savedInstanceIndex = 1, numSavedInstances do
-            local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
+            local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID =
+            GetSavedInstanceInfo(savedInstanceIndex)
             local raid = AE_table_get(raids, "instanceID", instanceID)
             local savedInstance = {
                 index = savedInstanceIndex,
@@ -465,13 +471,15 @@ function AlterEgo:UpdateCharacterInfo()
     if playerClassName then character.info.class.name = playerClassName end
     if playerClassFile then character.info.class.file = playerClassFile end
     if playerClassID then character.info.class.id = playerClassID end
-    if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = defaultCharacter.info.factionGroup end
+    if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = defaultCharacter.info
+        .factionGroup end
     if playerFactionGroupEnglish then character.info.factionGroup.english = playerFactionGroupEnglish end
     if playerFactionGroupLocalized then character.info.factionGroup.localized = playerFactionGroupLocalized end
     if avgItemLevel then character.info.ilvl.level = avgItemLevel end
     if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
     if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
-    if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
+    if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(
+        itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
     character.lastUpdate = GetServerTime()
     self:UpdateUI()
 end
@@ -553,7 +561,8 @@ function AlterEgo:UpdateMythicPlus()
         end
     end
 
-    if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
+    if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary
+        .currentSeasonScore end
     if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
     if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
     if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
