@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.5 - 2023-12-05
+
+### Fixed
+
+- Fixed a bug showing incorrect kills for the Council and Larodar encounters
+
 ## v1.0.4 - 2023-11-22
 
 ### Fixed
