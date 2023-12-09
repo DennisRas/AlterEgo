@@ -5,6 +5,7 @@
 ### Added
 
 - Added an icon to the AddOn List
+- Added support for Mythic0 and Heroic vault values/tooltips
 
 ### Updated
 
@@ -14,6 +15,7 @@
 
 - Fixed a bug showing incorrect kills for the Council and Larodar encounters
 - Rating tooltip no longer shows +0 as highest key level
+- The vault tooltip no longer shows improvement text if all weekly dungeon runs are level 20+
 
 ## v1.0.4 - 2023-11-22
 

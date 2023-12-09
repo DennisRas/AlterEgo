@@ -327,16 +327,15 @@ function AlterEgo:GetCharacterInfo()
             value = function(character)
                 local vaultLevels = ""
                 if character.vault.slots ~= nil then
-                    for _, slot in ipairs(character.vault.slots) do
-                        if slot.type == Enum.WeeklyRewardChestThresholdType.Activities then
-                            local level = "-"
-                            local color = LIGHTGRAY_FONT_COLOR
-                            if slot.level > 0 then
-                                level = tostring(slot.level)
-                                color = UNCOMMON_GREEN_COLOR
-                            end
-                            vaultLevels = vaultLevels .. WrapTextInColorCode(level, color:GenerateHexColor()) .. "  "
+                    local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
+                    for _, slot in ipairs(slots) do
+                        local level = "-"
+                        local color = LIGHTGRAY_FONT_COLOR
+                        if slot.progress >= slot.threshold then
+                            level = tostring(slot.level)
+                            color = UNCOMMON_GREEN_COLOR
                         end
+                        vaultLevels = vaultLevels .. WrapTextInColorCode(level, color:GenerateHexColor()) .. "  "
                     end
                 end
                 if vaultLevels == "" then
@@ -345,85 +344,71 @@ function AlterEgo:GetCharacterInfo()
                 return strtrim(vaultLevels)
             end,
             OnEnter = function(character)
-                local runs = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
-                local countRuns = AE_table_count(runs) or 0
+                local weeklyRuns = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
+                local weeklyRunsCount = AE_table_count(weeklyRuns) or 0
                 GameTooltip:AddLine("Vault Progress", 1, 1, 1);
-                GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. countRuns .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-                GameTooltip:AddLine(" ")
+                -- GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. tostring(weeklyRunsCount) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 
-                local function GetLowestLevelInTopRuns(numRuns)
-                    table.sort(runs, function(a, b) return a.level > b.level; end);
-                    local lowestLevel;
-                    local lowestCount = 0;
-                    for i = math.min(numRuns, #runs), 1, -1 do
-                        local run = runs[i];
-                        if not lowestLevel then
-                            lowestLevel = run.level;
-                        end
-                        if lowestLevel == run.level then
-                            lowestCount = lowestCount + 1;
-                        else
-                            break;
-                        end
+                if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
+                    local numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
+                    if numHeroic > 0 then
+                        GameTooltip:AddLine("Heroic runs this Week: " .. "|cffffffff" .. tostring(numHeroic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                     end
-                    return lowestLevel, lowestCount;
-                end
-
-                local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
-                table.sort(slots, function(a, b) return a.index < b.index; end);
-                local lastCompletedIndex = 0;
-                for slotIndex, slot in ipairs(slots) do
-                    if slot.progress >= slot.threshold then
-                        lastCompletedIndex = slotIndex;
+                    local numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
+                    if numMythic > 0 then
+                        GameTooltip:AddLine("Mythic runs this Week: " .. "|cffffffff" .. tostring(numMythic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                    end
+                    local numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
+                    if numMythicPlus > 0 then
+                        GameTooltip:AddLine("Mythic+ runs this Week: " .. "|cffffffff" .. tostring(numMythicPlus) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                     end
                 end
-                if lastCompletedIndex == 0 then
+                GameTooltip_AddBlankLineToTooltip(GameTooltip);
+
+                local lastCompletedActivityInfo, nextActivityInfo = AE_GetActivitiesProgress(character);
+                if not lastCompletedActivityInfo then
                     GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE);
                 else
-                    if lastCompletedIndex == #slots then
-                        GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
-                        GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                        GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
-                        local info = slots[lastCompletedIndex];
-                        local level, count = GetLowestLevelInTopRuns(info.threshold);
-                        GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, level + 1));
+                    if nextActivityInfo then
+                        local globalString = (lastCompletedActivityInfo.index == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND;
+                        GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress));
                     else
-                        local nextInfo = slots[lastCompletedIndex + 1];
-                        local textString = (lastCompletedIndex == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND;
-                        local level, count = GetLowestLevelInTopRuns(nextInfo.threshold);
-                        GameTooltip_AddNormalLine(GameTooltip, textString:format(nextInfo.threshold - nextInfo.progress, nextInfo.threshold, level));
+                        GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
+                        local level, count = AE_GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold);
+                        if level == WeeklyRewardsUtil.HeroicLevel then
+                            GameTooltip_AddBlankLineToTooltip(GameTooltip);
+                            GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
+                            GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count));
+                        else
+                            local nextLevel = WeeklyRewardsUtil.GetNextMythicLevel(level);
+                            if nextLevel < 20 then
+                                GameTooltip_AddBlankLineToTooltip(GameTooltip);
+                                GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
+                                GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, nextLevel));
+                            end
+                        end
                     end
                 end
 
-                if countRuns > 0 then
-                    GameTooltip:AddLine(" ")
-                    table.sort(runs, function(a, b) return a.level > b.level end)
-                    for runIndex, run in ipairs(runs) do
-                        local threshold = false
-                        for _, slot in ipairs(character.vault.slots) do
-                            if slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold then
-                                threshold = true
-                            end
-                        end
+                if weeklyRunsCount > 0 then
+                    GameTooltip_AddBlankLineToTooltip(GameTooltip)
+                    table.sort(weeklyRuns, function(a, b) return a.level > b.level end)
+                    for runIndex, run in ipairs(weeklyRuns) do
+                        local threshold = AE_table_find(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold end)
+                        local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
                         local dungeon = AE_table_get(dungeons, "challengeModeID", run.mapChallengeModeID)
+                        local color = WHITE_FONT_COLOR
+                        if threshold then
+                            color = GREEN_FONT_COLOR
+                        end
                         if dungeon then
-                            local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
-                            if threshold then
-                                GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-                            else
-                                GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
-                            end
+                            GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
                         end
                         if runIndex == 8 then
                             break
                         end
                     end
                 end
-                -- if countRuns < 8 then
-                --     for i = countRuns, 8 do
-                --         GameTooltip:AddDoubleLine("-", "-", LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b, LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b)
-                --     end
-                -- end
             end,
             enabled = true,
         },

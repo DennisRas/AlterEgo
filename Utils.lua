@@ -77,3 +77,65 @@ function AE_table_foreach(tbl, callback)
     end
     return tbl
 end
+
+function AE_GetActivitiesProgress(character)
+    local activities = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
+    table.sort(activities, function(left, right) return left.index < right.index; end);
+    local lastCompletedIndex = 0;
+    for i, activityInfo in ipairs(activities) do
+        if activityInfo.progress >= activityInfo.threshold then
+            lastCompletedIndex = i;
+        end
+    end
+    if lastCompletedIndex == 0 then
+        return nil, nil;
+    else
+        if lastCompletedIndex == #activities then
+            local info = activities[lastCompletedIndex];
+            return info, nil;
+        else
+            local nextInfo = activities[lastCompletedIndex + 1];
+            return activities[lastCompletedIndex], nextInfo;
+        end
+    end
+end
+
+function AE_GetLowestLevelInTopDungeonRuns(character, numRuns)
+    local lowestLevel;
+    local lowestCount   = 0;
+    local numHeroic     = 0;
+    local numMythic     = 0;
+    local numMythicPlus = 0;
+
+    if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
+        numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
+        numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
+        numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
+    end
+
+    if numRuns > numMythicPlus and (numHeroic + numMythic) > 0 then
+        if numRuns > numMythicPlus + numMythic and numHeroic > 0 then
+            lowestLevel = WeeklyRewardsUtil.HeroicLevel;
+            lowestCount = numRuns - numMythicPlus - numMythic;
+        else
+            lowestLevel = WeeklyRewardsUtil.MythicLevel;
+            lowestCount = numRuns - numMythicPlus;
+        end
+        return lowestLevel, lowestCount;
+    end
+
+    local runHistory = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end);
+    table.sort(runHistory, function(left, right) return left.level > right.level; end);
+    for i = math.min(numRuns, #runHistory), 1, -1 do
+        local run = runHistory[i];
+        if not lowestLevel then
+            lowestLevel = run.level;
+        end
+        if lowestLevel == run.level then
+            lowestCount = lowestCount + 1;
+        else
+            break;
+        end
+    end
+    return lowestLevel, lowestCount;
+end

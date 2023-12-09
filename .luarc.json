@@ -134,6 +134,8 @@
         "WHITE_FONT_COLOR",
         "wipe",
         "WrapTextInColorCode",
-        "LibStub"
+        "LibStub",
+        "WeeklyRewardsUtil",
+        "GREAT_VAULT_REWARDS_HEROIC_IMPROVE"
     ]
 }

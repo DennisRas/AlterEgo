@@ -86,6 +86,11 @@ local defaultCharacter = {
         },
     },
     mythicplus = { -- Mythic Plus
+        numCompletedDungeonRuns = {
+            -- heroic = 0,
+            -- mythic = 0,
+            -- mythicPlus = 0
+        },
         rating = 0,
         keystone = {
             challengeModeID = 0,
@@ -378,6 +383,7 @@ function AlterEgo:TaskWeeklyReset()
             end)
             wipe(character.vault.slots or {})
             wipe(character.mythicplus.keystone or {})
+            wipe(character.mythicplus.numCompletedDungeonRuns or {})
         end)
     end
     self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
@@ -573,6 +579,7 @@ function AlterEgo:UpdateMythicPlus()
     local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
     local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
     local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+    local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
 
     if currentSeason then
         for _, char in pairs(self.db.global.characters) do
@@ -591,6 +598,12 @@ function AlterEgo:UpdateMythicPlus()
     if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
     if weeklyRewardAvailable ~= nil then character.mythicplus.weeklyRewardAvailable = weeklyRewardAvailable end
     if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
+
+    character.mythicplus.numCompletedDungeonRuns = {
+        heroic = numHeroic or 0,
+        mythic = numMythic or 0,
+        mythicPlus = numMythicPlus or 0,
+    }
 
     wipe(character.mythicplus.dungeons or {})
     for _, dataDungeon in pairs(dungeons) do
