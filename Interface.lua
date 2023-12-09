@@ -144,7 +144,11 @@ function AlterEgo:GetCharacterInfo()
                     for _, dungeon in pairs(character.mythicplus.dungeons) do
                         local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
                         if dungeonName ~= nil then
-                            GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(dungeon.level), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+                            if dungeon.level > 0 then
+                                GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(dungeon.level), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+                            else
+                                GameTooltip:AddDoubleLine(dungeonName, "-", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b)
+                            end
                         end
                     end
                     GameTooltip:AddLine(" ")

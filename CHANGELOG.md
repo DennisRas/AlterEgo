@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.5 - 2023-12-05
+## v1.0.5 - 2023-12-09
 
 ### Added
 
@@ -13,6 +13,7 @@
 ### Fixed
 
 - Fixed a bug showing incorrect kills for the Council and Larodar encounters
+- Rating tooltip no longer shows +0 as highest key level
 
 ## v1.0.4 - 2023-11-22
 
