@@ -17,6 +17,7 @@
 - Rating tooltip no longer shows +0 as highest key level
 - The vault tooltip no longer shows improvement text if all weekly dungeon runs are level 20+
 - The "Rewards" label now hides properly when looting the vault
+- Fixed a small graphical spacing issue with dropdowns
 
 ## v1.0.4 - 2023-11-22
 
