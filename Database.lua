@@ -562,6 +562,8 @@ function AlterEgo:UpdateVault()
             table.insert(character.vault.slots, slot)
         end
     end
+    local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
+    if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
     self:UpdateUI()
 end
 
