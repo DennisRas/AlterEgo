@@ -1,11 +1,12 @@
 # Changelog
 
-## v1.0.5 - 2023-12-10
+## v1.0.5 - 2023-12-14
 
 ### Added
 
 - Added an icon to the AddOn List
 - Added support for Heroic and Mythic dungeon runs
+- Added the weekly affixes in the top of the window
 
 ### Updated
 

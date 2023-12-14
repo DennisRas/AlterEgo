@@ -11,6 +11,7 @@ local defaultDB = {
         sorting = "lastUpdate",
         showTiers = true,
         showAffixColors = false,
+        showAffixHeader = true,
         showZeroRatedCharacters = true,
         raids = {
             enabled = true,

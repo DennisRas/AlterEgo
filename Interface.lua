@@ -719,6 +719,12 @@ function AlterEgo:CreateUI()
         self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + sizes.padding, -1)
         self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
         self.Window.TitleBar.Text:SetText("AlterEgo")
+        anchorFrame = self.Window.TitleBar
+        for i = 1, 3 do
+            self.Window.TitleBar["Affix" .. i] = self.Window.TitleBar:CreateTexture("$parentAffix" .. i, "ARTWORK")
+            self.Window.TitleBar["Affix" .. i]:SetSize(20, 20)
+            anchorFrame = self.Window.TitleBar["Affix" .. i]
+        end
         self.Window.TitleBar.CloseButton = CreateFrame("Button", "$parentCloseButton", self.Window.TitleBar)
         self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", 0, 0)
         self.Window.TitleBar.CloseButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
@@ -761,6 +767,19 @@ function AlterEgo:CreateUI()
         UIDropDownMenu_Initialize(
             self.Window.TitleBar.SettingsButton.Dropdown,
             function()
+                UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show the weekly affixes",
+                    checked = self.db.global.showAffixHeader,
+                    isNotRadio = true,
+                    tooltipTitle = "Show the weekly affixes",
+                    tooltipText = "The affixes will be shown at the top.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showAffixHeader = not checked
+                        self:UpdateUI()
+                    end
+                })
                 UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
                 UIDropDownMenu_AddButton({
                     text = "Show the minimap button",
@@ -1188,6 +1207,45 @@ function AlterEgo:UpdateUI()
         self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
         self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
         self.Window.Footer:Hide()
+    end
+
+    local currentAffixes = C_MythicPlus.GetCurrentAffixes();
+    anchorFrame = self.Window.TitleBar
+    for i = 1, 3 do
+        local frame = self.Window.TitleBar["Affix" .. i]
+        if frame then
+            if currentAffixes then
+                local name, desc, filedataid = C_ChallengeMode.GetAffixInfo(currentAffixes[i].id);
+                frame:SetTexture(filedataid)
+                frame:SetScript("OnEnter", function()
+                    GameTooltip:ClearAllPoints()
+                    GameTooltip:ClearLines()
+                    GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+                    GameTooltip:SetText(name, 1, 1, 1);
+                    GameTooltip:AddLine(desc, nil, nil, nil, true)
+                    GameTooltip:Show()
+                end)
+                frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            end
+            if i == 1 then
+                frame:ClearAllPoints()
+                if numCharacters == 1 then
+                    frame:SetPoint("LEFT", self.Window.TitleBar.Icon, "RIGHT", 6, 0)
+                    self.Window.TitleBar.Text:Hide()
+                else
+                    frame:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
+                    self.Window.TitleBar.Text:Show()
+                end
+            else
+                frame:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
+            end
+            if self.db.global.showAffixHeader then
+                frame:Show()
+            else
+                frame:Hide()
+            end
+            anchorFrame = frame
+        end
     end
 
     self:HideCharacterColumns()
