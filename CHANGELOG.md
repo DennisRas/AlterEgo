@@ -12,6 +12,7 @@
 
 - Raid progress is now enabled by default on first use
 - Color settings are now enabled by default
+- Moved the settings around a bit
 
 ### Fixed
 

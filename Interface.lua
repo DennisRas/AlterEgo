@@ -780,6 +780,68 @@ function AlterEgo:CreateUI()
                         self:UpdateUI()
                     end
                 })
+                UIDropDownMenu_AddButton({
+                    text = "Show characters with zero rating",
+                    checked = self.db.global.showZeroRatedCharacters,
+                    isNotRadio = true,
+                    tooltipTitle = "Show characters with zero rating",
+                    tooltipText = "Too many alts?",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showZeroRatedCharacters = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show timed icons",
+                    checked = self.db.global.showTiers,
+                    isNotRadio = true,
+                    tooltipTitle = "Show timed icons",
+                    tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showTiers = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Show score colors",
+                    checked = self.db.global.showAffixColors,
+                    isNotRadio = true,
+                    tooltipTitle = "Show score colors",
+                    tooltipText = "Show some colors!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.showAffixColors = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Show raid progress",
+                    checked = self.db.global.raids and self.db.global.raids.enabled,
+                    isNotRadio = true,
+                    tooltipTitle = "Show raid progress",
+                    tooltipText = "Because Mythic Plus ain't enough!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.raids.enabled = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Show difficulty colors",
+                    checked = self.db.global.raids and self.db.global.raids.colors,
+                    isNotRadio = true,
+                    tooltipTitle = "Show difficulty colors",
+                    tooltipText = "Argharhggh! So much greeeen!",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.raids.colors = not checked
+                        self:UpdateUI()
+                    end
+                })
                 UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
                 UIDropDownMenu_AddButton({
                     text = "Show the minimap button",
@@ -803,69 +865,6 @@ function AlterEgo:CreateUI()
                     func = function(button, arg1, arg2, checked)
                         self.db.global.minimap.lock = not checked
                         self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Characters", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show characters with zero rating",
-                    checked = self.db.global.showZeroRatedCharacters,
-                    isNotRadio = true,
-                    tooltipTitle = "Show characters with zero rating",
-                    tooltipText = "Too many alts?",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showZeroRatedCharacters = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show tier icons",
-                    checked = self.db.global.showTiers,
-                    isNotRadio = true,
-                    tooltipTitle = "Show tier icons",
-                    tooltipText = "Show the tier icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a) in the grid.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showTiers = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show colors on dungeon scores",
-                    checked = self.db.global.showAffixColors,
-                    isNotRadio = true,
-                    tooltipTitle = "Show colors on dungeon scores",
-                    tooltipText = "Show some colors!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showAffixColors = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show the current raid tier",
-                    checked = self.db.global.raids and self.db.global.raids.enabled,
-                    isNotRadio = true,
-                    tooltipTitle = "Show the current raid tier",
-                    tooltipText = "Because Mythic Plus ain't enough!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.raids.enabled = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show different colors per difficulty",
-                    checked = self.db.global.raids and self.db.global.raids.colors,
-                    isNotRadio = true,
-                    tooltipTitle = "Show different colors per difficulty",
-                    tooltipText = "Argharhggh! So much greeeen!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.raids.colors = not checked
-                        self:UpdateUI()
                     end
                 })
             end,
