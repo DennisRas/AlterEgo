@@ -13,6 +13,11 @@ local defaultDB = {
         showAffixColors = true,
         showAffixHeader = true,
         showZeroRatedCharacters = true,
+        announceKeystones = {
+            autoParty = true,
+            autoGuild = false,
+            multiline = true
+        },
         raids = {
             enabled = true,
             colors = true,

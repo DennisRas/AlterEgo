@@ -792,6 +792,43 @@ function AlterEgo:CreateUI()
                         self:UpdateUI()
                     end
                 })
+                UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
+                UIDropDownMenu_AddButton({
+                    text = "Announce new keystones (Party)",
+                    checked = self.db.global.announceKeystones.autoParty,
+                    isNotRadio = true,
+                    tooltipTitle = "New keystones (Party)",
+                    tooltipText = "Announce to your party when you loot a new keystone.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.announceKeystones.autoParty = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Announce new keystones (Guild)",
+                    checked = self.db.global.announceKeystones.autoGuild,
+                    isNotRadio = true,
+                    tooltipTitle = "New keystones (Guild)",
+                    tooltipText = "Announce to your guild when you loot a new keystone.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.announceKeystones.autoGuild = not checked
+                        self:UpdateUI()
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Announce keystones in one message",
+                    checked = not self.db.global.announceKeystones.multiline,
+                    isNotRadio = true,
+                    tooltipTitle = "Announce keystones in one message",
+                    tooltipText = "With too many alts it could get spammy.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.announceKeystones.multiline = checked
+                        self:UpdateUI()
+                    end
+                })
                 UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
                 UIDropDownMenu_AddButton({
                     text = "Show timed icons",
@@ -982,6 +1019,70 @@ function AlterEgo:CreateUI()
         self.Window.TitleBar.CharactersButton:SetScript("OnLeave", function()
             self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
             SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0)
+            GameTooltip:Hide()
+        end)
+        self.Window.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", self.Window.TitleBar)
+        self.Window.TitleBar.AnnounceButton:SetPoint("RIGHT", self.Window.TitleBar.CharactersButton, "LEFT", 0, 0)
+        self.Window.TitleBar.AnnounceButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
+        self.Window.TitleBar.AnnounceButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.AnnounceButton.Dropdown) end)
+        self.Window.TitleBar.AnnounceButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
+        self.Window.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", self.Window.TitleBar.AnnounceButton, "CENTER")
+        self.Window.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
+        self.Window.TitleBar.AnnounceButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Announce.blp")
+        self.Window.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self.Window.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.AnnounceButton:GetName() .. "Dropdown", self.Window.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
+        self.Window.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.AnnounceButton, "CENTER", 0, -6)
+        self.Window.TitleBar.AnnounceButton.Dropdown.Button:Hide()
+        UIDropDownMenu_SetWidth(self.Window.TitleBar.AnnounceButton.Dropdown, sizes.titlebar.height)
+        UIDropDownMenu_Initialize(
+            self.Window.TitleBar.AnnounceButton.Dropdown,
+            function()
+                UIDropDownMenu_AddButton({
+                    text = "Send to Party Chat",
+                    isNotRadio = true,
+                    notCheckable = true,
+                    tooltipTitle = "Party",
+                    tooltipText = "Announce all your keystones to the party chat",
+                    tooltipOnButton = true,
+                    func = function()
+                        if not IsInGroup() then
+                            self:Print("No announcement. You are not in a party.")
+                            return
+                        end
+                        self:AnnounceKeystones("PARTY", self.db.global.announceKeystones.multiline)
+                    end
+                })
+                UIDropDownMenu_AddButton({
+                    text = "Send to Guild Chat",
+                    isNotRadio = true,
+                    notCheckable = true,
+                    tooltipTitle = "Guild",
+                    tooltipText = "Announce all your keystones to the guild chat",
+                    tooltipOnButton = true,
+                    func = function()
+                        if not IsInGuild() then
+                            self:Print("No announcement. You are not in a guild.")
+                            return
+                        end
+                        self:AnnounceKeystones("GUILD", self.db.global.announceKeystones.multiline)
+                    end
+                })
+            end,
+            "MENU"
+        )
+        self.Window.TitleBar.AnnounceButton:SetScript("OnEnter", function()
+            self.Window.TitleBar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            SetBackgroundColor(self.Window.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(self.Window.TitleBar.AnnounceButton, "ANCHOR_TOP")
+            GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true);
+            GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            GameTooltip:Show()
+        end)
+        self.Window.TitleBar.AnnounceButton:SetScript("OnLeave", function()
+            self.Window.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            SetBackgroundColor(self.Window.TitleBar.AnnounceButton, 1, 1, 1, 0)
             GameTooltip:Hide()
         end)
     end

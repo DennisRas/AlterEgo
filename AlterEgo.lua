@@ -46,6 +46,7 @@ function AlterEgo:OnEnable()
     self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, "UpdateRaidInstances")
     self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, "UpdateMythicPlus")
     self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
+    self:RegisterEvent("SHOW_LOOT_TOAST", "OnToast")
 
     C_Timer.After(5, function()
         C_MythicPlus.RequestCurrentAffixes();
@@ -56,4 +57,80 @@ function AlterEgo:OnEnable()
     self:MigrateDB()
     self:loadGameData()
     self:UpdateDB()
+end
+
+function AlterEgo:OnToast(event, typeIdentifier, itemLink)
+    local character = self:GetCharacter()
+    if typeIdentifier ~= "item" then
+        return
+    end
+    local _, itemId = strsplit(":", itemLink)
+    if not itemId or tonumber(itemId) ~= 180653 then
+        return
+    end
+
+    self:UpdateKeystoneItem()
+    if IsInGroup() and self.db.global.announceKeystones.autoParty then
+        SendChatMessage("New Keystone: " .. character.mythicplus.keystone.itemLink, "PARTY")
+    end
+    if IsInGuild() and self.db.global.announceKeystones.autoGuild then
+        SendChatMessage("New Keystone: " .. character.mythicplus.keystone.itemLink, "GUILD")
+    end
+end
+
+function AlterEgo:AnnounceKeystones(chatType, multiline)
+    local characters = self:GetCharacters()
+    local dungeons = self:GetDungeons()
+    local msg = "My Keystones: "
+
+    if AE_table_count(characters) < 1 then
+        self:Print("No announcement. You have no characters saved.")
+        return
+    end
+
+    local keystoneCharacters = AE_table_filter(characters, function(character)
+        local dungeon
+        if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
+            dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+        elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
+            dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
+        end
+        if dungeon and type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
+            return true
+        end
+        return false
+    end)
+
+    if AE_table_count(keystoneCharacters) < 1 then
+        self:Print("No announcement. You have no keystones saved.")
+        return
+    end
+
+    local count = 0
+    AE_table_foreach(keystoneCharacters, function(character)
+        local dungeon
+        if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
+            dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+        elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
+            dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
+        end
+        if dungeon then
+            if type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
+                local currentKeystone = dungeon.abbr .. " +" .. tostring(character.mythicplus.keystone.level)
+                if multiline then
+                    SendChatMessage(character.info.name .. ": " .. (character.mythicplus.keystone.itemLink and character.mythicplus.keystone.itemLink or currentKeystone), chatType)
+                else
+                    if count > 0 then
+                        msg = msg .. " || "
+                    end
+                    msg = msg .. currentKeystone
+                end
+                count = count + 1
+            end
+        end
+    end)
+
+    if not multiline then
+        SendChatMessage(msg, chatType)
+    end
 end
