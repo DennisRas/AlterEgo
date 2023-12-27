@@ -355,7 +355,7 @@ end
 
 function AlterEgo:MigrateDB()
     if type(self.db.global.dbVersion) ~= "number" then
-        self.db.global.dbVersion = 1
+        self.db.global.dbVersion = dbVersion
     end
     if self.db.global.dbVersion < dbVersion then
         if self.db.global.dbVersion == 1 then
@@ -370,8 +370,8 @@ function AlterEgo:MigrateDB()
                     end
                 end
             end
-            self.db.global.dbVersion = 2
         end
+        self.db.global.dbVersion = self.db.global.dbVersion + 1
         self:MigrateDB()
     end
 end

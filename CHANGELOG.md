@@ -6,6 +6,10 @@
 
 - Added keystone announcements. Check your settings
 
+### Fixed
+
+- Fixed a database migration loop
+
 ## v1.0.5 - 2023-12-14
 
 ### Added
