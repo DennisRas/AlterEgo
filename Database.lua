@@ -1,4 +1,4 @@
-local dbVersion = 2
+local dbVersion = 3
 local defaultDB = {
     global = {
         weeklyReset = 0,
