@@ -1,10 +1,11 @@
 # Changelog
 
-## v1.0.6 - 2023-12-27
+## v1.0.6 - 2023-12-28
 
 ### Added
 
-- Added keystone announcements. Check your settings
+- Added keystone announcements
+- Added instance reset announcements
 
 ### Fixed
 

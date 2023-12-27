@@ -18,6 +18,7 @@ local defaultDB = {
             autoGuild = false,
             multiline = true
         },
+        announceResets = true,
         raids = {
             enabled = true,
             colors = true,

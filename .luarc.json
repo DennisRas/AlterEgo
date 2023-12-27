@@ -136,6 +136,11 @@
         "WrapTextInColorCode",
         "LibStub",
         "WeeklyRewardsUtil",
-        "GREAT_VAULT_REWARDS_HEROIC_IMPROVE"
+        "GREAT_VAULT_REWARDS_HEROIC_IMPROVE",
+        "INSTANCE_RESET_SUCCESS",
+        "RESET_INSTANCES",
+        "INSTANCE_RESET_FAILED",
+        "INSTANCE_RESET_FAILED_OFFLINE",
+        "INSTANCE_RESET_FAILED_ZONING"
     ]
 }

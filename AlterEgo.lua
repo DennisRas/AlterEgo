@@ -3,6 +3,9 @@ AlterEgo.Libs = {}
 AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
 AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
+AlterEgo.constants = {
+    prefix = "<AlterEgo> "
+}
 
 local libDataObject = {
     label = "AlterEgo",
@@ -31,6 +34,9 @@ function AlterEgo:OnInitialize()
     self:RegisterChatCommand("alterego", "ToggleWindow")
     self:CreateUI()
     _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
+    hooksecurefunc("ResetInstances", function()
+        self:OnInstanceReset()
+    end)
 end
 
 function AlterEgo:OnEnable()
@@ -47,6 +53,7 @@ function AlterEgo:OnEnable()
     self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, "UpdateMythicPlus")
     self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
     self:RegisterEvent("SHOW_LOOT_TOAST", "OnToast")
+    self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
 
     C_Timer.After(5, function()
         C_MythicPlus.RequestCurrentAffixes();
@@ -70,6 +77,31 @@ function AlterEgo:OnToast(_, typeIdentifier, itemLink)
 
     self.newKeystone = true
     self:UpdateKeystoneItem()
+end
+
+function AlterEgo:OnInstanceReset(event)
+    local groupChannel = AE_GetGroupChannel()
+    if groupChannel and self.db.global.announceResets then
+        if not IsInInstance() and UnitIsGroupLeader("player") then
+            SendChatMessage(self.constants.prefix .. "Resetting instances...", groupChannel)
+        end
+    end
+end
+
+function AlterEgo:OnChatMessageSystem(event, msg)
+    local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
+    local groupChannel = AE_GetGroupChannel()
+    if groupChannel and self.db.global.announceResets then
+        if not IsInInstance() and UnitIsGroupLeader("player") then
+            AE_table_foreach(resetPatterns, function(resetPattern)
+                if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
+                    if groupChannel and self.db.global.announceResets then
+                        SendChatMessage(self.constants.prefix .. msg, groupChannel)
+                    end
+                end
+            end)
+        end
+    end
 end
 
 function AlterEgo:AnnounceKeystones(chatType, multiline)

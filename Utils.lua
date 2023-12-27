@@ -139,3 +139,13 @@ function AE_GetLowestLevelInTopDungeonRuns(character, numRuns)
     end
     return lowestLevel, lowestCount;
 end
+
+function AE_GetGroupChannel()
+    if IsInRaid() then
+        return "RAID"
+    elseif IsInGroup() then
+        return "PARTY"
+    else
+        return nil
+    end
+end

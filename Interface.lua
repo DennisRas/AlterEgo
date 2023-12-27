@@ -792,6 +792,18 @@ function AlterEgo:CreateUI()
                         self:UpdateUI()
                     end
                 })
+                UIDropDownMenu_AddButton({
+                    text = "Announce instance resets",
+                    checked = self.db.global.announceResets,
+                    isNotRadio = true,
+                    tooltipTitle = "Announce instance resets",
+                    tooltipText = "Let others in your group know when you've reset the instances.",
+                    tooltipOnButton = true,
+                    func = function(button, arg1, arg2, checked)
+                        self.db.global.announceResets = not checked
+                        self:UpdateUI()
+                    end
+                })
                 UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
                 UIDropDownMenu_AddButton({
                     text = "Announce new keystones (Party)",
