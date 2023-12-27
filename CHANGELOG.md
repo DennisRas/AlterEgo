@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.6 - 2023-12-27
+
+### Added
+
+- Added keystone announcements. Check your settings
+
 ## v1.0.5 - 2023-12-14
 
 ### Added
