@@ -59,8 +59,7 @@ function AlterEgo:OnEnable()
     self:UpdateDB()
 end
 
-function AlterEgo:OnToast(event, typeIdentifier, itemLink)
-    local character = self:GetCharacter()
+function AlterEgo:OnToast(_, typeIdentifier, itemLink)
     if typeIdentifier ~= "item" then
         return
     end
@@ -69,13 +68,8 @@ function AlterEgo:OnToast(event, typeIdentifier, itemLink)
         return
     end
 
+    self.newKeystone = true
     self:UpdateKeystoneItem()
-    if IsInGroup() and self.db.global.announceKeystones.autoParty then
-        SendChatMessage("New Keystone: " .. character.mythicplus.keystone.itemLink, "PARTY")
-    end
-    if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-        SendChatMessage("New Keystone: " .. character.mythicplus.keystone.itemLink, "GUILD")
-    end
 end
 
 function AlterEgo:AnnounceKeystones(chatType, multiline)

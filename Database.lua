@@ -540,6 +540,15 @@ function AlterEgo:UpdateKeystoneItem()
                         itemId = tonumber(itemId),
                         itemLink = itemLink,
                     }
+                    if self.newKeystone then
+                        if IsInGroup() and self.db.global.announceKeystones.autoParty then
+                            SendChatMessage("New Keystone: " .. itemLink, "PARTY")
+                        end
+                        if IsInGuild() and self.db.global.announceKeystones.autoGuild then
+                            SendChatMessage("New Keystone: " .. itemLink, "GUILD")
+                        end
+                        self.newKeystone = false
+                    end
                 end
                 break
             end
