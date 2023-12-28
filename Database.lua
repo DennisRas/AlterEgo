@@ -1,4 +1,4 @@
-local dbVersion = 3
+local dbVersion = 4
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -16,7 +16,7 @@ local defaultDB = {
         announceKeystones = {
             autoParty = true,
             autoGuild = false,
-            multiline = true
+            multiline = false
         },
         announceResets = true,
         raids = {
@@ -533,6 +533,16 @@ function AlterEgo:UpdateKeystoneItem()
                 local _, _, challengeModeID, level = strsplit(":", itemLink)
                 local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
                 if dungeon then
+                    local newKeystone = false
+                    if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
+                        if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) then
+                            if character.mythicplus.keystone.level < tonumber(level) then
+                                newKeystone = true
+                            end
+                        end
+                    elseif tonumber(dungeon.mapId) and tonumber(level) then
+                        newKeystone = true
+                    end
                     character.mythicplus.keystone = {
                         challengeModeID = tonumber(dungeon.challengeModeID),
                         mapId = tonumber(dungeon.mapId),
@@ -541,14 +551,13 @@ function AlterEgo:UpdateKeystoneItem()
                         itemId = tonumber(itemId),
                         itemLink = itemLink,
                     }
-                    if self.newKeystone then
+                    if newKeystone then
                         if IsInGroup() and self.db.global.announceKeystones.autoParty then
-                            SendChatMessage("New Keystone: " .. itemLink, "PARTY")
+                            SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
                         end
                         if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-                            SendChatMessage("New Keystone: " .. itemLink, "GUILD")
+                            SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
                         end
-                        self.newKeystone = false
                     end
                 end
                 break

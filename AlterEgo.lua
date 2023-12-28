@@ -40,7 +40,7 @@ function AlterEgo:OnInitialize()
 end
 
 function AlterEgo:OnEnable()
-    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 2, function()
+    self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 3, function()
         self:UpdateCharacterInfo()
         self:UpdateKeystoneItem()
     end)
@@ -50,9 +50,11 @@ function AlterEgo:OnEnable()
     -- self:RegisterEvent("WEEKLY_REWARDS_UPDATE", "UpdateVault")
     self:RegisterBucketEvent("WEEKLY_REWARDS_UPDATE", 2, "UpdateVault")
     self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, "UpdateRaidInstances")
-    self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, "UpdateMythicPlus")
+    self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, function()
+        self:UpdateMythicPlus()
+        self:UpdateKeystoneItem()
+    end)
     self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
-    self:RegisterEvent("SHOW_LOOT_TOAST", "OnToast")
     self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
 
     C_Timer.After(5, function()
@@ -66,20 +68,7 @@ function AlterEgo:OnEnable()
     self:UpdateDB()
 end
 
-function AlterEgo:OnToast(_, typeIdentifier, itemLink)
-    if typeIdentifier ~= "item" then
-        return
-    end
-    local _, itemId = strsplit(":", itemLink)
-    if not itemId or tonumber(itemId) ~= 180653 then
-        return
-    end
-
-    self.newKeystone = true
-    self:UpdateKeystoneItem()
-end
-
-function AlterEgo:OnInstanceReset(event)
+function AlterEgo:OnInstanceReset()
     local groupChannel = AE_GetGroupChannel()
     if groupChannel and self.db.global.announceResets then
         if not IsInInstance() and UnitIsGroupLeader("player") then
@@ -88,7 +77,7 @@ function AlterEgo:OnInstanceReset(event)
     end
 end
 
-function AlterEgo:OnChatMessageSystem(event, msg)
+function AlterEgo:OnChatMessageSystem(_, msg)
     local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
     local groupChannel = AE_GetGroupChannel()
     if groupChannel and self.db.global.announceResets then
@@ -157,6 +146,6 @@ function AlterEgo:AnnounceKeystones(chatType, multiline)
     end)
 
     if not multiline then
-        SendChatMessage(msg, chatType)
+        SendChatMessage(self.constants.prefix .. msg, chatType)
     end
 end
