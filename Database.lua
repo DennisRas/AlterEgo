@@ -191,14 +191,14 @@ local dataDungeons = {
     -- [405] = { seasonID = 2, challengeModeID = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
     -- [406] = { seasonID = 2, challengeModeID = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
     -- [438] = { seasonID = 2, challengeModeID = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
-    [168] = {seasonID = 3, challengeModeID = 168, mapId = 1279, time = 0, abbr = "EB", name = "The Everbloom"},
-    [198] = {seasonID = 3, challengeModeID = 198, mapId = 1466, time = 0, abbr = "DHT", name = "Darkheart Thicket"},
-    [199] = {seasonID = 3, challengeModeID = 199, mapId = 1501, time = 0, abbr = "BRH", name = "Black Rook Hold"},
-    [244] = {seasonID = 3, challengeModeID = 244, mapId = 1763, time = 0, abbr = "AD", name = "Atal'Dazar"},
-    [248] = {seasonID = 3, challengeModeID = 248, mapId = 1862, time = 0, abbr = "WM", name = "Waycrest Manor"},
-    [456] = {seasonID = 3, challengeModeID = 456, mapId = 643, time = 0, abbr = "TOTT", name = "Throne of the Tides"},
-    [463] = {seasonID = 3, challengeModeID = 463, mapId = 2579, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
-    [464] = {seasonID = 3, challengeModeID = 464, mapId = 2579, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise", short = "DOTI: Murozond's Rise"},
+    [168] = {seasonID = 3, challengeModeID = 168, mapId = 1279, spellID = 159901, time = 0, abbr = "EB", name = "The Everbloom"},
+    [198] = {seasonID = 3, challengeModeID = 198, mapId = 1466, spellID = 424163, time = 0, abbr = "DHT", name = "Darkheart Thicket"},
+    [199] = {seasonID = 3, challengeModeID = 199, mapId = 1501, spellID = 424153, time = 0, abbr = "BRH", name = "Black Rook Hold"},
+    [244] = {seasonID = 3, challengeModeID = 244, mapId = 1763, spellID = 424187, time = 0, abbr = "AD", name = "Atal'Dazar"},
+    [248] = {seasonID = 3, challengeModeID = 248, mapId = 1862, spellID = 424167, time = 0, abbr = "WM", name = "Waycrest Manor"},
+    [456] = {seasonID = 3, challengeModeID = 456, mapId = 643, spellID = 424142, time = 0, abbr = "TOTT", name = "Throne of the Tides"},
+    [463] = {seasonID = 3, challengeModeID = 463, mapId = 2579, spellID = 424197, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
+    [464] = {seasonID = 3, challengeModeID = 464, mapId = 2579, spellID = 424197, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise", short = "DOTI: Murozond's Rise"},
 }
 
 local dataRaids = {

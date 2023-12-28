@@ -5,6 +5,7 @@
 ### Added
 
 - You can now sort characters by class name
+- Added dungeon teleportation to dungeon names
 
 ## v1.0.6 - 2023-12-28
 

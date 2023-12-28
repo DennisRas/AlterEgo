@@ -1168,7 +1168,7 @@ function AlterEgo:CreateUI()
 
     do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
-            local Label = CreateFrame("Frame", "$parentDungeon" .. dungeonIndex, self.Window.Body.Sidebar)
+            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.Window.Body.Sidebar, "SecureActionButtonTemplate")
             Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
             Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
             Label:SetHeight(sizes.row)
@@ -1392,11 +1392,26 @@ function AlterEgo:UpdateUI()
             Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             Label.Icon:SetTexture(tostring(dungeon.texture))
+            if dungeon.spellID and IsSpellKnown(dungeon.spellID) then
+                Label:SetAttribute("type", "spell")
+                Label:SetAttribute("spell", dungeon.spellID)
+                Label:RegisterForClicks("AnyUp", "AnyDown")
+                Label:EnableMouse(true)
+            end
             Label:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
                 GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
                 GameTooltip:SetText(dungeon.name, 1, 1, 1);
+                if dungeon.spellID then
+                    if IsSpellKnown(dungeon.spellID) then
+                        GameTooltip:ClearLines()
+                        GameTooltip:SetSpellByID(dungeon.spellID)
+                        _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+                    else
+                        GameTooltip:AddLine("Time this dungeon on level 20 to unlock teleportation.", nil, nil, nil, true)
+                    end
+                end
                 GameTooltip:Show()
             end)
             Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
