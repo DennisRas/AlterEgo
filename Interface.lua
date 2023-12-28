@@ -454,6 +454,8 @@ local sortingOptions = {
     {value = "rating.desc", text = "Rating (Highest)"},
     {value = "ilvl.asc",    text = "Item Level (Lowest)"},
     {value = "ilvl.desc",   text = "Item Level (Highest)"},
+    {value = "class.asc",   text = "Class (A-Z)"},
+    {value = "class.desc",  text = "Class (Z-A)"},
 }
 
 local function SetBackgroundColor(parent, r, g, b, a)

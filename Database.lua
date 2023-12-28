@@ -319,6 +319,10 @@ function AlterEgo:GetCharacters(unfiltered)
             return a.info.ilvl.level < b.info.ilvl.level
         elseif self.db.global.sorting == "ilvl.desc" then
             return a.info.ilvl.level > b.info.ilvl.level
+        elseif self.db.global.sorting == "class.asc" then
+            return a.info.class.name < b.info.class.name
+        elseif self.db.global.sorting == "class.desc" then
+            return a.info.class.name > b.info.class.name
         end
         return a.lastUpdate > b.lastUpdate
     end)

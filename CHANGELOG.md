@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.6 - 2023-12-29
+
+### Added
+
+- You can now sort characters by class name
+
 ## v1.0.6 - 2023-12-28
 
 ### Added
