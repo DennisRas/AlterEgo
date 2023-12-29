@@ -40,6 +40,21 @@ function AlterEgo:GetCharacterInfo()
                     GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 end
             end,
+            OnClick = function(character)
+                local windowCharacter = self:GetWindow("Character")
+                windowCharacter:SetSize(600, 200)
+                local table = self:CreateTable(
+                    {
+                        {"Player", "Slot", "Item", "Item Level"},
+                        {1,        2,      3,      4},
+                        {1,        2,      3,      4},
+                        {1,        2,      3,      4},
+                        {1,        2,      3,      4},
+                    },
+                    windowCharacter.Body
+                )
+                self:ToggleWindow("Character")
+            end,
             enabled = true,
         },
         {
@@ -415,68 +430,25 @@ function AlterEgo:GetCharacterInfo()
     }
 end
 
-local assets = {
-    font = {
-        file = "Fonts\\FRIZQT__.TTF",
-        size = 12,
-        flags = ""
-    },
-}
-local sizes = {
-    padding = 8,
-    row = 22,
-    column = 120,
-    border = 4,
-    titlebar = {
-        height = 30
-    },
-    footer = {
-        height = 16
-    },
-    sidebar = {
-        width = 150,
-        collapsedWidth = 30
-    }
-}
-
-local colors = {
-    primary = CreateColorFromHexString("FF98cbd8"),
-    dark = CreateColorFromHexString("FF1d242a"),
-}
-
-local sortingOptions = {
-    {value = "lastUpdate",  text = "Recently played"},
-    {value = "name.asc",    text = "Name (A-Z)"},
-    {value = "name.desc",   text = "Name (Z-A)"},
-    {value = "realm.asc",   text = "Realm (A-Z)"},
-    {value = "realm.desc",  text = "Realm (Z-A)"},
-    {value = "rating.asc",  text = "Rating (Lowest)"},
-    {value = "rating.desc", text = "Rating (Highest)"},
-    {value = "ilvl.asc",    text = "Item Level (Lowest)"},
-    {value = "ilvl.desc",   text = "Item Level (Highest)"},
-    {value = "class.asc",   text = "Class (A-Z)"},
-    {value = "class.desc",  text = "Class (Z-A)"},
-}
-
-local function SetBackgroundColor(parent, r, g, b, a)
+function AlterEgo:SetBackgroundColor(parent, r, g, b, a)
     if not parent.Background then
         parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
-        parent.Background:SetTexture("Interface/BUTTONS/WHITE8X8")
+        parent.Background:SetTexture(self.constants.assets.textures.white)
         parent.Background:SetAllPoints()
     end
 
     parent.Background:SetVertexColor(r, g, b, a)
 end
 
-local CreateCharacterColumn = function(parent, index)
+function AlterEgo:CreateCharacterColumn(parent, index)
     local affixes = AlterEgo:GetAffixes()
     local dungeons = AlterEgo:GetDungeons()
     local raids = AlterEgo:GetRaids()
     local anchorFrame
 
     local CharacterColumn = CreateFrame("Frame", "$parentCharacterColumn" .. index, parent)
-    CharacterColumn:SetWidth(sizes.column)
-    SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
+    CharacterColumn:SetWidth(self.constants.sizes.column)
+    self:SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
     anchorFrame = CharacterColumn
 
     -- Character info
@@ -492,15 +464,15 @@ local CreateCharacterColumn = function(parent, index)
                 CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
             end
 
-            CharacterFrame:SetHeight(sizes.row)
+            CharacterFrame:SetHeight(self.constants.sizes.row)
             CharacterFrame.Text = CharacterFrame:CreateFontString(CharacterFrame:GetName() .. "Text", "OVERLAY")
-            CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", sizes.padding, 0)
-            CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -sizes.padding, 0)
+            CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", self.constants.sizes.padding, 0)
+            CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -self.constants.sizes.padding, 0)
             CharacterFrame.Text:SetJustifyH("CENTER")
-            CharacterFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            CharacterFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
 
             if info.backgroundColor then
-                SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
+                self:SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
             end
 
             anchorFrame = CharacterFrame
@@ -510,8 +482,8 @@ local CreateCharacterColumn = function(parent, index)
     CharacterColumn.AffixHeader = CreateFrame("Frame", "$parentAffixes", CharacterColumn)
     CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    CharacterColumn.AffixHeader:SetHeight(sizes.row)
-    SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
+    CharacterColumn.AffixHeader:SetHeight(self.constants.sizes.row)
+    self:SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
     anchorFrame = CharacterColumn.AffixHeader
 
     -- Affix header icons
@@ -542,10 +514,10 @@ local CreateCharacterColumn = function(parent, index)
     -- Dungeon rows
     for dungeonIndex in ipairs(dungeons) do
         local DungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, CharacterColumn)
-        DungeonFrame:SetHeight(sizes.row)
+        DungeonFrame:SetHeight(self.constants.sizes.row)
         DungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         DungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+        self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
         anchorFrame = DungeonFrame
 
         -- Affix values
@@ -562,12 +534,12 @@ local CreateCharacterColumn = function(parent, index)
             AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
             AffixFrame.Text:SetPoint("TOPLEFT", AffixFrame, "TOPLEFT", 1, -1)
             AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-            AffixFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            AffixFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
             AffixFrame.Text:SetJustifyH("RIGHT")
             AffixFrame.Tier = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Tier", "OVERLAY")
             AffixFrame.Tier:SetPoint("TOPLEFT", AffixFrame, "TOP", 1, -1)
             AffixFrame.Tier:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-            AffixFrame.Tier:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            AffixFrame.Tier:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
             AffixFrame.Tier:SetJustifyH("LEFT")
         end
         anchorFrame = DungeonFrame
@@ -576,29 +548,29 @@ local CreateCharacterColumn = function(parent, index)
     -- Raid Rows
     for raidIndex, raid in ipairs(raids) do
         local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, CharacterColumn)
-        RaidFrame:SetHeight(sizes.row)
+        RaidFrame:SetHeight(self.constants.sizes.row)
         RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
+        self:SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
         anchorFrame = RaidFrame
 
         for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
             local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
             DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-            DifficultyFrame:SetHeight(sizes.row)
-            SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+            DifficultyFrame:SetHeight(self.constants.sizes.row)
+            self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
             anchorFrame = DifficultyFrame
 
             for encounterIndex in ipairs(raid.encounters) do
                 local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
-                local size = sizes.column
-                size = size - sizes.padding                -- left/right cell padding
+                local size = self.constants.sizes.column
+                size = size - self.constants.sizes.padding -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
                 size = size / raid.numEncounters           -- box sizes
-                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
-                EncounterFrame:SetSize(size, sizes.row - 12)
-                SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
+                EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
+                self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                 anchorFrame = EncounterFrame
             end
             anchorFrame = DifficultyFrame
@@ -611,7 +583,7 @@ end
 local CharacterColumns = {}
 function AlterEgo:GetCharacterColumn(parent, index)
     if CharacterColumns[index] == nil then
-        CharacterColumns[index] = CreateCharacterColumn(parent, index)
+        CharacterColumns[index] = self:CreateCharacterColumn(parent, index)
     end
     CharacterColumns[index]:Show()
     return CharacterColumns[index]
@@ -623,23 +595,10 @@ function AlterEgo:HideCharacterColumns()
     end
 end
 
-function AlterEgo:ToggleWindow()
-    if not self.Window then return end
-    if self.Window:IsVisible() then
-        self.Window:Hide()
-    else
-        self.Window:Show()
-    end
-end
-
-function AlterEgo:GetMaxWindowWidth()
-    return GetScreenWidth() - 100
-end
-
 function AlterEgo:IsScrollbarNeeded()
     local characters = self:GetCharacters()
     local numCharacters = AE_table_count(characters)
-    return numCharacters > 0 and sizes.sidebar.width + numCharacters * sizes.column > self:GetMaxWindowWidth()
+    return numCharacters > 0 and self.constants.sizes.sidebar.width + numCharacters * self.constants.sizes.column > self:GetMaxWindowWidth()
 end
 
 function AlterEgo:GetWindowSize()
@@ -656,118 +615,103 @@ function AlterEgo:GetWindowSize()
     if numCharacters == 0 then
         width = 500
     else
-        width = width + sizes.sidebar.width
-        width = width + numCharacters * sizes.column
+        width = width + self.constants.sizes.sidebar.width
+        width = width + numCharacters * self.constants.sizes.column
     end
     if width > maxWidth then
         width = maxWidth
         if numCharacters > 0 then
-            height = height + sizes.footer.height -- Shoes?
+            height = height + self.constants.sizes.footer.height -- Shoes?
         end
     end
 
     -- Height
-    height = height + sizes.titlebar.height                                                                                                                  -- Titlebar duh
-    height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled end)) * sizes.row -- Character info
-    height = height + sizes.row                                                                                                                              -- DungeonHeader
-    height = height + AE_table_count(dungeons) * sizes.row                                                                                                   -- Dungeon rows
+    height = height + self.constants.sizes.titlebar.height                                                                                                                  -- Titlebar duh
+    height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled end)) * self.constants.sizes.row -- Character info
+    height = height + self.constants.sizes.row                                                                                                                              -- DungeonHeader
+    height = height + AE_table_count(dungeons) * self.constants.sizes.row                                                                                                   -- Dungeon rows
     if self.db.global.raids.enabled then
-        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * sizes.row                                                             -- Raids
+        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * self.constants.sizes.row                                                             -- Raids
     end
 
     return width, height
 end
 
 function AlterEgo:CreateUI()
-    if self.Window then return end
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
     local difficulties = self:GetRaidDifficulties()
     local labels = self:GetCharacterInfo()
     local anchorFrame
 
-    self.Window = CreateFrame("Frame", "AlterEgoWindow", UIParent)
-    self.Window:SetFrameStrata("HIGH")
-    self.Window:SetClampedToScreen(true)
-    self.Window:SetMovable(true)
-    self.Window:SetPoint("CENTER")
-    SetBackgroundColor(self.Window, colors.dark:GetRGBA())
-    table.insert(UISpecialFrames, self.Window:GetName())
+    local windowCharacter = self:CreateWindow("Character", "Character", UIParent)
 
-    do -- Border
-        self.Window.Border = CreateFrame("Frame", "$parentBorder", self.Window, "BackdropTemplate")
-        self.Window.Border:SetPoint("TOPLEFT", self.Window, "TOPLEFT", -3, 3)
-        self.Window.Border:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT", 3, -3)
-        self.Window.Border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = sizes.border, right = sizes.border, top = sizes.border, bottom = sizes.border}})
-        self.Window.Border:SetBackdropBorderColor(0, 0, 0, .5)
-        self.Window.Border:Show()
-    end
+    local windowMain = self:CreateWindow("Main", "AlterEgo", UIParent)
+    -- window = CreateFrame("Frame", "AlterEgoWindow", UIParent)
+    -- window:SetFrameStrata("HIGH")
+    -- window:SetClampedToScreen(true)
+    -- window:SetMovable(true)
+    -- window:SetPoint("CENTER")
+    --selfAlterEgo:SetBackgroundColor(window, colors.dark:GetRGBA())
+    -- table.insert(UISpecialFrames, window:GetName())
+
+    -- do -- Border
+    --     window.Border = CreateFrame("Frame", "$parentBorder", window, "BackdropTemplate")
+    --     window.Border:SetPoint("TOPLEFT", window, "TOPLEFT", -3, 3)
+    --     window.Border:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 3, -3)
+    --     window.Border:SetBackdrop({edgeFile = self.constants.assets.textures.border, edgeSize = 16, insets = {left = self.constants.sizes.border, right = self.constants.sizes.border, top = self.constants.sizes.border, bottom = self.constants.sizes.border}})
+    --     window.Border:SetBackdropBorderColor(0, 0, 0, .5)
+    --     window.Border:Show()
+    -- end
 
     do -- TitleBar
-        self.Window.TitleBar = CreateFrame("Frame", "$parentTitleBar", self.Window)
-        self.Window.TitleBar:EnableMouse(true)
-        self.Window.TitleBar:RegisterForDrag("LeftButton")
-        self.Window.TitleBar:SetScript("OnDragStart", function() self.Window:StartMoving() end)
-        self.Window.TitleBar:SetScript("OnDragStop", function() self.Window:StopMovingOrSizing() end)
-        self.Window.TitleBar:SetPoint("TOPLEFT", self.Window, "TOPLEFT")
-        self.Window.TitleBar:SetPoint("TOPRIGHT", self.Window, "TOPRIGHT")
-        self.Window.TitleBar:SetHeight(sizes.titlebar.height)
-        SetBackgroundColor(self.Window.TitleBar, 0, 0, 0, 0.5)
-        self.Window.TitleBar.Icon = self.Window.TitleBar:CreateTexture("$parentIcon", "ARTWORK")
-        self.Window.TitleBar.Icon:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 6, 0)
-        self.Window.TitleBar.Icon:SetSize(20, 20)
-        self.Window.TitleBar.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/LogoTransparent.blp")
-        self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString("$parentText", "OVERLAY")
-        self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + sizes.padding, -1)
-        self.Window.TitleBar.Text:SetFont(assets.font.file, assets.font.size + 2, assets.font.flags)
-        self.Window.TitleBar.Text:SetText("AlterEgo")
-        anchorFrame = self.Window.TitleBar
+        anchorFrame = windowMain.TitleBar
         for i = 1, 3 do
-            self.Window.TitleBar["Affix" .. i] = self.Window.TitleBar:CreateTexture("$parentAffix" .. i, "ARTWORK")
-            self.Window.TitleBar["Affix" .. i]:SetSize(20, 20)
-            anchorFrame = self.Window.TitleBar["Affix" .. i]
+            windowMain.TitleBar["Affix" .. i] = windowMain.TitleBar:CreateTexture("$parentAffix" .. i, "ARTWORK")
+            windowMain.TitleBar["Affix" .. i]:SetSize(20, 20)
+            anchorFrame = windowMain.TitleBar["Affix" .. i]
         end
-        self.Window.TitleBar.CloseButton = CreateFrame("Button", "$parentCloseButton", self.Window.TitleBar)
-        self.Window.TitleBar.CloseButton:SetPoint("RIGHT", self.Window.TitleBar, "RIGHT", 0, 0)
-        self.Window.TitleBar.CloseButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-        self.Window.TitleBar.CloseButton:RegisterForClicks("AnyUp")
-        self.Window.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
-        self.Window.TitleBar.CloseButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
-        self.Window.TitleBar.CloseButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CloseButton, "CENTER")
-        self.Window.TitleBar.CloseButton.Icon:SetSize(10, 10)
-        self.Window.TitleBar.CloseButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Close.blp")
-        self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        self.Window.TitleBar.CloseButton:SetScript("OnEnter", function()
-            self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-            SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0.05)
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(self.Window.TitleBar.CloseButton, "ANCHOR_TOP")
-            GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
-            GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-            GameTooltip:Show()
-        end)
-        self.Window.TitleBar.CloseButton:SetScript("OnLeave", function()
-            self.Window.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-            SetBackgroundColor(self.Window.TitleBar.CloseButton, 1, 1, 1, 0)
-            GameTooltip:Hide()
-        end)
-        self.Window.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", self.Window.TitleBar)
-        self.Window.TitleBar.SettingsButton:SetPoint("RIGHT", self.Window.TitleBar.CloseButton, "LEFT", 0, 0)
-        self.Window.TitleBar.SettingsButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-        self.Window.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
-        self.Window.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SettingsButton.Dropdown) end)
-        self.Window.TitleBar.SettingsButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
-        self.Window.TitleBar.SettingsButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER")
-        self.Window.TitleBar.SettingsButton.Icon:SetSize(12, 12)
-        self.Window.TitleBar.SettingsButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Settings.blp")
-        self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        self.Window.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SettingsButton:GetName() .. "Dropdown", self.Window.TitleBar, "UIDropDownMenuTemplate")
-        self.Window.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SettingsButton, "CENTER", 0, -6)
-        self.Window.TitleBar.SettingsButton.Dropdown.Button:Hide()
-        UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, sizes.titlebar.height)
+        -- windowMain.TitleBar.CloseButton = CreateFrame("Button", "$parentCloseButton", windowMain.TitleBar)
+        -- windowMain.TitleBar.CloseButton:SetPoint("RIGHT", windowMain.TitleBar, "RIGHT", 0, 0)
+        -- windowMain.TitleBar.CloseButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        -- windowMain.TitleBar.CloseButton:RegisterForClicks("AnyUp")
+        -- windowMain.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
+        -- windowMain.TitleBar.CloseButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
+        -- windowMain.TitleBar.CloseButton.Icon:SetPoint("CENTER", windowMain.TitleBar.CloseButton, "CENTER")
+        -- windowMain.TitleBar.CloseButton.Icon:SetSize(10, 10)
+        -- windowMain.TitleBar.CloseButton.Icon:SetTexture(self.constants.assets.textures.iconClose)
+        -- windowMain.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        -- windowMain.TitleBar.CloseButton:SetScript("OnEnter", function()
+        --     windowMain.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        --     self:SetBackgroundColor(windowMain.TitleBar.CloseButton, 1, 1, 1, 0.05)
+        --     GameTooltip:ClearAllPoints()
+        --     GameTooltip:ClearLines()
+        --     GameTooltip:SetOwner(windowMain.TitleBar.CloseButton, "ANCHOR_TOP")
+        --     GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
+        --     GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        --     GameTooltip:Show()
+        -- end)
+        -- windowMain.TitleBar.CloseButton:SetScript("OnLeave", function()
+        --     windowMain.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        --     self:SetBackgroundColor(windowMain.TitleBar.CloseButton, 1, 1, 1, 0)
+        --     GameTooltip:Hide()
+        -- end)
+        windowMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", windowMain.TitleBar)
+        windowMain.TitleBar.SettingsButton:SetPoint("RIGHT", windowMain.TitleBar.CloseButton, "LEFT", 0, 0)
+        windowMain.TitleBar.SettingsButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        windowMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
+        windowMain.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, windowMain.TitleBar.SettingsButton.Dropdown) end)
+        windowMain.TitleBar.SettingsButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
+        windowMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", windowMain.TitleBar.SettingsButton, "CENTER")
+        windowMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
+        windowMain.TitleBar.SettingsButton.Icon:SetTexture(self.constants.assets.textures.iconSettings)
+        windowMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        windowMain.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.SettingsButton:GetName() .. "Dropdown", windowMain.TitleBar, "UIDropDownMenuTemplate")
+        windowMain.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.SettingsButton, "CENTER", 0, -6)
+        windowMain.TitleBar.SettingsButton.Dropdown.Button:Hide()
+        UIDropDownMenu_SetWidth(windowMain.TitleBar.SettingsButton.Dropdown, self.constants.sizes.titlebar.height)
         UIDropDownMenu_Initialize(
-            self.Window.TitleBar.SettingsButton.Dropdown,
+            windowMain.TitleBar.SettingsButton.Dropdown,
             function()
                 UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
                 UIDropDownMenu_AddButton({
@@ -921,38 +865,38 @@ function AlterEgo:CreateUI()
             end,
             "MENU"
         )
-        self.Window.TitleBar.SettingsButton:SetScript("OnEnter", function()
-            self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-            SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0.05)
+        windowMain.TitleBar.SettingsButton:SetScript("OnEnter", function()
+            windowMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.SettingsButton, 1, 1, 1, 0.05)
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(self.Window.TitleBar.SettingsButton, "ANCHOR_TOP")
+            GameTooltip:SetOwner(windowMain.TitleBar.SettingsButton, "ANCHOR_TOP")
             GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
             GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:Show()
         end)
-        self.Window.TitleBar.SettingsButton:SetScript("OnLeave", function()
-            self.Window.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-            SetBackgroundColor(self.Window.TitleBar.SettingsButton, 1, 1, 1, 0)
+        windowMain.TitleBar.SettingsButton:SetScript("OnLeave", function()
+            windowMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.SettingsButton, 1, 1, 1, 0)
             GameTooltip:Hide()
         end)
-        self.Window.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", self.Window.TitleBar)
-        self.Window.TitleBar.SortingButton:SetPoint("RIGHT", self.Window.TitleBar.SettingsButton, "LEFT", 0, 0)
-        self.Window.TitleBar.SortingButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-        self.Window.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.SortingButton.Dropdown) end)
-        self.Window.TitleBar.SortingButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
-        self.Window.TitleBar.SortingButton.Icon:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER")
-        self.Window.TitleBar.SortingButton.Icon:SetSize(16, 16)
-        self.Window.TitleBar.SortingButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp")
-        self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        self.Window.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.SortingButton:GetName() .. "Dropdown", self.Window.TitleBar.SortingButton, "UIDropDownMenuTemplate")
-        self.Window.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.SortingButton, "CENTER", 0, -6)
-        self.Window.TitleBar.SortingButton.Dropdown.Button:Hide()
-        UIDropDownMenu_SetWidth(self.Window.TitleBar.SortingButton.Dropdown, sizes.titlebar.height)
+        windowMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", windowMain.TitleBar)
+        windowMain.TitleBar.SortingButton:SetPoint("RIGHT", windowMain.TitleBar.SettingsButton, "LEFT", 0, 0)
+        windowMain.TitleBar.SortingButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        windowMain.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, windowMain.TitleBar.SortingButton.Dropdown) end)
+        windowMain.TitleBar.SortingButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
+        windowMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", windowMain.TitleBar.SortingButton, "CENTER")
+        windowMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
+        windowMain.TitleBar.SortingButton.Icon:SetTexture(self.constants.assets.textures.iconSorting)
+        windowMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        windowMain.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.SortingButton:GetName() .. "Dropdown", windowMain.TitleBar.SortingButton, "UIDropDownMenuTemplate")
+        windowMain.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.SortingButton, "CENTER", 0, -6)
+        windowMain.TitleBar.SortingButton.Dropdown.Button:Hide()
+        UIDropDownMenu_SetWidth(windowMain.TitleBar.SortingButton.Dropdown, self.constants.sizes.titlebar.height)
         UIDropDownMenu_Initialize(
-            self.Window.TitleBar.SortingButton.Dropdown,
+            windowMain.TitleBar.SortingButton.Dropdown,
             function()
-                for _, option in ipairs(sortingOptions) do
+                for _, option in ipairs(self.constants.sortingOptions) do
                     UIDropDownMenu_AddButton({
                         text = option.text,
                         checked = self.db.global.sorting == option.value,
@@ -966,36 +910,36 @@ function AlterEgo:CreateUI()
             end,
             "MENU"
         )
-        self.Window.TitleBar.SortingButton:SetScript("OnEnter", function()
-            self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-            SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0.05)
+        windowMain.TitleBar.SortingButton:SetScript("OnEnter", function()
+            windowMain.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.SortingButton, 1, 1, 1, 0.05)
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(self.Window.TitleBar.SortingButton, "ANCHOR_TOP")
+            GameTooltip:SetOwner(windowMain.TitleBar.SortingButton, "ANCHOR_TOP")
             GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
             GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:Show()
         end)
-        self.Window.TitleBar.SortingButton:SetScript("OnLeave", function()
-            self.Window.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-            SetBackgroundColor(self.Window.TitleBar.SortingButton, 1, 1, 1, 0)
+        windowMain.TitleBar.SortingButton:SetScript("OnLeave", function()
+            windowMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.SortingButton, 1, 1, 1, 0)
             GameTooltip:Hide()
         end)
-        self.Window.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", self.Window.TitleBar)
-        self.Window.TitleBar.CharactersButton:SetPoint("RIGHT", self.Window.TitleBar.SortingButton, "LEFT", 0, 0)
-        self.Window.TitleBar.CharactersButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-        self.Window.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.CharactersButton.Dropdown) end)
-        self.Window.TitleBar.CharactersButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
-        self.Window.TitleBar.CharactersButton.Icon:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER")
-        self.Window.TitleBar.CharactersButton.Icon:SetSize(14, 14)
-        self.Window.TitleBar.CharactersButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Characters.blp")
-        self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        self.Window.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.CharactersButton:GetName() .. "Dropdown", self.Window.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
-        self.Window.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.CharactersButton, "CENTER", 0, -6)
-        self.Window.TitleBar.CharactersButton.Dropdown.Button:Hide()
-        UIDropDownMenu_SetWidth(self.Window.TitleBar.CharactersButton.Dropdown, sizes.titlebar.height)
+        windowMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", windowMain.TitleBar)
+        windowMain.TitleBar.CharactersButton:SetPoint("RIGHT", windowMain.TitleBar.SortingButton, "LEFT", 0, 0)
+        windowMain.TitleBar.CharactersButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        windowMain.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, windowMain.TitleBar.CharactersButton.Dropdown) end)
+        windowMain.TitleBar.CharactersButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
+        windowMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", windowMain.TitleBar.CharactersButton, "CENTER")
+        windowMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
+        windowMain.TitleBar.CharactersButton.Icon:SetTexture(self.constants.assets.textures.iconCharacters)
+        windowMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        windowMain.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.CharactersButton:GetName() .. "Dropdown", windowMain.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
+        windowMain.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.CharactersButton, "CENTER", 0, -6)
+        windowMain.TitleBar.CharactersButton.Dropdown.Button:Hide()
+        UIDropDownMenu_SetWidth(windowMain.TitleBar.CharactersButton.Dropdown, self.constants.sizes.titlebar.height)
         UIDropDownMenu_Initialize(
-            self.Window.TitleBar.CharactersButton.Dropdown,
+            windowMain.TitleBar.CharactersButton.Dropdown,
             function()
                 local charactersUnfilteredList = self:GetCharacters(true)
                 for _, character in ipairs(charactersUnfilteredList) do
@@ -1020,36 +964,36 @@ function AlterEgo:CreateUI()
             end,
             "MENU"
         )
-        self.Window.TitleBar.CharactersButton:SetScript("OnEnter", function()
-            self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-            SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0.05)
+        windowMain.TitleBar.CharactersButton:SetScript("OnEnter", function()
+            windowMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.CharactersButton, 1, 1, 1, 0.05)
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(self.Window.TitleBar.CharactersButton, "ANCHOR_TOP")
+            GameTooltip:SetOwner(windowMain.TitleBar.CharactersButton, "ANCHOR_TOP")
             GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
             GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:Show()
         end)
-        self.Window.TitleBar.CharactersButton:SetScript("OnLeave", function()
-            self.Window.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-            SetBackgroundColor(self.Window.TitleBar.CharactersButton, 1, 1, 1, 0)
+        windowMain.TitleBar.CharactersButton:SetScript("OnLeave", function()
+            windowMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.CharactersButton, 1, 1, 1, 0)
             GameTooltip:Hide()
         end)
-        self.Window.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", self.Window.TitleBar)
-        self.Window.TitleBar.AnnounceButton:SetPoint("RIGHT", self.Window.TitleBar.CharactersButton, "LEFT", 0, 0)
-        self.Window.TitleBar.AnnounceButton:SetSize(sizes.titlebar.height, sizes.titlebar.height)
-        self.Window.TitleBar.AnnounceButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, self.Window.TitleBar.AnnounceButton.Dropdown) end)
-        self.Window.TitleBar.AnnounceButton.Icon = self.Window.TitleBar:CreateTexture(self.Window.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
-        self.Window.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", self.Window.TitleBar.AnnounceButton, "CENTER")
-        self.Window.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
-        self.Window.TitleBar.AnnounceButton.Icon:SetTexture("Interface/AddOns/AlterEgo/Media/Icon_Announce.blp")
-        self.Window.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        self.Window.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", self.Window.TitleBar.AnnounceButton:GetName() .. "Dropdown", self.Window.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
-        self.Window.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", self.Window.TitleBar.AnnounceButton, "CENTER", 0, -6)
-        self.Window.TitleBar.AnnounceButton.Dropdown.Button:Hide()
-        UIDropDownMenu_SetWidth(self.Window.TitleBar.AnnounceButton.Dropdown, sizes.titlebar.height)
+        windowMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", windowMain.TitleBar)
+        windowMain.TitleBar.AnnounceButton:SetPoint("RIGHT", windowMain.TitleBar.CharactersButton, "LEFT", 0, 0)
+        windowMain.TitleBar.AnnounceButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        windowMain.TitleBar.AnnounceButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, windowMain.TitleBar.AnnounceButton.Dropdown) end)
+        windowMain.TitleBar.AnnounceButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
+        windowMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", windowMain.TitleBar.AnnounceButton, "CENTER")
+        windowMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
+        windowMain.TitleBar.AnnounceButton.Icon:SetTexture(self.constants.assets.textures.iconAnnounce)
+        windowMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        windowMain.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.AnnounceButton:GetName() .. "Dropdown", windowMain.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
+        windowMain.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.AnnounceButton, "CENTER", 0, -6)
+        windowMain.TitleBar.AnnounceButton.Dropdown.Button:Hide()
+        UIDropDownMenu_SetWidth(windowMain.TitleBar.AnnounceButton.Dropdown, self.constants.sizes.titlebar.height)
         UIDropDownMenu_Initialize(
-            self.Window.TitleBar.AnnounceButton.Dropdown,
+            windowMain.TitleBar.AnnounceButton.Dropdown,
             function()
                 UIDropDownMenu_AddButton({
                     text = "Send to Party Chat",
@@ -1084,54 +1028,55 @@ function AlterEgo:CreateUI()
             end,
             "MENU"
         )
-        self.Window.TitleBar.AnnounceButton:SetScript("OnEnter", function()
-            self.Window.TitleBar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-            SetBackgroundColor(self.Window.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
+        windowMain.TitleBar.AnnounceButton:SetScript("OnEnter", function()
+            windowMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(self.Window.TitleBar.AnnounceButton, "ANCHOR_TOP")
+            GameTooltip:SetOwner(windowMain.TitleBar.AnnounceButton, "ANCHOR_TOP")
             GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true);
             GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:Show()
         end)
-        self.Window.TitleBar.AnnounceButton:SetScript("OnLeave", function()
-            self.Window.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-            SetBackgroundColor(self.Window.TitleBar.AnnounceButton, 1, 1, 1, 0)
+        windowMain.TitleBar.AnnounceButton:SetScript("OnLeave", function()
+            windowMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+            self:SetBackgroundColor(windowMain.TitleBar.AnnounceButton, 1, 1, 1, 0)
             GameTooltip:Hide()
         end)
     end
 
-    do -- Body
-        self.Window.Body = CreateFrame("Frame", "$parentBody", self.Window)
-        self.Window.Body:SetPoint("TOPLEFT", self.Window.TitleBar, "BOTTOMLEFT")
-        self.Window.Body:SetPoint("TOPRIGHT", self.Window.TitleBar, "BOTTOMRIGHT")
-        SetBackgroundColor(self.Window.Body, 0, 0, 0, 0)
-    end
+    -- do -- Body
+    --     window.Body = CreateFrame("Frame", "$parentBody", window)
+    --     window.Body:SetPoint("TOPLEFT", window.TitleBar, "BOTTOMLEFT")
+    --     window.Body:SetPoint("TOPRIGHT", window.TitleBar, "BOTTOMRIGHT")
+    --selfAlterEgo:SetBackgroundColor(window.Body, 0, 0, 0, 0)
+    -- end
 
     do -- No characters enabled
-        self.Window.Body.NoCharacterText = self.Window.Body:CreateFontString("$parentNoCharacterText", "ARTWORK")
-        self.Window.Body.NoCharacterText:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", 50, -50)
-        self.Window.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT", -50, 50)
-        self.Window.Body.NoCharacterText:SetJustifyH("CENTER")
-        self.Window.Body.NoCharacterText:SetJustifyV("CENTER")
-        self.Window.Body.NoCharacterText:SetFont(assets.font.file, assets.font.size, assets.font.flags)
-        self.Window.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
-        self.Window.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.Window.Body.NoCharacterText:Hide()
+        windowMain.Body.NoCharacterText = windowMain.Body:CreateFontString("$parentNoCharacterText", "ARTWORK")
+        windowMain.Body.NoCharacterText:SetPoint("TOPLEFT", windowMain.Body, "TOPLEFT", 50, -50)
+        windowMain.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", windowMain.Body, "BOTTOMRIGHT", -50, 50)
+        windowMain.Body.NoCharacterText:SetJustifyH("CENTER")
+        windowMain.Body.NoCharacterText:SetJustifyV("CENTER")
+        windowMain.Body.NoCharacterText:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+        windowMain.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+        windowMain.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
+        windowMain.Body.NoCharacterText:Hide()
     end
 
     do -- Sidebar
-        self.Window.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", self.Window.Body)
-        self.Window.Body.Sidebar:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT")
-        self.Window.Body.Sidebar:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT")
-        self.Window.Body.Sidebar:SetWidth(sizes.sidebar.width)
-        SetBackgroundColor(self.Window.Body.Sidebar, 0, 0, 0, 0.3)
-        anchorFrame = self.Window.Body.Sidebar
+        windowMain.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", windowMain.Body)
+        windowMain.Body.Sidebar:SetPoint("TOPLEFT", windowMain.Body, "TOPLEFT")
+        windowMain.Body.Sidebar:SetPoint("BOTTOMLEFT", windowMain.Body, "BOTTOMLEFT")
+        windowMain.Body.Sidebar:SetWidth(self.constants.sizes.sidebar.width)
+        self:SetBackgroundColor(windowMain.Body.Sidebar, 0, 0, 0, 0.3)
+        anchorFrame = windowMain.Body.Sidebar
     end
+    DevTools_Dump(windowMain.Body.Sidebar)
 
     do -- Character info
         for labelIndex, info in ipairs(labels) do
-            local Label = CreateFrame("Frame", "$parentLabel" .. labelIndex, self.Window.Body.Sidebar)
+            local Label = CreateFrame("Frame", "$parentLabel" .. labelIndex, windowMain.Body.Sidebar)
             if labelIndex > 1 then
                 Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1139,12 +1084,12 @@ function AlterEgo:CreateUI()
                 Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
                 Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
             end
-            Label:SetHeight(sizes.row)
+            Label:SetHeight(self.constants.sizes.row)
             Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-            Label.Text:SetPoint("LEFT", Label, "LEFT", sizes.padding, 0)
-            Label.Text:SetPoint("RIGHT", Label, "RIGHT", -sizes.padding, 0)
+            Label.Text:SetPoint("LEFT", Label, "LEFT", self.constants.sizes.padding, 0)
+            Label.Text:SetPoint("RIGHT", Label, "RIGHT", -self.constants.sizes.padding, 0)
             Label.Text:SetJustifyH("LEFT")
-            Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
             Label.Text:SetText(info.label)
             Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
             anchorFrame = Label
@@ -1152,14 +1097,14 @@ function AlterEgo:CreateUI()
     end
 
     do -- Dungeons Label
-        local Label = CreateFrame("Frame", "$parentMythicPlusLabel", self.Window.Body.Sidebar)
+        local Label = CreateFrame("Frame", "$parentMythicPlusLabel", windowMain.Body.Sidebar)
         Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        Label:SetHeight(sizes.row)
+        Label:SetHeight(self.constants.sizes.row)
         Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-        Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", sizes.padding, 0)
-        Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 0)
-        Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+        Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", self.constants.sizes.padding, 0)
+        Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
+        Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
         Label.Text:SetJustifyH("LEFT")
         Label.Text:SetText("Mythic Plus")
         Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1168,19 +1113,19 @@ function AlterEgo:CreateUI()
 
     do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
-            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.Window.Body.Sidebar, "SecureActionButtonTemplate")
+            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, windowMain.Body.Sidebar, "SecureActionButtonTemplate")
             Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
             Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
-            Label:SetHeight(sizes.row)
+            Label:SetHeight(self.constants.sizes.row)
             Label.Icon = Label:CreateTexture(Label:GetName() .. "Icon", "ARTWORK")
             Label.Icon:SetSize(16, 16)
-            Label.Icon:SetPoint("LEFT", Label, "LEFT", sizes.padding, 0)
+            Label.Icon:SetPoint("LEFT", Label, "LEFT", self.constants.sizes.padding, 0)
             Label.Icon:SetTexture(dungeon.icon)
             Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-            Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", 16 + sizes.padding * 2, -3)
-            Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -sizes.padding, 3)
+            Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", 16 + self.constants.sizes.padding * 2, -3)
+            Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
             Label.Text:SetJustifyH("LEFT")
-            Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             anchorFrame = Label
         end
@@ -1188,8 +1133,8 @@ function AlterEgo:CreateUI()
 
     do -- Raids & Difficulties
         for raidIndex, raid in ipairs(raids) do
-            local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.Window.Body.Sidebar)
-            RaidFrame:SetHeight(sizes.row)
+            local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, windowMain.Body.Sidebar)
+            RaidFrame:SetHeight(self.constants.sizes.row)
             RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             RaidFrame:SetScript("OnEnter", function()
@@ -1201,9 +1146,9 @@ function AlterEgo:CreateUI()
             end)
             RaidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
             RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
-            RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", sizes.padding, 0)
-            RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -sizes.padding, 0)
-            RaidFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", self.constants.sizes.padding, 0)
+            RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
+            RaidFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
             RaidFrame.Text:SetJustifyH("LEFT")
             RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
             RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1213,7 +1158,7 @@ function AlterEgo:CreateUI()
                 local DifficultFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
                 DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                DifficultFrame:SetHeight(sizes.row)
+                DifficultFrame:SetHeight(self.constants.sizes.row)
                 DifficultFrame:SetScript("OnEnter", function()
                     GameTooltip:ClearAllPoints()
                     GameTooltip:ClearLines()
@@ -1223,67 +1168,68 @@ function AlterEgo:CreateUI()
                 end)
                 DifficultFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
                 DifficultFrame.Text = DifficultFrame:CreateFontString(DifficultFrame:GetName() .. "Text", "OVERLAY")
-                DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", sizes.padding, -3)
-                DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -sizes.padding, 3)
+                DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", self.constants.sizes.padding, -3)
+                DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
                 DifficultFrame.Text:SetJustifyH("LEFT")
-                DifficultFrame.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+                DifficultFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
                 DifficultFrame.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
                 -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
                 -- RaidLabel.Icon:SetSize(16, 16)
-                -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", sizes.padding, 0)
+                -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", self.constants.sizes.padding, 0)
                 -- RaidLabel.Icon:SetTexture(raid.icon)
                 anchorFrame = DifficultFrame
             end
         end
     end
 
-    self.Window.Body.ScrollFrame = CreateFrame("ScrollFrame", "$parentScrollFrame", self.Window.Body)
-    self.Window.Body.ScrollFrame:SetPoint("TOPLEFT", self.Window.Body, "TOPLEFT", sizes.sidebar.width, 0)
-    self.Window.Body.ScrollFrame:SetPoint("BOTTOMLEFT", self.Window.Body, "BOTTOMLEFT", sizes.sidebar.width, 0)
-    self.Window.Body.ScrollFrame:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT")
-    self.Window.Body.ScrollFrame:SetPoint("TOPRIGHT", self.Window.Body, "TOPRIGHT")
-    self.Window.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", "$parentScrollChild", self.Window.Body.ScrollFrame)
-    self.Window.Body.ScrollFrame:SetScrollChild(self.Window.Body.ScrollFrame.ScrollChild)
+    windowMain.Body.ScrollFrame = CreateFrame("ScrollFrame", "$parentScrollFrame", windowMain.Body)
+    windowMain.Body.ScrollFrame:SetPoint("TOPLEFT", windowMain.Body, "TOPLEFT", self.constants.sizes.sidebar.width, 0)
+    windowMain.Body.ScrollFrame:SetPoint("BOTTOMLEFT", windowMain.Body, "BOTTOMLEFT", self.constants.sizes.sidebar.width, 0)
+    windowMain.Body.ScrollFrame:SetPoint("BOTTOMRIGHT", windowMain.Body, "BOTTOMRIGHT")
+    windowMain.Body.ScrollFrame:SetPoint("TOPRIGHT", windowMain.Body, "TOPRIGHT")
+    windowMain.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", "$parentScrollChild", windowMain.Body.ScrollFrame)
+    windowMain.Body.ScrollFrame:SetScrollChild(windowMain.Body.ScrollFrame.ScrollChild)
 
-    self.Window.Footer = CreateFrame("Frame", "$parentFooter", self.Window)
-    self.Window.Footer:SetHeight(sizes.footer.height)
-    self.Window.Footer:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
-    self.Window.Footer:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
-    SetBackgroundColor(self.Window.Footer, 0, 0, 0, .3)
+    windowMain.Footer = CreateFrame("Frame", "$parentFooter", windowMain)
+    windowMain.Footer:SetHeight(self.constants.sizes.footer.height)
+    windowMain.Footer:SetPoint("BOTTOMLEFT", windowMain, "BOTTOMLEFT")
+    windowMain.Footer:SetPoint("BOTTOMRIGHT", windowMain, "BOTTOMRIGHT")
+    self:SetBackgroundColor(windowMain.Footer, 0, 0, 0, .3)
 
-    self.Window.Footer.Scrollbar = CreateFrame("Slider", "$parentScrollbar", self.Window.Footer, "UISliderTemplate")
-    self.Window.Footer.Scrollbar:SetPoint("TOPLEFT", self.Window.Footer, "TOPLEFT", sizes.sidebar.width, 0)
-    self.Window.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", self.Window.Footer, "BOTTOMRIGHT", -sizes.padding / 2, 0)
-    self.Window.Footer.Scrollbar:SetMinMaxValues(0, 100)
-    self.Window.Footer.Scrollbar:SetValue(0)
-    self.Window.Footer.Scrollbar:SetValueStep(1)
-    self.Window.Footer.Scrollbar:SetOrientation("HORIZONTAL")
-    self.Window.Footer.Scrollbar:SetObeyStepOnDrag(true)
-    self.Window.Footer.Scrollbar.NineSlice:Hide()
-    self.Window.Footer.Scrollbar.thumb = self.Window.Footer.Scrollbar:GetThumbTexture()
-    self.Window.Footer.Scrollbar.thumb:SetPoint("CENTER")
-    self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
-    self.Window.Footer.Scrollbar.thumb:SetHeight(sizes.footer.height - 10)
-    self.Window.Footer.Scrollbar:SetScript("OnValueChanged", function(_, value)
-        self.Window.Body.ScrollFrame:SetHorizontalScroll(value)
+    windowMain.Footer.Scrollbar = CreateFrame("Slider", "$parentScrollbar", windowMain.Footer, "UISliderTemplate")
+    windowMain.Footer.Scrollbar:SetPoint("TOPLEFT", windowMain.Footer, "TOPLEFT", self.constants.sizes.sidebar.width, 0)
+    windowMain.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", windowMain.Footer, "BOTTOMRIGHT", -self.constants.sizes.padding / 2, 0)
+    windowMain.Footer.Scrollbar:SetMinMaxValues(0, 100)
+    windowMain.Footer.Scrollbar:SetValue(0)
+    windowMain.Footer.Scrollbar:SetValueStep(1)
+    windowMain.Footer.Scrollbar:SetOrientation("HORIZONTAL")
+    windowMain.Footer.Scrollbar:SetObeyStepOnDrag(true)
+    windowMain.Footer.Scrollbar.NineSlice:Hide()
+    windowMain.Footer.Scrollbar.thumb = windowMain.Footer.Scrollbar:GetThumbTexture()
+    windowMain.Footer.Scrollbar.thumb:SetPoint("CENTER")
+    windowMain.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
+    windowMain.Footer.Scrollbar.thumb:SetHeight(self.constants.sizes.footer.height - 10)
+    windowMain.Footer.Scrollbar:SetScript("OnValueChanged", function(_, value)
+        windowMain.Body.ScrollFrame:SetHorizontalScroll(value)
     end)
-    self.Window.Footer.Scrollbar:SetScript("OnEnter", function()
-        self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.2)
+    windowMain.Footer.Scrollbar:SetScript("OnEnter", function()
+        windowMain.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.2)
     end)
-    self.Window.Footer.Scrollbar:SetScript("OnLeave", function()
-        self.Window.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
+    windowMain.Footer.Scrollbar:SetScript("OnLeave", function()
+        windowMain.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
     end)
-    self.Window.Body.ScrollFrame:SetScript("OnMouseWheel", function(_, delta)
-        self.Window.Footer.Scrollbar:SetValue(self.Window.Footer.Scrollbar:GetValue() - delta * ((self.Window.Body.ScrollFrame.ScrollChild:GetWidth() - self.Window.Body.ScrollFrame:GetWidth()) * 0.1))
+    windowMain.Body.ScrollFrame:SetScript("OnMouseWheel", function(_, delta)
+        windowMain.Footer.Scrollbar:SetValue(windowMain.Footer.Scrollbar:GetValue() - delta * ((windowMain.Body.ScrollFrame.ScrollChild:GetWidth() - windowMain.Body.ScrollFrame:GetWidth()) * 0.1))
     end)
 
-    self.Window.Body:SetPoint("BOTTOMLEFT", self.Window.Footer, "TOPLEFT")
-    self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window.Footer, "TOPRIGHT")
+    windowMain.Body:SetPoint("BOTTOMLEFT", windowMain.Footer, "TOPLEFT")
+    windowMain.Body:SetPoint("BOTTOMRIGHT", windowMain.Footer, "TOPRIGHT")
     self:UpdateUI()
 end
 
 function AlterEgo:UpdateUI()
-    if not self.Window then return end
+    local window = self:GetWindow("Main")
+    if not window then return end
 
     local affixes = self:GetAffixes()
     local characters = self:GetCharacters()
@@ -1296,37 +1242,37 @@ function AlterEgo:UpdateUI()
     local anchorFrame
 
     if numCharacters == 0 then
-        self.Window.Body.Sidebar:Hide()
-        self.Window.Body.ScrollFrame:Hide()
-        self.Window.Footer:Hide()
-        self.Window.Body.NoCharacterText:Show()
+        window.Body.Sidebar:Hide()
+        window.Body.ScrollFrame:Hide()
+        window.Footer:Hide()
+        window.Body.NoCharacterText:Show()
     else
-        self.Window.Body.Sidebar:Show()
-        self.Window.Body.ScrollFrame:Show()
-        self.Window.Footer:Show()
-        self.Window.Body.NoCharacterText:Hide()
+        window.Body.Sidebar:Show()
+        window.Body.ScrollFrame:Show()
+        window.Footer:Show()
+        window.Body.NoCharacterText:Hide()
     end
 
-    self.Window:SetSize(self:GetWindowSize())
-    self.Window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * sizes.column, self.Window.Body.ScrollFrame:GetHeight())
+    window:SetSize(self:GetWindowSize())
+    window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * self.constants.sizes.column, window.Body.ScrollFrame:GetHeight())
 
     if self:IsScrollbarNeeded() then
-        self.Window.Footer.Scrollbar:SetMinMaxValues(0, self.Window.Body.ScrollFrame.ScrollChild:GetWidth() - self.Window.Body.ScrollFrame:GetWidth())
-        self.Window.Footer.Scrollbar.thumb:SetWidth(self.Window.Footer.Scrollbar:GetWidth() / 10)
-        self.Window.Body:SetPoint("BOTTOMLEFT", self.Window.Footer, "TOPLEFT")
-        self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window.Footer, "TOPRIGHT")
-        self.Window.Footer:Show()
+        window.Footer.Scrollbar:SetMinMaxValues(0, window.Body.ScrollFrame.ScrollChild:GetWidth() - window.Body.ScrollFrame:GetWidth())
+        window.Footer.Scrollbar.thumb:SetWidth(window.Footer.Scrollbar:GetWidth() / 10)
+        window.Body:SetPoint("BOTTOMLEFT", window.Footer, "TOPLEFT")
+        window.Body:SetPoint("BOTTOMRIGHT", window.Footer, "TOPRIGHT")
+        window.Footer:Show()
     else
-        self.Window.Body.ScrollFrame:SetHorizontalScroll(0)
-        self.Window.Body:SetPoint("BOTTOMLEFT", self.Window, "BOTTOMLEFT")
-        self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
-        self.Window.Footer:Hide()
+        window.Body.ScrollFrame:SetHorizontalScroll(0)
+        window.Body:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT")
+        window.Body:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT")
+        window.Footer:Hide()
     end
 
     local currentAffixes = C_MythicPlus.GetCurrentAffixes();
-    anchorFrame = self.Window.TitleBar
+    anchorFrame = window.TitleBar
     for i = 1, 3 do
-        local frame = self.Window.TitleBar["Affix" .. i]
+        local frame = window.TitleBar["Affix" .. i]
         if frame then
             if currentAffixes then
                 local name, desc, filedataid = C_ChallengeMode.GetAffixInfo(currentAffixes[i].id);
@@ -1344,11 +1290,11 @@ function AlterEgo:UpdateUI()
             if i == 1 then
                 frame:ClearAllPoints()
                 if numCharacters == 1 then
-                    frame:SetPoint("LEFT", self.Window.TitleBar.Icon, "RIGHT", 6, 0)
-                    self.Window.TitleBar.Text:Hide()
+                    frame:SetPoint("LEFT", window.TitleBar.Icon, "RIGHT", 6, 0)
+                    window.TitleBar.Text:Hide()
                 else
                     frame:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
-                    self.Window.TitleBar.Text:Show()
+                    window.TitleBar.Text:Show()
                 end
             else
                 frame:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
@@ -1366,9 +1312,9 @@ function AlterEgo:UpdateUI()
 
     -- Character Labels
     do
-        anchorFrame = self.Window.Body.Sidebar
+        anchorFrame = window.Body.Sidebar
         for labelIndex, info in ipairs(labels) do
-            local Label = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
+            local Label = _G[window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
             if info.enabled ~= nil and not info.enabled then
                 Label:Hide()
             else
@@ -1387,9 +1333,9 @@ function AlterEgo:UpdateUI()
 
     do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
-            local Label = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
+            local Label = _G[window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
             Label.Icon:SetTexture(dungeon.icon)
-            Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
+            Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             Label.Icon:SetTexture(tostring(dungeon.texture))
             if dungeon.spellID and IsSpellKnown(dungeon.spellID) then
@@ -1420,7 +1366,7 @@ function AlterEgo:UpdateUI()
 
     do -- Raids
         for raidIndex in ipairs(raids) do
-            local Label = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
+            local Label = _G[window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
             if self.db.global.raids.enabled then
                 Label:Show()
             else
@@ -1430,9 +1376,9 @@ function AlterEgo:UpdateUI()
     end
 
     do -- Characters
-        anchorFrame = self.Window.Body.ScrollFrame.ScrollChild
+        anchorFrame = window.Body.ScrollFrame.ScrollChild
         for characterIndex, character in ipairs(characters) do
-            local CharacterColumn = self:GetCharacterColumn(self.Window.Body.ScrollFrame.ScrollChild, characterIndex)
+            local CharacterColumn = self:GetCharacterColumn(window.Body.ScrollFrame.ScrollChild, characterIndex)
             if characterIndex > 1 then
                 CharacterColumn:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT")
                 CharacterColumn:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMRIGHT")
@@ -1440,7 +1386,7 @@ function AlterEgo:UpdateUI()
                 CharacterColumn:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
                 CharacterColumn:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMLEFT")
             end
-            SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
+            self:SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
             anchorFrame = CharacterColumn
 
             do -- Character info
@@ -1456,22 +1402,22 @@ function AlterEgo:UpdateUI()
                             info.OnEnter(character)
                             GameTooltip:Show()
                             if not info.backgroundColor then
-                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
                             end
                         end)
                         CharacterFrame:SetScript("OnLeave", function()
                             GameTooltip:Hide()
                             if not info.backgroundColor then
-                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
                             end
                         end)
                     else
                         if not info.backgroundColor then
                             CharacterFrame:SetScript("OnEnter", function()
-                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
                             end)
                             CharacterFrame:SetScript("OnLeave", function()
-                                SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
                             end)
                         end
                     end
@@ -1539,11 +1485,11 @@ function AlterEgo:UpdateUI()
                             end
                         end
                         GameTooltip:Show()
-                        SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
+                        self:SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
                     end)
                     DungeonFrame:SetScript("OnLeave", function()
                         GameTooltip:Hide()
-                        SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+                        self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
                     end)
 
                     for affixIndex, affix in ipairs(affixes) do
@@ -1636,11 +1582,11 @@ function AlterEgo:UpdateUI()
                                 GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
                             end
                             GameTooltip:Show()
-                            SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
+                            self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
                         end)
                         DifficultyFrame:SetScript("OnLeave", function()
                             GameTooltip:Hide()
-                            SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
+                            self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
                         end)
                         anchorFrame = DifficultyFrame
                         for encounterIndex, encounter in ipairs(raid.encounters) do
@@ -1649,13 +1595,13 @@ function AlterEgo:UpdateUI()
                             local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
                             if not EncounterFrame then
                                 EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
-                                local size = sizes.column
-                                size = size - sizes.padding                -- left/right cell padding
+                                local size = self.constants.sizes.column
+                                size = size - self.constants.sizes.padding -- left/right cell padding
                                 size = size - (raid.numEncounters - 1) * 4 -- gaps
                                 size = size / raid.numEncounters           -- box sizes
-                                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", sizes.padding / 2, 0)
-                                EncounterFrame:SetSize(size, sizes.row - 12)
-                                SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+                                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
+                                EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
+                                self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                                 anchorFrame = EncounterFrame
                             end
                             if character.raids.savedInstances then
@@ -1675,7 +1621,7 @@ function AlterEgo:UpdateUI()
                                     end
                                 end
                             end
-                            SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
+                            self:SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
                         end
                         anchorFrame = CharacterColumn
                     end

@@ -23,5 +23,7 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 
 Utils.lua
 AlterEgo.lua
-Database.lua
+Window.lua
+Table.lua
 Interface.lua
+Database.lua
