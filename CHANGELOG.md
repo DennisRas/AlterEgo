@@ -7,6 +7,10 @@
 - You can now sort characters by class name
 - Added dungeon teleportation to dungeon names
 
+### Updated
+
+- Rerolled keystones are now also announced
+
 ## v1.0.6 - 2023-12-28
 
 ### Added

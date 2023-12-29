@@ -539,10 +539,8 @@ function AlterEgo:UpdateKeystoneItem()
                 if dungeon then
                     local newKeystone = false
                     if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
-                        if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) then
-                            if character.mythicplus.keystone.level < tonumber(level) then
-                                newKeystone = true
-                            end
+                        if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) or character.mythicplus.keystone.level < tonumber(level) then
+                            newKeystone = true
                         end
                     elseif tonumber(dungeon.mapId) and tonumber(level) then
                         newKeystone = true
