@@ -39,11 +39,14 @@ function AlterEgo:GetCharacterInfo()
                     GameTooltip:AddLine(" ");
                     GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 end
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("<Click to View Equipment>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             end,
             OnClick = function(character)
                 local windowCharacter = self:GetWindow("Character")
                 windowCharacter:SetSize(600, 200)
-                local table = self:CreateTable(
+                windowCharacter.Body.Table = self:CreateTable(
+                    "$parentTable",
                     {
                         {"Player", "Slot", "Item", "Item Level"},
                         {1,        2,      3,      4},
@@ -53,7 +56,7 @@ function AlterEgo:GetCharacterInfo()
                     },
                     windowCharacter.Body
                 )
-                self:ToggleWindow("Character")
+                windowCharacter:Show()
             end,
             enabled = true,
         },

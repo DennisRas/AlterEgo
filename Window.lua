@@ -1,7 +1,8 @@
 local numWindows = 0
+local windows = {}
 function AlterEgo:GetWindow(name)
     name = "AlterEgo" .. name
-    return self.windows[name]
+    return windows[name]
 end
 
 function AlterEgo:CreateWindow(name, title, parent)
@@ -17,10 +18,15 @@ function AlterEgo:CreateWindow(name, title, parent)
 
     local windowFrame = CreateFrame("Frame", name, parent)
     windowFrame:SetFrameStrata("HIGH")
-    windowFrame:SetFrameLevel(numWindows)
+    windowFrame:SetFrameLevel(100)
     windowFrame:SetClampedToScreen(true)
     windowFrame:SetMovable(true)
+    windowFrame:SetUserPlaced(true)
     windowFrame:SetPoint("CENTER")
+    windowFrame:SetScript("OnShow", function()
+        windowFrame:Raise()
+        DevTools_Dump(windowFrame:GetFrameLevel())
+    end)
     self:SetBackgroundColor(windowFrame, self.constants.colors.dark:GetRGBA())
 
     do -- Border
@@ -36,7 +42,12 @@ function AlterEgo:CreateWindow(name, title, parent)
         windowFrame.TitleBar = CreateFrame("Frame", "$parentTitleBar", windowFrame)
         windowFrame.TitleBar:EnableMouse(true)
         windowFrame.TitleBar:RegisterForDrag("LeftButton")
-        windowFrame.TitleBar:SetScript("OnDragStart", function() windowFrame:StartMoving() end)
+        windowFrame.TitleBar:SetScript("OnDragStart", function()
+            windowFrame:SetFrameLevel(100)
+            windowFrame:Raise()
+            windowFrame:StartMoving()
+            DevTools_Dump(windowFrame:GetFrameLevel())
+        end)
         windowFrame.TitleBar:SetScript("OnDragStop", function() windowFrame:StopMovingOrSizing() end)
         windowFrame.TitleBar:SetPoint("TOPLEFT", windowFrame, "TOPLEFT")
         windowFrame.TitleBar:SetPoint("TOPRIGHT", windowFrame, "TOPRIGHT")
@@ -86,9 +97,9 @@ function AlterEgo:CreateWindow(name, title, parent)
         self:SetBackgroundColor(windowFrame.Body, 0, 0, 0, 0)
     end
 
-    table.insert(UISpecialFrames, name)
-    self.windows[name] = windowFrame
-    return self.windows[name]
+    -- table.insert(UISpecialFrames, name)
+    windows[name] = windowFrame
+    return windows[name]
 end
 
 function AlterEgo:GetMaxWindowWidth()

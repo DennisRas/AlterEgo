@@ -3,7 +3,6 @@ AlterEgo.Libs = {}
 AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
 AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
-AlterEgo.windows = {}
 AlterEgo.constants = {
     prefix = "<AlterEgo> ",
     assets = {
