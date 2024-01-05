@@ -56,6 +56,7 @@ function AlterEgo:OnEnable()
     end)
     self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
     self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
+    self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, "UpdateCharacterInfo")
 
     C_Timer.After(5, function()
         C_MythicPlus.RequestCurrentAffixes();

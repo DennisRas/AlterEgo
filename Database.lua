@@ -1,4 +1,4 @@
-local dbVersion = 4
+local dbVersion = 5
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -60,6 +60,28 @@ local defaultCharacter = {
             pvp = 0,
             color = "ffffffff"
         },
+    },
+    currencies = {
+        -- [1] = {
+        --     name = string
+        --     description = string
+        --     isHeader = boolean
+        --     isHeaderExpanded = boolean
+        --     isTypeUnused = boolean
+        --     isShowInBackpack = boolean
+        --     quantity = number
+        --     trackedQuantity = number
+        --     iconFileID = number
+        --     maxQuantity = number
+        --     canEarnPerWeek = boolean
+        --     quantityEarnedThisWeek = number
+        --     isTradeable = boolean
+        --     quality = Enum
+        --     maxWeeklyQuantity = number
+        --     totalEarned = number
+        --     discovered = boolean
+        --     useTotalEarnedForMaxQty = boolean
+        -- }
     },
     raids = {
         savedInstances = {
@@ -212,6 +234,15 @@ local dataRaidDifficulties = {
     [15] = {id = 15, color = EPIC_PURPLE_COLOR, order = 3, abbr = "HC", name = "Heroic"},
     [16] = {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic"},
     [17] = {id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
+}
+
+local dataCurrencies = {
+    [2245] = {id = 2245, currencyType = "upgrade"},  -- Flightstones
+    [2706] = {id = 2706, currencyType = "crest"},    -- Whelpling
+    [2707] = {id = 2707, currencyType = "crest"},    -- Drake
+    [2708] = {id = 2708, currencyType = "crest"},    -- Wyrm
+    [2709] = {id = 2709, currencyType = "crest"},    -- Aspect
+    [2796] = {id = 2796, currencyType = "catalyst"}, -- Catalyst
 }
 
 function AlterEgo:InitDB()
@@ -384,6 +415,16 @@ end
 function AlterEgo:TaskWeeklyReset()
     if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
         AE_table_foreach(self.db.global.characters, function(character)
+            if character.currencies ~= nil then
+                AE_table_foreach(character.currencies, function(currency)
+                    if currency.currencyType == "crest" then
+                        currency.maxQuantity = currency.maxQuantity + 90
+                    end
+                    -- if currency.currencyType == "catalyst" then
+                    --     currency.quantity = math.max(currency.quantity + 1, 8)
+                    -- end
+                end)
+            end
             AE_table_foreach(character.vault.slots, function(slot)
                 if slot.progress >= slot.threshold then
                     character.vault.hasAvailableRewards = true
@@ -521,6 +562,17 @@ function AlterEgo:UpdateCharacterInfo()
     if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
     if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
     if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
+    if character.currencies == nil then
+        character.currencies = {}
+    else
+        wipe(character.currencies or {})
+    end
+    AE_table_foreach(dataCurrencies, function(dataCurrency)
+        local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+        currency.id = dataCurrency.id
+        currency.currencyType = dataCurrency.currencyType
+        table.insert(character.currencies, currency)
+    end)
     character.lastUpdate = GetServerTime()
     self:UpdateUI()
 end

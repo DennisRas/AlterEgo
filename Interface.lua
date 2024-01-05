@@ -35,6 +35,20 @@ function AlterEgo:GetCharacterInfo()
                 if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
                     GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
                 end
+                if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
+                    GameTooltip:AddLine(" ");
+                    GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
+                    table.sort(character.currencies, function(a, b)
+                        return a.id < b.id
+                    end)
+                    AE_table_foreach(character.currencies, function(currency)
+                        if currency.useTotalEarnedForMaxQty then
+                            GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d/%d", currency.totalEarned, currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                        else
+                            GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d", currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                        end
+                    end)
+                end
                 if character.lastUpdate ~= nil then
                     GameTooltip:AddLine(" ");
                     GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);

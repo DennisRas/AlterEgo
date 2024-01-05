@@ -1,11 +1,12 @@
 # Changelog
 
-## v1.0.6 - 2023-12-29
+## v1.0.6 - 2024-01-05
 
 ### Added
 
 - You can now sort characters by class name
 - Added dungeon teleportation to dungeon names
+- Added flightstone/crest/catalyst tracking to the tooltips of character names
 
 ### Updated
 
