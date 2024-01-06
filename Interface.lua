@@ -1406,7 +1406,7 @@ function AlterEgo:UpdateUI()
             Label.Text:SetFont(assets.font.file, assets.font.size, assets.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             Label.Icon:SetTexture(tostring(dungeon.texture))
-            if dungeon.spellID and IsSpellKnown(dungeon.spellID) then
+            if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
                 Label:SetAttribute("type", "spell")
                 Label:SetAttribute("spell", dungeon.spellID)
                 Label:RegisterForClicks("AnyUp", "AnyDown")
