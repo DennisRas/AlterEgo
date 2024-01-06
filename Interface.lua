@@ -431,7 +431,7 @@ end
 
 local assets = {
     font = {
-        file = "Fonts\\FRIZQT__.TTF",
+        file = STANDARD_TEXT_FONT,
         size = 12,
         flags = ""
     },

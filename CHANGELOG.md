@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.9 - 2024-01-06
+
+### Fixed
+
+- Fixed font issues in different languages/alphabets (Cyrillic etc.)
+
 ## v1.0.8 - 2024-01-06
 
 ### Fixed
