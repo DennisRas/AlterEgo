@@ -1,6 +1,12 @@
 # Changelog
 
-## v1.0.6 - 2024-01-05
+## v1.0.8 - 2024-01-06
+
+### Fixed
+
+- Fixed an issue caused by the new teleport feature - Thanks to CrackedOrb/arcadepro for the report
+
+## v1.0.7 - 2024-01-05
 
 ### Added
 

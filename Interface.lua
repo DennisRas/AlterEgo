@@ -1182,7 +1182,7 @@ function AlterEgo:CreateUI()
 
     do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
-            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.Window.Body.Sidebar, "SecureActionButtonTemplate")
+            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.Window.Body.Sidebar, "InsecureActionButtonTemplate")
             Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
             Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
             Label:SetHeight(sizes.row)
