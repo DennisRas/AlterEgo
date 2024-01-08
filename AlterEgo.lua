@@ -4,10 +4,55 @@ AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
 AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
 AlterEgo.constants = {
-    prefix = "<AlterEgo> "
+    prefix = "<AlterEgo> ",
+    font = {
+        file = STANDARD_TEXT_FONT,
+        size = 12,
+        flags = ""
+    },
+    media = {
+        LogoTransparent = "Interface/AddOns/AlterEgo/Media/LogoTransparent.blp",
+        IconClose = "Interface/AddOns/AlterEgo/Media/Icon_Close.blp",
+        IconSettings = "Interface/AddOns/AlterEgo/Media/Icon_Settings.blp",
+        IconSorting = "Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp",
+        IconCharacters = "Interface/AddOns/AlterEgo/Media/Icon_Characters.blp",
+        IconAnnounce = "Interface/AddOns/AlterEgo/Media/Icon_Announce.blp"
+    },
+    sizes = {
+        padding = 8,
+        row = 22,
+        column = 120,
+        border = 4,
+        titlebar = {
+            height = 30
+        },
+        footer = {
+            height = 16
+        },
+        sidebar = {
+            width = 150,
+            collapsedWidth = 30
+        }
+    },
+    colors = {
+        primary = CreateColorFromHexString("FF98cbd8"),
+        dark = CreateColorFromHexString("FF1d242a"),
+    },
+    sortingOptions = {
+        {value = "lastUpdate",  text = "Recently played"},
+        {value = "name.asc",    text = "Name (A-Z)"},
+        {value = "name.desc",   text = "Name (Z-A)"},
+        {value = "realm.asc",   text = "Realm (A-Z)"},
+        {value = "realm.desc",  text = "Realm (Z-A)"},
+        {value = "rating.asc",  text = "Rating (Lowest)"},
+        {value = "rating.desc", text = "Rating (Highest)"},
+        {value = "ilvl.asc",    text = "Item Level (Lowest)"},
+        {value = "ilvl.desc",   text = "Item Level (Highest)"},
+        {value = "class.asc",   text = "Class (A-Z)"},
+        {value = "class.desc",  text = "Class (Z-A)"},
+    }
 }
-
-local libDataObject = {
+AlterEgo.libDataObject = {
     label = "AlterEgo",
     tocname = "AlterEgo",
     type = "launcher",
@@ -28,8 +73,8 @@ local libDataObject = {
 
 function AlterEgo:OnInitialize()
     self:InitDB()
-    self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
-    self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
+    self.Libs.LDB:NewDataObject("AlterEgo", self.libDataObject)
+    self.Libs.LDBIcon:Register("AlterEgo", self.libDataObject, self.db.global.minimap)
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
     self:CreateUI()
