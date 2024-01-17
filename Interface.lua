@@ -597,7 +597,7 @@ local CreateCharacterColumn = function(parent, index)
         anchorFrame = RaidFrame
 
         for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
-            local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+            local DifficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
             DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             DifficultyFrame:SetHeight(sizes.row)
@@ -605,7 +605,7 @@ local CreateCharacterColumn = function(parent, index)
             anchorFrame = DifficultyFrame
 
             for encounterIndex in ipairs(raid.encounters) do
-                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                 local size = sizes.column
                 size = size - sizes.padding                -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
@@ -1165,7 +1165,7 @@ function AlterEgo:CreateUI()
         end
     end
 
-    do -- Dungeons Label
+    do -- MythicPlus Label
         local Label = CreateFrame("Frame", "$parentMythicPlusLabel", self.Window.Body.Sidebar)
         Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1224,7 +1224,7 @@ function AlterEgo:CreateUI()
             anchorFrame = RaidFrame
 
             for difficultyIndex, difficulty in ipairs(difficulties) do
-                local DifficultFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+                local DifficultFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
                 DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
                 DifficultFrame:SetHeight(sizes.row)
@@ -1378,8 +1378,7 @@ function AlterEgo:UpdateUI()
 
     self:HideCharacterColumns()
 
-    -- Character Labels
-    do
+    do -- Character Labels
         anchorFrame = self.Window.Body.Sidebar
         for labelIndex, info in ipairs(labels) do
             local Label = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
@@ -1432,7 +1431,7 @@ function AlterEgo:UpdateUI()
         end
     end
 
-    do -- Raids
+    do -- Raids & Difficulties
         for raidIndex in ipairs(raids) do
             local Label = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
             if self.db.global.raids.enabled then
@@ -1616,7 +1615,7 @@ function AlterEgo:UpdateUI()
                         RaidFrame:Hide()
                     end
                     for difficultyIndex, difficulty in pairs(difficulties) do
-                        local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex]
+                        local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
                         DifficultyFrame:SetScript("OnEnter", function()
                             GameTooltip:ClearAllPoints()
                             GameTooltip:ClearLines()
@@ -1660,9 +1659,9 @@ function AlterEgo:UpdateUI()
                         for encounterIndex, encounter in ipairs(raid.encounters) do
                             local color = {r = 1, g = 1, b = 1}
                             local alpha = 0.1
-                            local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
+                            local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
                             if not EncounterFrame then
-                                EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                                EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                                 local size = sizes.column
                                 size = size - sizes.padding                -- left/right cell padding
                                 size = size - (raid.numEncounters - 1) * 4 -- gaps
