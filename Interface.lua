@@ -59,15 +59,19 @@ function AlterEgo:GetCharacterInfo()
             OnClick = function(character)
                 local windowCharacter = self:GetWindow("Character")
                 windowCharacter:SetSize(600, 200)
+                local data = {
+                    {"Item", "Item Level", "Slot"}
+                }
+                AE_table_foreach(character.equipment, function(item)
+                    table.insert(data, {
+                        item.itemName,
+                        item.itemLevel,
+                        item.itemEquipLoc,
+                    })
+                end)
                 windowCharacter.Body.Table = self:CreateTable(
                     "$parentTable",
-                    {
-                        {"Player", "Slot", "Item", "Item Level"},
-                        {1,        2,      3,      4},
-                        {1,        2,      3,      4},
-                        {1,        2,      3,      4},
-                        {1,        2,      3,      4},
-                    },
+                    data,
                     windowCharacter.Body
                 )
                 windowCharacter:Show()

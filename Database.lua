@@ -1,4 +1,4 @@
-local dbVersion = 6
+local dbVersion = 7
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -66,6 +66,7 @@ local defaultCharacter = {
             color = "ffffffff"
         },
     },
+    equipment = {},
     currencies = {
         -- [1] = {
         --     name = string
@@ -571,6 +572,18 @@ function AlterEgo:UpdateCharacterInfo()
         character.currencies = {}
     else
         wipe(character.currencies or {})
+    end
+    if character.equipment == nil then
+        character.equipment = {}
+    else
+        wipe(character.equipment or {})
+    end
+
+    for i = 1, 17 do
+        local inventoryItemID = GetInventoryItemID("player", i)
+        if type(inventoryItemID) == "number" then
+            table.insert(character.equipment, {GetItemInfo(inventoryItemID)})
+        end
     end
     AE_table_foreach(dataCurrencies, function(dataCurrency)
         local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
