@@ -554,7 +554,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
         anchorFrame = RaidFrame
 
         for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
-            local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+            local DifficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
             DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             DifficultyFrame:SetHeight(self.constants.sizes.row)
@@ -562,7 +562,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             anchorFrame = DifficultyFrame
 
             for encounterIndex in ipairs(raid.encounters) do
-                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                 local size = self.constants.sizes.column
                 size = size - self.constants.sizes.padding                -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
@@ -662,7 +662,7 @@ function AlterEgo:CreateUI()
     self.Window:SetClampedToScreen(true)
     self.Window:SetMovable(true)
     self.Window:SetPoint("CENTER")
-    SetBackgroundColor(self.Window, self.constants.colors.dark:GetRGBA())
+    SetBackgroundColor(self.Window, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
     table.insert(UISpecialFrames, self.Window:GetName())
 
     do -- Border
@@ -739,156 +739,214 @@ function AlterEgo:CreateUI()
         UIDropDownMenu_SetWidth(self.Window.TitleBar.SettingsButton.Dropdown, self.constants.sizes.titlebar.height)
         UIDropDownMenu_Initialize(
             self.Window.TitleBar.SettingsButton.Dropdown,
-            function()
-                UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show the weekly affixes",
-                    checked = self.db.global.showAffixHeader,
-                    isNotRadio = true,
-                    tooltipTitle = "Show the weekly affixes",
-                    tooltipText = "The affixes will be shown at the top.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showAffixHeader = not checked
-                        self:UpdateUI()
+            function(frame, level, subMenuName)
+                if subMenuName == "windowscale" then
+                    for i = 80, 200, 10 do
+                        UIDropDownMenu_AddButton(
+                            {
+                                text = i .. "%",
+                                value = i,
+                                checked = self.db.global.interface.windowScale == i,
+                                func = function(button)
+                                    self.db.global.interface.windowScale = button.value
+                                    self:UpdateUI()
+                                end
+                            },
+                            level
+                        )
                     end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show characters with zero rating",
-                    checked = self.db.global.showZeroRatedCharacters,
-                    isNotRadio = true,
-                    tooltipTitle = "Show characters with zero rating",
-                    tooltipText = "Too many alts?",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showZeroRatedCharacters = not checked
-                        self:UpdateUI()
+                elseif subMenuName == "fontsize" then
+                    for i = 10, 14 do
+                        UIDropDownMenu_AddButton(
+                            {
+                                text = i,
+                                checked = self.db.global.interface.fontSize == i,
+                                func = function(button)
+                                    self.db.global.interface.fontSize = button.value
+                                    self:UpdateUI()
+                                end
+                            },
+                            level
+                        )
                     end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Announce instance resets",
-                    checked = self.db.global.announceResets,
-                    isNotRadio = true,
-                    tooltipTitle = "Announce instance resets",
-                    tooltipText = "Let others in your group know when you've reset the instances.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceResets = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Announce new keystones (Party)",
-                    checked = self.db.global.announceKeystones.autoParty,
-                    isNotRadio = true,
-                    tooltipTitle = "New keystones (Party)",
-                    tooltipText = "Announce to your party when you loot a new keystone.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceKeystones.autoParty = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Announce new keystones (Guild)",
-                    checked = self.db.global.announceKeystones.autoGuild,
-                    isNotRadio = true,
-                    tooltipTitle = "New keystones (Guild)",
-                    tooltipText = "Announce to your guild when you loot a new keystone.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceKeystones.autoGuild = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Announce keystones in one message",
-                    checked = not self.db.global.announceKeystones.multiline,
-                    isNotRadio = true,
-                    tooltipTitle = "Announce keystones in one message",
-                    tooltipText = "With too many alts it could get spammy.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceKeystones.multiline = checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show timed icons",
-                    checked = self.db.global.showTiers,
-                    isNotRadio = true,
-                    tooltipTitle = "Show timed icons",
-                    tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showTiers = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show score colors",
-                    checked = self.db.global.showAffixColors,
-                    isNotRadio = true,
-                    tooltipTitle = "Show score colors",
-                    tooltipText = "Show some colors!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showAffixColors = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show raid progress",
-                    checked = self.db.global.raids and self.db.global.raids.enabled,
-                    isNotRadio = true,
-                    tooltipTitle = "Show raid progress",
-                    tooltipText = "Because Mythic Plus ain't enough!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.raids.enabled = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show difficulty colors",
-                    checked = self.db.global.raids and self.db.global.raids.colors,
-                    isNotRadio = true,
-                    tooltipTitle = "Show difficulty colors",
-                    tooltipText = "Argharhggh! So much greeeen!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.raids.colors = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show the minimap button",
-                    checked = not self.db.global.minimap.hide,
-                    isNotRadio = true,
-                    tooltipTitle = "Show the minimap button",
-                    tooltipText = "It does get crowded around the minimap sometimes.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.minimap.hide = checked
-                        self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Lock the minimap button",
-                    checked = self.db.global.minimap.lock,
-                    isNotRadio = true,
-                    tooltipTitle = "Lock the minimap button",
-                    tooltipText = "No more moving the button around accidentally!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.minimap.lock = not checked
-                        self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                    end
-                })
+                elseif level == 1 then
+                    UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show the weekly affixes",
+                        checked = self.db.global.showAffixHeader,
+                        isNotRadio = true,
+                        tooltipTitle = "Show the weekly affixes",
+                        tooltipText = "The affixes will be shown at the top.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showAffixHeader = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show characters with zero rating",
+                        checked = self.db.global.showZeroRatedCharacters,
+                        isNotRadio = true,
+                        tooltipTitle = "Show characters with zero rating",
+                        tooltipText = "Too many alts?",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showZeroRatedCharacters = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Announce instance resets",
+                        checked = self.db.global.announceResets,
+                        isNotRadio = true,
+                        tooltipTitle = "Announce instance resets",
+                        tooltipText = "Let others in your group know when you've reset the instances.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceResets = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Announce new keystones (Party)",
+                        checked = self.db.global.announceKeystones.autoParty,
+                        isNotRadio = true,
+                        tooltipTitle = "New keystones (Party)",
+                        tooltipText = "Announce to your party when you loot a new keystone.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceKeystones.autoParty = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Announce new keystones (Guild)",
+                        checked = self.db.global.announceKeystones.autoGuild,
+                        isNotRadio = true,
+                        tooltipTitle = "New keystones (Guild)",
+                        tooltipText = "Announce to your guild when you loot a new keystone.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceKeystones.autoGuild = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Announce keystones in one message",
+                        checked = not self.db.global.announceKeystones.multiline,
+                        isNotRadio = true,
+                        tooltipTitle = "Announce keystones in one message",
+                        tooltipText = "With too many alts it could get spammy.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceKeystones.multiline = checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show timed icons",
+                        checked = self.db.global.showTiers,
+                        isNotRadio = true,
+                        tooltipTitle = "Show timed icons",
+                        tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showTiers = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show score colors",
+                        checked = self.db.global.showAffixColors,
+                        isNotRadio = true,
+                        tooltipTitle = "Show score colors",
+                        tooltipText = "Show some colors!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showAffixColors = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show raid progress",
+                        checked = self.db.global.raids and self.db.global.raids.enabled,
+                        isNotRadio = true,
+                        tooltipTitle = "Show raid progress",
+                        tooltipText = "Because Mythic Plus ain't enough!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.raids.enabled = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show difficulty colors",
+                        checked = self.db.global.raids and self.db.global.raids.colors,
+                        isNotRadio = true,
+                        tooltipTitle = "Show difficulty colors",
+                        tooltipText = "Argharhggh! So much greeeen!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.raids.colors = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show the minimap button",
+                        checked = not self.db.global.minimap.hide,
+                        isNotRadio = true,
+                        tooltipTitle = "Show the minimap button",
+                        tooltipText = "It does get crowded around the minimap sometimes.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.minimap.hide = checked
+                            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Lock the minimap button",
+                        checked = self.db.global.minimap.lock,
+                        isNotRadio = true,
+                        tooltipTitle = "Lock the minimap button",
+                        tooltipText = "No more moving the button around accidentally!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.minimap.lock = not checked
+                            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Window color",
+                        notCheckable = true,
+                        hasColorSwatch = true,
+                        r = self.db.global.interface.windowColor.r,
+                        g = self.db.global.interface.windowColor.g,
+                        b = self.db.global.interface.windowColor.b,
+                        -- notClickable = true,
+                        hasOpacity = false,
+                        func = UIDropDownMenuButton_OpenColorPicker,
+                        swatchFunc = function()
+                            local r, g, b = ColorPickerFrame:GetColorRGB();
+                            self.db.global.interface.windowColor.r = r
+                            self.db.global.interface.windowColor.g = g
+                            self.db.global.interface.windowColor.b = b
+                            SetBackgroundColor(self.Window, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+                        end,
+                        cancelFunc = function(color)
+                            self.db.global.interface.windowColor.r = color.r
+                            self.db.global.interface.windowColor.g = color.g
+                            self.db.global.interface.windowColor.b = color.b
+                            SetBackgroundColor(self.Window, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
+                    UIDropDownMenu_AddButton({text = "Font size", notCheckable = true, hasArrow = true, menuList = "fontsize"})
+                end
             end,
             "MENU"
         )
@@ -1122,7 +1180,7 @@ function AlterEgo:CreateUI()
         end
     end
 
-    do -- Dungeons Label
+    do -- MythicPlus Label
         local Label = CreateFrame("Frame", "$parentMythicPlusLabel", self.Window.Body.Sidebar)
         Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1181,7 +1239,7 @@ function AlterEgo:CreateUI()
             anchorFrame = RaidFrame
 
             for difficultyIndex, difficulty in ipairs(difficulties) do
-                local DifficultFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+                local DifficultFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
                 DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
                 DifficultFrame:SetHeight(self.constants.sizes.row)
@@ -1279,6 +1337,8 @@ function AlterEgo:UpdateUI()
     end
 
     self.Window:SetSize(self:GetWindowSize())
+    self.Window:SetScale(self.db.global.interface.windowScale / 100)
+    SetBackgroundColor(self.Window, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
     self.Window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * self.constants.sizes.column, self.Window.Body.ScrollFrame:GetHeight())
 
     if self:IsScrollbarNeeded() then
@@ -1293,6 +1353,8 @@ function AlterEgo:UpdateUI()
         self.Window.Body:SetPoint("BOTTOMRIGHT", self.Window, "BOTTOMRIGHT")
         self.Window.Footer:Hide()
     end
+
+    self.Window.Body.NoCharacterText:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
 
     local currentAffixes = C_MythicPlus.GetCurrentAffixes();
     anchorFrame = self.Window.TitleBar
@@ -1335,8 +1397,7 @@ function AlterEgo:UpdateUI()
 
     self:HideCharacterColumns()
 
-    -- Character Labels
-    do
+    do -- Character Labels
         anchorFrame = self.Window.Body.Sidebar
         for labelIndex, info in ipairs(labels) do
             local Label = _G[self.Window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
@@ -1350,10 +1411,16 @@ function AlterEgo:UpdateUI()
                     Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
                     Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
                 end
+                Label.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
                 Label:Show()
                 anchorFrame = Label
             end
         end
+    end
+
+    do -- MythicPlus Label
+        local Label = _G[self.Window.Body.Sidebar:GetName() .. "MythicPlusLabel"]
+        Label.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
     end
 
     do -- Dungeon names
@@ -1389,13 +1456,21 @@ function AlterEgo:UpdateUI()
         end
     end
 
-    do -- Raids
+    do -- Raids & Difficulties
         for raidIndex in ipairs(raids) do
             local Label = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
             if self.db.global.raids.enabled then
+                Label.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
                 Label:Show()
             else
                 Label:Hide()
+            end
+
+            for difficultyIndex, difficulty in ipairs(difficulties) do
+                local DifficultFrame = _G[Label:GetName() .. "Difficulty" .. difficultyIndex]
+                if DifficultFrame then
+                    DifficultFrame.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                end
             end
         end
     end
@@ -1419,6 +1494,7 @@ function AlterEgo:UpdateUI()
                 for labelIndex, info in ipairs(labels) do
                     local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
                     CharacterFrame.Text:SetText(info.value(character))
+                    CharacterFrame.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
                     if info.OnEnter then
                         CharacterFrame:SetScript("OnEnter", function()
                             GameTooltip:ClearAllPoints()
@@ -1549,7 +1625,9 @@ function AlterEgo:UpdateUI()
                         end
 
                         AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
+                        AffixFrame.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
                         AffixFrame.Tier:SetText(tier)
+                        AffixFrame.Tier:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
 
                         if self.db.global.showTiers then
                             AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
@@ -1573,7 +1651,7 @@ function AlterEgo:UpdateUI()
                         RaidFrame:Hide()
                     end
                     for difficultyIndex, difficulty in pairs(difficulties) do
-                        local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex]
+                        local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
                         DifficultyFrame:SetScript("OnEnter", function()
                             GameTooltip:ClearAllPoints()
                             GameTooltip:ClearLines()
@@ -1617,9 +1695,9 @@ function AlterEgo:UpdateUI()
                         for encounterIndex, encounter in ipairs(raid.encounters) do
                             local color = {r = 1, g = 1, b = 1}
                             local alpha = 0.1
-                            local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
+                            local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
                             if not EncounterFrame then
-                                EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                                EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                                 local size = self.constants.sizes.column
                                 size = size - self.constants.sizes.padding                -- left/right cell padding
                                 size = size - (raid.numEncounters - 1) * 4 -- gaps
