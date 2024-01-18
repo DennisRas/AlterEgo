@@ -1,4 +1,3 @@
-local numWindows = 0
 local windows = {}
 function AlterEgo:GetWindow(name)
     name = "AlterEgo" .. name
@@ -12,22 +11,17 @@ function AlterEgo:CreateWindow(name, title, parent)
         return window
     end
 
-    numWindows = numWindows + 1
     if parent == nil then parent = UIParent end
-    if title == nil then title = name end
+    if title == nil then title = "" end
 
     local windowFrame = CreateFrame("Frame", name, parent)
     windowFrame:SetFrameStrata("HIGH")
-    windowFrame:SetFrameLevel(100)
+    windowFrame:SetFrameLevel(100 * (AE_table_count(windows) + 1))
     windowFrame:SetClampedToScreen(true)
     windowFrame:SetMovable(true)
     windowFrame:SetUserPlaced(true)
     windowFrame:SetPoint("CENTER")
-    windowFrame:SetScript("OnShow", function()
-        windowFrame:Raise()
-        DevTools_Dump(windowFrame:GetFrameLevel())
-    end)
-    self:SetBackgroundColor(windowFrame, self.constants.colors.dark:GetRGBA())
+    self:SetBackgroundColor(windowFrame, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
 
     do -- Border
         windowFrame.Border = CreateFrame("Frame", "$parentBorder", windowFrame, "BackdropTemplate")
@@ -42,12 +36,7 @@ function AlterEgo:CreateWindow(name, title, parent)
         windowFrame.TitleBar = CreateFrame("Frame", "$parentTitleBar", windowFrame)
         windowFrame.TitleBar:EnableMouse(true)
         windowFrame.TitleBar:RegisterForDrag("LeftButton")
-        windowFrame.TitleBar:SetScript("OnDragStart", function()
-            windowFrame:SetFrameLevel(100)
-            windowFrame:Raise()
-            windowFrame:StartMoving()
-            DevTools_Dump(windowFrame:GetFrameLevel())
-        end)
+        windowFrame.TitleBar:SetScript("OnDragStart", function() windowFrame:StartMoving() end)
         windowFrame.TitleBar:SetScript("OnDragStop", function() windowFrame:StopMovingOrSizing() end)
         windowFrame.TitleBar:SetPoint("TOPLEFT", windowFrame, "TOPLEFT")
         windowFrame.TitleBar:SetPoint("TOPRIGHT", windowFrame, "TOPRIGHT")
