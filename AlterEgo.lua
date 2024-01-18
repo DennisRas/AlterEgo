@@ -11,6 +11,7 @@ AlterEgo.constants = {
     },
     media = {
         WhiteSquare = "Interface/BUTTONS/WHITE8X8",
+        Logo = "Interface/AddOns/AlterEgo/Media/Logo.blp",
         LogoTransparent = "Interface/AddOns/AlterEgo/Media/LogoTransparent.blp",
         IconClose = "Interface/AddOns/AlterEgo/Media/Icon_Close.blp",
         IconSettings = "Interface/AddOns/AlterEgo/Media/Icon_Settings.blp",
@@ -48,33 +49,37 @@ AlterEgo.constants = {
         {value = "class.desc",  text = "Class (Z-A)"},
     }
 }
-AlterEgo.libDataObject = {
-    label = "AlterEgo",
-    tocname = "AlterEgo",
-    type = "launcher",
-    icon = "Interface/AddOns/AlterEgo/Media/Logo.blp",
-    OnClick = function()
-        AlterEgo:ToggleWindow()
-    end,
-    OnTooltipShow = function(tooltip)
-        tooltip:SetText("AlterEgo", 1, 1, 1)
-        tooltip:AddLine("Click to show the character summary.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-        local dragText = "Drag to move this icon"
-        if AlterEgo.db.global.minimap.lock then
-            dragText = dragText .. " |cffff0000(locked)|r"
-        end
-        tooltip:AddLine(dragText .. ".", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-    end
-}
 
 function AlterEgo:OnInitialize()
+    _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
+
     self:InitDB()
-    self.Libs.LDB:NewDataObject("AlterEgo", self.libDataObject)
-    self.Libs.LDBIcon:Register("AlterEgo", self.libDataObject, self.db.global.minimap)
+    self:MigrateDB()
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
     self:CreateUI()
-    _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
+
+    local libDataObject = {
+        label = "AlterEgo",
+        tocname = "AlterEgo",
+        type = "launcher",
+        icon = self.constants.media.Logo,
+        OnClick = function()
+            self:ToggleWindow()
+        end,
+        OnTooltipShow = function(tooltip)
+            tooltip:SetText("AlterEgo", 1, 1, 1)
+            tooltip:AddLine("Click to show the character summary.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+            local dragText = "Drag to move this icon"
+            if self.db.global.minimap.lock then
+                dragText = dragText .. " |cffff0000(locked)|r"
+            end
+            tooltip:AddLine(dragText .. ".", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+        end
+    }
+    self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
+    self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
+
     hooksecurefunc("ResetInstances", function()
         self:OnInstanceReset()
     end)
@@ -105,7 +110,6 @@ function AlterEgo:OnEnable()
         RequestRaidInfo()
     end)
 
-    self:MigrateDB()
     self:loadGameData()
     self:UpdateDB()
 end
