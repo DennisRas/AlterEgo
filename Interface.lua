@@ -1395,9 +1395,11 @@ function AlterEgo:UpdateUI()
                     if IsSpellKnown(dungeon.spellID) then
                         GameTooltip:ClearLines()
                         GameTooltip:SetSpellByID(dungeon.spellID)
+                        GameTooltip:AddLine(" ")
+                        GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
                         _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
                     else
-                        GameTooltip:AddLine("Time this dungeon on level 20 to unlock teleportation.", nil, nil, nil, true)
+                        GameTooltip:AddLine("Time this dungeon on level 20 or above to unlock teleportation.", nil, nil, nil, true)
                     end
                 end
                 GameTooltip:Show()
