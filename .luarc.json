@@ -143,6 +143,7 @@
         "INSTANCE_RESET_FAILED_OFFLINE",
         "INSTANCE_RESET_FAILED_ZONING",
         "STANDARD_TEXT_FONT",
-        "UIDropDownMenuButton_OpenColorPicker"
+        "UIDropDownMenuButton_OpenColorPicker",
+        "CreateSimpleTextureMarkup"
     ]
 }
