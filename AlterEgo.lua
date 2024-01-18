@@ -5,22 +5,18 @@ AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
 AlterEgo.constants = {
     prefix = "<AlterEgo> ",
-    assets = {
-        font = {
-            file = "Fonts\\FRIZQT__.TTF",
-            size = 12,
-            flags = ""
-        },
-        textures = {
-            white = "Interface/BUTTONS/WHITE8X8",
-            logo = "Interface/AddOns/AlterEgo/Media/LogoTransparent.blp",
-            iconClose = "Interface/AddOns/AlterEgo/Media/Icon_Close.blp",
-            iconSettings = "Interface/AddOns/AlterEgo/Media/Icon_Settings.blp",
-            iconSorting = "Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp",
-            iconCharacters = "Interface/AddOns/AlterEgo/Media/Icon_Characters.blp",
-            iconAnnounce = "Interface/AddOns/AlterEgo/Media/Icon_Announce.blp",
-            border = "Interface/Tooltips/UI-Tooltip-Border"
-        }
+    font = {
+        file = STANDARD_TEXT_FONT,
+        flags = ""
+    },
+    media = {
+        WhiteSquare = "Interface/BUTTONS/WHITE8X8",
+        LogoTransparent = "Interface/AddOns/AlterEgo/Media/LogoTransparent.blp",
+        IconClose = "Interface/AddOns/AlterEgo/Media/Icon_Close.blp",
+        IconSettings = "Interface/AddOns/AlterEgo/Media/Icon_Settings.blp",
+        IconSorting = "Interface/AddOns/AlterEgo/Media/Icon_Sorting.blp",
+        IconCharacters = "Interface/AddOns/AlterEgo/Media/Icon_Characters.blp",
+        IconAnnounce = "Interface/AddOns/AlterEgo/Media/Icon_Announce.blp"
     },
     sizes = {
         padding = 8,
@@ -38,10 +34,6 @@ AlterEgo.constants = {
             collapsedWidth = 30
         }
     },
-    colors = {
-        primary = CreateColorFromHexString("FF98cbd8"),
-        dark = CreateColorFromHexString("FF1d242a"),
-    },
     sortingOptions = {
         {value = "lastUpdate",  text = "Recently played"},
         {value = "name.asc",    text = "Name (A-Z)"},
@@ -56,8 +48,7 @@ AlterEgo.constants = {
         {value = "class.desc",  text = "Class (Z-A)"},
     }
 }
-
-local libDataObject = {
+AlterEgo.libDataObject = {
     label = "AlterEgo",
     tocname = "AlterEgo",
     type = "launcher",
@@ -78,8 +69,8 @@ local libDataObject = {
 
 function AlterEgo:OnInitialize()
     self:InitDB()
-    self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
-    self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
+    self.Libs.LDB:NewDataObject("AlterEgo", self.libDataObject)
+    self.Libs.LDBIcon:Register("AlterEgo", self.libDataObject, self.db.global.minimap)
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
     self:CreateUI()
@@ -106,6 +97,7 @@ function AlterEgo:OnEnable()
     end)
     self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
     self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
+    self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, "UpdateCharacterInfo")
 
     C_Timer.After(5, function()
         C_MythicPlus.RequestCurrentAffixes();

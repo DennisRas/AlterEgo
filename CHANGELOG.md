@@ -1,11 +1,24 @@
 # Changelog
 
-## v1.0.6 - 2023-12-29
+## v1.0.9 - 2024-01-07
+
+### Fixed
+
+- Fixed font issues in different languages/alphabets (Cyrillic etc.)
+
+## v1.0.8 - 2024-01-06
+
+### Fixed
+
+- Fixed an issue caused by the new teleport feature - Thanks to CrackedOrb/arcadepro for the report
+
+## v1.0.7 - 2024-01-05
 
 ### Added
 
 - You can now sort characters by class name
 - Added dungeon teleportation to dungeon names
+- Added flightstone/crest/catalyst tracking to the tooltips of character names
 
 ### Updated
 

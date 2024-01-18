@@ -35,6 +35,20 @@ function AlterEgo:GetCharacterInfo()
                 if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
                     GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
                 end
+                if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
+                    GameTooltip:AddLine(" ");
+                    GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
+                    table.sort(character.currencies, function(a, b)
+                        return a.id < b.id
+                    end)
+                    AE_table_foreach(character.currencies, function(currency)
+                        if currency.useTotalEarnedForMaxQty then
+                            GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d/%d", currency.totalEarned, currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                        else
+                            GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d", currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                        end
+                    end)
+                end
                 if character.lastUpdate ~= nil then
                     GameTooltip:AddLine(" ");
                     GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
@@ -436,7 +450,7 @@ end
 function AlterEgo:SetBackgroundColor(parent, r, g, b, a)
     if not parent.Background then
         parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
-        parent.Background:SetTexture(self.constants.assets.textures.white)
+        parent.Background:SetTexture(self.constants.media.WhiteSquare)
         parent.Background:SetAllPoints()
     end
 
@@ -472,7 +486,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", self.constants.sizes.padding, 0)
             CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -self.constants.sizes.padding, 0)
             CharacterFrame.Text:SetJustifyH("CENTER")
-            CharacterFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            CharacterFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
 
             if info.backgroundColor then
                 self:SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
@@ -537,12 +551,12 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
             AffixFrame.Text:SetPoint("TOPLEFT", AffixFrame, "TOPLEFT", 1, -1)
             AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-            AffixFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            AffixFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             AffixFrame.Text:SetJustifyH("RIGHT")
             AffixFrame.Tier = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Tier", "OVERLAY")
             AffixFrame.Tier:SetPoint("TOPLEFT", AffixFrame, "TOP", 1, -1)
             AffixFrame.Tier:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-            AffixFrame.Tier:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            AffixFrame.Tier:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             AffixFrame.Tier:SetJustifyH("LEFT")
         end
         anchorFrame = DungeonFrame
@@ -558,7 +572,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
         anchorFrame = RaidFrame
 
         for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
-            local DifficultyFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+            local DifficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
             DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
             DifficultyFrame:SetHeight(self.constants.sizes.row)
@@ -566,7 +580,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             anchorFrame = DifficultyFrame
 
             for encounterIndex in ipairs(raid.encounters) do
-                local EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                 local size = self.constants.sizes.column
                 size = size - self.constants.sizes.padding -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
@@ -648,24 +662,7 @@ function AlterEgo:CreateUI()
     local anchorFrame
 
     local windowCharacter = self:CreateWindow("Character", "Character", UIParent)
-
     local windowMain = self:CreateWindow("Main", "AlterEgo", UIParent)
-    -- window = CreateFrame("Frame", "AlterEgoWindow", UIParent)
-    -- window:SetFrameStrata("HIGH")
-    -- window:SetClampedToScreen(true)
-    -- window:SetMovable(true)
-    -- window:SetPoint("CENTER")
-    --selfAlterEgo:SetBackgroundColor(window, colors.dark:GetRGBA())
-    -- table.insert(UISpecialFrames, window:GetName())
-
-    -- do -- Border
-    --     window.Border = CreateFrame("Frame", "$parentBorder", window, "BackdropTemplate")
-    --     window.Border:SetPoint("TOPLEFT", window, "TOPLEFT", -3, 3)
-    --     window.Border:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 3, -3)
-    --     window.Border:SetBackdrop({edgeFile = self.constants.assets.textures.border, edgeSize = 16, insets = {left = self.constants.sizes.border, right = self.constants.sizes.border, top = self.constants.sizes.border, bottom = self.constants.sizes.border}})
-    --     window.Border:SetBackdropBorderColor(0, 0, 0, .5)
-    --     window.Border:Show()
-    -- end
 
     do -- TitleBar
         anchorFrame = windowMain.TitleBar
@@ -674,31 +671,6 @@ function AlterEgo:CreateUI()
             windowMain.TitleBar["Affix" .. i]:SetSize(20, 20)
             anchorFrame = windowMain.TitleBar["Affix" .. i]
         end
-        -- windowMain.TitleBar.CloseButton = CreateFrame("Button", "$parentCloseButton", windowMain.TitleBar)
-        -- windowMain.TitleBar.CloseButton:SetPoint("RIGHT", windowMain.TitleBar, "RIGHT", 0, 0)
-        -- windowMain.TitleBar.CloseButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
-        -- windowMain.TitleBar.CloseButton:RegisterForClicks("AnyUp")
-        -- windowMain.TitleBar.CloseButton:SetScript("OnClick", function() self:ToggleWindow() end)
-        -- windowMain.TitleBar.CloseButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.CloseButton:GetName() .. "Icon", "ARTWORK")
-        -- windowMain.TitleBar.CloseButton.Icon:SetPoint("CENTER", windowMain.TitleBar.CloseButton, "CENTER")
-        -- windowMain.TitleBar.CloseButton.Icon:SetSize(10, 10)
-        -- windowMain.TitleBar.CloseButton.Icon:SetTexture(self.constants.assets.textures.iconClose)
-        -- windowMain.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        -- windowMain.TitleBar.CloseButton:SetScript("OnEnter", function()
-        --     windowMain.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-        --     self:SetBackgroundColor(windowMain.TitleBar.CloseButton, 1, 1, 1, 0.05)
-        --     GameTooltip:ClearAllPoints()
-        --     GameTooltip:ClearLines()
-        --     GameTooltip:SetOwner(windowMain.TitleBar.CloseButton, "ANCHOR_TOP")
-        --     GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
-        --     GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        --     GameTooltip:Show()
-        -- end)
-        -- windowMain.TitleBar.CloseButton:SetScript("OnLeave", function()
-        --     windowMain.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-        --     self:SetBackgroundColor(windowMain.TitleBar.CloseButton, 1, 1, 1, 0)
-        --     GameTooltip:Hide()
-        -- end)
         windowMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", windowMain.TitleBar)
         windowMain.TitleBar.SettingsButton:SetPoint("RIGHT", windowMain.TitleBar.CloseButton, "LEFT", 0, 0)
         windowMain.TitleBar.SettingsButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
@@ -707,7 +679,7 @@ function AlterEgo:CreateUI()
         windowMain.TitleBar.SettingsButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
         windowMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", windowMain.TitleBar.SettingsButton, "CENTER")
         windowMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
-        windowMain.TitleBar.SettingsButton.Icon:SetTexture(self.constants.assets.textures.iconSettings)
+        windowMain.TitleBar.SettingsButton.Icon:SetTexture(self.constants.media.IconSettings)
         windowMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
         windowMain.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.SettingsButton:GetName() .. "Dropdown", windowMain.TitleBar, "UIDropDownMenuTemplate")
         windowMain.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.SettingsButton, "CENTER", 0, -6)
@@ -715,156 +687,214 @@ function AlterEgo:CreateUI()
         UIDropDownMenu_SetWidth(windowMain.TitleBar.SettingsButton.Dropdown, self.constants.sizes.titlebar.height)
         UIDropDownMenu_Initialize(
             windowMain.TitleBar.SettingsButton.Dropdown,
-            function()
-                UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show the weekly affixes",
-                    checked = self.db.global.showAffixHeader,
-                    isNotRadio = true,
-                    tooltipTitle = "Show the weekly affixes",
-                    tooltipText = "The affixes will be shown at the top.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showAffixHeader = not checked
-                        self:UpdateUI()
+            function(frame, level, subMenuName)
+                if subMenuName == "windowscale" then
+                    for i = 80, 200, 10 do
+                        UIDropDownMenu_AddButton(
+                            {
+                                text = i .. "%",
+                                value = i,
+                                checked = self.db.global.interface.windowScale == i,
+                                func = function(button)
+                                    self.db.global.interface.windowScale = button.value
+                                    self:UpdateUI()
+                                end
+                            },
+                            level
+                        )
                     end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show characters with zero rating",
-                    checked = self.db.global.showZeroRatedCharacters,
-                    isNotRadio = true,
-                    tooltipTitle = "Show characters with zero rating",
-                    tooltipText = "Too many alts?",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showZeroRatedCharacters = not checked
-                        self:UpdateUI()
+                elseif subMenuName == "fontsize" then
+                    for i = 10, 14 do
+                        UIDropDownMenu_AddButton(
+                            {
+                                text = i,
+                                checked = self.db.global.interface.fontSize == i,
+                                func = function(button)
+                                    self.db.global.interface.fontSize = button.value
+                                    self:UpdateUI()
+                                end
+                            },
+                            level
+                        )
                     end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Announce instance resets",
-                    checked = self.db.global.announceResets,
-                    isNotRadio = true,
-                    tooltipTitle = "Announce instance resets",
-                    tooltipText = "Let others in your group know when you've reset the instances.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceResets = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Announce new keystones (Party)",
-                    checked = self.db.global.announceKeystones.autoParty,
-                    isNotRadio = true,
-                    tooltipTitle = "New keystones (Party)",
-                    tooltipText = "Announce to your party when you loot a new keystone.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceKeystones.autoParty = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Announce new keystones (Guild)",
-                    checked = self.db.global.announceKeystones.autoGuild,
-                    isNotRadio = true,
-                    tooltipTitle = "New keystones (Guild)",
-                    tooltipText = "Announce to your guild when you loot a new keystone.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceKeystones.autoGuild = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Announce keystones in one message",
-                    checked = not self.db.global.announceKeystones.multiline,
-                    isNotRadio = true,
-                    tooltipTitle = "Announce keystones in one message",
-                    tooltipText = "With too many alts it could get spammy.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.announceKeystones.multiline = checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show timed icons",
-                    checked = self.db.global.showTiers,
-                    isNotRadio = true,
-                    tooltipTitle = "Show timed icons",
-                    tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showTiers = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show score colors",
-                    checked = self.db.global.showAffixColors,
-                    isNotRadio = true,
-                    tooltipTitle = "Show score colors",
-                    tooltipText = "Show some colors!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.showAffixColors = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show raid progress",
-                    checked = self.db.global.raids and self.db.global.raids.enabled,
-                    isNotRadio = true,
-                    tooltipTitle = "Show raid progress",
-                    tooltipText = "Because Mythic Plus ain't enough!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.raids.enabled = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Show difficulty colors",
-                    checked = self.db.global.raids and self.db.global.raids.colors,
-                    isNotRadio = true,
-                    tooltipTitle = "Show difficulty colors",
-                    tooltipText = "Argharhggh! So much greeeen!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.raids.colors = not checked
-                        self:UpdateUI()
-                    end
-                })
-                UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
-                UIDropDownMenu_AddButton({
-                    text = "Show the minimap button",
-                    checked = not self.db.global.minimap.hide,
-                    isNotRadio = true,
-                    tooltipTitle = "Show the minimap button",
-                    tooltipText = "It does get crowded around the minimap sometimes.",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.minimap.hide = checked
-                        self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                    end
-                })
-                UIDropDownMenu_AddButton({
-                    text = "Lock the minimap button",
-                    checked = self.db.global.minimap.lock,
-                    isNotRadio = true,
-                    tooltipTitle = "Lock the minimap button",
-                    tooltipText = "No more moving the button around accidentally!",
-                    tooltipOnButton = true,
-                    func = function(button, arg1, arg2, checked)
-                        self.db.global.minimap.lock = not checked
-                        self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
-                    end
-                })
+                elseif level == 1 then
+                    UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show the weekly affixes",
+                        checked = self.db.global.showAffixHeader,
+                        isNotRadio = true,
+                        tooltipTitle = "Show the weekly affixes",
+                        tooltipText = "The affixes will be shown at the top.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showAffixHeader = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show characters with zero rating",
+                        checked = self.db.global.showZeroRatedCharacters,
+                        isNotRadio = true,
+                        tooltipTitle = "Show characters with zero rating",
+                        tooltipText = "Too many alts?",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showZeroRatedCharacters = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Announce instance resets",
+                        checked = self.db.global.announceResets,
+                        isNotRadio = true,
+                        tooltipTitle = "Announce instance resets",
+                        tooltipText = "Let others in your group know when you've reset the instances.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceResets = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Announce new keystones (Party)",
+                        checked = self.db.global.announceKeystones.autoParty,
+                        isNotRadio = true,
+                        tooltipTitle = "New keystones (Party)",
+                        tooltipText = "Announce to your party when you loot a new keystone.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceKeystones.autoParty = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Announce new keystones (Guild)",
+                        checked = self.db.global.announceKeystones.autoGuild,
+                        isNotRadio = true,
+                        tooltipTitle = "New keystones (Guild)",
+                        tooltipText = "Announce to your guild when you loot a new keystone.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceKeystones.autoGuild = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Announce keystones in one message",
+                        checked = not self.db.global.announceKeystones.multiline,
+                        isNotRadio = true,
+                        tooltipTitle = "Announce keystones in one message",
+                        tooltipText = "With too many alts it could get spammy.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.announceKeystones.multiline = checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show timed icons",
+                        checked = self.db.global.showTiers,
+                        isNotRadio = true,
+                        tooltipTitle = "Show timed icons",
+                        tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showTiers = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show score colors",
+                        checked = self.db.global.showAffixColors,
+                        isNotRadio = true,
+                        tooltipTitle = "Show score colors",
+                        tooltipText = "Show some colors!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showAffixColors = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show raid progress",
+                        checked = self.db.global.raids and self.db.global.raids.enabled,
+                        isNotRadio = true,
+                        tooltipTitle = "Show raid progress",
+                        tooltipText = "Because Mythic Plus ain't enough!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.raids.enabled = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show difficulty colors",
+                        checked = self.db.global.raids and self.db.global.raids.colors,
+                        isNotRadio = true,
+                        tooltipTitle = "Show difficulty colors",
+                        tooltipText = "Argharhggh! So much greeeen!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.raids.colors = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show the minimap button",
+                        checked = not self.db.global.minimap.hide,
+                        isNotRadio = true,
+                        tooltipTitle = "Show the minimap button",
+                        tooltipText = "It does get crowded around the minimap sometimes.",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.minimap.hide = checked
+                            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Lock the minimap button",
+                        checked = self.db.global.minimap.lock,
+                        isNotRadio = true,
+                        tooltipTitle = "Lock the minimap button",
+                        tooltipText = "No more moving the button around accidentally!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.minimap.lock = not checked
+                            self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Window color",
+                        notCheckable = true,
+                        hasColorSwatch = true,
+                        r = self.db.global.interface.windowColor.r,
+                        g = self.db.global.interface.windowColor.g,
+                        b = self.db.global.interface.windowColor.b,
+                        -- notClickable = true,
+                        hasOpacity = false,
+                        func = UIDropDownMenuButton_OpenColorPicker,
+                        swatchFunc = function()
+                            local r, g, b = ColorPickerFrame:GetColorRGB();
+                            self.db.global.interface.windowColor.r = r
+                            self.db.global.interface.windowColor.g = g
+                            self.db.global.interface.windowColor.b = b
+                            self:SetBackgroundColor(windowMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+                        end,
+                        cancelFunc = function(color)
+                            self.db.global.interface.windowColor.r = color.r
+                            self.db.global.interface.windowColor.g = color.g
+                            self.db.global.interface.windowColor.b = color.b
+                            self:SetBackgroundColor(windowMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+                        end
+                    })
+                    UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
+                    UIDropDownMenu_AddButton({text = "Font size", notCheckable = true, hasArrow = true, menuList = "fontsize"})
+                end
             end,
             "MENU"
         )
@@ -890,7 +920,7 @@ function AlterEgo:CreateUI()
         windowMain.TitleBar.SortingButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
         windowMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", windowMain.TitleBar.SortingButton, "CENTER")
         windowMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
-        windowMain.TitleBar.SortingButton.Icon:SetTexture(self.constants.assets.textures.iconSorting)
+        windowMain.TitleBar.SortingButton.Icon:SetTexture(self.constants.media.IconSorting)
         windowMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
         windowMain.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.SortingButton:GetName() .. "Dropdown", windowMain.TitleBar.SortingButton, "UIDropDownMenuTemplate")
         windowMain.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.SortingButton, "CENTER", 0, -6)
@@ -935,7 +965,7 @@ function AlterEgo:CreateUI()
         windowMain.TitleBar.CharactersButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
         windowMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", windowMain.TitleBar.CharactersButton, "CENTER")
         windowMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
-        windowMain.TitleBar.CharactersButton.Icon:SetTexture(self.constants.assets.textures.iconCharacters)
+        windowMain.TitleBar.CharactersButton.Icon:SetTexture(self.constants.media.IconCharacters)
         windowMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
         windowMain.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.CharactersButton:GetName() .. "Dropdown", windowMain.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
         windowMain.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.CharactersButton, "CENTER", 0, -6)
@@ -989,7 +1019,7 @@ function AlterEgo:CreateUI()
         windowMain.TitleBar.AnnounceButton.Icon = windowMain.TitleBar:CreateTexture(windowMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
         windowMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", windowMain.TitleBar.AnnounceButton, "CENTER")
         windowMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
-        windowMain.TitleBar.AnnounceButton.Icon:SetTexture(self.constants.assets.textures.iconAnnounce)
+        windowMain.TitleBar.AnnounceButton.Icon:SetTexture(self.constants.media.IconAnnounce)
         windowMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
         windowMain.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", windowMain.TitleBar.AnnounceButton:GetName() .. "Dropdown", windowMain.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
         windowMain.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", windowMain.TitleBar.AnnounceButton, "CENTER", 0, -6)
@@ -1061,7 +1091,7 @@ function AlterEgo:CreateUI()
         windowMain.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", windowMain.Body, "BOTTOMRIGHT", -50, 50)
         windowMain.Body.NoCharacterText:SetJustifyH("CENTER")
         windowMain.Body.NoCharacterText:SetJustifyV("CENTER")
-        windowMain.Body.NoCharacterText:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+        windowMain.Body.NoCharacterText:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
         windowMain.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
         windowMain.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
         windowMain.Body.NoCharacterText:Hide()
@@ -1092,14 +1122,14 @@ function AlterEgo:CreateUI()
             Label.Text:SetPoint("LEFT", Label, "LEFT", self.constants.sizes.padding, 0)
             Label.Text:SetPoint("RIGHT", Label, "RIGHT", -self.constants.sizes.padding, 0)
             Label.Text:SetJustifyH("LEFT")
-            Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             Label.Text:SetText(info.label)
             Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
             anchorFrame = Label
         end
     end
 
-    do -- Dungeons Label
+    do -- MythicPlus Label
         local Label = CreateFrame("Frame", "$parentMythicPlusLabel", windowMain.Body.Sidebar)
         Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1107,7 +1137,7 @@ function AlterEgo:CreateUI()
         Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
         Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", self.constants.sizes.padding, 0)
         Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
-        Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+        Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
         Label.Text:SetJustifyH("LEFT")
         Label.Text:SetText("Mythic Plus")
         Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1116,7 +1146,7 @@ function AlterEgo:CreateUI()
 
     do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
-            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, windowMain.Body.Sidebar, "SecureActionButtonTemplate")
+            local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, windowMain.Body.Sidebar, "InsecureActionButtonTemplate")
             Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
             Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
             Label:SetHeight(self.constants.sizes.row)
@@ -1128,7 +1158,7 @@ function AlterEgo:CreateUI()
             Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", 16 + self.constants.sizes.padding * 2, -3)
             Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
             Label.Text:SetJustifyH("LEFT")
-            Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             anchorFrame = Label
         end
@@ -1151,14 +1181,14 @@ function AlterEgo:CreateUI()
             RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
             RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", self.constants.sizes.padding, 0)
             RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
-            RaidFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            RaidFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             RaidFrame.Text:SetJustifyH("LEFT")
             RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
             RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
             anchorFrame = RaidFrame
 
             for difficultyIndex, difficulty in ipairs(difficulties) do
-                local DifficultFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex .. "Difficulty" .. difficultyIndex, RaidFrame)
+                local DifficultFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
                 DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
                 DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
                 DifficultFrame:SetHeight(self.constants.sizes.row)
@@ -1174,7 +1204,7 @@ function AlterEgo:CreateUI()
                 DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", self.constants.sizes.padding, -3)
                 DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
                 DifficultFrame.Text:SetJustifyH("LEFT")
-                DifficultFrame.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+                DifficultFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 DifficultFrame.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
                 -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
                 -- RaidLabel.Icon:SetSize(16, 16)
@@ -1257,7 +1287,9 @@ function AlterEgo:UpdateUI()
     end
 
     window:SetSize(self:GetWindowSize())
+    window:SetScale(self.db.global.interface.windowScale / 100)
     window.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * self.constants.sizes.column, window.Body.ScrollFrame:GetHeight())
+    self:SetBackgroundColor(window, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
 
     if self:IsScrollbarNeeded() then
         window.Footer.Scrollbar:SetMinMaxValues(0, window.Body.ScrollFrame.ScrollChild:GetWidth() - window.Body.ScrollFrame:GetWidth())
@@ -1271,6 +1303,8 @@ function AlterEgo:UpdateUI()
         window.Body:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT")
         window.Footer:Hide()
     end
+
+    window.Body.NoCharacterText:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
 
     local currentAffixes = C_MythicPlus.GetCurrentAffixes();
     anchorFrame = window.TitleBar
@@ -1313,8 +1347,7 @@ function AlterEgo:UpdateUI()
 
     self:HideCharacterColumns()
 
-    -- Character Labels
-    do
+    do -- Character Labels
         anchorFrame = window.Body.Sidebar
         for labelIndex, info in ipairs(labels) do
             local Label = _G[window.Body.Sidebar:GetName() .. "Label" .. labelIndex]
@@ -1328,20 +1361,26 @@ function AlterEgo:UpdateUI()
                     Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
                     Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
                 end
+                Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 Label:Show()
                 anchorFrame = Label
             end
         end
     end
 
+    do -- MythicPlus Label
+        local Label = _G[window.Body.Sidebar:GetName() .. "MythicPlusLabel"]
+        Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
+    end
+
     do -- Dungeon names
         for dungeonIndex, dungeon in ipairs(dungeons) do
             local Label = _G[window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
             Label.Icon:SetTexture(dungeon.icon)
-            Label.Text:SetFont(self.constants.assets.font.file, self.constants.assets.font.size, self.constants.assets.font.flags)
+            Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             Label.Icon:SetTexture(tostring(dungeon.texture))
-            if dungeon.spellID and IsSpellKnown(dungeon.spellID) then
+            if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
                 Label:SetAttribute("type", "spell")
                 Label:SetAttribute("spell", dungeon.spellID)
                 Label:RegisterForClicks("AnyUp", "AnyDown")
@@ -1367,13 +1406,21 @@ function AlterEgo:UpdateUI()
         end
     end
 
-    do -- Raids
+    do -- Raids & Difficulties
         for raidIndex in ipairs(raids) do
             local Label = _G[window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
             if self.db.global.raids.enabled then
+                Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 Label:Show()
             else
                 Label:Hide()
+            end
+
+            for difficultyIndex, difficulty in ipairs(difficulties) do
+                local DifficultFrame = _G[Label:GetName() .. "Difficulty" .. difficultyIndex]
+                if DifficultFrame then
+                    DifficultFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
+                end
             end
         end
     end
@@ -1397,6 +1444,7 @@ function AlterEgo:UpdateUI()
                 for labelIndex, info in ipairs(labels) do
                     local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
                     CharacterFrame.Text:SetText(info.value(character))
+                    CharacterFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                     if info.OnEnter then
                         CharacterFrame:SetScript("OnEnter", function()
                             GameTooltip:ClearAllPoints()
@@ -1527,7 +1575,9 @@ function AlterEgo:UpdateUI()
                         end
 
                         AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
+                        AffixFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                         AffixFrame.Tier:SetText(tier)
+                        AffixFrame.Tier:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
 
                         if self.db.global.showTiers then
                             AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
@@ -1551,7 +1601,7 @@ function AlterEgo:UpdateUI()
                         RaidFrame:Hide()
                     end
                     for difficultyIndex, difficulty in pairs(difficulties) do
-                        local DifficultyFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex]
+                        local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
                         DifficultyFrame:SetScript("OnEnter", function()
                             GameTooltip:ClearAllPoints()
                             GameTooltip:ClearLines()
@@ -1595,9 +1645,9 @@ function AlterEgo:UpdateUI()
                         for encounterIndex, encounter in ipairs(raid.encounters) do
                             local color = {r = 1, g = 1, b = 1}
                             local alpha = 0.1
-                            local EncounterFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex]
+                            local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
                             if not EncounterFrame then
-                                EncounterFrame = CreateFrame("Frame", CharacterColumn:GetName() .. "Raid" .. raidIndex .. "Difficulty" .. difficultyIndex .. "Encounter" .. encounterIndex, DifficultyFrame)
+                                EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                                 local size = self.constants.sizes.column
                                 size = size - self.constants.sizes.padding -- left/right cell padding
                                 size = size - (raid.numEncounters - 1) * 4 -- gaps
