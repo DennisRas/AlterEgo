@@ -468,7 +468,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", self.constants.sizes.padding, 0)
             CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -self.constants.sizes.padding, 0)
             CharacterFrame.Text:SetJustifyH("CENTER")
-            CharacterFrame.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            CharacterFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
 
             if info.backgroundColor then
                 SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
@@ -533,12 +533,12 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
             AffixFrame.Text:SetPoint("TOPLEFT", AffixFrame, "TOPLEFT", 1, -1)
             AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-            AffixFrame.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            AffixFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             AffixFrame.Text:SetJustifyH("RIGHT")
             AffixFrame.Tier = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Tier", "OVERLAY")
             AffixFrame.Tier:SetPoint("TOPLEFT", AffixFrame, "TOP", 1, -1)
             AffixFrame.Tier:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-            AffixFrame.Tier:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            AffixFrame.Tier:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             AffixFrame.Tier:SetJustifyH("LEFT")
         end
         anchorFrame = DungeonFrame
@@ -564,7 +564,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             for encounterIndex in ipairs(raid.encounters) do
                 local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                 local size = self.constants.sizes.column
-                size = size - self.constants.sizes.padding                -- left/right cell padding
+                size = size - self.constants.sizes.padding -- left/right cell padding
                 size = size - (raid.numEncounters - 1) * 4 -- gaps
                 size = size / raid.numEncounters           -- box sizes
                 EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
@@ -690,7 +690,7 @@ function AlterEgo:CreateUI()
         self.Window.TitleBar.Icon:SetTexture(self.constants.media.LogoTransparent)
         self.Window.TitleBar.Text = self.Window.TitleBar:CreateFontString("$parentText", "OVERLAY")
         self.Window.TitleBar.Text:SetPoint("LEFT", self.Window.TitleBar, "LEFT", 20 + self.constants.sizes.padding, -1)
-        self.Window.TitleBar.Text:SetFont(self.constants.font.file, self.constants.font.size + 2, self.constants.font.flags)
+        self.Window.TitleBar.Text:SetFont(self.constants.font.file, 14, self.constants.font.flags)
         self.Window.TitleBar.Text:SetText("AlterEgo")
         anchorFrame = self.Window.TitleBar
         for i = 1, 3 do
@@ -1143,7 +1143,7 @@ function AlterEgo:CreateUI()
         self.Window.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", self.Window.Body, "BOTTOMRIGHT", -50, 50)
         self.Window.Body.NoCharacterText:SetJustifyH("CENTER")
         self.Window.Body.NoCharacterText:SetJustifyV("CENTER")
-        self.Window.Body.NoCharacterText:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+        self.Window.Body.NoCharacterText:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
         self.Window.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
         self.Window.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
         self.Window.Body.NoCharacterText:Hide()
@@ -1173,7 +1173,7 @@ function AlterEgo:CreateUI()
             Label.Text:SetPoint("LEFT", Label, "LEFT", self.constants.sizes.padding, 0)
             Label.Text:SetPoint("RIGHT", Label, "RIGHT", -self.constants.sizes.padding, 0)
             Label.Text:SetJustifyH("LEFT")
-            Label.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             Label.Text:SetText(info.label)
             Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
             anchorFrame = Label
@@ -1188,7 +1188,7 @@ function AlterEgo:CreateUI()
         Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
         Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", self.constants.sizes.padding, 0)
         Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
-        Label.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+        Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
         Label.Text:SetJustifyH("LEFT")
         Label.Text:SetText("Mythic Plus")
         Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1209,7 +1209,7 @@ function AlterEgo:CreateUI()
             Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", 16 + self.constants.sizes.padding * 2, -3)
             Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
             Label.Text:SetJustifyH("LEFT")
-            Label.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             anchorFrame = Label
         end
@@ -1232,7 +1232,7 @@ function AlterEgo:CreateUI()
             RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
             RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", self.constants.sizes.padding, 0)
             RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
-            RaidFrame.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            RaidFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             RaidFrame.Text:SetJustifyH("LEFT")
             RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
             RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1255,7 +1255,7 @@ function AlterEgo:CreateUI()
                 DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", self.constants.sizes.padding, -3)
                 DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
                 DifficultFrame.Text:SetJustifyH("LEFT")
-                DifficultFrame.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+                DifficultFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 DifficultFrame.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
                 -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
                 -- RaidLabel.Icon:SetSize(16, 16)
@@ -1427,7 +1427,7 @@ function AlterEgo:UpdateUI()
         for dungeonIndex, dungeon in ipairs(dungeons) do
             local Label = _G[self.Window.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
             Label.Icon:SetTexture(dungeon.icon)
-            Label.Text:SetFont(self.constants.font.file, self.constants.font.size, self.constants.font.flags)
+            Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             Label.Icon:SetTexture(tostring(dungeon.texture))
             if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
@@ -1699,7 +1699,7 @@ function AlterEgo:UpdateUI()
                             if not EncounterFrame then
                                 EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                                 local size = self.constants.sizes.column
-                                size = size - self.constants.sizes.padding                -- left/right cell padding
+                                size = size - self.constants.sizes.padding -- left/right cell padding
                                 size = size - (raid.numEncounters - 1) * 4 -- gaps
                                 size = size / raid.numEncounters           -- box sizes
                                 EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
