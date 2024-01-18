@@ -7,7 +7,6 @@ AlterEgo.constants = {
     prefix = "<AlterEgo> ",
     font = {
         file = STANDARD_TEXT_FONT,
-        size = 12,
         flags = ""
     },
     media = {
@@ -33,10 +32,6 @@ AlterEgo.constants = {
             width = 150,
             collapsedWidth = 30
         }
-    },
-    colors = {
-        primary = CreateColorFromHexString("FF98cbd8"),
-        dark = CreateColorFromHexString("FF1d242a"),
     },
     sortingOptions = {
         {value = "lastUpdate",  text = "Recently played"},

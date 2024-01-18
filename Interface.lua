@@ -1354,7 +1354,7 @@ function AlterEgo:UpdateUI()
         self.Window.Footer:Hide()
     end
 
-    self.Window.Body.NoCharacterText:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+    self.Window.Body.NoCharacterText:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
 
     local currentAffixes = C_MythicPlus.GetCurrentAffixes();
     anchorFrame = self.Window.TitleBar
@@ -1411,7 +1411,7 @@ function AlterEgo:UpdateUI()
                     Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
                     Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
                 end
-                Label.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 Label:Show()
                 anchorFrame = Label
             end
@@ -1420,7 +1420,7 @@ function AlterEgo:UpdateUI()
 
     do -- MythicPlus Label
         local Label = _G[self.Window.Body.Sidebar:GetName() .. "MythicPlusLabel"]
-        Label.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+        Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
     end
 
     do -- Dungeon names
@@ -1460,7 +1460,7 @@ function AlterEgo:UpdateUI()
         for raidIndex in ipairs(raids) do
             local Label = _G[self.Window.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
             if self.db.global.raids.enabled then
-                Label.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                Label.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 Label:Show()
             else
                 Label:Hide()
@@ -1469,7 +1469,7 @@ function AlterEgo:UpdateUI()
             for difficultyIndex, difficulty in ipairs(difficulties) do
                 local DifficultFrame = _G[Label:GetName() .. "Difficulty" .. difficultyIndex]
                 if DifficultFrame then
-                    DifficultFrame.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                    DifficultFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                 end
             end
         end
@@ -1494,7 +1494,7 @@ function AlterEgo:UpdateUI()
                 for labelIndex, info in ipairs(labels) do
                     local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
                     CharacterFrame.Text:SetText(info.value(character))
-                    CharacterFrame.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                    CharacterFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                     if info.OnEnter then
                         CharacterFrame:SetScript("OnEnter", function()
                             GameTooltip:ClearAllPoints()
@@ -1625,9 +1625,9 @@ function AlterEgo:UpdateUI()
                         end
 
                         AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
-                        AffixFrame.Text:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                        AffixFrame.Text:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
                         AffixFrame.Tier:SetText(tier)
-                        AffixFrame.Tier:SetFont(assets.font.file, self.db.global.interface.fontSize, assets.font.flags)
+                        AffixFrame.Tier:SetFont(self.constants.font.file, self.db.global.interface.fontSize, self.constants.font.flags)
 
                         if self.db.global.showTiers then
                             AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
