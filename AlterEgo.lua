@@ -1,3 +1,4 @@
+local _, AlterEgo = ...
 AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 AlterEgo.Libs = {}
 AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")

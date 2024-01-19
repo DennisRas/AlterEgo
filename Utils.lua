@@ -1,3 +1,4 @@
+local _, AlterEgo = ...
 --- Find a table item by callback
 ---@param tbl table
 ---@param callback function

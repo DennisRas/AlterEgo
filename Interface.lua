@@ -1,4 +1,5 @@
 ---@diagnostic disable: inject-field, deprecated
+local _, AlterEgo = ...
 function AlterEgo:GetCharacterInfo()
     local dungeons = self:GetDungeons()
     return {

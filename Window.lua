@@ -1,3 +1,4 @@
+local _, AlterEgo = ...
 local windows = {}
 function AlterEgo:GetWindow(name)
     name = "AlterEgo" .. name
