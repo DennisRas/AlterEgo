@@ -80,9 +80,7 @@ function AlterEgo:OnInitialize()
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
 
-    hooksecurefunc("ResetInstances", function()
-        self:OnInstanceReset()
-    end)
+    hooksecurefunc("ResetInstances", self.OnInstanceReset)
 end
 
 function AlterEgo:OnEnable()
