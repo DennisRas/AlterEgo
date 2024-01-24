@@ -567,7 +567,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOMRIGHT")
         end
         AffixFrame.Icon = AffixFrame:CreateTexture(AffixFrame:GetName() .. "Icon", "ARTWORK")
-        AffixFrame.Icon:SetTexture(affix.filedataid)
+        AffixFrame.Icon:SetTexture(affix.fileDataID)
         AffixFrame.Icon:SetSize(16, 16)
         AffixFrame.Icon:SetPoint("CENTER", AffixFrame, "CENTER", 0, 0)
         AffixFrame:SetScript("OnEnter", function()
@@ -1429,8 +1429,8 @@ function AlterEgo:UpdateUI()
         local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
         if affixButton then
             if currentAffixes then
-                local name, desc, filedataid = C_ChallengeMode.GetAffixInfo(currentAffixes[i].id);
-                affixButton:SetNormalTexture(filedataid)
+                local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffixes[i].id);
+                affixButton:SetNormalTexture(fileDataID)
                 affixButton:SetScript("OnEnter", function()
                     GameTooltip:ClearAllPoints()
                     GameTooltip:ClearLines()
