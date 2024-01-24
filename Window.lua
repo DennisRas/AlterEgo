@@ -1,8 +1,20 @@
-local _, AlterEgo = ...
 local windows = {}
 function AlterEgo:GetWindow(name)
     name = "AlterEgo" .. name
     return windows[name]
+end
+
+function AlterEgo:SetHeight(name, height)
+    if name == nil then name = "Main" end
+    local window = self:GetWindow(name)
+    if not window then return end
+end
+
+function AlterEgo:SetTitle(name, title)
+    if name == nil then name = "Main" end
+    local window = self:GetWindow(name)
+    if not window then return end
+    window.Titlebar.Text:SetText(title)
 end
 
 function AlterEgo:CreateWindow(name, title, parent)
@@ -22,6 +34,7 @@ function AlterEgo:CreateWindow(name, title, parent)
     windowFrame:SetMovable(true)
     windowFrame:SetUserPlaced(true)
     windowFrame:SetPoint("CENTER")
+    windowFrame:SetSize(300, 300)
     self:SetBackgroundColor(windowFrame, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
 
     do -- Border
@@ -48,7 +61,7 @@ function AlterEgo:CreateWindow(name, title, parent)
         windowFrame.TitleBar.Icon:SetSize(20, 20)
         windowFrame.TitleBar.Icon:SetTexture(self.constants.media.LogoTransparent)
         windowFrame.TitleBar.Text = windowFrame.TitleBar:CreateFontString("$parentText", "OVERLAY")
-        windowFrame.TitleBar.Text:SetPoint("LEFT", windowFrame.TitleBar, "LEFT", 20 + self.constants.sizes.padding, -1)
+        windowFrame.TitleBar.Text:SetPoint("LEFT", windowFrame.TitleBar, "LEFT", 20 + self.constants.sizes.padding, 0)
         windowFrame.TitleBar.Text:SetFont(self.constants.font.file, 14, self.constants.font.flags)
         windowFrame.TitleBar.Text:SetText(title)
         windowFrame.TitleBar.CloseButton = CreateFrame("Button", "$parentCloseButton", windowFrame.TitleBar)
@@ -62,13 +75,13 @@ function AlterEgo:CreateWindow(name, title, parent)
         windowFrame.TitleBar.CloseButton.Icon:SetTexture(self.constants.media.IconClose)
         windowFrame.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
         windowFrame.TitleBar.CloseButton:SetScript("OnEnter", function()
-            windowFrame.TitleBar.CloseButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-            self:SetBackgroundColor(windowFrame.TitleBar.CloseButton, 1, 1, 1, 0.05)
+            windowFrame.TitleBar.CloseButton.Icon:SetVertexColor(1, 1, 1, 1)
+            self:SetBackgroundColor(windowFrame.TitleBar.CloseButton, 1, 0, 0, 0.2)
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
             GameTooltip:SetOwner(windowFrame.TitleBar.CloseButton, "ANCHOR_TOP")
-            GameTooltip:SetText("Will you be back?", 1, 1, 1, 1, true);
-            GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+            GameTooltip:SetText("Close the window", 1, 1, 1, 1, true);
+            -- GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
             GameTooltip:Show()
         end)
         windowFrame.TitleBar.CloseButton:SetScript("OnLeave", function()

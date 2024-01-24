@@ -1,4 +1,3 @@
-local _, AlterEgo = ...
 AlterEgo = LibStub("AceAddon-3.0"):NewAddon("AlterEgo", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 AlterEgo.Libs = {}
 AlterEgo.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
@@ -53,12 +52,9 @@ AlterEgo.constants = {
 
 function AlterEgo:OnInitialize()
     _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
-
-    self:InitDB()
-    self:MigrateDB()
     self:RegisterChatCommand("ae", "ToggleWindow")
     self:RegisterChatCommand("alterego", "ToggleWindow")
-    self:CreateUI()
+    self:InitDB()
 
     local libDataObject = {
         label = "AlterEgo",
@@ -92,7 +88,6 @@ function AlterEgo:OnEnable()
     self:RegisterBucketEvent({"RAID_INSTANCE_WELCOME", "LFG_LOCK_INFO_RECEIVED", "BOSS_KILL"}, 2, RequestRaidInfo)
     self:RegisterEvent("ENCOUNTER_END", "OnEncounterEnd")
     self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "UpdateUI")
-    -- self:RegisterEvent("WEEKLY_REWARDS_UPDATE", "UpdateVault")
     self:RegisterBucketEvent("WEEKLY_REWARDS_UPDATE", 2, "UpdateVault")
     self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, "UpdateRaidInstances")
     self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, function()
@@ -110,12 +105,14 @@ function AlterEgo:OnEnable()
     end)
 
     self:loadGameData()
+    self:MigrateDB()
+    self:CreateUI()
     self:UpdateDB()
 end
 
 function AlterEgo:OnInstanceReset()
     local groupChannel = AE_GetGroupChannel()
-    if groupChannel and self.db.global.announceResets then
+    if groupChannel and self.db.global.announceResets then -- Bug?
         if not IsInInstance() and UnitIsGroupLeader("player") then
             SendChatMessage(self.constants.prefix .. "Resetting instances...", groupChannel)
         end

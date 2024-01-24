@@ -144,6 +144,8 @@
         "INSTANCE_RESET_FAILED_ZONING",
         "STANDARD_TEXT_FONT",
         "UIDropDownMenuButton_OpenColorPicker",
-        "CreateSimpleTextureMarkup"
+        "CreateSimpleTextureMarkup",
+        "ITEM_UPGRADE_TOOLTIP_FORMAT_STRING",
+        "RED_FONT_COLOR"
     ]
 }

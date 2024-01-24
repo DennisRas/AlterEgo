@@ -1,4 +1,4 @@
-local dbVersion = 7
+local dbVersion = 8
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -205,9 +205,69 @@ local defaultCharacter = {
     },
 }
 
+local tooltipScan = CreateFrame("GameTooltip", "AE_Tooltip_Scan", nil, "GameTooltipTemplate")
+tooltipScan:SetOwner(UIParent, "ANCHOR_NONE")
+
+local dataInventory = {
+    {id = INVSLOT_HEAD,     name = "HEADSLOT"},
+    {id = INVSLOT_NECK,     name = "NECKSLOT"},
+    {id = INVSLOT_SHOULDER, name = "SHOULDERSLOT"},
+    {id = INVSLOT_BACK,     name = "BACKSLOT"},
+    {id = INVSLOT_CHEST,    name = "CHESTSLOT"},
+    {id = INVSLOT_WRIST,    name = "WRISTSLOT"},
+    {id = INVSLOT_HAND,     name = "HANDSSLOT"},
+    {id = INVSLOT_WAIST,    name = "WAISTSLOT"},
+    {id = INVSLOT_LEGS,     name = "LEGSSLOT"},
+    {id = INVSLOT_FEET,     name = "FEETSLOT"},
+    {id = INVSLOT_FINGER1,  name = "FINGER0SLOT"},
+    {id = INVSLOT_FINGER2,  name = "FINGER1SLOT"},
+    {id = INVSLOT_TRINKET1, name = "TRINKET0SLOT"},
+    {id = INVSLOT_TRINKET2, name = "TRINKET1SLOT"},
+    {id = INVSLOT_MAINHAND, name = "MAINHANDSLOT"},
+    {id = INVSLOT_OFFHAND,  name = "SECONDARYHANDSLOT"},
+}
+
+local AFFIX_VOLCANIC = 3
+local AFFIX_RAGING = 6
+local AFFIX_BOLSTERING = 7
+local AFFIX_SANGUINE = 8
+local AFFIX_TYRANNICAL = 9
+local AFFIX_FORTIFIED = 10
+local AFFIX_BURSTING = 11
+local AFFIX_SPITEFUL = 123
+local AFFIX_STORMING = 124
+local AFFIX_ENTANGLING = 134
+local AFFIX_AFFLICTED = 135
+local AFFIX_INCORPOREAL = 136
+
 local dataAffixes = {
-    [9]  = {affixID = 9, name = "Tyrannical", icon = "Interface/Icons/achievement_boss_archaedas"},
-    [10] = {affixID = 10, name = "Fortified", icon = "Interface/Icons/ability_toughness"},
+    {id = AFFIX_VOLCANIC,    base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_RAGING,      base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_BOLSTERING,  base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_SANGUINE,    base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_FORTIFIED,   base = 1, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_TYRANNICAL,  base = 1, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_BURSTING,    base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_SPITEFUL,    base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_STORMING,    base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_ENTANGLING,  base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_AFFLICTED,   base = 0, name = "", description = "", fileDataID = nil},
+    {id = AFFIX_INCORPOREAL, base = 0, name = "", description = "", fileDataID = nil},
+}
+
+-- Rotation: https://mythicpl.us
+-- Difficulty: https://mplus.subcreation.net/all-affixes.html
+local dataAffixRotation = {
+    {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING,     EPIC_PURPLE_COLOR:WrapTextInColorCode("Hard")},
+    {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING, RARE_BLUE_COLOR:WrapTextInColorCode("Medium")},
+    {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL,   RARE_BLUE_COLOR:WrapTextInColorCode("Medium")},
+    {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING,     UNCOMMON_GREEN_COLOR:WrapTextInColorCode("Easy")},
+    {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE,   UNCOMMON_GREEN_COLOR:WrapTextInColorCode("Easy")},
+    {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING,   GREEN_FONT_COLOR:WrapTextInColorCode("Very Easy")},
+    {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING, UNCOMMON_GREEN_COLOR:WrapTextInColorCode("Easy")},
+    {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE,   RED_FONT_COLOR:WrapTextInColorCode("Painful")},
+    {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING,   LEGENDARY_ORANGE_COLOR:WrapTextInColorCode("Very Hard")},
+    {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL,   EPIC_PURPLE_COLOR:WrapTextInColorCode("Hard")},
 }
 
 local dataDungeons = {
@@ -287,15 +347,34 @@ function AlterEgo:GetRaidDifficulties()
     return result
 end
 
-function AlterEgo:GetAffixes()
+function AlterEgo:GetAffixRotation()
+    return dataAffixRotation
+end
+
+function AlterEgo:GetActiveAffixRotation(currentAffixes)
+    local affixRotation = self:GetAffixRotation()
+    local index = 0
+    if currentAffixes then
+        AE_table_foreach(affixRotation, function(affix, i)
+            if affix[1] == currentAffixes[1].id and affix[2] == currentAffixes[2].id and affix[3] == currentAffixes[3].id then
+                index = i
+            end
+        end)
+    end
+    return index
+end
+
+function AlterEgo:GetAffixes(base)
     local result = {}
     for _, affix in pairs(dataAffixes) do
-        table.insert(result, affix)
+        if not base or affix.base == 1 then
+            table.insert(result, affix)
+        end
     end
 
-    table.sort(result, function(a, b)
-        return a.affixID < b.affixID
-    end)
+    -- table.sort(result, function(a, b)
+    --     return a.id < b.id
+    -- end)
 
     return result
 end
@@ -477,9 +556,10 @@ function AlterEgo:loadGameData()
     end
 
     for _, affix in pairs(dataAffixes) do
-        local name, description = C_ChallengeMode.GetAffixInfo(affix.affixID);
+        local name, description, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id);
         affix.name = name
         affix.description = description
+        affix.fileDataID = fileDataID
     end
 end
 
@@ -579,10 +659,59 @@ function AlterEgo:UpdateCharacterInfo()
         wipe(character.equipment or {})
     end
 
-    for i = 1, 17 do
-        local inventoryItemID = GetInventoryItemID("player", i)
-        if type(inventoryItemID) == "number" then
-            table.insert(character.equipment, {GetItemInfo(inventoryItemID)})
+    local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
+    upgradePattern = upgradePattern:gsub("%%d", "%%s")
+    upgradePattern = upgradePattern:format("(.+)", "(%d)", "(%d)")
+    for _, slot in ipairs(dataInventory) do
+        local inventoryItemLink = GetInventoryItemLink("player", slot.id)
+        if inventoryItemLink then
+            local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
+            local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
+            itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
+            expacID, setID, isCraftingReagent = GetItemInfo(inventoryItemLink)
+
+            tooltipScan:ClearLines()
+            tooltipScan:SetHyperlink(inventoryItemLink)
+            AE_table_foreach({tooltipScan:GetRegions()}, function(region)
+                if region:IsObjectType("FontString") then
+                    local text = region:GetText()
+                    if text then
+                        local match, _, uTrack, uLevel, uMax = text:find(upgradePattern)
+                        if match then
+                            itemUpgradeTrack = uTrack
+                            itemUpgradeLevel = uLevel
+                            itemUpgradeMax = uMax
+                        end
+                    end
+                end
+            end)
+
+            if itemName ~= nil then
+                table.insert(character.equipment, {
+                    itemName = itemName,
+                    itemLink = itemLink,
+                    itemQuality = itemQuality,
+                    itemLevel = itemLevel,
+                    itemMinLevel = itemMinLevel,
+                    itemType = itemType,
+                    itemSubType = itemSubType,
+                    itemStackCount = itemStackCount,
+                    itemEquipLoc = itemEquipLoc,
+                    itemTexture = itemTexture,
+                    sellPrice = sellPrice,
+                    classID = classID,
+                    subclassID = subclassID,
+                    bindType = bindType,
+                    expacID = expacID,
+                    setID = setID,
+                    isCraftingReagent = isCraftingReagent,
+                    itemUpgradeTrack = itemUpgradeTrack,
+                    itemUpgradeLevel = itemUpgradeLevel,
+                    itemUpgradeMax = itemUpgradeMax,
+                    itemSlotID = slot.id,
+                    itemSlotName = slot.name
+                })
+            end
         end
     end
     AE_table_foreach(dataCurrencies, function(dataCurrency)
