@@ -6,6 +6,10 @@
 
 - Added a new setting to hide realm names
 
+### Updated
+
+- Swapped the Fortified/Tyrannical columns to match raider.io
+
 ## v1.0.9 - 2024-01-07
 
 ### Fixed
