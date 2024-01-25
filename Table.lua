@@ -83,12 +83,11 @@ function Table:Update()
             else
                 colFrame = CreateFrame("Button", "$parentCol" .. colIndex, rowFrame)
                 colFrame.Text = colFrame:CreateFontString("$parentText", "OVERLAY")
-                colFrame.Text:SetFont(AlterEgo.constants.font.file, AlterEgo.db.global.interface.fontSize, AlterEgo.constants.font.flags)
+                colFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
                 colFrame.Text:SetJustifyH(self.data.columns[colIndex].align or "LEFT")
                 -- colFrame.Text:SetAllPoints()
                 colFrame.Text:SetPoint("LEFT", colFrame, "LEFT", AlterEgo.constants.sizes.padding, 0)
                 colFrame.Text:SetPoint("RIGHT", colFrame, "RIGHT", -AlterEgo.constants.sizes.padding, 0)
-                -- colFrame:SetPushedTextOffset(0, 0);
                 rowFrame.colFrames[colIndex] = colFrame
             end
             if colIndex > 1 then

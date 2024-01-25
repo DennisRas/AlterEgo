@@ -5,10 +5,6 @@ AlterEgo.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 AlterEgo.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
 AlterEgo.constants = {
     prefix = "<AlterEgo> ",
-    font = {
-        file = STANDARD_TEXT_FONT,
-        flags = ""
-    },
     media = {
         WhiteSquare = "Interface/BUTTONS/WHITE8X8",
         Logo = "Interface/AddOns/AlterEgo/Media/Logo.blp",
