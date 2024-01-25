@@ -30,7 +30,11 @@ function AlterEgo:GetCharacterInfo()
                         nameColor = classColor.GenerateHexColor(classColor)
                     end
                 end
-                GameTooltip:AddLine("|c" .. nameColor .. name .. "|r");
+                name = "|c" .. nameColor .. name .. "|r"
+                if not self.db.global.showRealms then
+                    name = name .. format(" (%s)", character.info.realm)
+                end
+                GameTooltip:AddLine(name, 1, 1, 1);
                 GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1);
                 if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
                     GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
@@ -138,7 +142,7 @@ function AlterEgo:GetCharacterInfo()
                 return "|c" .. realmColor .. realm .. "|r"
             end,
             tooltip = false,
-            enabled = true,
+            enabled = self.db.global.showRealms,
         },
         {
             label = STAT_AVERAGE_ITEM_LEVEL,
@@ -843,6 +847,18 @@ function AlterEgo:CreateUI()
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
                             self.db.global.showZeroRatedCharacters = not checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show realm names",
+                        checked = self.db.global.showRealms,
+                        isNotRadio = true,
+                        tooltipTitle = "Show realm names",
+                        tooltipText = "One big party!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.showRealms = not checked
                             self:UpdateUI()
                         end
                     })

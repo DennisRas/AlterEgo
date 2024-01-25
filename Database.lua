@@ -1,4 +1,4 @@
-local dbVersion = 8
+local dbVersion = 9
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -13,6 +13,7 @@ local defaultDB = {
         showAffixColors = true,
         showAffixHeader = true,
         showZeroRatedCharacters = true,
+        showRealms = true,
         announceKeystones = {
             autoParty = true,
             autoGuild = false,

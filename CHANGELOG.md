@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0 - 2024-01-27
+
+### Added
+
+- Added a new setting to hide realm names
+
 ## v1.0.9 - 2024-01-07
 
 ### Fixed
