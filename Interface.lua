@@ -40,16 +40,17 @@ function AlterEgo:GetCharacterInfo()
                     GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
                 end
                 if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
+                    local dataCurrencies = self:GetCurrencies()
                     GameTooltip:AddLine(" ");
                     GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-                    table.sort(character.currencies, function(a, b)
-                        return a.id < b.id
-                    end)
-                    AE_table_foreach(character.currencies, function(currency)
-                        if currency.useTotalEarnedForMaxQty then
-                            GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d/%d", currency.totalEarned, currency.maxQuantity), 1, 1, 1, 1, 1, 1)
-                        else
-                            GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d", currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                    AE_table_foreach(dataCurrencies, function(dataCurrency)
+                        local currency = AE_table_get(character.currencies, "id", dataCurrency.id)
+                        if currency then
+                            if currency.useTotalEarnedForMaxQty then
+                                GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d/%d", currency.totalEarned, currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                            else
+                                GameTooltip:AddDoubleLine(CreateSimpleTextureMarkup(currency.iconFileID) .. " " .. currency.quantity, format("%d", currency.maxQuantity), 1, 1, 1, 1, 1, 1)
+                            end
                         end
                     end)
                 end

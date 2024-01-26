@@ -9,6 +9,7 @@
 ### Updated
 
 - Swapped the Fortified/Tyrannical columns to match raider.io
+- Changed the order of crests and currencies by difficulty
 
 ## v1.0.9 - 2024-01-07
 

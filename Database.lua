@@ -304,16 +304,20 @@ local dataRaidDifficulties = {
 }
 
 local dataCurrencies = {
-    [2245] = {id = 2245, currencyType = "upgrade"},  -- Flightstones
-    [2706] = {id = 2706, currencyType = "crest"},    -- Whelpling
-    [2707] = {id = 2707, currencyType = "crest"},    -- Drake
-    [2708] = {id = 2708, currencyType = "crest"},    -- Wyrm
-    [2709] = {id = 2709, currencyType = "crest"},    -- Aspect
-    [2796] = {id = 2796, currencyType = "catalyst"}, -- Catalyst
+    {id = 2709, currencyType = "crest"},    -- Aspect
+    {id = 2708, currencyType = "crest"},    -- Wyrm
+    {id = 2707, currencyType = "crest"},    -- Drake
+    {id = 2706, currencyType = "crest"},    -- Whelpling
+    {id = 2245, currencyType = "upgrade"},  -- Flightstones
+    {id = 2796, currencyType = "catalyst"}, -- Catalyst
 }
 
 function AlterEgo:InitDB()
     self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
+end
+
+function AlterEgo:GetCurrencies()
+    return dataCurrencies
 end
 
 -- Temp fix until a better solution, since C_MythicPlus.GetCurrentUIDisplaySeason() isn't ready on init
