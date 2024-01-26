@@ -5,11 +5,16 @@
 ### Added
 
 - Added a new setting to hide realm names
+- Added tooltip instructions for click actions
 
 ### Updated
 
 - Swapped the Fortified/Tyrannical columns to match raider.io
 - Changed the order of crests and currencies by difficulty
+
+### Fixed
+
+- Fixed additional font issues with alphabets not working across client languages
 
 ## v1.0.9 - 2024-01-07
 
