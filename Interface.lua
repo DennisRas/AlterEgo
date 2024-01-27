@@ -727,7 +727,9 @@ function AlterEgo:CreateUI()
     winEquipment.Body.Table.frame:SetParent(winEquipment.Body)
     winEquipment.Body.Table.frame:SetPoint("TOPLEFT", winEquipment.Body, "TOPLEFT")
 
-    winAffixRotation.Body.Table = self.Table:New()
+    winAffixRotation.Body.Table = self.Table:New({
+        rowHeight = 28
+    })
     winAffixRotation.Body.Table.frame:SetParent(winAffixRotation.Body)
     winAffixRotation.Body.Table.frame:SetPoint("TOPLEFT", winAffixRotation.Body, "TOPLEFT")
     winAffixRotation.TitleBar.Text:SetText("Weekly Affixes")
@@ -764,6 +766,7 @@ function AlterEgo:CreateUI()
 
                 AE_table_foreach(affixRotation, function(affixValues, weekIndex)
                     local row = {cols = {}}
+                    local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.05} or nil
                     AE_table_foreach(affixValues, function(affixValue)
                         if type(affixValue) == "number" then
                             local affix = AE_table_get(affixes, "id", affixValue)
@@ -771,7 +774,7 @@ function AlterEgo:CreateUI()
                                 local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
                                 table.insert(row.cols, {
                                     text = "|T" .. affix.fileDataID .. ":0|t " .. name,
-                                    backgroundColor = weekIndex == activeWeek and {r = 0, g = 0, b = 0, a = 0.5} or nil,
+                                    backgroundColor = backgroundColor or nil,
                                     OnEnter = function()
                                         GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
                                         GameTooltip:AddLine(affix.description, nil, nil, nil, true);
@@ -781,7 +784,7 @@ function AlterEgo:CreateUI()
                         else
                             table.insert(row.cols, {
                                 text = affixValue,
-                                backgroundColor = weekIndex == activeWeek and {r = 0, g = 0, b = 0, a = 0.5} or nil,
+                                backgroundColor = backgroundColor or nil,
                             })
                         end
                     end)
