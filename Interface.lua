@@ -990,6 +990,22 @@ function AlterEgo:CreateUI()
                             self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
                         end
                     })
+                    UIDropDownMenu_AddButton({
+                        text = "Show in addon compartment",
+                        checked = self.db.global.minimap.showInCompartment,
+                        isNotRadio = true,
+                        tooltipTitle = "Show in addon compartment",
+                        tooltipText = "The small number at the top right of the minimap!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.minimap.showInCompartment = not checked
+                            if not checked then
+                                self.Libs.LDBIcon:AddButtonToCompartment("AlterEgo")
+                            else
+                                self.Libs.LDBIcon:RemoveButtonFromCompartment("AlterEgo")
+                            end
+                        end
+                    })
                     UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
                     UIDropDownMenu_AddButton({
                         text = "Window color",

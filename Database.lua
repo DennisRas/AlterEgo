@@ -6,7 +6,8 @@ local defaultDB = {
         minimap = {
             minimapPos = 195,
             hide = false,
-            lock = false
+            lock = false,
+            showInCompartment = false
         },
         sorting = "lastUpdate",
         showTiers = true,
