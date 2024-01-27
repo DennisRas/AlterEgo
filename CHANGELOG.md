@@ -4,7 +4,8 @@
 
 ### Added
 
-- Added new feature: Weekly Affixes - Click on the affixes at the top
+- Added Character Equipment - Click character names to show equipment
+- Added Weekly Affixes - Click on the affixes at the top
 - Added a new setting to hide realm names
 - Added tooltip instructions for click actions
 

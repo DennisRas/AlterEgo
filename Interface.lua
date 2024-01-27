@@ -126,7 +126,7 @@ function AlterEgo:GetCharacterInfo()
                             nameColor = classColor.GenerateHexColor(classColor)
                         end
                     end
-                    windowCharacter.TitleBar.Text:SetText(WrapTextInColorCode(character.info.name, nameColor))
+                    windowCharacter.TitleBar.Text:SetText(WrapTextInColorCode(character.info.name, nameColor) .. format(" (%s)", character.info.realm))
                     windowCharacter:Show()
                 end
             end,
