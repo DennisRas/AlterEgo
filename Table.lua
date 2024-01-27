@@ -1,30 +1,36 @@
 local Table = {}
 AlterEgo.Table = Table
 
-function Table:New(data)
-    local instance = {}
-    setmetatable(instance, self)
-    self.__index = self
-    instance.frame = CreateFrame("Frame")
-    instance.data = data or {
-        columns = {
-            -- [1] = {
-            --     width = number,
-            --     align? = string,
-            -- }
+function Table:New(config)
+    local instance = {
+        frame = CreateFrame("Frame"),
+        rowFrames = {},
+        config = {
+            width = 600,
+            rowHeight = AlterEgo.constants.sizes.row,
+            cellPadding = AlterEgo.constants.sizes.padding
         },
-        rows = {
-            -- [1] = {
-            --     cols = {
-            --         [1] = {
-            --             text = string
-            --         }
-            --     }
-            -- }
+        data = {
+            columns = {
+                -- [1] = {
+                --     width = number,
+                --     align? = string,
+                -- }
+            },
+            rows = {
+                -- [1] = {
+                --     cols = {
+                --         [1] = {
+                --             text = string
+                --         }
+                --     }
+                -- }
+            }
         }
     }
-    instance.rowFrames = {}
-    instance.width = 600
+    Mixin(instance.config, config or {})
+    setmetatable(instance, self)
+    self.__index = self
     return instance;
 end
 
@@ -35,6 +41,11 @@ end
 
 function Table:SetWidth(width)
     self.width = width
+    self:Update()
+end
+
+function Table:SetRowHeight(rowHeight)
+    self.config.rowHeight = rowHeight
     self:Update()
 end
 
@@ -64,6 +75,7 @@ function Table:Update()
         if rowIndex > 1 then
             rowFrame:SetPoint("TOPLEFT", rowFrames[rowIndex - 1], "BOTTOMLEFT", 0, 0)
             rowFrame:SetPoint("TOPRIGHT", rowFrames[rowIndex - 1], "BOTTOMRIGHT", 0, 0)
+
             if rowIndex % 2 == 1 then
                 AlterEgo:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
             end
@@ -73,11 +85,12 @@ function Table:Update()
             -- AlterEgo:SetBackgroundColor(rowFrame, 0, 0, 0, .3)
         end
 
-        rowFrame:SetHeight(AlterEgo.constants.sizes.row)
+        rowFrame:SetHeight(self.config.rowHeight)
 
         for colIndex = 1, #columns do
             local column = columns[colIndex]
             local colFrame = rowFrame.colFrames[colIndex]
+
             if colFrame then
                 colFrame:Show()
             else
@@ -87,15 +100,17 @@ function Table:Update()
                 colFrame.Text:SetWordWrap(false)
                 colFrame.Text:SetJustifyH(self.data.columns[colIndex].align or "LEFT")
                 -- colFrame.Text:SetAllPoints()
-                colFrame.Text:SetPoint("LEFT", colFrame, "LEFT", AlterEgo.constants.sizes.padding, 0)
-                colFrame.Text:SetPoint("RIGHT", colFrame, "RIGHT", -AlterEgo.constants.sizes.padding, 0)
+                colFrame.Text:SetPoint("LEFT", colFrame, "LEFT", self.config.cellPadding, 0)
+                colFrame.Text:SetPoint("RIGHT", colFrame, "RIGHT", -self.config.cellPadding, 0)
                 rowFrame.colFrames[colIndex] = colFrame
             end
+
             if colIndex > 1 then
                 colFrame:SetPoint("LEFT", rowFrame.colFrames[colIndex - 1], "RIGHT")
             else
                 colFrame:SetPoint("LEFT", rowFrame, "LEFT")
             end
+
             if column.OnEnter then
                 colFrame:SetScript("OnEnter", function()
                     GameTooltip:ClearAllPoints()
@@ -134,10 +149,7 @@ function Table:Update()
                 AlterEgo:SetBackgroundColor(colFrame, column.backgroundColor.r, column.backgroundColor.g, column.backgroundColor.b, column.backgroundColor.a)
             end
 
-            -- if r == 1 then
-            --     col:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-            -- end
-            colFrame:SetSize(self.data.columns[colIndex].width, AlterEgo.constants.sizes.row)
+            colFrame:SetSize(self.data.columns[colIndex].width, self.config.rowHeight)
             colFrame.Text:SetText(column.text)
             colFrame:Show()
         end
@@ -162,68 +174,5 @@ function Table:Update()
         width = width + self.data.columns[colIndex].width
     end
 
-    self.frame:SetSize(width, #rows * AlterEgo.constants.sizes.row)
+    self.frame:SetSize(width, #rows * self.config.rowHeight)
 end
-
--- local tables = {}
--- function Table:Create(name, initialData, parent)
---     local uniqueName = parent:GetName() .. name
---     if tables[uniqueName] then
---         return tables[uniqueName]
---     end
-
---     local data = initialData or {}
---     local tableFrame = CreateFrame("Frame", name, parent)
---     tableFrame.rows = {}
-
---     for r = 1, #data do
---         local row = tableFrame.rows[r]
---         if row then
---             row:Show()
---         else
---             row = CreateFrame("Button", tableFrame:GetName() .. "Row" .. r, tableFrame)
-
---             tableFrame.rows[r] = row
---             row.cols = {}
---         end
---         if r > 1 then
---             row:SetPoint("TOPLEFT", tableFrame.rows[r - 1], "BOTTOMLEFT", 0, 0)
---             row:SetPoint("TOPRIGHT", tableFrame.rows[r - 1], "BOTTOMRIGHT", 0, 0)
---             if r % 2 == 1 then
---                 AlterEgo:SetBackgroundColor(row, 1, 1, 1, .02)
---             end
---         else
---             row:SetPoint("TOPLEFT", tableFrame, "TOPLEFT", 0, 0)
---             row:SetPoint("TOPRIGHT", tableFrame, "TOPRIGHT", 0, 0)
---             AlterEgo:SetBackgroundColor(row, 0, 0, 0, .3)
---         end
---         row:SetHeight(AlterEgo.constants.sizes.row)
-
---         for c = 1, #data[r] do
---             local col = row.cols[c]
---             if col then
---                 col:Show()
---             else
---                 col = row:CreateFontString(row:GetName() .. "Col" .. c, "OVERLAY")
---                 col:SetFont(AlterEgo.constants.font.file, AlterEgo.constants.font.size, AlterEgo.constants.font.flags)
---                 col:SetJustifyH("LEFT")
---                 row.cols[c] = col
---             end
---             if c > 1 then
---                 col:SetPoint("LEFT", row.cols[c - 1], "RIGHT", AlterEgo.constants.sizes.padding * 2, 0)
---             else
---                 col:SetPoint("LEFT", row, "LEFT", AlterEgo.constants.sizes.padding, 0)
---             end
---             -- if r == 1 then
---             --     col:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
---             -- end
---             col:SetSize(parent:GetWidth() / #data[r] - AlterEgo.constants.sizes.padding * 2, AlterEgo.constants.sizes.row)
---             col:Show()
---             col:SetText(data[r][c])
---         end
---     end
-
---     tableFrame:SetAllPoints(parent)
---     tables[uniqueName] = tableFrame
---     return tables[uniqueName]
--- end
