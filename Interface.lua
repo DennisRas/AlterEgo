@@ -18,6 +18,27 @@ function AlterEgo:GetCharacterInfo()
                 end
                 return "|c" .. nameColor .. name .. "|r"
             end,
+            Moveable = {
+                OnMouseDown = function(self, button)
+                    -- TODO: This might not work, as I don't know if function args are passed implicitly like JS when passing a func through a higher order func
+                    self:StartMoving()
+                    print("OnMouseDown", button)
+                end,
+                OnMouseUp = function(self, button, character) 
+                    self:StopMovingOrSizing()
+                    print("OnMouseUp", button)
+                    -- TODO: This is the big hang-up of the functionality - since I can't find a globally-accessable data structure of the columns and their indices
+                    -- as well as there seemingly being no 'onDrop' event on the element you are trying to drop to, as there would be in a browser context
+
+                    -- Steps
+                    -- Capture index (synonymous with order at this point) within columns of element that the Frame is dropped on
+                    -- If index is lower than the moveable Frame's current order (i.e. player has moved character foreward in order), increment all custom order values at and above captured index
+                    -- If index is higher (i.e. player has moved character backwards in order), decrement all order values at and above index
+                    -- -- How would either of these be done? This has to have positional nuance, as an unconditional position drop event would make either the first or the last element in the custom order inacessable (if alyways 'after', the first custom order could never be updated, and vice versa for 'before' and last element)
+                    -- -- Could you capture the drop event at a certain pixel, and diff it 50% between each column, where <= 50% is 'before' and > 50% is 'after'?
+                    -- Update custom order via self.db.global.characterCustomSortOrder[character.GUID] = capturedIndex
+                end
+            },
             OnEnter = function(character)
                 local name = "-"
                 local nameColor = "ffffffff"
@@ -547,6 +568,15 @@ function AlterEgo:CreateCharacterColumn(parent, index)
             CharacterFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
             if info.backgroundColor then
                 self:SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
+            end
+
+            -- Set Frame to moveable if declared in labels
+            if info.Moveable then
+                CharacterFrame:SetMovable(true)
+
+                -- TODO: Args might not work as implicit passing via higher-order function, might have to bind `self` to the callback
+                CharacterFrame:SetScript("OnMouseDown", info.Moveable.OnMouseDown)
+                CharacterFrame:SetScript("OnMouseUp", info.Moveable.OnMouseUp)
             end
 
             anchorFrame = CharacterFrame

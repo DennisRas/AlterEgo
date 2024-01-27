@@ -3,6 +3,7 @@ local defaultDB = {
     global = {
         weeklyReset = 0,
         characters = {},
+        characterCustomSortOrder = {},
         minimap = {
             minimapPos = 195,
             hide = false,
@@ -444,7 +445,10 @@ function AlterEgo:GetCharacters(unfiltered)
             return a.info.class.name < b.info.class.name
         elseif self.db.global.sorting == "class.desc" then
             return a.info.class.name > b.info.class.name
+        elseif self.db.global.sorting == "custom" then
+            return self.db.global.characterCustomSortOrder[a.GUID] < self.db.global.characterCustomSortOrder[b.GUID]
         end
+
         return a.lastUpdate > b.lastUpdate
     end)
 
@@ -662,6 +666,12 @@ function AlterEgo:UpdateCharacterInfo()
         character.equipment = {}
     else
         wipe(character.equipment or {})
+    end
+
+    -- Place character into db.global.characterCustomSortOrder if it doesn't exist already
+    if self.db.global.characterCustomSortOrder[character.GUID] == nil then
+        -- Ensure that any new character added to the DB is forced to the end of the sort order
+        self.db.global.characterCustomSortOrder[character.GUID] = 999
     end
 
     local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING

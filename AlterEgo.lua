@@ -43,6 +43,7 @@ AlterEgo.constants = {
         {value = "ilvl.desc",   text = "Item Level (Highest)"},
         {value = "class.asc",   text = "Class (A-Z)"},
         {value = "class.desc",  text = "Class (Z-A)"},
+        {value = "custom",  text = "Custom"},
     }
 }
 
