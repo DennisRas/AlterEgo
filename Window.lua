@@ -29,7 +29,7 @@ function AlterEgo:CreateWindow(name, title, parent)
 
     local windowFrame = CreateFrame("Frame", name, parent)
     windowFrame:SetFrameStrata("HIGH")
-    windowFrame:SetFrameLevel(100 * (AE_table_count(windows) + 1))
+    windowFrame:SetFrameLevel(1000 + 100 * (AE_table_count(windows) + 1))
     windowFrame:SetClampedToScreen(true)
     windowFrame:SetMovable(true)
     windowFrame:SetUserPlaced(true)
