@@ -110,7 +110,7 @@ function AlterEgo:GetMaxWindowWidth()
 end
 
 function AlterEgo:ToggleWindow(name)
-    if name == nil then name = "Main" end
+    if name == nil or name == "" then name = "Main" end
     local window = self:GetWindow(name)
     if not window then return end
     if window:IsVisible() then
