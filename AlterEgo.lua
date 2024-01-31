@@ -45,7 +45,6 @@ AlterEgo.constants = {
         {value = "class.desc",  text = "Class (Z-A)"},
     }
 }
-
 function AlterEgo:OnInitialize()
     _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
     self:RegisterChatCommand("ae", "ToggleWindow")
@@ -73,7 +72,9 @@ function AlterEgo:OnInitialize()
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
 
-    hooksecurefunc("ResetInstances", self.OnInstanceReset)
+    hooksecurefunc("ResetInstances", function()
+        self:OnInstanceReset()
+    end)
 end
 
 function AlterEgo:OnEnable()
