@@ -100,7 +100,7 @@ function AlterEgo:CreateWindow(name, title, parent)
         self:SetBackgroundColor(windowFrame.Body, 0, 0, 0, 0)
     end
 
-    -- table.insert(UISpecialFrames, name)
+    table.insert(UISpecialFrames, name)
     windows[name] = windowFrame
     return windows[name]
 end
