@@ -1011,13 +1011,15 @@ function AlterEgo:CreateUI()
                             self.db.global.interface.windowColor.r = r
                             self.db.global.interface.windowColor.g = g
                             self.db.global.interface.windowColor.b = b
-                            self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+                            self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
+                            -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
                         end,
                         cancelFunc = function(color)
                             self.db.global.interface.windowColor.r = color.r
                             self.db.global.interface.windowColor.g = color.g
                             self.db.global.interface.windowColor.b = color.b
-                            self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+                            self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
+                            -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
                         end
                     })
                     UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
@@ -1413,9 +1415,12 @@ function AlterEgo:UpdateUI()
     end
 
     winMain:SetSize(self:GetWindowSize())
-    winMain:SetScale(self.db.global.interface.windowScale / 100)
+
+    self:SetWindowScale(self.db.global.interface.windowScale / 100)
+    self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
+    -- winMain:SetScale(self.db.global.interface.windowScale / 100)
+    -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
     winMain.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * self.constants.sizes.column, winMain.Body.ScrollFrame:GetHeight())
-    self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
 
     if self:IsScrollbarNeeded() then
         winMain.Footer.Scrollbar:SetMinMaxValues(0, winMain.Body.ScrollFrame.ScrollChild:GetWidth() - winMain.Body.ScrollFrame:GetWidth())

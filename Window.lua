@@ -4,6 +4,18 @@ function AlterEgo:GetWindow(name)
     return windows[name]
 end
 
+function AlterEgo:SetWindowScale(scale)
+    AE_table_foreach(windows, function(window)
+        window:SetScale(scale)
+    end)
+end
+
+function AlterEgo:SetWindowBackgroundColor(color)
+    AE_table_foreach(windows, function(window)
+        self:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
+    end)
+end
+
 function AlterEgo:SetHeight(name, height)
     if name == nil then name = "Main" end
     local window = self:GetWindow(name)
