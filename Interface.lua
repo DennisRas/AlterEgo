@@ -65,6 +65,10 @@ function AlterEgo:GetCharacterInfo()
             end,
             OnClick = function(character)
                 local windowCharacter = self:GetWindow("Character")
+                if windowCharacter.character and windowCharacter.character == character and windowCharacter:IsVisible() then
+                    windowCharacter:Hide()
+                    return
+                end
                 local data = {
                     columns = {
                         {width = 100},
@@ -128,6 +132,7 @@ function AlterEgo:GetCharacterInfo()
                     end
                     windowCharacter.TitleBar.Text:SetText(WrapTextInColorCode(character.info.name, nameColor) .. format(" (%s)", character.info.realm))
                     windowCharacter:Show()
+                    windowCharacter.character = character
                 end
             end,
             enabled = true,
