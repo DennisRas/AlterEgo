@@ -109,27 +109,23 @@ end
 
 function AlterEgo:OnInstanceReset()
     local groupChannel = AE_GetGroupChannel()
-    if groupChannel and self.db.global.announceResets then -- Bug?
-        if not IsInInstance() and UnitIsGroupLeader("player") then
-            SendChatMessage(self.constants.prefix .. "Resetting instances...", groupChannel)
-        end
+    if not groupChannel or not self.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
+        return
     end
+    SendChatMessage(self.constants.prefix .. "Resetting instances...", groupChannel)
 end
 
 function AlterEgo:OnChatMessageSystem(_, msg)
-    local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
     local groupChannel = AE_GetGroupChannel()
-    if groupChannel and self.db.global.announceResets then
-        if not IsInInstance() and UnitIsGroupLeader("player") then
-            AE_table_foreach(resetPatterns, function(resetPattern)
-                if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
-                    if groupChannel and self.db.global.announceResets then
-                        SendChatMessage(self.constants.prefix .. msg, groupChannel)
-                    end
-                end
-            end)
-        end
+    if not groupChannel or not self.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
+        return
     end
+    local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
+    AE_table_foreach(resetPatterns, function(resetPattern)
+        if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
+            SendChatMessage(self.constants.prefix .. msg, groupChannel)
+        end
+    end)
 end
 
 function AlterEgo:AnnounceKeystones(chatType, multiline)
@@ -138,7 +134,7 @@ function AlterEgo:AnnounceKeystones(chatType, multiline)
     local msg = "My Keystones: "
 
     if AE_table_count(characters) < 1 then
-        self:Print("No announcement. You have no characters saved.")
+        self:Print("No announcement: You have no characters saved.")
         return
     end
 
@@ -156,7 +152,7 @@ function AlterEgo:AnnounceKeystones(chatType, multiline)
     end)
 
     if AE_table_count(keystoneCharacters) < 1 then
-        self:Print("No announcement. You have no keystones saved.")
+        self:Print("No announcement: You have no keystones saved.")
         return
     end
 
