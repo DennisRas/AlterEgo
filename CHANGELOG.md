@@ -8,6 +8,7 @@
 - Added Weekly Affixes - Click on the affixes at the top
 - Added a new setting to hide realm names
 - Added tooltip instructions for click actions
+- Added AlterEgo to the addon compartment (Thanks [@Wolkenschutz](https://github.com/Wolkenschutz))
 
 ### Updated
 

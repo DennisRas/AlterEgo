@@ -71,6 +71,7 @@ function AlterEgo:OnInitialize()
     }
     self.Libs.LDB:NewDataObject("AlterEgo", libDataObject)
     self.Libs.LDBIcon:Register("AlterEgo", libDataObject, self.db.global.minimap)
+    self.Libs.LDBIcon:AddButtonToCompartment("AlterEgo")
 
     hooksecurefunc("ResetInstances", function()
         self:OnInstanceReset()
