@@ -1621,6 +1621,29 @@ function AlterEgo:UpdateUI()
                 end
             end
 
+            do -- Affix header icons
+                if currentAffixes then
+                    for affixIndex, affix in ipairs(affixes) do
+                        local active = false
+                        local AffixFrame = _G[CharacterColumn.AffixHeader:GetName() .. affixIndex]
+                        if AffixFrame then
+                            AE_table_foreach(currentAffixes, function(currentAffix)
+                                if currentAffix.id == affix.id then
+                                    active = true
+                                end
+                            end)
+                        end
+                        if active then
+                            -- AffixFrame.Icon:SetDesaturation(0)
+                            AffixFrame:SetAlpha(1)
+                        else
+                            -- AffixFrame.Icon:SetDesaturation(1)
+                            AffixFrame:SetAlpha(0.2)
+                        end
+                    end
+                end
+            end
+
             do -- Dungeon rows
                 -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
                 for dungeonIndex, dungeon in ipairs(dungeons) do
