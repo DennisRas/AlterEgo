@@ -1,23 +1,29 @@
 # Changelog
 
-## v1.1.0 - 2024-01-27
+## v1.1.0 - 2024-02-01
 
 ### Added
 
-- Added Character Equipment - Click character names to show equipment
-- Added Weekly Affixes - Click on the affixes at the top
-- Added a new setting to hide realm names
-- Added tooltip instructions for click actions
+- Added a new window: Weekly Affixes (Click the affixes at the top)
+- Added a new window: Character Equipment (Click the character names)
+- Added a new setting: Hide realm names
+- Added a new setting: Window background color
+- Added a new setting: Window scaling
 - Added AlterEgo to the addon compartment (Thanks [@Wolkenschutz](https://github.com/Wolkenschutz))
 
 ### Updated
 
 - Swapped the Fortified/Tyrannical columns to match raider.io
 - Changed the order of crests and currencies by difficulty
+- Added new tooltip instructions to all click actions
+- The affix of the week is now highlighted above the dungeon scores
+- Frames and windows have been recoded completely for a better/optimized performance
 
 ### Fixed
 
-- Fixed additional font issues with alphabets not working across client languages
+- Fixed font issues with characters saved across different client/realm languages
+- Fixed an issue with the addon frames and textures clashing/mixing with other UI elements
+- Max. Catalyst charges are now correctly increased weekly
 
 ## v1.0.9 - 2024-01-07
 
