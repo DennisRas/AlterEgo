@@ -825,6 +825,7 @@ function AlterEgo:CreateUI()
                                 text = i .. "%",
                                 value = i,
                                 checked = self.db.global.interface.windowScale == i,
+                                keepShownOnClick = true,
                                 func = function(button)
                                     self.db.global.interface.windowScale = button.value
                                     self:UpdateUI()
@@ -838,6 +839,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show the weekly affixes",
                         checked = self.db.global.showAffixHeader,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show the weekly affixes",
                         tooltipText = "The affixes will be shown at the top.",
@@ -850,6 +852,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show characters with zero rating",
                         checked = self.db.global.showZeroRatedCharacters,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show characters with zero rating",
                         tooltipText = "Too many alts?",
@@ -862,6 +865,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show realm names",
                         checked = self.db.global.showRealms,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show realm names",
                         tooltipText = "One big party!",
@@ -874,6 +878,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Announce instance resets",
                         checked = self.db.global.announceResets,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Announce instance resets",
                         tooltipText = "Let others in your group know when you've reset the instances.",
@@ -887,6 +892,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Announce new keystones (Party)",
                         checked = self.db.global.announceKeystones.autoParty,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "New keystones (Party)",
                         tooltipText = "Announce to your party when you loot a new keystone.",
@@ -899,6 +905,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Announce new keystones (Guild)",
                         checked = self.db.global.announceKeystones.autoGuild,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "New keystones (Guild)",
                         tooltipText = "Announce to your guild when you loot a new keystone.",
@@ -911,6 +918,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Announce keystones in one message",
                         checked = not self.db.global.announceKeystones.multiline,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Announce keystones in one message",
                         tooltipText = "With too many alts it could get spammy.",
@@ -924,6 +932,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show timed icons",
                         checked = self.db.global.showTiers,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show timed icons",
                         tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
@@ -936,6 +945,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show score colors",
                         checked = self.db.global.showAffixColors,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show score colors",
                         tooltipText = "Show some colors!",
@@ -949,6 +959,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show raid progress",
                         checked = self.db.global.raids and self.db.global.raids.enabled,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show raid progress",
                         tooltipText = "Because Mythic Plus ain't enough!",
@@ -961,6 +972,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show difficulty colors",
                         checked = self.db.global.raids and self.db.global.raids.colors,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show difficulty colors",
                         tooltipText = "Argharhggh! So much greeeen!",
@@ -974,6 +986,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show the minimap button",
                         checked = not self.db.global.minimap.hide,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show the minimap button",
                         tooltipText = "It does get crowded around the minimap sometimes.",
@@ -986,6 +999,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Lock the minimap button",
                         checked = self.db.global.minimap.lock,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Lock the minimap button",
                         tooltipText = "No more moving the button around accidentally!",
@@ -998,6 +1012,7 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
                     UIDropDownMenu_AddButton({
                         text = "Window color",
+                        keepShownOnClick = false,
                         notCheckable = true,
                         hasColorSwatch = true,
                         r = self.db.global.interface.windowColor.r,
