@@ -826,7 +826,7 @@ function AlterEgo:CreateUI()
                                 text = i .. "%",
                                 value = i,
                                 checked = self.db.global.interface.windowScale == i,
-                                keepShownOnClick = true,
+                                keepShownOnClick = false,
                                 func = function(button)
                                     self.db.global.interface.windowScale = button.value
                                     self:UpdateUI()
@@ -846,7 +846,8 @@ function AlterEgo:CreateUI()
                         tooltipText = "The affixes will be shown at the top.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showAffixHeader = not checked
+                            DevTools_Dump(checked)
+                            self.db.global.showAffixHeader = checked
                             self:UpdateUI()
                         end
                     })
@@ -859,7 +860,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Too many alts?",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showZeroRatedCharacters = not checked
+                            self.db.global.showZeroRatedCharacters = checked
                             self:UpdateUI()
                         end
                     })
@@ -872,7 +873,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "One big party!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showRealms = not checked
+                            self.db.global.showRealms = checked
                             self:UpdateUI()
                         end
                     })
@@ -885,7 +886,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Let others in your group know when you've reset the instances.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceResets = not checked
+                            self.db.global.announceResets = checked
                             self:UpdateUI()
                         end
                     })
@@ -899,7 +900,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Announce to your party when you loot a new keystone.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceKeystones.autoParty = not checked
+                            self.db.global.announceKeystones.autoParty = checked
                             self:UpdateUI()
                         end
                     })
@@ -912,7 +913,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Announce to your guild when you loot a new keystone.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceKeystones.autoGuild = not checked
+                            self.db.global.announceKeystones.autoGuild = checked
                             self:UpdateUI()
                         end
                     })
@@ -925,7 +926,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "With too many alts it could get spammy.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceKeystones.multiline = checked
+                            self.db.global.announceKeystones.multiline = not checked
                             self:UpdateUI()
                         end
                     })
@@ -939,7 +940,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showTiers = not checked
+                            self.db.global.showTiers = checked
                             self:UpdateUI()
                         end
                     })
@@ -952,7 +953,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Show some colors!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showAffixColors = not checked
+                            self.db.global.showAffixColors = checked
                             self:UpdateUI()
                         end
                     })
@@ -966,7 +967,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Because Mythic Plus ain't enough!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.raids.enabled = not checked
+                            self.db.global.raids.enabled = checked
                             self:UpdateUI()
                         end
                     })
@@ -979,7 +980,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "Argharhggh! So much greeeen!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.raids.colors = not checked
+                            self.db.global.raids.colors = checked
                             self:UpdateUI()
                         end
                     })
@@ -993,7 +994,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "It does get crowded around the minimap sometimes.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.minimap.hide = checked
+                            self.db.global.minimap.hide = not checked
                             self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
                         end
                     })
@@ -1006,7 +1007,7 @@ function AlterEgo:CreateUI()
                         tooltipText = "No more moving the button around accidentally!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.minimap.lock = not checked
+                            self.db.global.minimap.lock = checked
                             self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
                         end
                     })
@@ -1134,9 +1135,10 @@ function AlterEgo:CreateUI()
                         text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
                         checked = character.enabled,
                         isNotRadio = true,
+                        keepShownOnClick = true,
                         arg1 = character.GUID,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.characters[arg1].enabled = not checked
+                            self.db.global.characters[arg1].enabled = checked
                             self:UpdateUI()
                         end
                     })
