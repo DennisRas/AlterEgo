@@ -846,7 +846,6 @@ function AlterEgo:CreateUI()
                         tooltipText = "The affixes will be shown at the top.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            DevTools_Dump(checked)
                             self.db.global.showAffixHeader = checked
                             self:UpdateUI()
                         end
