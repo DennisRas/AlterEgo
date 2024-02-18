@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.1 - ?
+
+### Updated
+
+- Dropdowns now behave as expected on multiple clicks.
+- Dropdowns now remain open when toggling options.
+
 ## v1.1.0 - 2024-02-01
 
 ### Added
