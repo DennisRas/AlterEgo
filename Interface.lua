@@ -193,9 +193,9 @@ function AlterEgo:GetCharacterInfo()
                 local rating = "-"
                 local ratingColor = "ffffffff"
                 if character.mythicplus.rating ~= nil then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
-                    if color ~= nil then
-                        ratingColor = color.GenerateHexColor(color)
+                    local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+                    if color then
+                        ratingColor = color:GenerateHexColor()
                     end
                     rating = tostring(character.mythicplus.rating)
                 end
@@ -207,21 +207,36 @@ function AlterEgo:GetCharacterInfo()
                 local bestSeasonScore = nil
                 local bestSeasonScoreColor = "ffffffff"
                 local bestSeasonNumber = nil
-                if character.mythicplus.bestSeasonScore ~= nil then
-                    bestSeasonScore = character.mythicplus.bestSeasonScore
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
-                    if color ~= nil then
-                        bestSeasonScoreColor = color.GenerateHexColor(color)
-                    end
-                end
                 if character.mythicplus.bestSeasonNumber ~= nil then
                     bestSeasonNumber = character.mythicplus.bestSeasonNumber
                 end
-                if character.mythicplus.rating ~= nil then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
-                    if color ~= nil then
-                        ratingColor = color.GenerateHexColor(color)
+                if character.mythicplus.bestSeasonScore ~= nil then
+                    bestSeasonScore = character.mythicplus.bestSeasonScore
+                    -- local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
+                    -- if color ~= nil then
+                    --     bestSeasonScoreColor = color.GenerateHexColor(color)
+                    -- end
+                    local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < self:GetSeason())
+                    if color then
+                        bestSeasonScoreColor = color:GenerateHexColor()
                     end
+                end
+                if character.mythicplus.rating ~= nil then
+                    local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+                    if color then
+                        ratingColor = color:GenerateHexColor()
+                    end
+                    -- if self.db.global.useRIOScoreColor and _G.RaiderIO then
+                    --     local color = CreateColor(_G.RaiderIO.GetScoreColor(character.mythicplus.rating))
+                    --     if color then
+                    --         ratingColor = color.GenerateHexColor(color)
+                    --     end
+                    -- else
+                    --     local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
+                    --     if color ~= nil then
+                    --         ratingColor = color.GenerateHexColor(color)
+                    --     end
+                    -- end
                     rating = tostring(character.mythicplus.rating)
                 end
                 GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
@@ -886,6 +901,20 @@ function AlterEgo:CreateUI()
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
                             self.db.global.announceResets = checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Use Raider.io rating colors",
+                        checked = self.db.global.useRIOScoreColor,
+                        keepShownOnClick = true,
+                        isNotRadio = true,
+                        tooltipTitle = "Use Raider.io rating colors",
+                        tooltipText = "So many colors!",
+                        tooltipOnButton = true,
+                        disabled = type(_G.RaiderIO) == "nil",
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.useRIOScoreColor = checked
                             self:UpdateUI()
                         end
                     })

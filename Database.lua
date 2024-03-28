@@ -1,4 +1,4 @@
-local dbVersion = 9
+local dbVersion = 10
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -34,7 +34,8 @@ local defaultDB = {
             -- fontSize = 12,
             windowScale = 100,
             windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-        }
+        },
+        useRIOScoreColor = false,
     }
 }
 local defaultCharacter = {

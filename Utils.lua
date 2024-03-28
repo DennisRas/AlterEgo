@@ -149,3 +149,18 @@ function AE_GetGroupChannel()
         return nil
     end
 end
+
+--- Get a rating color
+---@param rating number
+---@param useRIOScoreColor boolean
+---@param isPreviousSeason boolean
+function AE_GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
+    local color
+    local RIO = _G["RaiderIO"]
+    if useRIOScoreColor and RIO then
+        color = CreateColor(RIO.GetScoreColor(rating, isPreviousSeason or false))
+    else
+        color = C_ChallengeMode.GetDungeonScoreRarityColor(rating)
+    end
+    return color
+end
