@@ -242,12 +242,12 @@ function AlterEgo:GetCharacterInfo()
                 GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
                 GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.mythicplus.runHistory or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-                if bestSeasonScore ~= nil then
-                    local score = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
-                    if bestSeasonNumber ~= nil then
-                        score = score .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
+                if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
+                    local bestSeasonValue = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
+                    if bestSeasonNumber > 0 then
+                        bestSeasonValue = bestSeasonValue .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
                     end
-                    GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                    GameTooltip:AddLine("Best Season: " .. bestSeasonValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 end
                 if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
                     GameTooltip:AddLine(" ")

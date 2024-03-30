@@ -8,6 +8,10 @@
 - Dropdowns now remain open when toggling options
 - Added Raider.io color rating
 
+### Updated
+
+- Rating tooltip will no longer show "(Season 0)" as Best Season
+
 ### Fixed
 
 - Fixed a localization bug with dungeon orders in rating tooltips
