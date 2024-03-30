@@ -8,6 +8,10 @@
 - Dropdowns now remain open when toggling options
 - Added Raider.io color rating
 
+### Fixed
+
+- Fixed a localization bug with dungeon orders in rating tooltips
+
 ## v1.1.0 - 2024-02-01
 
 ### Added

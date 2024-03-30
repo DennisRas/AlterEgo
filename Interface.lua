@@ -251,14 +251,27 @@ function AlterEgo:GetCharacterInfo()
                 end
                 if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
                     GameTooltip:AddLine(" ")
-                    for _, dungeon in pairs(character.mythicplus.dungeons) do
+                    local characterDungeons = CopyTable(character.mythicplus.dungeons)
+                    for _, dungeon in pairs(characterDungeons) do
                         local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
                         if dungeonName ~= nil then
+                            dungeon.name = dungeonName
+                        else
+                            dungeon.name = ""
+                        end
+                    end
+                    table.sort(characterDungeons, function(a, b)
+                        return a.name < b.name
+                    end)
+                    for _, dungeon in pairs(characterDungeons) do
+                        if dungeon.name ~= "" then
+                            local levelColor = LIGHTGRAY_FONT_COLOR
+                            local levelValue = "-"
                             if dungeon.level > 0 then
-                                GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(dungeon.level), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
-                            else
-                                GameTooltip:AddDoubleLine(dungeonName, "-", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b)
+                                levelColor = WHITE_FONT_COLOR
+                                levelValue = "+" .. tostring(dungeon.level)
                             end
+                            GameTooltip:AddDoubleLine(dungeon.name, levelValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, levelColor.r, levelColor.g, levelColor.b)
                         end
                     end
                     GameTooltip:AddLine(" ")
