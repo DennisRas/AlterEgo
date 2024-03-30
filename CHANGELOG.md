@@ -2,11 +2,14 @@
 
 ## v1.1.1 - ?
 
+### Added
+
+- Added a new setting: Raider.io rating colors
+
 ### Updated
 
 - Dropdowns now behave as expected on multiple clicks
 - Dropdowns now remain open when toggling options
-- Added Raider.io color rating
 - Rating tooltip will no longer show "(Season 0)" as Best Season
 
 ### Fixed
