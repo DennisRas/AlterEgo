@@ -15,6 +15,7 @@
 ### Fixed
 
 - Fixed a localization bug with dungeon orders in rating tooltips
+- Fixed a game crash when shift clicking a rating tooltip with zero dungeon runs
 
 ## v1.1.0 - 2024-02-01
 

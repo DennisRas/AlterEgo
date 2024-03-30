@@ -207,6 +207,10 @@ function AlterEgo:GetCharacterInfo()
                 local bestSeasonScore = nil
                 local bestSeasonScoreColor = "ffffffff"
                 local bestSeasonNumber = nil
+                local numSeasonRuns = 0
+                if character.mythicplus.runHistory ~= nil then
+                    numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+                end
                 if character.mythicplus.bestSeasonNumber ~= nil then
                     bestSeasonNumber = character.mythicplus.bestSeasonNumber
                 end
@@ -241,7 +245,7 @@ function AlterEgo:GetCharacterInfo()
                 end
                 GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
                 GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-                GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.mythicplus.runHistory or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                GameTooltip:AddLine("Runs this Season: " .. WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
                     local bestSeasonValue = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
                     if bestSeasonNumber > 0 then
@@ -274,35 +278,43 @@ function AlterEgo:GetCharacterInfo()
                             GameTooltip:AddDoubleLine(dungeon.name, levelValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, levelColor.r, levelColor.g, levelColor.b)
                         end
                     end
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                    if numSeasonRuns > 0 then
+                        GameTooltip:AddLine(" ")
+                        GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                    end
                 end
             end,
             OnClick = function(character)
-                if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
-                    if IsModifiedClick("CHATLINK") then
-                        local dungeonScoreDungeonTable = {};
-                        for _, dungeon in pairs(character.mythicplus.dungeons) do
-                            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
-                            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
-                            table.insert(dungeonScoreDungeonTable, dungeon.level);
-                        end
-                        local dungeonScoreTable = {
-                            character.mythicplus.rating,
-                            character.GUID,
-                            character.info.name,
-                            character.info.class.id,
-                            math.ceil(character.info.ilvl.level),
-                            character.info.level,
-                            character.mythicplus.runHistory and AE_table_count(character.mythicplus.runHistory) or 0,
-                            character.mythicplus.bestSeasonScore,
-                            character.mythicplus.bestSeasonNumber,
-                            unpack(dungeonScoreDungeonTable)
-                        };
-                        local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
-                        if not ChatEdit_InsertLink(link) then
-                            ChatFrame_OpenChat(link);
-                        end
+                local numSeasonRuns = 0
+                if character.mythicplus.runHistory ~= nil then
+                    numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+                end
+                if character.mythicplus.dungeons ~= nil
+                    and AE_table_count(character.mythicplus.dungeons) > 0
+                    and numSeasonRuns > 0
+                    and IsModifiedClick("CHATLINK")
+                then
+                    local dungeonScoreDungeonTable = {};
+                    for _, dungeon in pairs(character.mythicplus.dungeons) do
+                        table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
+                        table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
+                        table.insert(dungeonScoreDungeonTable, dungeon.level);
+                    end
+                    local dungeonScoreTable = {
+                        character.mythicplus.rating,
+                        character.GUID,
+                        character.info.name,
+                        character.info.class.id,
+                        math.ceil(character.info.ilvl.level),
+                        character.info.level,
+                        numSeasonRuns,
+                        character.mythicplus.bestSeasonScore,
+                        character.mythicplus.bestSeasonNumber,
+                        unpack(dungeonScoreDungeonTable)
+                    };
+                    local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+                    if not ChatEdit_InsertLink(link) then
+                        ChatFrame_OpenChat(link);
                     end
                 end
             end,
