@@ -1779,23 +1779,22 @@ function AlterEgo:UpdateUI()
                                 level = "-"
                                 levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                             else
-                                for _, affixScore in ipairs(characterDungeon.affixScores) do
-                                    if affixScore.name == affix.name then
-                                        level = affixScore.level
+                                local affixScore = AE_table_get(characterDungeon.affixScores, "id", affix.id)
+                                if affixScore then
+                                    level = affixScore.level
 
-                                        if affixScore.durationSec <= dungeon.time * 0.6 then
-                                            tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                                        elseif affixScore.durationSec <= dungeon.time * 0.8 then
-                                            tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                                        elseif affixScore.durationSec <= dungeon.time then
-                                            tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                                        end
+                                    if affixScore.durationSec <= dungeon.time * 0.6 then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                                    elseif affixScore.durationSec <= dungeon.time * 0.8 then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                                    elseif affixScore.durationSec <= dungeon.time then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                                    end
 
-                                        if tier == "" then
-                                            levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                                        elseif self.db.global.showAffixColors then
-                                            levelColor = scoreColor:GenerateHexColor()
-                                        end
+                                    if tier == "" then
+                                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                                    elseif self.db.global.showAffixColors then
+                                        levelColor = scoreColor:GenerateHexColor()
                                     end
                                 end
                             end

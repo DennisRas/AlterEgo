@@ -1,4 +1,4 @@
-local dbVersion = 10
+local dbVersion = 11
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -498,6 +498,22 @@ function AlterEgo:MigrateDB()
                 end
             end
         end
+        if self.db.global.dbVersion == 10 then
+            local affixes = self:GetAffixes()
+            for characterIndex in pairs(self.db.global.characters) do
+                local character = self.db.global.characters[characterIndex]
+                if character.mythicplus.dungeons ~= nil then
+                    AE_table_foreach(character.mythicplus.dungeons, function(dungeon)
+                        AE_table_foreach(dungeon.affixScores, function(affixScore)
+                            local affix = AE_table_get(affixes, "name", affixScore.name)
+                            if affixScore.id == nil then
+                                affixScore.id = affix and affix.id or 0
+                            end
+                        end)
+                    end)
+                end
+            end
+        end
         self.db.global.dbVersion = self.db.global.dbVersion + 1
         self:MigrateDB()
     end
@@ -814,6 +830,7 @@ function AlterEgo:UpdateMythicPlus()
     local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
     local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
     local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
+    local affixes = self:GetAffixes()
 
     if currentSeason then
         for _, char in pairs(self.db.global.characters) do
@@ -855,7 +872,13 @@ function AlterEgo:UpdateMythicPlus()
         }
         if bestTimedRun ~= nil then dungeon.bestTimedRun = bestTimedRun end
         if bestNotTimedRun ~= nil then dungeon.bestNotTimedRun = bestNotTimedRun end
-        if affixScores ~= nil then dungeon.affixScores = affixScores end
+        if affixScores ~= nil then
+            AE_table_foreach(affixScores, function(affixScore)
+                local affix = AE_table_get(affixes, "name", affixScore.name)
+                affixScore.id = affix and affix.id or 0
+            end)
+            dungeon.affixScores = affixScores
+        end
         if bestOverAllScore ~= nil then dungeon.bestOverAllScore = bestOverAllScore end
         if ratingSummary ~= nil and ratingSummary.runs ~= nil then
             for _, run in ipairs(ratingSummary.runs) do

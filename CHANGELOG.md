@@ -15,6 +15,7 @@
 ### Fixed
 
 - Fixed a localization bug with dungeon orders in rating tooltips
+- Fixed a localization bug with dungeon values missing when switching between game clients (You may have to log your characters again to update the missing values)
 - Fixed a game crash when shift clicking a rating tooltip with zero dungeon runs
 
 ## v1.1.0 - 2024-02-01
