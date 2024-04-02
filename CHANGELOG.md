@@ -12,6 +12,7 @@
 - Dropdowns now remain open when toggling options
 - Rating tooltip will no longer show "(Season 0)" as Best Season
 - Removed Difficulty column from the Weekly Affixes window
+- Updated TOC
 
 ### Fixed
 
