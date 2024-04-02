@@ -792,18 +792,16 @@ function AlterEgo:CreateUI()
                 local affixes = self:GetAffixes()
                 local data = {
                     columns = {
-                        {width = 120},
-                        {width = 120},
-                        {width = 120},
-                        {width = 120},
+                        {width = 140},
+                        {width = 140},
+                        {width = 140},
                     },
                     rows = {
                         {
                             cols = {
-                                {text = "+2",         backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                                {text = "+7",         backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                                {text = "+14",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                                {text = "Difficulty", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                                {text = "+2",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                                {text = "+7",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                                {text = "+14", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
                             }
                         }
                     }
@@ -811,7 +809,7 @@ function AlterEgo:CreateUI()
 
                 AE_table_foreach(affixRotation, function(affixValues, weekIndex)
                     local row = {cols = {}}
-                    local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.05} or nil
+                    local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
                     AE_table_foreach(affixValues, function(affixValue)
                         if type(affixValue) == "number" then
                             local affix = AE_table_get(affixes, "id", affixValue)
