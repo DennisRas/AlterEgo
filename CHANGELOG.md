@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.1 - 2024-04-03
+
+### Fixed
+
+Fixed a horrendous Blizzard bug with keystone/dungeon colors.
+Players in the US will most likely see white colors until Blizzard hotfixes this.
+
 ## v1.1.0 - 2024-02-01
 
 ### Added
