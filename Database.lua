@@ -765,11 +765,16 @@ function AlterEgo:UpdateKeystoneItem()
                     elseif tonumber(dungeon.mapId) and tonumber(level) then
                         newKeystone = true
                     end
+                    local keystoneColor = "ffffffff"
+                    local color = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
+                    if color ~= nil then
+                        keystoneColor = color:GenerateHexColor()
+                    end
                     character.mythicplus.keystone = {
                         challengeModeID = tonumber(dungeon.challengeModeID),
                         mapId = tonumber(dungeon.mapId),
                         level = tonumber(level),
-                        color = C_ChallengeMode.GetKeystoneLevelRarityColor(level):GenerateHexColor(),
+                        color = keystoneColor,
                         itemId = tonumber(itemId),
                         itemLink = itemLink,
                     }

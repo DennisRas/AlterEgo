@@ -1725,7 +1725,7 @@ function AlterEgo:UpdateUI()
                     if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
                         if (characterDungeon.rating) then
                             local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
-                            if color then
+                            if color ~= nil then
                                 scoreColor = color
                             end
                         end

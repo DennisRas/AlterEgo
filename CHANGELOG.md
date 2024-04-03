@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.1 - ?
+## v1.1.2 - ?
 
 ### Added
 
@@ -19,6 +19,13 @@
 - Fixed a localization bug with dungeon orders in rating tooltips
 - Fixed a localization bug with dungeon values missing when switching between game clients (You may have to log your characters again to update the missing values)
 - Fixed a game crash when shift clicking a rating tooltip with zero dungeon runs
+
+## v1.1.1 - 2024-04-03
+
+### Fixed
+
+Fixed a horrendous Blizzard bug with keystone/dungeon colors.
+Players in the US will most likely see white colors until Blizzard hotfixes this.
 
 ## v1.1.0 - 2024-02-01
 
