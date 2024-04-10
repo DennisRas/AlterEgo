@@ -1,0 +1,10 @@
+package-as: AlterEgo
+
+enable-nolib-creation: no
+
+ignore:
+  - "*.png"
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
