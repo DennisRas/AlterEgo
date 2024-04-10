@@ -5,6 +5,7 @@
 ### Added
 
 - Added a new setting: Raider.io rating colors
+- Added AlterEgo to WowInterface.com and Wago.io
 
 ### Updated
 
