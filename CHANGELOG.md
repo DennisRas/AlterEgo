@@ -13,6 +13,7 @@
 - Rating tooltip will no longer show "(Season 0)" as Best Season
 - Removed Difficulty column from the Weekly Affixes window
 - Updated TOC
+- Cleaning up code and preparing for easier addon packaging/releases
 
 ### Fixed
 
