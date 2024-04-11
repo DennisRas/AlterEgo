@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.1.2 - 2024-04-11
+
+### Added
+
+- Added a new setting: Raider.io rating colors
+- Added AlterEgo to WowInterface.com and Wago.io
+
+### Updated
+
+- Dropdowns now behave as expected on multiple clicks
+- Dropdowns now remain open when toggling options
+- Rating tooltip will no longer show "(Season 0)" as Best Season
+- Removed Difficulty column from the Weekly Affixes window
+- Updated TOC
+- Cleaning up code and preparing for easier addon packaging/releases
+
+### Fixed
+
+- Fixed a localization bug with dungeon orders in rating tooltips
+- Fixed a localization bug with dungeon values missing when switching between game clients (You may have to log your characters again to update the missing values)
+- Fixed a game crash when shift clicking a rating tooltip with zero dungeon runs
+
 ## v1.1.1 - 2024-04-03
 
 ### Fixed

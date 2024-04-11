@@ -1,4 +1,4 @@
-local dbVersion = 9
+local dbVersion = 11
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -34,7 +34,8 @@ local defaultDB = {
             -- fontSize = 12,
             windowScale = 100,
             windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-        }
+        },
+        useRIOScoreColor = false,
     }
 }
 local defaultCharacter = {
@@ -257,18 +258,17 @@ local dataAffixes = {
 }
 
 -- Rotation: https://mythicpl.us
--- Difficulty: https://mplus.subcreation.net/all-affixes.html
 local dataAffixRotation = {
-    {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING,     RARE_BLUE_COLOR:WrapTextInColorCode("Medium")},
-    {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING, EPIC_PURPLE_COLOR:WrapTextInColorCode("Hard")},
-    {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL,   EPIC_PURPLE_COLOR:WrapTextInColorCode("Hard")},
-    {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING,     UNCOMMON_GREEN_COLOR:WrapTextInColorCode("Easy")},
-    {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE,   RARE_BLUE_COLOR:WrapTextInColorCode("Medium")},
-    {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING,   UNCOMMON_GREEN_COLOR:WrapTextInColorCode("Easy")},
-    {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING, RARE_BLUE_COLOR:WrapTextInColorCode("Medium")},
-    {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE,   EPIC_PURPLE_COLOR:WrapTextInColorCode("Hard")},
-    {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING,   EPIC_PURPLE_COLOR:WrapTextInColorCode("Hard")},
-    {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL,   RARE_BLUE_COLOR:WrapTextInColorCode("Medium")},
+    {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
+    {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
+    {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
+    {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
+    {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
+    {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
+    {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
+    {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
+    {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
+    {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
 }
 
 local dataDungeons = {
@@ -494,6 +494,22 @@ function AlterEgo:MigrateDB()
                             self.db.global.characters[characterIndex].raids.savedInstances[savedInstanceIndex].encounters[5].instanceEncounterID = 2728
                         end
                     end
+                end
+            end
+        end
+        if self.db.global.dbVersion == 10 then
+            local affixes = self:GetAffixes()
+            for characterIndex in pairs(self.db.global.characters) do
+                local character = self.db.global.characters[characterIndex]
+                if character.mythicplus.dungeons ~= nil then
+                    AE_table_foreach(character.mythicplus.dungeons, function(dungeon)
+                        AE_table_foreach(dungeon.affixScores, function(affixScore)
+                            local affix = AE_table_get(affixes, "name", affixScore.name)
+                            if affixScore.id == nil then
+                                affixScore.id = affix and affix.id or 0
+                            end
+                        end)
+                    end)
                 end
             end
         end
@@ -818,6 +834,7 @@ function AlterEgo:UpdateMythicPlus()
     local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
     local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
     local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
+    local affixes = self:GetAffixes()
 
     if currentSeason then
         for _, char in pairs(self.db.global.characters) do
@@ -859,7 +876,13 @@ function AlterEgo:UpdateMythicPlus()
         }
         if bestTimedRun ~= nil then dungeon.bestTimedRun = bestTimedRun end
         if bestNotTimedRun ~= nil then dungeon.bestNotTimedRun = bestNotTimedRun end
-        if affixScores ~= nil then dungeon.affixScores = affixScores end
+        if affixScores ~= nil then
+            AE_table_foreach(affixScores, function(affixScore)
+                local affix = AE_table_get(affixes, "name", affixScore.name)
+                affixScore.id = affix and affix.id or 0
+            end)
+            dungeon.affixScores = affixScores
+        end
         if bestOverAllScore ~= nil then dungeon.bestOverAllScore = bestOverAllScore end
         if ratingSummary ~= nil and ratingSummary.runs ~= nil then
             for _, run in ipairs(ratingSummary.runs) do

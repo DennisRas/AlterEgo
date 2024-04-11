@@ -193,9 +193,9 @@ function AlterEgo:GetCharacterInfo()
                 local rating = "-"
                 local ratingColor = "ffffffff"
                 if character.mythicplus.rating ~= nil then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
-                    if color ~= nil then
-                        ratingColor = color.GenerateHexColor(color)
+                    local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+                    if color then
+                        ratingColor = color:GenerateHexColor()
                     end
                     rating = tostring(character.mythicplus.rating)
                 end
@@ -207,74 +207,114 @@ function AlterEgo:GetCharacterInfo()
                 local bestSeasonScore = nil
                 local bestSeasonScoreColor = "ffffffff"
                 local bestSeasonNumber = nil
-                if character.mythicplus.bestSeasonScore ~= nil then
-                    bestSeasonScore = character.mythicplus.bestSeasonScore
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
-                    if color ~= nil then
-                        bestSeasonScoreColor = color.GenerateHexColor(color)
-                    end
+                local numSeasonRuns = 0
+                if character.mythicplus.runHistory ~= nil then
+                    numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
                 end
                 if character.mythicplus.bestSeasonNumber ~= nil then
                     bestSeasonNumber = character.mythicplus.bestSeasonNumber
                 end
-                if character.mythicplus.rating ~= nil then
-                    local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
-                    if color ~= nil then
-                        ratingColor = color.GenerateHexColor(color)
+                if character.mythicplus.bestSeasonScore ~= nil then
+                    bestSeasonScore = character.mythicplus.bestSeasonScore
+                    -- local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
+                    -- if color ~= nil then
+                    --     bestSeasonScoreColor = color.GenerateHexColor(color)
+                    -- end
+                    local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < self:GetSeason())
+                    if color then
+                        bestSeasonScoreColor = color:GenerateHexColor()
                     end
+                end
+                if character.mythicplus.rating ~= nil then
+                    local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+                    if color then
+                        ratingColor = color:GenerateHexColor()
+                    end
+                    -- if self.db.global.useRIOScoreColor and _G.RaiderIO then
+                    --     local color = CreateColor(_G.RaiderIO.GetScoreColor(character.mythicplus.rating))
+                    --     if color then
+                    --         ratingColor = color.GenerateHexColor(color)
+                    --     end
+                    -- else
+                    --     local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
+                    --     if color ~= nil then
+                    --         ratingColor = color.GenerateHexColor(color)
+                    --     end
+                    -- end
                     rating = tostring(character.mythicplus.rating)
                 end
                 GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
                 GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-                GameTooltip:AddLine("Runs this Season: " .. "|cffffffff" .. (#character.mythicplus.runHistory or 0) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-                if bestSeasonScore ~= nil then
-                    local score = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
-                    if bestSeasonNumber ~= nil then
-                        score = score .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
+                GameTooltip:AddLine("Runs this Season: " .. WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
+                    local bestSeasonValue = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
+                    if bestSeasonNumber > 0 then
+                        bestSeasonValue = bestSeasonValue .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
                     end
-                    GameTooltip:AddLine("Best Season: " .. score, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+                    GameTooltip:AddLine("Best Season: " .. bestSeasonValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
                 end
                 if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
                     GameTooltip:AddLine(" ")
-                    for _, dungeon in pairs(character.mythicplus.dungeons) do
+                    local characterDungeons = CopyTable(character.mythicplus.dungeons)
+                    for _, dungeon in pairs(characterDungeons) do
                         local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
                         if dungeonName ~= nil then
-                            if dungeon.level > 0 then
-                                GameTooltip:AddDoubleLine(dungeonName, "+" .. tostring(dungeon.level), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
-                            else
-                                GameTooltip:AddDoubleLine(dungeonName, "-", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, LIGHTGRAY_FONT_COLOR.r, LIGHTGRAY_FONT_COLOR.g, LIGHTGRAY_FONT_COLOR.b)
-                            end
+                            dungeon.name = dungeonName
+                        else
+                            dungeon.name = ""
                         end
                     end
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                    table.sort(characterDungeons, function(a, b)
+                        return a.name < b.name
+                    end)
+                    for _, dungeon in pairs(characterDungeons) do
+                        if dungeon.name ~= "" then
+                            local levelColor = LIGHTGRAY_FONT_COLOR
+                            local levelValue = "-"
+                            if dungeon.level > 0 then
+                                levelColor = WHITE_FONT_COLOR
+                                levelValue = "+" .. tostring(dungeon.level)
+                            end
+                            GameTooltip:AddDoubleLine(dungeon.name, levelValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, levelColor.r, levelColor.g, levelColor.b)
+                        end
+                    end
+                    if numSeasonRuns > 0 then
+                        GameTooltip:AddLine(" ")
+                        GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                    end
                 end
             end,
             OnClick = function(character)
-                if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
-                    if IsModifiedClick("CHATLINK") then
-                        local dungeonScoreDungeonTable = {};
-                        for _, dungeon in pairs(character.mythicplus.dungeons) do
-                            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
-                            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
-                            table.insert(dungeonScoreDungeonTable, dungeon.level);
-                        end
-                        local dungeonScoreTable = {
-                            character.mythicplus.rating,
-                            character.GUID,
-                            character.info.name,
-                            character.info.class.id,
-                            math.ceil(character.info.ilvl.level),
-                            character.info.level,
-                            character.mythicplus.runHistory and AE_table_count(character.mythicplus.runHistory) or 0,
-                            character.mythicplus.bestSeasonScore,
-                            character.mythicplus.bestSeasonNumber,
-                            unpack(dungeonScoreDungeonTable)
-                        };
-                        local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
-                        if not ChatEdit_InsertLink(link) then
-                            ChatFrame_OpenChat(link);
-                        end
+                local numSeasonRuns = 0
+                if character.mythicplus.runHistory ~= nil then
+                    numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+                end
+                if character.mythicplus.dungeons ~= nil
+                    and AE_table_count(character.mythicplus.dungeons) > 0
+                    and numSeasonRuns > 0
+                    and IsModifiedClick("CHATLINK")
+                then
+                    local dungeonScoreDungeonTable = {};
+                    for _, dungeon in pairs(character.mythicplus.dungeons) do
+                        table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
+                        table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
+                        table.insert(dungeonScoreDungeonTable, dungeon.level);
+                    end
+                    local dungeonScoreTable = {
+                        character.mythicplus.rating,
+                        character.GUID,
+                        character.info.name,
+                        character.info.class.id,
+                        math.ceil(character.info.ilvl.level),
+                        character.info.level,
+                        numSeasonRuns,
+                        character.mythicplus.bestSeasonScore,
+                        character.mythicplus.bestSeasonNumber,
+                        unpack(dungeonScoreDungeonTable)
+                    };
+                    local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+                    if not ChatEdit_InsertLink(link) then
+                        ChatFrame_OpenChat(link);
                     end
                 end
             end,
@@ -752,18 +792,16 @@ function AlterEgo:CreateUI()
                 local affixes = self:GetAffixes()
                 local data = {
                     columns = {
-                        {width = 120},
-                        {width = 120},
-                        {width = 120},
-                        {width = 120},
+                        {width = 140},
+                        {width = 140},
+                        {width = 140},
                     },
                     rows = {
                         {
                             cols = {
-                                {text = "+2",         backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                                {text = "+7",         backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                                {text = "+14",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                                {text = "Difficulty", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                                {text = "+2",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                                {text = "+7",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                                {text = "+14", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
                             }
                         }
                     }
@@ -771,7 +809,7 @@ function AlterEgo:CreateUI()
 
                 AE_table_foreach(affixRotation, function(affixValues, weekIndex)
                     local row = {cols = {}}
-                    local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.05} or nil
+                    local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
                     AE_table_foreach(affixValues, function(affixValue)
                         if type(affixValue) == "number" then
                             local affix = AE_table_get(affixes, "id", affixValue)
@@ -805,6 +843,7 @@ function AlterEgo:CreateUI()
         winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
         winMain.TitleBar.SettingsButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
         winMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
+        winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function() return true end
         winMain.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.SettingsButton.Dropdown) end)
         winMain.TitleBar.SettingsButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
         winMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER")
@@ -825,6 +864,7 @@ function AlterEgo:CreateUI()
                                 text = i .. "%",
                                 value = i,
                                 checked = self.db.global.interface.windowScale == i,
+                                keepShownOnClick = false,
                                 func = function(button)
                                     self.db.global.interface.windowScale = button.value
                                     self:UpdateUI()
@@ -838,48 +878,66 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show the weekly affixes",
                         checked = self.db.global.showAffixHeader,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show the weekly affixes",
                         tooltipText = "The affixes will be shown at the top.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showAffixHeader = not checked
+                            self.db.global.showAffixHeader = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Show characters with zero rating",
                         checked = self.db.global.showZeroRatedCharacters,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show characters with zero rating",
                         tooltipText = "Too many alts?",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showZeroRatedCharacters = not checked
+                            self.db.global.showZeroRatedCharacters = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Show realm names",
                         checked = self.db.global.showRealms,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show realm names",
                         tooltipText = "One big party!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showRealms = not checked
+                            self.db.global.showRealms = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Announce instance resets",
                         checked = self.db.global.announceResets,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Announce instance resets",
                         tooltipText = "Let others in your group know when you've reset the instances.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceResets = not checked
+                            self.db.global.announceResets = checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Use Raider.io rating colors",
+                        checked = self.db.global.useRIOScoreColor,
+                        keepShownOnClick = true,
+                        isNotRadio = true,
+                        tooltipTitle = "Use Raider.io rating colors",
+                        tooltipText = "So many colors!",
+                        tooltipOnButton = true,
+                        disabled = type(_G.RaiderIO) == "nil",
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.useRIOScoreColor = checked
                             self:UpdateUI()
                         end
                     })
@@ -887,36 +945,39 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Announce new keystones (Party)",
                         checked = self.db.global.announceKeystones.autoParty,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "New keystones (Party)",
                         tooltipText = "Announce to your party when you loot a new keystone.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceKeystones.autoParty = not checked
+                            self.db.global.announceKeystones.autoParty = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Announce new keystones (Guild)",
                         checked = self.db.global.announceKeystones.autoGuild,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "New keystones (Guild)",
                         tooltipText = "Announce to your guild when you loot a new keystone.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceKeystones.autoGuild = not checked
+                            self.db.global.announceKeystones.autoGuild = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Announce keystones in one message",
                         checked = not self.db.global.announceKeystones.multiline,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Announce keystones in one message",
                         tooltipText = "With too many alts it could get spammy.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.announceKeystones.multiline = checked
+                            self.db.global.announceKeystones.multiline = not checked
                             self:UpdateUI()
                         end
                     })
@@ -924,24 +985,26 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show timed icons",
                         checked = self.db.global.showTiers,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show timed icons",
                         tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showTiers = not checked
+                            self.db.global.showTiers = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Show score colors",
                         checked = self.db.global.showAffixColors,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show score colors",
                         tooltipText = "Show some colors!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.showAffixColors = not checked
+                            self.db.global.showAffixColors = checked
                             self:UpdateUI()
                         end
                     })
@@ -949,24 +1012,26 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show raid progress",
                         checked = self.db.global.raids and self.db.global.raids.enabled,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show raid progress",
                         tooltipText = "Because Mythic Plus ain't enough!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.raids.enabled = not checked
+                            self.db.global.raids.enabled = checked
                             self:UpdateUI()
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Show difficulty colors",
                         checked = self.db.global.raids and self.db.global.raids.colors,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show difficulty colors",
                         tooltipText = "Argharhggh! So much greeeen!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.raids.colors = not checked
+                            self.db.global.raids.colors = checked
                             self:UpdateUI()
                         end
                     })
@@ -974,30 +1039,33 @@ function AlterEgo:CreateUI()
                     UIDropDownMenu_AddButton({
                         text = "Show the minimap button",
                         checked = not self.db.global.minimap.hide,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Show the minimap button",
                         tooltipText = "It does get crowded around the minimap sometimes.",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.minimap.hide = checked
+                            self.db.global.minimap.hide = not checked
                             self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
                         end
                     })
                     UIDropDownMenu_AddButton({
                         text = "Lock the minimap button",
                         checked = self.db.global.minimap.lock,
+                        keepShownOnClick = true,
                         isNotRadio = true,
                         tooltipTitle = "Lock the minimap button",
                         tooltipText = "No more moving the button around accidentally!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.minimap.lock = not checked
+                            self.db.global.minimap.lock = checked
                             self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
                         end
                     })
                     UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
                     UIDropDownMenu_AddButton({
                         text = "Window color",
+                        keepShownOnClick = false,
                         notCheckable = true,
                         hasColorSwatch = true,
                         r = self.db.global.interface.windowColor.r,
@@ -1045,6 +1113,7 @@ function AlterEgo:CreateUI()
         winMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", winMain.TitleBar)
         winMain.TitleBar.SortingButton:SetPoint("RIGHT", winMain.TitleBar.SettingsButton, "LEFT", 0, 0)
         winMain.TitleBar.SortingButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function() return true end
         winMain.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.SortingButton.Dropdown) end)
         winMain.TitleBar.SortingButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
         winMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER")
@@ -1090,6 +1159,7 @@ function AlterEgo:CreateUI()
         winMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
         winMain.TitleBar.CharactersButton:SetPoint("RIGHT", winMain.TitleBar.SortingButton, "LEFT", 0, 0)
         winMain.TitleBar.CharactersButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function() return true end
         winMain.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.CharactersButton.Dropdown) end)
         winMain.TitleBar.CharactersButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
         winMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER")
@@ -1116,9 +1186,10 @@ function AlterEgo:CreateUI()
                         text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
                         checked = character.enabled,
                         isNotRadio = true,
+                        keepShownOnClick = true,
                         arg1 = character.GUID,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.characters[arg1].enabled = not checked
+                            self.db.global.characters[arg1].enabled = checked
                             self:UpdateUI()
                         end
                     })
@@ -1144,6 +1215,7 @@ function AlterEgo:CreateUI()
         winMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
         winMain.TitleBar.AnnounceButton:SetPoint("RIGHT", winMain.TitleBar.CharactersButton, "LEFT", 0, 0)
         winMain.TitleBar.AnnounceButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+        winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function() return true end
         winMain.TitleBar.AnnounceButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.AnnounceButton.Dropdown) end)
         winMain.TitleBar.AnnounceButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
         winMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER")
@@ -1705,23 +1777,22 @@ function AlterEgo:UpdateUI()
                                 level = "-"
                                 levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                             else
-                                for _, affixScore in ipairs(characterDungeon.affixScores) do
-                                    if affixScore.name == affix.name then
-                                        level = affixScore.level
+                                local affixScore = AE_table_get(characterDungeon.affixScores, "id", affix.id)
+                                if affixScore then
+                                    level = affixScore.level
 
-                                        if affixScore.durationSec <= dungeon.time * 0.6 then
-                                            tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                                        elseif affixScore.durationSec <= dungeon.time * 0.8 then
-                                            tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                                        elseif affixScore.durationSec <= dungeon.time then
-                                            tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                                        end
+                                    if affixScore.durationSec <= dungeon.time * 0.6 then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                                    elseif affixScore.durationSec <= dungeon.time * 0.8 then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                                    elseif affixScore.durationSec <= dungeon.time then
+                                        tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                                    end
 
-                                        if tier == "" then
-                                            levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                                        elseif self.db.global.showAffixColors then
-                                            levelColor = scoreColor:GenerateHexColor()
-                                        end
+                                    if tier == "" then
+                                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                                    elseif self.db.global.showAffixColors then
+                                        levelColor = scoreColor:GenerateHexColor()
                                     end
                                 end
                             end

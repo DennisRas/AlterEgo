@@ -7,7 +7,7 @@ AlterEgo also offers an optional easy-to-read grid overview of your raid progres
 
 We understand that every player has unique needs and preferences. That's why we've included a range of customizable options, allowing you to tailor the data displayed and the colors used to your liking. With AlterEgo, your WoW experience becomes more personalized and efficient.
 
-Download AlterEgo today and take control of your gaming experience like never before!  
+Download AlterEgo today and take control of your gaming experience like never before!
 
 ## Features
 

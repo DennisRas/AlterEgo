@@ -1,5 +1,5 @@
 <Bindings>
-    <Binding name="ALTEREGO" category="AlterEgo">
-        AlterEgo:ToggleWindow()
-    </Binding>
+  <Binding name="ALTEREGO" category="AlterEgo">
+    AlterEgo:ToggleWindow()
+  </Binding>
 </Bindings>
