@@ -1,6 +1,7 @@
 ---@diagnostic disable: inject-field, deprecated
 function AlterEgo:GetCharacterInfo()
     local dungeons = self:GetDungeons()
+    local difficulties = self:GetRaidDifficulties(true)
     return {
         {
             label = CHARACTER,
@@ -384,7 +385,7 @@ function AlterEgo:GetCharacterInfo()
                             local name = "-"
                             local nameColor = LIGHTGRAY_FONT_COLOR
                             if slot.level > 0 then
-                                local dataDifficulty = AE_table_get(self:GetRaidDifficulties(), "id", slot.level)
+                                local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
                                 if dataDifficulty and dataDifficulty.abbr then
                                     name = dataDifficulty.abbr
                                 else
@@ -422,7 +423,7 @@ function AlterEgo:GetCharacterInfo()
                             if slot.exampleRewardLink ~= nil and slot.exampleRewardLink ~= "" then
                                 local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
                                 local difficultyName = GetDifficultyInfo(slot.level)
-                                local dataDifficulty = AE_table_get(self:GetRaidDifficulties(), "id", slot.level)
+                                local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
                                 if dataDifficulty then
                                     difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
                                 end
@@ -608,6 +609,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
     local affixes = self:GetAffixes(true)
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
+    local difficulties = self:GetRaidDifficulties(true)
     local anchorFrame
 
     local CharacterColumn = CreateFrame("Frame", "$parentCharacterColumn" .. index, parent)
@@ -718,7 +720,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
         self:SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
         anchorFrame = RaidFrame
 
-        for difficultyIndex in pairs(AlterEgo:GetRaidDifficulties()) do
+        for difficultyIndex in pairs(difficulties) do
             local DifficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
             DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -804,7 +806,7 @@ end
 function AlterEgo:CreateUI()
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
-    local difficulties = self:GetRaidDifficulties()
+    local difficulties = self:GetRaidDifficulties(true)
     local labels = self:GetCharacterInfo()
     local anchorFrame
 
@@ -902,7 +904,23 @@ function AlterEgo:CreateUI()
         UIDropDownMenu_Initialize(
             winMain.TitleBar.SettingsButton.Dropdown,
             function(frame, level, subMenuName)
-                if subMenuName == "windowscale" then
+                if subMenuName == "raiddifficulties" then
+                    AE_table_foreach(difficulties, function(difficulty)
+                        UIDropDownMenu_AddButton(
+                            {
+                                text = difficulty.name,
+                                value = difficulty.id,
+                                checked = self.db.global.raids.hiddenDifficulties and not self.db.global.raids.hiddenDifficulties[difficulty.id],
+                                keepShownOnClick = true,
+                                func = function(button, arg1, arg2, checked)
+                                    self.db.global.raids.hiddenDifficulties[button.value] = not checked
+                                    self:UpdateUI()
+                                end
+                            },
+                            level
+                        )
+                    end)
+                elseif subMenuName == "windowscale" then
                     for i = 80, 200, 10 do
                         UIDropDownMenu_AddButton(
                             {
@@ -1038,7 +1056,9 @@ function AlterEgo:CreateUI()
                         func = function(button, arg1, arg2, checked)
                             self.db.global.raids.enabled = checked
                             self:UpdateUI()
-                        end
+                        end,
+                        hasArrow = true,
+                        menuList = "raiddifficulties"
                     })
                     UIDropDownMenu_AddButton({
                         text = "Show difficulty colors",
@@ -1529,7 +1549,7 @@ function AlterEgo:UpdateUI()
     local charactersUnfiltered = self:GetCharacters(true)
     local dungeons = self:GetDungeons()
     local raids = self:GetRaids()
-    local difficulties = self:GetRaidDifficulties()
+    local difficulties = self:GetRaidDifficulties(true)
     local labels = self:GetCharacterInfo()
     local anchorFrame
 
@@ -1677,17 +1697,30 @@ function AlterEgo:UpdateUI()
 
     do -- Raids & Difficulties
         for raidIndex in ipairs(raids) do
-            local Label = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
-            if self.db.global.raids.enabled then
-                Label:Show()
-            else
-                Label:Hide()
+            local RaidFrame = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
+            if RaidFrame then
+                if self.db.global.raids.enabled then
+                    RaidFrame:Show()
+                    RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                    RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                    anchorFrame = RaidFrame
+                    for difficultyIndex, difficulty in ipairs(difficulties) do
+                        local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
+                        if DifficultyFrame then
+                            if self.db.global.raids.hiddenDifficulties and self.db.global.raids.hiddenDifficulties[difficulty.id] then
+                                DifficultyFrame:Hide()
+                            else
+                                DifficultyFrame:Show()
+                                DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                                DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                                anchorFrame = DifficultyFrame
+                            end
+                        end
+                    end
+                else
+                    RaidFrame:Hide()
+                end
             end
-            -- for difficultyIndex, difficulty in ipairs(difficulties) do
-            --     local DifficultFrame = _G[Label:GetName() .. "Difficulty" .. difficultyIndex]
-            --     if DifficultFrame then
-            --     end
-            -- end
         end
     end
 
@@ -1887,6 +1920,7 @@ function AlterEgo:UpdateUI()
                             end
                         end
                     end
+                    anchorFrame = DungeonFrame
                 end
             end
 
@@ -1895,86 +1929,98 @@ function AlterEgo:UpdateUI()
                     local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
                     if self.db.global.raids.enabled then
                         RaidFrame:Show()
+                        RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                        RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                        anchorFrame = RaidFrame
+                        for difficultyIndex, difficulty in pairs(difficulties) do
+                            local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
+                            if DifficultyFrame then
+                                if self.db.global.raids.hiddenDifficulties and self.db.global.raids.hiddenDifficulties[difficulty.id] then
+                                    DifficultyFrame:Hide()
+                                else
+                                    DifficultyFrame:Show()
+                                    DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                                    DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                                    anchorFrame = DifficultyFrame
+                                    DifficultyFrame:SetScript("OnEnter", function()
+                                        GameTooltip:ClearAllPoints()
+                                        GameTooltip:ClearLines()
+                                        GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
+                                        GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
+                                        GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
+                                        if character.raids.savedInstances ~= nil then
+                                            local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                                                return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                                            end)
+                                            if savedInstance ~= nil then
+                                                GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
+                                            end
+                                        end
+                                        GameTooltip:AddLine(" ")
+                                        for _, encounter in ipairs(raid.encounters) do
+                                            local color = LIGHTGRAY_FONT_COLOR
+                                            if character.raids.savedInstances then
+                                                local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                                                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                                                end)
+                                                if savedInstance ~= nil then
+                                                    local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
+                                                        return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
+                                                    end)
+                                                    if savedEncounter ~= nil then
+                                                        color = GREEN_FONT_COLOR
+                                                    end
+                                                end
+                                            end
+                                            GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
+                                        end
+                                        GameTooltip:Show()
+                                        self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
+                                    end)
+                                    DifficultyFrame:SetScript("OnLeave", function()
+                                        GameTooltip:Hide()
+                                        self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
+                                    end)
+                                    for encounterIndex, encounter in ipairs(raid.encounters) do
+                                        local color = {r = 1, g = 1, b = 1}
+                                        local alpha = 0.1
+                                        local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
+                                        if not EncounterFrame then
+                                            EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
+                                            local size = self.constants.sizes.column
+                                            size = size - self.constants.sizes.padding -- left/right cell padding
+                                            size = size - (raid.numEncounters - 1) * 4 -- gaps
+                                            size = size / raid.numEncounters           -- box sizes
+                                            EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
+                                            EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
+                                            self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+                                        end
+                                        if character.raids.savedInstances then
+                                            local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                                                return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                                            end)
+                                            if savedInstance ~= nil then
+                                                local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
+                                                    return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
+                                                end)
+                                                if savedEncounter ~= nil then
+                                                    color = UNCOMMON_GREEN_COLOR
+                                                    if self.db.global.raids.colors then
+                                                        color = difficulty.color
+                                                    end
+                                                    alpha = 0.5
+                                                end
+                                            end
+                                        end
+                                        self:SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
+                                        anchorFrame = EncounterFrame
+                                    end
+                                    anchorFrame = DifficultyFrame
+                                end
+                            end
+                        end
                     else
                         RaidFrame:Hide()
-                    end
-                    for difficultyIndex, difficulty in pairs(difficulties) do
-                        local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
-                        DifficultyFrame:SetScript("OnEnter", function()
-                            GameTooltip:ClearAllPoints()
-                            GameTooltip:ClearLines()
-                            GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
-                            GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
-                            GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
-                            if character.raids.savedInstances ~= nil then
-                                local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
-                                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                                end)
-                                if savedInstance ~= nil then
-                                    GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
-                                end
-                            end
-                            GameTooltip:AddLine(" ")
-                            for _, encounter in ipairs(raid.encounters) do
-                                local color = LIGHTGRAY_FONT_COLOR
-                                if character.raids.savedInstances then
-                                    local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
-                                        return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                                    end)
-                                    if savedInstance ~= nil then
-                                        local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
-                                            return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
-                                        end)
-                                        if savedEncounter ~= nil then
-                                            color = GREEN_FONT_COLOR
-                                        end
-                                    end
-                                end
-                                GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
-                            end
-                            GameTooltip:Show()
-                            self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
-                        end)
-                        DifficultyFrame:SetScript("OnLeave", function()
-                            GameTooltip:Hide()
-                            self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
-                        end)
-                        anchorFrame = DifficultyFrame
-                        for encounterIndex, encounter in ipairs(raid.encounters) do
-                            local color = {r = 1, g = 1, b = 1}
-                            local alpha = 0.1
-                            local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
-                            if not EncounterFrame then
-                                EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
-                                local size = self.constants.sizes.column
-                                size = size - self.constants.sizes.padding -- left/right cell padding
-                                size = size - (raid.numEncounters - 1) * 4 -- gaps
-                                size = size / raid.numEncounters           -- box sizes
-                                EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
-                                EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
-                                self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
-                                anchorFrame = EncounterFrame
-                            end
-                            if character.raids.savedInstances then
-                                local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
-                                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                                end)
-                                if savedInstance ~= nil then
-                                    local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
-                                        return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
-                                    end)
-                                    if savedEncounter ~= nil then
-                                        color = UNCOMMON_GREEN_COLOR
-                                        if self.db.global.raids.colors then
-                                            color = difficulty.color
-                                        end
-                                        alpha = 0.5
-                                    end
-                                end
-                            end
-                            self:SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
-                        end
-                        anchorFrame = CharacterColumn
                     end
                 end
             end

@@ -5,6 +5,7 @@
 ### Added
 
 - Added PvP vault progress
+- Added a new setting: Toggle Raid difficulties
 
 ### Fixed
 

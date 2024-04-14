@@ -1,4 +1,4 @@
-local dbVersion = 12
+local dbVersion = 13
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -27,10 +27,7 @@ local defaultDB = {
             enabled = true,
             colors = true,
             currentTierOnly = true,
-            lfr = true,
-            normal = true,
-            heroic = true,
-            mythic = true,
+            hiddenDifficulties = {},
             boxes = false
         },
         interface = {
@@ -294,8 +291,8 @@ local dataDungeons = {
 }
 
 local dataRaids = {
-    -- [1200] = { seasonID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates" },
-    -- [1208] = { seasonID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible" },
+    -- [1200] = {seasonID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
+    -- [1208] = {seasonID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
     [1207] = {seasonID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
 }
 
@@ -342,7 +339,7 @@ function AlterEgo:GetCharacter(playerGUID)
     return self.db.global.characters[playerGUID]
 end
 
-function AlterEgo:GetRaidDifficulties()
+function AlterEgo:GetRaidDifficulties(unfiltered)
     local result = {}
     for _, difficulty in pairs(dataRaidDifficulties) do
         table.insert(result, difficulty)
@@ -352,7 +349,18 @@ function AlterEgo:GetRaidDifficulties()
         return a.order < b.order
     end)
 
-    return result
+    if unfiltered then
+        return result
+    end
+
+    local filtered = {}
+    for _, difficulty in ipairs(result) do
+        if self.db.global.raids.hiddenDifficulties and not self.db.global.raids.hiddenDifficulties[difficulty.id] then
+            table.insert(filtered, difficulty)
+        end
+    end
+
+    return filtered
 end
 
 function AlterEgo:GetAffixRotation()
