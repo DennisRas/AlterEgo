@@ -258,71 +258,111 @@ local dataAffixes = {
 }
 
 -- Rotation: https://mythicpl.us
-local dataAffixRotation = {
-  {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
-  {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
-  {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
-  {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
-  {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
-  {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
-  {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
-  {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
-  {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
-  {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
+local dataAffixRotations = {
+  {
+    seasonID = 11,
+    rotation = {
+      {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
+      {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
+      {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
+      {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
+      {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
+      {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
+      {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
+      {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
+      {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
+      {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
+    }
+  },
+  -- {
+  --   seasonID = 12,
+  --   rotation = {
+  --     {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
+  --     {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
+  --     {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
+  --     {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
+  --     {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
+  --     {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
+  --     {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
+  --     {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
+  --     {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
+  --     {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
+  --   }
+  -- }
 }
 
 local dataDungeons = {
-  -- [206] = { seasonID = 2, challengeModeID = 206, mapId = 1458, time = 0, abbr = "NL", name = "Neltharion's Lair" },
-  -- [245] = { seasonID = 2, challengeModeID = 245, mapId = 1754, time = 0, abbr = "FH", name = "Freehold" },
-  -- [251] = { seasonID = 2, challengeModeID = 251, mapId = 1841, time = 0, abbr = "UNDR", name = "The Underrot" },
-  -- [403] = { seasonID = 2, challengeModeID = 403, mapId = 2451, time = 0, abbr = "ULD", name = "Uldaman: Legacy of Tyr" },
-  -- [404] = { seasonID = 2, challengeModeID = 404, mapId = 2519, time = 0, abbr = "NELT", name = "Neltharus" },
-  -- [405] = { seasonID = 2, challengeModeID = 405, mapId = 2520, time = 0, abbr = "BH", name = "Brackenhide Hollow" },
-  -- [406] = { seasonID = 2, challengeModeID = 406, mapId = 2527, time = 0, abbr = "HOI", name = "Halls of Infusion" },
-  -- [438] = { seasonID = 2, challengeModeID = 438, mapId = 657, time = 0, abbr = "VP", name = "The Vortex Pinnacle" },
-  [168] = {seasonID = 3, challengeModeID = 168, mapId = 1279, spellID = 159901, time = 0, abbr = "EB", name = "The Everbloom"},
-  [198] = {seasonID = 3, challengeModeID = 198, mapId = 1466, spellID = 424163, time = 0, abbr = "DHT", name = "Darkheart Thicket"},
-  [199] = {seasonID = 3, challengeModeID = 199, mapId = 1501, spellID = 424153, time = 0, abbr = "BRH", name = "Black Rook Hold"},
-  [244] = {seasonID = 3, challengeModeID = 244, mapId = 1763, spellID = 424187, time = 0, abbr = "AD", name = "Atal'Dazar"},
-  [248] = {seasonID = 3, challengeModeID = 248, mapId = 1862, spellID = 424167, time = 0, abbr = "WM", name = "Waycrest Manor"},
-  [456] = {seasonID = 3, challengeModeID = 456, mapId = 643, spellID = 424142, time = 0, abbr = "TOTT", name = "Throne of the Tides"},
-  [463] = {seasonID = 3, challengeModeID = 463, mapId = 2579, spellID = 424197, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
-  [464] = {seasonID = 3, challengeModeID = 464, mapId = 2579, spellID = 424197, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise", short = "DOTI: Murozond's Rise"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078, time = 0, abbr = "NL",   name = "Neltharion's Lair"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071, time = 0, abbr = "FH",   name = "Freehold"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 251, mapId = 1841, spellID = 410074, time = 0, abbr = "UNDR", name = "The Underrot"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 403, mapId = 2451, spellID = 393222, time = 0, abbr = "ULD",  name = "Uldaman: Legacy of Tyr"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 404, mapId = 2519, spellID = 393276, time = 0, abbr = "NELT", name = "Neltharus"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 405, mapId = 2520, spellID = 393267, time = 0, abbr = "BH",   name = "Brackenhide Hollow"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 406, mapId = 2527, spellID = 393283, time = 0, abbr = "HOI",  name = "Halls of Infusion"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 438, mapId = 657,  spellID = 410080, time = 0, abbr = "VP",   name = "The Vortex Pinnacle"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 168, mapId = 1279, spellID = 159901, time = 0, abbr = "EB",   name = "The Everbloom"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 198, mapId = 1466, spellID = 424163, time = 0, abbr = "DHT",  name = "Darkheart Thicket"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 199, mapId = 1501, spellID = 424153, time = 0, abbr = "BRH",  name = "Black Rook Hold"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 244, mapId = 1763, spellID = 424187, time = 0, abbr = "AD",   name = "Atal'Dazar"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 248, mapId = 1862, spellID = 424167, time = 0, abbr = "WM",   name = "Waycrest Manor"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 456, mapId = 643,  spellID = 424142, time = 0, abbr = "TOTT", name = "Throne of the Tides"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 463, mapId = 2579, spellID = 424197, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 464, mapId = 2579, spellID = 424197, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise",  short = "DOTI: Murozond's Rise"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 399, mapId = 2521, spellID = 393256, time = 0, abbr = "RLP",  name = "Ruby Life Pools"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 400, mapId = 2516, spellID = 393262, time = 0, abbr = "NO",   name = "The Nokhud Offensive"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 401, mapId = 2515, spellID = 393279, time = 0, abbr = "AV",   name = "The Azure Vault"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 402, mapId = 2526, spellID = 393273, time = 0, abbr = "AA",   name = "Algeth'ar Academy"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 403, mapId = 2451, spellID = 393222, time = 0, abbr = "ULD",  name = "Uldaman: Legacy of Tyr"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 404, mapId = 2519, spellID = 393276, time = 0, abbr = "NELT", name = "Neltharus"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 405, mapId = 2520, spellID = 393267, time = 0, abbr = "BH",   name = "Brackenhide Hollow"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 406, mapId = 2527, spellID = 393283, time = 0, abbr = "HOI",  name = "Halls of Infusion"},
 }
 
 local dataRaids = {
-  -- [1200] = {seasonID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
-  -- [1208] = {seasonID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
-  [1207] = {seasonID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
+  {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
 }
 
 local dataRaidDifficulties = {
-  [14] = {id = 14, color = RARE_BLUE_COLOR, order = 2, abbr = "N", name = "Normal"},
-  [15] = {id = 15, color = EPIC_PURPLE_COLOR, order = 3, abbr = "HC", name = "Heroic"},
-  [16] = {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic"},
-  [17] = {id = 17, color = UNCOMMON_GREEN_COLOR, order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
+  {id = 14, color = RARE_BLUE_COLOR,        order = 2, abbr = "N",   name = "Normal"},
+  {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "HC",  name = "Heroic"},
+  {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M",   name = "Mythic"},
+  {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
 }
 
+-- TODO: Find the new currencies
 local dataCurrencies = {
-  {id = 2709, currencyType = "crest"},    -- Aspect
-  {id = 2708, currencyType = "crest"},    -- Wyrm
-  {id = 2707, currencyType = "crest"},    -- Drake
-  {id = 2706, currencyType = "crest"},    -- Whelpling
-  {id = 2245, currencyType = "upgrade"},  -- Flightstones
-  {id = 2796, currencyType = "catalyst"}, -- Catalyst
+  {seasonID = 11, id = 2709, currencyType = "crest"},    -- Aspect
+  {seasonID = 11, id = 2708, currencyType = "crest"},    -- Wyrm
+  {seasonID = 11, id = 2707, currencyType = "crest"},    -- Drake
+  {seasonID = 11, id = 2706, currencyType = "crest"},    -- Whelpling
+  {seasonID = 11, id = 2245, currencyType = "upgrade"},  -- Flightstones
+  {seasonID = 11, id = 2796, currencyType = "catalyst"}, -- Catalyst
+  -- {seasonID = 12, id = 2709, currencyType = "crest"},    -- Aspect
+  -- {seasonID = 12, id = 2708, currencyType = "crest"},    -- Wyrm
+  -- {seasonID = 12, id = 2707, currencyType = "crest"},    -- Drake
+  -- {seasonID = 12, id = 2706, currencyType = "crest"},    -- Whelpling
+  -- {seasonID = 12, id = 2245, currencyType = "upgrade"},  -- Flightstones
+  -- {seasonID = 12, id = 2796, currencyType = "catalyst"}, -- Catalyst
 }
 
 function AlterEgo:InitDB()
   self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
 end
 
-function AlterEgo:GetCurrencies()
-  return dataCurrencies
+function AlterEgo:GetSeasonID()
+  return C_MythicPlus.GetCurrentSeason() or 0
 end
 
--- Temp fix until a better solution, since C_MythicPlus.GetCurrentUIDisplaySeason() isn't ready on init
-function AlterEgo:GetSeason()
-  return 3
+function AlterEgo:GetCurrencies()
+  local seasonID = self:GetSeasonID()
+  return AE_table_filter(dataCurrencies, function(dataCurrency)
+    return dataCurrency.seasonID == seasonID
+  end)
 end
 
 function AlterEgo:GetCharacter(playerGUID)
@@ -364,7 +404,11 @@ function AlterEgo:GetRaidDifficulties(unfiltered)
 end
 
 function AlterEgo:GetAffixRotation()
-  return dataAffixRotation
+  local activeRotation = AE_table_get(dataAffixRotations, "seasonID", self:GetSeasonID())
+  if activeRotation and activeRotation.rotation then
+    return activeRotation.rotation
+  end
+  return {}
 end
 
 function AlterEgo:GetActiveAffixRotation(currentAffixes)
@@ -398,7 +442,7 @@ end
 function AlterEgo:GetDungeons()
   local result = {}
   for _, dungeon in pairs(dataDungeons) do
-    if dungeon.seasonID == self:GetSeason() then
+    if dungeon.seasonID == self:GetSeasonID() then
       table.insert(result, dungeon)
     end
   end
@@ -413,7 +457,7 @@ end
 function AlterEgo:GetRaids()
   local result = {}
   for _, raid in pairs(dataRaids) do
-    if raid.seasonID == self:GetSeason() then
+    if raid.seasonID == self:GetSeasonID() then
       table.insert(result, raid)
     end
   end

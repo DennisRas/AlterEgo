@@ -49,7 +49,7 @@ function AlterEgo:CreateWindow(name, title, parent)
   windowFrame:SetSize(300, 300)
   self:SetBackgroundColor(windowFrame, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
 
-  do   -- Border
+  do -- Border
     windowFrame.Border = CreateFrame("Frame", "$parentBorder", windowFrame, "BackdropTemplate")
     windowFrame.Border:SetPoint("TOPLEFT", windowFrame, "TOPLEFT", -3, 3)
     windowFrame.Border:SetPoint("BOTTOMRIGHT", windowFrame, "BOTTOMRIGHT", 3, -3)
@@ -58,7 +58,7 @@ function AlterEgo:CreateWindow(name, title, parent)
     windowFrame.Border:Show()
   end
 
-  do   -- Titlebar
+  do -- Titlebar
     windowFrame.TitleBar = CreateFrame("Frame", "$parentTitleBar", windowFrame)
     windowFrame.TitleBar:EnableMouse(true)
     windowFrame.TitleBar:RegisterForDrag("LeftButton")
@@ -103,7 +103,7 @@ function AlterEgo:CreateWindow(name, title, parent)
     end)
   end
 
-  do   -- Body
+  do -- Body
     windowFrame.Body = CreateFrame("Frame", "$parentBody", windowFrame)
     windowFrame.Body:SetPoint("TOPLEFT", windowFrame.TitleBar, "BOTTOMLEFT")
     windowFrame.Body:SetPoint("TOPRIGHT", windowFrame.TitleBar, "BOTTOMRIGHT")
@@ -112,6 +112,7 @@ function AlterEgo:CreateWindow(name, title, parent)
     self:SetBackgroundColor(windowFrame.Body, 0, 0, 0, 0)
   end
 
+  windowFrame:Hide()
   table.insert(UISpecialFrames, name)
   windows[name] = windowFrame
   return windows[name]

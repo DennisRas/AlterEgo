@@ -79,27 +79,43 @@ function AlterEgo:OnInitialize()
 end
 
 function AlterEgo:OnEnable()
+  C_MythicPlus.RequestCurrentAffixes();
+  C_MythicPlus.RequestMapInfo()
+  C_MythicPlus.RequestRewards()
+  RequestRaidInfo()
+
+  self:OnMythicPlusData()
+end
+
+function AlterEgo:OnMythicPlusData()
+  local seasonID = C_MythicPlus.GetCurrentSeason()
+  if seasonID == nil or seasonID == -1 then
+    return self:ScheduleTimer("OnMythicPlusData", 1)
+  end
+
   self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 3, function()
     self:UpdateCharacterInfo()
     self:UpdateKeystoneItem()
   end)
   self:RegisterBucketEvent({"RAID_INSTANCE_WELCOME", "LFG_LOCK_INFO_RECEIVED", "BOSS_KILL"}, 2, RequestRaidInfo)
   self:RegisterEvent("ENCOUNTER_END", "OnEncounterEnd")
-  self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "UpdateUI")
-  self:RegisterBucketEvent("WEEKLY_REWARDS_UPDATE", 2, "UpdateVault")
-  self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, "UpdateRaidInstances")
+  self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
+    self:UpdateUI()
+  end)
+  self:RegisterBucketEvent("WEEKLY_REWARDS_UPDATE", 2, function()
+    self:UpdateVault()
+  end)
+  self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, function()
+    self:UpdateRaidInstances()
+  end)
   self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, function()
     self:UpdateMythicPlus()
     self:UpdateKeystoneItem()
   end)
   self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
   self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
-  self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, "UpdateCharacterInfo")
-
-  C_Timer.After(5, function()
-    C_MythicPlus.RequestCurrentAffixes();
-    C_MythicPlus.RequestMapInfo()
-    RequestRaidInfo()
+  self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, function()
+    self:UpdateCharacterInfo()
   end)
 
   self:loadGameData()

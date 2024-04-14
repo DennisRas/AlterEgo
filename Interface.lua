@@ -221,7 +221,7 @@ function AlterEgo:GetCharacterInfo()
           -- if color ~= nil then
           --     bestSeasonScoreColor = color.GenerateHexColor(color)
           -- end
-          local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < self:GetSeason())
+          local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < self:GetSeasonID())
           if color then
             bestSeasonScoreColor = color:GenerateHexColor()
           end
@@ -731,9 +731,9 @@ function AlterEgo:CreateCharacterColumn(parent, index)
       for encounterIndex in ipairs(raid.encounters) do
         local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
         local size = self.constants.sizes.column
-        size = size - self.constants.sizes.padding         -- left/right cell padding
-        size = size - (raid.numEncounters - 1) * 4         -- gaps
-        size = size / raid.numEncounters                   -- box sizes
+        size = size - self.constants.sizes.padding -- left/right cell padding
+        size = size - (raid.numEncounters - 1) * 4 -- gaps
+        size = size / raid.numEncounters           -- box sizes
         EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
         EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
         self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
@@ -787,17 +787,17 @@ function AlterEgo:GetWindowSize()
   if width > maxWidth then
     width = maxWidth
     if numCharacters > 0 then
-      height = height + self.constants.sizes.footer.height       -- Shoes?
+      height = height + self.constants.sizes.footer.height -- Shoes?
     end
   end
 
   -- Height
-  height = height + self.constants.sizes.titlebar.height                                                                                                                            -- Titlebar duh
-  height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled == true end)) * self.constants.sizes.row   -- Character info
-  height = height + self.constants.sizes.row                                                                                                                                        -- DungeonHeader
-  height = height + AE_table_count(dungeons) * self.constants.sizes.row                                                                                                             -- Dungeon rows
+  height = height + self.constants.sizes.titlebar.height                                                                                                                          -- Titlebar duh
+  height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled == true end)) * self.constants.sizes.row -- Character info
+  height = height + self.constants.sizes.row                                                                                                                                      -- DungeonHeader
+  height = height + AE_table_count(dungeons) * self.constants.sizes.row                                                                                                           -- Dungeon rows
   if self.db.global.raids.enabled == true then
-    height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * self.constants.sizes.row                                                                         -- Raids
+    height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * self.constants.sizes.row                                                                       -- Raids
   end
 
   return width, height
@@ -826,7 +826,7 @@ function AlterEgo:CreateUI()
   winAffixRotation.Body.Table.frame:SetPoint("TOPLEFT", winAffixRotation.Body, "TOPLEFT")
   winAffixRotation.TitleBar.Text:SetText("Weekly Affixes")
 
-  do   -- TitleBar
+  do -- TitleBar
     anchorFrame = winMain.TitleBar
     winMain.TitleBar.Affixes = CreateFrame("Button", "$parentAffixes", winMain.TitleBar)
     for i = 1, 3 do
@@ -837,49 +837,65 @@ function AlterEgo:CreateUI()
         local affixRotation = self:GetAffixRotation()
         local activeWeek = self:GetActiveAffixRotation(currentAffixes)
         local affixes = self:GetAffixes()
-        local data = {
-          columns = {
-            {width = 140},
-            {width = 140},
-            {width = 140},
-          },
-          rows = {
-            {
-              cols = {
-                {text = "+2",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "+7",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "+14", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+        local data
+
+        if AE_table_count(affixRotation) < 1 then
+          data = {
+            columns = {
+              {width = 500}
+            },
+            rows = {
+              {
+                cols = {
+                  {text = "The weekly schedule is currently unknown. Check back next addon update!"}
+                }
               }
             }
           }
-        }
-
-        AE_table_foreach(affixRotation, function(affixValues, weekIndex)
-          local row = {cols = {}}
-          local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
-          AE_table_foreach(affixValues, function(affixValue)
-            if type(affixValue) == "number" then
-              local affix = AE_table_get(affixes, "id", affixValue)
-              if affix then
-                local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
+        else
+          data = {
+            columns = {
+              {width = 140},
+              {width = 140},
+              {width = 140},
+            },
+            rows = {
+              {
+                cols = {
+                  {text = "+2",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                  {text = "+7",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                  {text = "+14", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                }
+              }
+            }
+          }
+          AE_table_foreach(affixRotation, function(affixValues, weekIndex)
+            local row = {cols = {}}
+            local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
+            AE_table_foreach(affixValues, function(affixValue)
+              if type(affixValue) == "number" then
+                local affix = AE_table_get(affixes, "id", affixValue)
+                if affix then
+                  local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
+                  table.insert(row.cols, {
+                    text = "|T" .. affix.fileDataID .. ":0|t " .. name,
+                    backgroundColor = backgroundColor or nil,
+                    OnEnter = function()
+                      GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
+                      GameTooltip:AddLine(affix.description, nil, nil, nil, true);
+                    end,
+                  })
+                end
+              else
                 table.insert(row.cols, {
-                  text = "|T" .. affix.fileDataID .. ":0|t " .. name,
+                  text = affixValue,
                   backgroundColor = backgroundColor or nil,
-                  OnEnter = function()
-                    GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
-                    GameTooltip:AddLine(affix.description, nil, nil, nil, true);
-                  end,
                 })
               end
-            else
-              table.insert(row.cols, {
-                text = affixValue,
-                backgroundColor = backgroundColor or nil,
-              })
-            end
+            end)
+            table.insert(data.rows, row)
           end)
-          table.insert(data.rows, row)
-        end)
+        end
         winAffixRotation.Body.Table:SetData(data)
         local w, h = winAffixRotation.Body.Table:GetSize()
         winAffixRotation:SetSize(w, h + self.constants.sizes.titlebar.height)
@@ -1365,7 +1381,7 @@ function AlterEgo:CreateUI()
   --selfAlterEgo:SetBackgroundColor(window.Body, 0, 0, 0, 0)
   -- end
 
-  do   -- No characters enabled
+  do -- No characters enabled
     winMain.Body.NoCharacterText = winMain.Body:CreateFontString("$parentNoCharacterText", "ARTWORK")
     winMain.Body.NoCharacterText:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", 50, -50)
     winMain.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", winMain.Body, "BOTTOMRIGHT", -50, 50)
@@ -1377,7 +1393,7 @@ function AlterEgo:CreateUI()
     winMain.Body.NoCharacterText:Hide()
   end
 
-  do   -- Sidebar
+  do -- Sidebar
     winMain.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", winMain.Body)
     winMain.Body.Sidebar:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT")
     winMain.Body.Sidebar:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT")
@@ -1386,7 +1402,7 @@ function AlterEgo:CreateUI()
     anchorFrame = winMain.Body.Sidebar
   end
 
-  do   -- Character info
+  do -- Character info
     for labelIndex, info in ipairs(labels) do
       local Label = CreateFrame("Frame", "$parentLabel" .. labelIndex, winMain.Body.Sidebar)
       if labelIndex > 1 then
@@ -1408,7 +1424,7 @@ function AlterEgo:CreateUI()
     end
   end
 
-  do   -- MythicPlus Label
+  do -- MythicPlus Label
     local Label = CreateFrame("Frame", "$parentMythicPlusLabel", winMain.Body.Sidebar)
     Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1423,7 +1439,7 @@ function AlterEgo:CreateUI()
     anchorFrame = Label
   end
 
-  do   -- Dungeon Labels
+  do -- Dungeon Labels
     for dungeonIndex, dungeon in ipairs(dungeons) do
       local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, winMain.Body.Sidebar, "InsecureActionButtonTemplate")
       Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
@@ -1443,7 +1459,7 @@ function AlterEgo:CreateUI()
     end
   end
 
-  do   -- Raids & Difficulties
+  do -- Raids & Difficulties
     for raidIndex, raid in ipairs(raids) do
       local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, winMain.Body.Sidebar)
       RaidFrame:SetHeight(self.constants.sizes.row)
@@ -1629,7 +1645,7 @@ function AlterEgo:UpdateUI()
 
   self:HideCharacterColumns()
 
-  do   -- Character Labels
+  do -- Character Labels
     anchorFrame = winMain.Body.Sidebar
     for labelIndex, info in ipairs(labels) do
       local Label = _G[winMain.Body.Sidebar:GetName() .. "Label" .. labelIndex]
@@ -1649,7 +1665,7 @@ function AlterEgo:UpdateUI()
     end
   end
 
-  do   -- MythicPlus Label
+  do -- MythicPlus Label
     local Label = _G[winMain.Body.Sidebar:GetName() .. "MythicPlusLabel"]
     if Label then
       Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
@@ -1658,7 +1674,7 @@ function AlterEgo:UpdateUI()
     end
   end
 
-  do   -- Dungeon Labels
+  do -- Dungeon Labels
     for dungeonIndex, dungeon in ipairs(dungeons) do
       local Label = _G[winMain.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
       Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
@@ -1695,7 +1711,7 @@ function AlterEgo:UpdateUI()
     end
   end
 
-  do   -- Raids & Difficulties
+  do -- Raids & Difficulties
     for raidIndex in ipairs(raids) do
       local RaidFrame = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
       if RaidFrame then
@@ -1724,7 +1740,7 @@ function AlterEgo:UpdateUI()
     end
   end
 
-  do   -- Characters
+  do -- Characters
     anchorFrame = winMain.Body.ScrollFrame.ScrollChild
     for characterIndex, character in ipairs(characters) do
       local CharacterColumn = self:GetCharacterColumn(winMain.Body.ScrollFrame.ScrollChild, characterIndex)
@@ -1738,7 +1754,7 @@ function AlterEgo:UpdateUI()
       self:SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
       anchorFrame = CharacterColumn
 
-      do       -- Character info
+      do -- Character info
         anchorFrame = CharacterColumn
         for labelIndex, info in ipairs(labels) do
           local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
@@ -1793,7 +1809,7 @@ function AlterEgo:UpdateUI()
         end
       end
 
-      do       -- Affix header
+      do -- Affix header
         -- CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         -- CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
         if CharacterColumn.AffixHeader then
@@ -1803,7 +1819,7 @@ function AlterEgo:UpdateUI()
         end
       end
 
-      do       -- Affix header icons
+      do -- Affix header icons
         if currentAffixes then
           for affixIndex, affix in ipairs(affixes) do
             local active = false
@@ -1826,7 +1842,7 @@ function AlterEgo:UpdateUI()
         end
       end
 
-      do       -- Dungeon rows
+      do -- Dungeon rows
         -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
         for dungeonIndex, dungeon in ipairs(dungeons) do
           local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
@@ -1929,7 +1945,7 @@ function AlterEgo:UpdateUI()
         end
       end
 
-      do       -- Raid Rows
+      do -- Raid Rows
         for raidIndex, raid in ipairs(raids) do
           local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
           if self.db.global.raids.enabled then
@@ -1993,9 +2009,9 @@ function AlterEgo:UpdateUI()
                     if not EncounterFrame then
                       EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
                       local size = self.constants.sizes.column
-                      size = size - self.constants.sizes.padding                       -- left/right cell padding
-                      size = size - (raid.numEncounters - 1) * 4                       -- gaps
-                      size = size / raid.numEncounters                                 -- box sizes
+                      size = size - self.constants.sizes.padding -- left/right cell padding
+                      size = size - (raid.numEncounters - 1) * 4 -- gaps
+                      size = size / raid.numEncounters           -- box sizes
                       EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
                       EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
                       self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
