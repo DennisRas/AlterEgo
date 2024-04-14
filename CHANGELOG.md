@@ -6,6 +6,10 @@
 
 - Added PvP vault progress
 
+### Fixed
+
+- Fixed some string sorting issues with unicode characters
+
 ## v1.1.2 - 2024-04-11
 
 ### Added

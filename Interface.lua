@@ -265,7 +265,7 @@ function AlterEgo:GetCharacterInfo()
                         end
                     end
                     table.sort(characterDungeons, function(a, b)
-                        return a.name < b.name
+                        return strcmputf8i(a.name, b.name) < 0
                     end)
                     for _, dungeon in pairs(characterDungeons) do
                         if dungeon.name ~= "" then

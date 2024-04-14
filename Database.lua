@@ -396,7 +396,7 @@ function AlterEgo:GetDungeons()
     end
 
     table.sort(result, function(a, b)
-        return a.name < b.name
+        return strcmputf8i(a.name, b.name) < 0
     end)
 
     return result
@@ -428,13 +428,13 @@ function AlterEgo:GetCharacters(unfiltered)
     -- Sorting
     table.sort(characters, function(a, b)
         if self.db.global.sorting == "name.asc" then
-            return a.info.name < b.info.name
+            return strcmputf8i(a.info.name, b.info.name) < 0
         elseif self.db.global.sorting == "name.desc" then
-            return a.info.name > b.info.name
+            return strcmputf8i(a.info.name, b.info.name) > 0
         elseif self.db.global.sorting == "realm.asc" then
-            return a.info.realm < b.info.realm
+            return strcmputf8i(a.info.realm, b.info.realm) < 0
         elseif self.db.global.sorting == "realm.desc" then
-            return a.info.realm > b.info.realm
+            return strcmputf8i(a.info.realm, b.info.realm) > 0
         elseif self.db.global.sorting == "rating.asc" then
             return a.mythicplus.rating < b.mythicplus.rating
         elseif self.db.global.sorting == "rating.desc" then
@@ -444,9 +444,9 @@ function AlterEgo:GetCharacters(unfiltered)
         elseif self.db.global.sorting == "ilvl.desc" then
             return a.info.ilvl.level > b.info.ilvl.level
         elseif self.db.global.sorting == "class.asc" then
-            return a.info.class.name < b.info.class.name
+            return strcmputf8i(a.info.class.name, b.info.class.name) < 0
         elseif self.db.global.sorting == "class.desc" then
-            return a.info.class.name > b.info.class.name
+            return strcmputf8i(a.info.class.name, b.info.class.name) > 0
         end
         return a.lastUpdate > b.lastUpdate
     end)
