@@ -1,4 +1,4 @@
-local dbVersion = 11
+local dbVersion = 12
 local defaultDB = {
     global = {
         weeklyReset = 0,
@@ -20,6 +20,9 @@ local defaultDB = {
             multiline = false
         },
         announceResets = true,
+        pvp = {
+            enabled = false,
+        },
         raids = {
             enabled = true,
             colors = true,

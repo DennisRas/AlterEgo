@@ -547,6 +547,50 @@ function AlterEgo:GetCharacterInfo()
             end,
             enabled = true,
         },
+        {
+            label = WrapTextInColorCode("PvP", "ffffffff"),
+            value = function(character)
+                local text = "- / -"
+                local textColor = LIGHTGRAY_FONT_COLOR
+                if character.vault.slots ~= nil then
+                    local slots = AE_table_filter(character.vault.slots, function(slot)
+                        return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
+                    end)
+                    local completed = AE_table_filter(slots, function(slot)
+                        return slot.progress >= slot.threshold
+                    end)
+                    if #slots > 0 then
+                        text = format("%d / %d", #completed, #slots)
+                    end
+                    if #completed > 0 then
+                        if #slots == #completed then
+                            textColor = UNCOMMON_GREEN_COLOR
+                        else
+                            textColor = WHITE_FONT_COLOR
+                        end
+                    end
+                end
+                return strtrim(textColor:WrapTextInColorCode(text))
+            end,
+            OnEnter = function(character)
+                GameTooltip:AddLine("Vault Progress", 1, 1, 1)
+                if character.vault.slots ~= nil then
+                    local slots = AE_table_filter(character.vault.slots, function(slot)
+                        return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
+                    end)
+                    AE_table_foreach(slots, function(slot)
+                        local value = "Locked"
+                        local valueColor = LIGHTGRAY_FONT_COLOR
+                        if slot.progress >= slot.threshold then
+                            value = "Unlocked"
+                            valueColor = WHITE_FONT_COLOR
+                        end
+                        GameTooltip:AddDoubleLine(format("%d Honor:", slot.threshold), value, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, valueColor.r, valueColor.g, valueColor.b)
+                    end)
+                end
+            end,
+            enabled = self.db.global.pvp and self.db.global.pvp.enabled == true,
+        },
     }
 end
 
@@ -598,6 +642,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
         end
     end
 
+    -- Affix header
     CharacterColumn.AffixHeader = CreateFrame("Frame", "$parentAffixes", CharacterColumn)
     CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -745,12 +790,12 @@ function AlterEgo:GetWindowSize()
     end
 
     -- Height
-    height = height + self.constants.sizes.titlebar.height                                                                                                                  -- Titlebar duh
-    height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled end)) * self.constants.sizes.row -- Character info
-    height = height + self.constants.sizes.row                                                                                                                              -- DungeonHeader
-    height = height + AE_table_count(dungeons) * self.constants.sizes.row                                                                                                   -- Dungeon rows
-    if self.db.global.raids.enabled then
-        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * self.constants.sizes.row                                                             -- Raids
+    height = height + self.constants.sizes.titlebar.height                                                                                                                          -- Titlebar duh
+    height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled == true end)) * self.constants.sizes.row -- Character info
+    height = height + self.constants.sizes.row                                                                                                                                      -- DungeonHeader
+    height = height + AE_table_count(dungeons) * self.constants.sizes.row                                                                                                           -- Dungeon rows
+    if self.db.global.raids.enabled == true then
+        height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * self.constants.sizes.row                                                                     -- Raids
     end
 
     return width, height
@@ -981,6 +1026,33 @@ function AlterEgo:CreateUI()
                             self:UpdateUI()
                         end
                     })
+                    UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({
+                        text = "Show raid progress",
+                        checked = self.db.global.raids and self.db.global.raids.enabled,
+                        keepShownOnClick = true,
+                        isNotRadio = true,
+                        tooltipTitle = "Show raid progress",
+                        tooltipText = "Because Mythic Plus ain't enough!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.raids.enabled = checked
+                            self:UpdateUI()
+                        end
+                    })
+                    UIDropDownMenu_AddButton({
+                        text = "Show difficulty colors",
+                        checked = self.db.global.raids and self.db.global.raids.colors,
+                        keepShownOnClick = true,
+                        isNotRadio = true,
+                        tooltipTitle = "Show difficulty colors",
+                        tooltipText = "Argharhggh! So much greeeen!",
+                        tooltipOnButton = true,
+                        func = function(button, arg1, arg2, checked)
+                            self.db.global.raids.colors = checked
+                            self:UpdateUI()
+                        end
+                    })
                     UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
                     UIDropDownMenu_AddButton({
                         text = "Show timed icons",
@@ -1008,30 +1080,17 @@ function AlterEgo:CreateUI()
                             self:UpdateUI()
                         end
                     })
-                    UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+                    UIDropDownMenu_AddButton({text = "PvP", isTitle = true, notCheckable = true})
                     UIDropDownMenu_AddButton({
-                        text = "Show raid progress",
-                        checked = self.db.global.raids and self.db.global.raids.enabled,
+                        text = "Show PvP progress",
+                        checked = self.db.global.pvp and self.db.global.pvp.enabled,
                         keepShownOnClick = true,
                         isNotRadio = true,
-                        tooltipTitle = "Show raid progress",
+                        tooltipTitle = "Show PvP progress",
                         tooltipText = "Because Mythic Plus ain't enough!",
                         tooltipOnButton = true,
                         func = function(button, arg1, arg2, checked)
-                            self.db.global.raids.enabled = checked
-                            self:UpdateUI()
-                        end
-                    })
-                    UIDropDownMenu_AddButton({
-                        text = "Show difficulty colors",
-                        checked = self.db.global.raids and self.db.global.raids.colors,
-                        keepShownOnClick = true,
-                        isNotRadio = true,
-                        tooltipTitle = "Show difficulty colors",
-                        tooltipText = "Argharhggh! So much greeeen!",
-                        tooltipOnButton = true,
-                        func = function(button, arg1, arg2, checked)
-                            self.db.global.raids.colors = checked
+                            self.db.global.pvp.enabled = checked
                             self:UpdateUI()
                         end
                     })
@@ -1554,7 +1613,7 @@ function AlterEgo:UpdateUI()
         anchorFrame = winMain.Body.Sidebar
         for labelIndex, info in ipairs(labels) do
             local Label = _G[winMain.Body.Sidebar:GetName() .. "Label" .. labelIndex]
-            if info.enabled ~= nil and not info.enabled then
+            if info.enabled ~= nil and info.enabled == false then
                 Label:Hide()
             else
                 if labelIndex > 1 then
@@ -1571,14 +1630,19 @@ function AlterEgo:UpdateUI()
     end
 
     do -- MythicPlus Label
-        -- local Label = _G[winMain.Body.Sidebar:GetName() .. "MythicPlusLabel"]
-        -- if Label then
-        -- end
+        local Label = _G[winMain.Body.Sidebar:GetName() .. "MythicPlusLabel"]
+        if Label then
+            Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+            Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+            anchorFrame = Label
+        end
     end
 
     do -- Dungeon Labels
         for dungeonIndex, dungeon in ipairs(dungeons) do
             local Label = _G[winMain.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
+            Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
+            Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
             Label.Icon:SetTexture(dungeon.icon)
             Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
             Label.Icon:SetTexture(tostring(dungeon.texture))
@@ -1607,6 +1671,7 @@ function AlterEgo:UpdateUI()
                 GameTooltip:Show()
             end)
             Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            anchorFrame = Label
         end
     end
 
@@ -1644,6 +1709,8 @@ function AlterEgo:UpdateUI()
                 anchorFrame = CharacterColumn
                 for labelIndex, info in ipairs(labels) do
                     local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
+
+
                     CharacterFrame.Text:SetText(info.value(character))
                     if info.OnEnter then
                         CharacterFrame:SetScript("OnEnter", function()
@@ -1690,6 +1757,16 @@ function AlterEgo:UpdateUI()
                         anchorFrame = CharacterFrame
                         CharacterFrame:Show()
                     end
+                end
+            end
+
+            do -- Affix header
+                -- CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                -- CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                if CharacterColumn.AffixHeader then
+                    CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+                    CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+                    anchorFrame = CharacterColumn.AffixHeader
                 end
             end
 

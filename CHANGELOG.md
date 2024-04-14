@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.3 - 2024-04-??
+
+### Added
+
+- Added PvP vault progress
+
 ## v1.1.2 - 2024-04-11
 
 ### Added
