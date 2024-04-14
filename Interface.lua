@@ -1831,12 +1831,12 @@ function AlterEgo:UpdateUI()
                 for dungeonIndex, dungeon in ipairs(dungeons) do
                     local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
                     local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
-                    local scoreColor = HIGHLIGHT_FONT_COLOR
+                    local overallScoreColor = HIGHLIGHT_FONT_COLOR
                     if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
                         if (characterDungeon.rating) then
                             local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
                             if color ~= nil then
-                                scoreColor = color
+                                overallScoreColor = color
                             end
                         end
                     end
@@ -1847,7 +1847,7 @@ function AlterEgo:UpdateUI()
                         GameTooltip:SetText(dungeon.name, 1, 1, 1);
                         if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
                             if (characterDungeon.rating) then
-                                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(scoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
+                                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(overallScoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
                             end
                             for _, affixInfo in ipairs(characterDungeon.affixScores) do
                                 GameTooltip_AddBlankLineToTooltip(GameTooltip);
@@ -1902,7 +1902,12 @@ function AlterEgo:UpdateUI()
                                     if tier == "" then
                                         levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
                                     elseif self.db.global.showAffixColors then
-                                        levelColor = scoreColor:GenerateHexColor()
+                                        local scoreColor = C_ChallengeMode.GetSpecificDungeonScoreRarityColor(affixScore.score)
+                                        if scoreColor ~= nil then
+                                            levelColor = scoreColor:GenerateHexColor()
+                                        else
+                                            levelColor = overallScoreColor:GenerateHexColor()
+                                        end
                                     end
                                 end
                             end
