@@ -1,4 +1,4 @@
-local dbVersion = 13
+local dbVersion = 14
 local defaultDB = {
   global = {
     weeklyReset = 0,
@@ -17,7 +17,8 @@ local defaultDB = {
     announceKeystones = {
       autoParty = true,
       autoGuild = false,
-      multiline = false
+      multiline = false,
+      multilineNames = false,
     },
     announceResets = true,
     pvp = {

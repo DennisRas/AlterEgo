@@ -1020,7 +1020,7 @@ function AlterEgo:CreateUI()
               self:UpdateUI()
             end
           })
-          UIDropDownMenu_AddButton({text = "Keystone Announcements", isTitle = true, notCheckable = true})
+          UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Announce new keystones (Party)",
             checked = self.db.global.announceKeystones.autoParty,
@@ -1044,19 +1044,6 @@ function AlterEgo:CreateUI()
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
               self.db.global.announceKeystones.autoGuild = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Announce keystones in one message",
-            checked = not self.db.global.announceKeystones.multiline,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Announce keystones in one message",
-            tooltipText = "With too many alts it could get spammy.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              self.db.global.announceKeystones.multiline = not checked
               self:UpdateUI()
             end
           })
@@ -1336,7 +1323,7 @@ function AlterEgo:CreateUI()
               self:Print("No announcement. You are not in a party.")
               return
             end
-            self:AnnounceKeystones("PARTY", self.db.global.announceKeystones.multiline)
+            self:AnnounceKeystones("PARTY")
           end
         })
         UIDropDownMenu_AddButton({
@@ -1351,7 +1338,33 @@ function AlterEgo:CreateUI()
               self:Print("No announcement. You are not in a guild.")
               return
             end
-            self:AnnounceKeystones("GUILD", self.db.global.announceKeystones.multiline)
+            self:AnnounceKeystones("GUILD")
+          end
+        })
+        UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({
+          text = "Announce keystones in multiple chat messages",
+          checked = self.db.global.announceKeystones.multiline,
+          keepShownOnClick = true,
+          isNotRadio = true,
+          tooltipTitle = "Announce keystones in multiple chat messages",
+          tooltipText = "With too many alts it could get spammy.",
+          tooltipOnButton = true,
+          func = function(button, arg1, arg2, checked)
+            self.db.global.announceKeystones.multiline = checked
+          end
+        })
+        UIDropDownMenu_AddButton({
+          text = "Announce with character names",
+          checked = self.db.global.announceKeystones.multilineNames,
+          keepShownOnClick = true,
+          isNotRadio = true,
+          disabled = not self.db.global.announceKeystones.multiline,
+          tooltipTitle = "Add character names before each keystone",
+          tooltipText = "Character names are only added if multiple chat messages is enabled.",
+          tooltipOnButton = true,
+          func = function(button, arg1, arg2, checked)
+            self.db.global.announceKeystones.multilineNames = checked
           end
         })
       end,

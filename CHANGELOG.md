@@ -7,6 +7,10 @@
 - Added PvP vault progress
 - Added a new setting: Toggle Raid difficulties
 
+### Updated
+
+- Moved and clarified the settings regarding manual keystone announcements
+
 ### Fixed
 
 - Fixed some string sorting issues with unicode characters
