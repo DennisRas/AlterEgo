@@ -16,12 +16,28 @@ Download AlterEgo today and take control of your gaming experience like never be
 - Track all of your Mythic+ levels for each affix.
 - Track all of your Mythic+ keystone items.
 - Track all of your Raid lockouts and kills.
-- Track your Great Vault progress.
-- Get notified of available Great Vault rewards.
+- Track all of your seasonal currencies, such as crests and flightstones.
+- Track your Great Vault progress and get notified of available Great Vault rewards.
+- Track and view equipped items on all of your characters.
 - Get a fantastic overview of everything in a big datagrid.
-- Customize the overview with filters, sorting, colors and other options.
+- Customize the grid with filters, sorting, colors and other settings.
+- Show the weekly Affix schedule for the entire season.
+- Teleport to the dungeons by clicking the dungeon names.
+- Announce instance resets to your party/raid.
+- Announce your keystones to your party/guild.
+- Automatically announce newly looted keystones to your party.
+
+## Slash Commands
+
+- **/alterego** (or /ae) - shows/hides the main window
 
 ## Feedback
 
 Your feedback is invaluable and instrumental in making AlterEgo the best it can be.  
 If you come across any bugs or have suggestions for improvements, please don't hesitate to reach out.
+
+## Video Spotlight
+
+Here's an addon spotlight published by Sunshade on YouTube:
+
+[![YouTube Thumbnail](https://i3.ytimg.com/vi/KN9U9jYVH7g/maxresdefault.jpg)](https://www.youtube.com/watch?v=KN9U9jYVH7g)

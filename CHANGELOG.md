@@ -10,6 +10,7 @@
 ### Updated
 
 - Moved and clarified the settings regarding manual keystone announcements
+- Updated the addon description with new features, updates and a video spotlight (Thanks [@Sunshade](https://www.youtube.com/@SunshadeWoW))
 
 ### Fixed
 
