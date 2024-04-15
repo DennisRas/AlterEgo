@@ -32,40 +32,19 @@ AlterEgo.constants = {
       collapsedWidth = 30
     }
   },
-  sortingOptions = {{
-    value = "lastUpdate",
-    text = "Recently played"
-  }, {
-    value = "name.asc",
-    text = "Name (A-Z)"
-  }, {
-    value = "name.desc",
-    text = "Name (Z-A)"
-  }, {
-    value = "realm.asc",
-    text = "Realm (A-Z)"
-  }, {
-    value = "realm.desc",
-    text = "Realm (Z-A)"
-  }, {
-    value = "rating.asc",
-    text = "Rating (Lowest)"
-  }, {
-    value = "rating.desc",
-    text = "Rating (Highest)"
-  }, {
-    value = "ilvl.asc",
-    text = "Item Level (Lowest)"
-  }, {
-    value = "ilvl.desc",
-    text = "Item Level (Highest)"
-  }, {
-    value = "class.asc",
-    text = "Class (A-Z)"
-  }, {
-    value = "class.desc",
-    text = "Class (Z-A)"
-  }}
+  sortingOptions = {
+    {value = "lastUpdate",  text = "Recently played"},
+    {value = "name.asc",    text = "Name (A-Z)"},
+    {value = "name.desc",   text = "Name (Z-A)"},
+    {value = "realm.asc",   text = "Realm (A-Z)"},
+    {value = "realm.desc",  text = "Realm (Z-A)"},
+    {value = "rating.asc",  text = "Rating (Lowest)"},
+    {value = "rating.desc", text = "Rating (Highest)"},
+    {value = "ilvl.asc",    text = "Item Level (Lowest)"},
+    {value = "ilvl.desc",   text = "Item Level (Highest)"},
+    {value = "class.asc",   text = "Class (A-Z)"},
+    {value = "class.desc",  text = "Class (Z-A)"},
+  }
 }
 function AlterEgo:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
@@ -116,11 +95,10 @@ function AlterEgo:OnMythicPlusData()
     return self:ScheduleTimer("OnMythicPlusData", 1)
   end
 
-  self:RegisterBucketEvent(
-    {"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 3, function()
-      self:UpdateCharacterInfo()
-      self:UpdateKeystoneItem()
-    end)
+  self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 3, function()
+    self:UpdateCharacterInfo()
+    self:UpdateKeystoneItem()
+  end)
   self:RegisterBucketEvent({"RAID_INSTANCE_WELCOME", "LFG_LOCK_INFO_RECEIVED", "BOSS_KILL"}, 2, RequestRaidInfo)
   self:RegisterEvent("ENCOUNTER_END", "OnEncounterEnd")
   self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
@@ -132,19 +110,15 @@ function AlterEgo:OnMythicPlusData()
   self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, function()
     self:UpdateRaidInstances()
   end)
-  self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE",
-                             "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, function()
-                             self:UpdateMythicPlus()
-                             self:UpdateKeystoneItem()
-                           end)
+  self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, function()
+    self:UpdateMythicPlus()
+    self:UpdateKeystoneItem()
+  end)
   self:RegisterEvent("PLAYER_LEVEL_UP", "UpdateDB")
   self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
-  self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE",
-                             "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT",
-                             "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3,
-                           function()
-                             self:UpdateCharacterInfo()
-                           end)
+  self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, function()
+    self:UpdateCharacterInfo()
+  end)
 
   self:loadGameData()
   self:MigrateDB()
@@ -165,8 +139,7 @@ function AlterEgo:OnChatMessageSystem(_, msg)
   if not groupChannel or not self.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
     return
   end
-  local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE,
-    INSTANCE_RESET_FAILED_ZONING}
+  local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
   AE_table_foreach(resetPatterns, function(resetPattern)
     if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
       SendChatMessage(self.constants.prefix .. msg, groupChannel)
