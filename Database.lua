@@ -292,6 +292,11 @@ local dataAffixRotations = {
   -- }
 }
 
+local dataKeystones = {
+  {seasonID = 11, seasonDisplayID = 3, itemID = 180653},
+  {seasonID = 12, seasonDisplayID = 4, itemID = 151086},
+}
+
 local dataDungeons = {
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078, time = 0, abbr = "NL",   name = "Neltharion's Lair"},
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071, time = 0, abbr = "FH",   name = "Freehold"},
@@ -438,6 +443,16 @@ function AlterEgo:GetAffixes(base)
   -- end)
 
   return result
+end
+
+function AlterEgo:GetKeystoneItemID()
+  local keystone = AE_table_get(dataKeystones, "seasonID", self:GetSeasonID())
+
+  if keystone ~= nil then
+    return keystone.itemID
+  end
+
+  return nil
 end
 
 function AlterEgo:GetDungeons()
@@ -804,46 +819,49 @@ end
 function AlterEgo:UpdateKeystoneItem()
   local character = self:GetCharacter()
   local dungeons = self:GetDungeons()
+  local keystoneItemID = self:GetKeystoneItemID()
   -- character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
-  for bagId = 0, NUM_BAG_SLOTS do
-    for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
-      local itemId = C_Container.GetContainerItemID(bagId, slotId)
-      if itemId and itemId == 180653 then
-        local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
-        local _, _, challengeModeID, level = strsplit(":", itemLink)
-        local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
-        if dungeon then
-          local newKeystone = false
-          if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
-            if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) or character.mythicplus.keystone.level < tonumber(level) then
+  if keystoneItemID ~= nil then
+    for bagId = 0, NUM_BAG_SLOTS do
+      for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
+        local itemId = C_Container.GetContainerItemID(bagId, slotId)
+        if itemId and itemId == keystoneItemID then
+          local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
+          local _, _, challengeModeID, level = strsplit(":", itemLink)
+          local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
+          if dungeon then
+            local newKeystone = false
+            if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
+              if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) or character.mythicplus.keystone.level < tonumber(level) then
+                newKeystone = true
+              end
+            elseif tonumber(dungeon.mapId) and tonumber(level) then
               newKeystone = true
             end
-          elseif tonumber(dungeon.mapId) and tonumber(level) then
-            newKeystone = true
-          end
-          local keystoneColor = "ffffffff"
-          local color = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
-          if color ~= nil then
-            keystoneColor = color:GenerateHexColor()
-          end
-          character.mythicplus.keystone = {
-            challengeModeID = tonumber(dungeon.challengeModeID),
-            mapId = tonumber(dungeon.mapId),
-            level = tonumber(level),
-            color = keystoneColor,
-            itemId = tonumber(itemId),
-            itemLink = itemLink,
-          }
-          if newKeystone then
-            if IsInGroup() and self.db.global.announceKeystones.autoParty then
-              SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
+            local keystoneColor = "ffffffff"
+            local color = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
+            if color ~= nil then
+              keystoneColor = color:GenerateHexColor()
             end
-            if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-              SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
+            character.mythicplus.keystone = {
+              challengeModeID = tonumber(dungeon.challengeModeID),
+              mapId = tonumber(dungeon.mapId),
+              level = tonumber(level),
+              color = keystoneColor,
+              itemId = tonumber(itemId),
+              itemLink = itemLink,
+            }
+            if newKeystone then
+              if IsInGroup() and self.db.global.announceKeystones.autoParty then
+                SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
+              end
+              if IsInGuild() and self.db.global.announceKeystones.autoGuild then
+                SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
+              end
             end
           end
+          break
         end
-        break
       end
     end
   end
