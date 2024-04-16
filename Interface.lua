@@ -1040,19 +1040,6 @@ function AlterEgo:CreateUI()
             end
           })
           UIDropDownMenu_AddButton({
-            text = "Announce instance resets",
-            checked = self.db.global.announceResets,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Announce instance resets",
-            tooltipText = "Let others in your group know when you've reset the instances.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              self.db.global.announceResets = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
             text = "Use Raider.io rating colors",
             checked = self.db.global.useRIOScoreColor,
             keepShownOnClick = true,
@@ -1067,6 +1054,19 @@ function AlterEgo:CreateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
+          UIDropDownMenu_AddButton({
+            text = "Announce instance resets",
+            checked = self.db.global.announceResets,
+            keepShownOnClick = true,
+            isNotRadio = true,
+            tooltipTitle = "Announce instance resets",
+            tooltipText = "Let others in your group know when you've reset the instances.",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+              self.db.global.announceResets = checked
+              self:UpdateUI()
+            end
+          })
           UIDropDownMenu_AddButton({
             text = "Announce new keystones (Party)",
             checked = self.db.global.announceKeystones.autoParty,
@@ -1402,19 +1402,19 @@ function AlterEgo:CreateUI()
         })
         UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
-          text = "Announce keystones in multiple chat messages",
+          text = "Multiple chat messages",
           checked = self.db.global.announceKeystones.multiline,
           keepShownOnClick = true,
           isNotRadio = true,
-          tooltipTitle = "Announce keystones in multiple chat messages",
-          tooltipText = "With too many alts it could get spammy.",
+          tooltipTitle = "Announce keystones with multiple chat messages",
+          tooltipText = "With too many alts it could get spammy though.",
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             self.db.global.announceKeystones.multiline = checked
           end
         })
         UIDropDownMenu_AddButton({
-          text = "Announce with character names",
+          text = "With character names",
           checked = self.db.global.announceKeystones.multilineNames,
           keepShownOnClick = true,
           isNotRadio = true,
