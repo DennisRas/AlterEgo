@@ -142,11 +142,12 @@ function AlterEgo:GetCharacterInfo()
       label = "Realm",
       value = function(character)
         local realm = "-"
-        local realmColor = "ffffffff"
+        local realmColor = LIGHTGRAY_FONT_COLOR
         if character.info.realm ~= nil then
           realm = character.info.realm
+          realmColor = WHITE_FONT_COLOR
         end
-        return "|c" .. realmColor .. realm .. "|r"
+        return realmColor:WrapTextInColorCode(realm)
       end,
       tooltip = false,
       enabled = self.db.global.showRealms,
@@ -154,17 +155,19 @@ function AlterEgo:GetCharacterInfo()
     {
       label = STAT_AVERAGE_ITEM_LEVEL,
       value = function(character)
-        local itemLevel = ""
-        local itemLevelColor = "ffffffff"
+        local itemLevel = "-"
+        local itemLevelColor = LIGHTGRAY_FONT_COLOR
         if character.info.ilvl ~= nil then
           if character.info.ilvl.level ~= nil then
             itemLevel = tostring(floor(character.info.ilvl.level))
           end
           if character.info.ilvl.color then
             itemLevelColor = character.info.ilvl.color
+          else
+            itemLevelColor = WHITE_FONT_COLOR
           end
         end
-        return "|c" .. itemLevelColor .. itemLevel .. "|r"
+        return itemLevelColor:WrapTextInColorCode(itemLevel)
       end,
       OnEnter = function(character)
         local itemLevelTooltip = ""
@@ -192,15 +195,17 @@ function AlterEgo:GetCharacterInfo()
       label = "Rating",
       value = function(character)
         local rating = "-"
-        local ratingColor = "ffffffff"
+        local ratingColor = LIGHTGRAY_FONT_COLOR
         if character.mythicplus.rating ~= nil then
-          local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
-          if color then
-            ratingColor = color:GenerateHexColor()
-          end
           rating = tostring(character.mythicplus.rating)
+          local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          if color ~= nil then
+            ratingColor = color
+          else
+            ratingColor = WHITE_FONT_COLOR
+          end
         end
-        return "|c" .. ratingColor .. rating .. "|r"
+        return ratingColor:WrapTextInColorCode(rating)
       end,
       OnEnter = function(character)
         local rating = "-"
