@@ -124,14 +124,14 @@ function AlterEgo:GetCharacterInfo()
           windowCharacter.Body.Table:SetData(data)
           local w, h = windowCharacter.Body.Table:GetSize()
           windowCharacter:SetSize(w, h + self.constants.sizes.titlebar.height)
-          local nameColor = "ffffffff"
+          local nameColor = WHITE_FONT_COLOR
           if character.info.class.file ~= nil then
             local classColor = C_ClassColor.GetClassColor(character.info.class.file)
             if classColor ~= nil then
-              nameColor = classColor.GenerateHexColor(classColor)
+              nameColor = classColor
             end
           end
-          windowCharacter.TitleBar.Text:SetText(WrapTextInColorCode(character.info.name, nameColor) .. format(" (%s)", character.info.realm))
+          windowCharacter.TitleBar.Text:SetText(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
           windowCharacter:Show()
           windowCharacter.character = character
         end
@@ -204,9 +204,9 @@ function AlterEgo:GetCharacterInfo()
       end,
       OnEnter = function(character)
         local rating = "-"
-        local ratingColor = "ffffffff"
+        local ratingColor = WHITE_FONT_COLOR
         local bestSeasonScore = nil
-        local bestSeasonScoreColor = "ffffffff"
+        local bestSeasonScoreColor = WHITE_FONT_COLOR
         local bestSeasonNumber = nil
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
@@ -222,14 +222,14 @@ function AlterEgo:GetCharacterInfo()
           --     bestSeasonScoreColor = color.GenerateHexColor(color)
           -- end
           local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < self:GetSeasonID())
-          if color then
-            bestSeasonScoreColor = color:GenerateHexColor()
+          if color ~= nil then
+            bestSeasonScoreColor = color
           end
         end
         if character.mythicplus.rating ~= nil then
           local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
-          if color then
-            ratingColor = color:GenerateHexColor()
+          if color ~= nil then
+            ratingColor = color
           end
           -- if self.db.global.useRIOScoreColor and _G.RaiderIO then
           --     local color = CreateColor(_G.RaiderIO.GetScoreColor(character.mythicplus.rating))
@@ -245,14 +245,15 @@ function AlterEgo:GetCharacterInfo()
           rating = tostring(character.mythicplus.rating)
         end
         GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
-        GameTooltip:AddLine("Current Season: " .. "|c" .. ratingColor .. rating .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:AddLine("Runs this Season: " .. WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
         if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
-          local bestSeasonValue = "|c" .. bestSeasonScoreColor .. bestSeasonScore .. "|r"
+          local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(bestSeasonScore)
           if bestSeasonNumber > 0 then
-            bestSeasonValue = bestSeasonValue .. LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(" (Season " .. bestSeasonNumber .. ")")
+            local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
+            bestSeasonValue = format("%s %s", bestSeasonValue, season)
           end
-          GameTooltip:AddLine("Best Season: " .. bestSeasonValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+          GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
         end
         if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
           GameTooltip:AddLine(" ")
@@ -324,7 +325,7 @@ function AlterEgo:GetCharacterInfo()
     {
       label = "Current Keystone",
       value = function(character)
-        local currentKeystone = WrapTextInColorCode("-", LIGHTGRAY_FONT_COLOR:GenerateHexColor())
+        local currentKeystone = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-")
         if character.mythicplus.keystone ~= nil then
           local dungeon
           if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
@@ -332,10 +333,10 @@ function AlterEgo:GetCharacterInfo()
           elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
             dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
           end
-          if dungeon then
+          if dungeon ~= nil then
             currentKeystone = dungeon.abbr
             if type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
-              currentKeystone = currentKeystone .. " +" .. tostring(character.mythicplus.keystone.level)
+              currentKeystone = format("%s +%s", currentKeystone, tostring(character.mythicplus.keystone.level))
             end
           end
         end
@@ -363,51 +364,57 @@ function AlterEgo:GetCharacterInfo()
       label = "Vault",
       value = function(character)
         if character.vault.hasAvailableRewards == true then
-          return WrapTextInColorCode("Rewards", GREEN_FONT_COLOR:GenerateHexColor())
+          return GREEN_FONT_COLOR:WrapTextInColorCode("Rewards")
         end
         return ""
       end,
       OnEnter = function(character)
         if character.vault.hasAvailableRewards == true then
-          GameTooltip:AddLine("It's payday!", 1, 1, 1)
+          GameTooltip:AddLine("It's payday!", WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
           GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
         end
       end,
       backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
     },
     {
-      label = WrapTextInColorCode("Raids", "ffffffff"),
+      label = WHITE_FONT_COLOR:WrapTextInColorCode("Raids"),
       value = function(character)
-        local vaultLevels = ""
+        local value = {}
         if character.vault.slots ~= nil then
-          for _, slot in ipairs(character.vault.slots) do
-            if slot.type == Enum.WeeklyRewardChestThresholdType.Raid then
-              local name = "-"
-              local nameColor = LIGHTGRAY_FONT_COLOR
-              if slot.level > 0 then
-                local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
-                if dataDifficulty and dataDifficulty.abbr then
-                  name = dataDifficulty.abbr
-                else
-                  local difficultyName = GetDifficultyInfo(slot.level)
-                  if difficultyName then
-                    name = tostring(difficultyName):sub(1, 1)
-                  end
-                end
-                if self.db.global.raids.colors and dataDifficulty and dataDifficulty.color then
+          local slots = AE_table_filter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestActivityType.Raid
+          end)
+          AE_table_foreach(slots, function(slot)
+            local name = "-"
+            local nameColor = LIGHTGRAY_FONT_COLOR
+            if slot.level > 0 then
+              local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
+              if dataDifficulty then
+                name = dataDifficulty.abbr
+                if self.db.global.raids.colors then
                   nameColor = dataDifficulty.color
-                else
-                  nameColor = UNCOMMON_GREEN_COLOR
                 end
               end
-              vaultLevels = vaultLevels .. WrapTextInColorCode(name, nameColor:GenerateHexColor()) .. "  "
+              if name == nil then
+                local difficultyName = GetDifficultyInfo(slot.level)
+                if difficultyName ~= nil then
+                  name = tostring(difficultyName):sub(1, 1)
+                else
+                  name = "?"
+                end
+              end
+              if nameColor == nil then
+                nameColor = UNCOMMON_GREEN_COLOR
+              end
             end
+            table.insert(value, nameColor:WrapTextInColorCode(name))
+          end)
+        else
+          for i = 1, 3 do
+            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
           end
         end
-        if vaultLevels == "" then
-          vaultLevels = WrapTextInColorCode("-  -  -", LIGHTGRAY_FONT_COLOR:GenerateHexColor())
-        end
-        return strtrim(vaultLevels)
+        return table.concat(value, "  ")
       end,
       OnEnter = function(character)
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
@@ -459,25 +466,26 @@ function AlterEgo:GetCharacterInfo()
       enabled = self.db.global.raids.enabled,
     },
     {
-      label = WrapTextInColorCode("Dungeons", "ffffffff"),
+      label = WHITE_FONT_COLOR:WrapTextInColorCode("Dungeons"),
       value = function(character)
-        local vaultLevels = ""
+        local value = {}
         if character.vault.slots ~= nil then
           local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
-          for _, slot in ipairs(slots) do
+          AE_table_foreach(slots, function(slot)
             local level = "-"
             local color = LIGHTGRAY_FONT_COLOR
             if slot.progress >= slot.threshold then
               level = tostring(slot.level)
               color = UNCOMMON_GREEN_COLOR
             end
-            vaultLevels = vaultLevels .. WrapTextInColorCode(level, color:GenerateHexColor()) .. "  "
+            table.insert(value, color:WrapTextInColorCode(level))
+          end)
+        else
+          for i = 1, 3 do
+            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
           end
         end
-        if vaultLevels == "" then
-          vaultLevels = WrapTextInColorCode("-  -  -", LIGHTGRAY_FONT_COLOR:GenerateHexColor())
-        end
-        return strtrim(vaultLevels)
+        return table.concat(value, "  ")
       end,
       OnEnter = function(character)
         local weeklyRuns = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
@@ -549,7 +557,7 @@ function AlterEgo:GetCharacterInfo()
       enabled = true,
     },
     {
-      label = WrapTextInColorCode("PvP", "ffffffff"),
+      label = WHITE_FONT_COLOR:WrapTextInColorCode("PvP"),
       value = function(character)
         local text = "- / -"
         local textColor = LIGHTGRAY_FONT_COLOR
@@ -571,7 +579,7 @@ function AlterEgo:GetCharacterInfo()
             end
           end
         end
-        return strtrim(textColor:WrapTextInColorCode(text))
+        return textColor:WrapTextInColorCode(text)
       end,
       OnEnter = function(character)
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
@@ -833,7 +841,7 @@ function AlterEgo:CreateUI()
       local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
       affixButton:SetSize(20, 20)
       affixButton:SetScript("OnClick", function()
-        local currentAffixes = C_MythicPlus.GetCurrentAffixes()
+        local currentAffixes = self:GetCurrentAffixes()
         local affixRotation = self:GetAffixRotation()
         local activeWeek = self:GetActiveAffixRotation(currentAffixes)
         local affixes = self:GetAffixes()
@@ -881,7 +889,7 @@ function AlterEgo:CreateUI()
                     text = "|T" .. affix.fileDataID .. ":0|t " .. name,
                     backgroundColor = backgroundColor or nil,
                     OnEnter = function()
-                      GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
+                      GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true);
                       GameTooltip:AddLine(affix.description, nil, nil, nil, true);
                     end,
                   })
@@ -1615,25 +1623,28 @@ function AlterEgo:UpdateUI()
     winMain.Footer:Hide()
   end
 
-  local currentAffixes = C_MythicPlus.GetCurrentAffixes();
+  local currentAffixes = self:GetCurrentAffixes();
   anchorFrame = winMain.TitleBar
   for i = 1, 3 do
     local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
-    if affixButton then
-      if currentAffixes then
-        local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffixes[i].id);
-        affixButton:SetNormalTexture(fileDataID)
-        affixButton:SetScript("OnEnter", function()
-          GameTooltip:ClearAllPoints()
-          GameTooltip:ClearLines()
-          GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
-          GameTooltip:SetText(name, 1, 1, 1);
-          GameTooltip:AddLine(desc, nil, nil, nil, true)
-          GameTooltip:AddLine(" ")
-          GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-          GameTooltip:Show()
-        end)
-        affixButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    if affixButton ~= nil then
+      if AE_table_count(currentAffixes) > 0 then
+        local currentAffix = currentAffixes[i]
+        if currentAffix ~= nil then
+          local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
+          affixButton:SetNormalTexture(fileDataID)
+          affixButton:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
+            GameTooltip:SetText(name, 1, 1, 1);
+            GameTooltip:AddLine(desc, nil, nil, nil, true)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
+          end)
+          affixButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end
       end
       if i == 1 then
         affixButton:ClearAllPoints()
@@ -2006,7 +2017,7 @@ function AlterEgo:UpdateUI()
                           end
                         end
                       end
-                      GameTooltip:AddLine(WrapTextInColorCode(encounter.name, color:GenerateHexColor()))
+                      GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
                     end
                     GameTooltip:Show()
                     self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)

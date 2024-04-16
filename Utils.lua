@@ -27,7 +27,9 @@ end
 function AE_table_filter(tbl, callback)
   local t = {}
   for i, v in ipairs(tbl) do
-    if callback(v, i) then table.insert(t, v) end
+    if callback(v, i) then
+      table.insert(t, v)
+    end
   end
   return t
 end
@@ -37,7 +39,9 @@ end
 ---@return number
 function AE_table_count(tbl)
   local n = 0
-  for _ in pairs(tbl) do n = n + 1 end
+  for _ in pairs(tbl) do
+    n = n + 1
+  end
   return n
 end
 
@@ -45,10 +49,18 @@ end
 ---@param from table
 ---@param to table|nil
 ---@param recursion_check table|nil
+---@return table|nil
 function AE_table_copy(from, to, recursion_check)
-  local table = (to == nil) and {} or to
-  if not recursion_check then recursion_check = {} end
-  if recursion_check[from] then return "<recursion>" end
+  local table = to
+  if to == nil then
+    table = {}
+  end
+  if not recursion_check then
+    recursion_check = {}
+  end
+  if recursion_check[from] then
+    return "<recursion>"
+  end
   recursion_check[from] = true
   for k, v in pairs(from) do
     table[k] = type(v) == "table" and AE_table_copy(v, nil, recursion_check) or v
@@ -59,6 +71,7 @@ end
 --- Map each item in a table
 ---@param tbl table
 ---@param callback function
+---@return table
 function AE_table_map(tbl, callback)
   local t = {}
   for ik, iv in pairs(tbl) do
@@ -71,6 +84,7 @@ end
 --- Run a callback on each table item
 ---@param tbl table
 ---@param callback function
+---@return table
 function AE_table_foreach(tbl, callback)
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
@@ -78,6 +92,9 @@ function AE_table_foreach(tbl, callback)
   return tbl
 end
 
+--- Get character activity progress
+---@param character table
+---@return table|nil, table|nil
 function AE_GetActivitiesProgress(character)
   local activities = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
   table.sort(activities, function(left, right) return left.index < right.index; end);
@@ -87,17 +104,18 @@ function AE_GetActivitiesProgress(character)
       lastCompletedIndex = i;
     end
   end
+
   if lastCompletedIndex == 0 then
     return nil, nil;
-  else
-    if lastCompletedIndex == #activities then
-      local info = activities[lastCompletedIndex];
-      return info, nil;
-    else
-      local nextInfo = activities[lastCompletedIndex + 1];
-      return activities[lastCompletedIndex], nextInfo;
-    end
   end
+
+  if lastCompletedIndex == #activities then
+    local info = activities[lastCompletedIndex];
+    return info, nil;
+  end
+
+  local nextInfo = activities[lastCompletedIndex + 1];
+  return activities[lastCompletedIndex], nextInfo;
 end
 
 function AE_GetLowestLevelInTopDungeonRuns(character, numRuns)
@@ -140,20 +158,23 @@ function AE_GetLowestLevelInTopDungeonRuns(character, numRuns)
   return lowestLevel, lowestCount;
 end
 
+--- Get the group type
+---@return string|nil
 function AE_GetGroupChannel()
   if IsInRaid() then
     return "RAID"
-  elseif IsInGroup() then
-    return "PARTY"
-  else
-    return nil
   end
+  if IsInGroup() then
+    return "PARTY"
+  end
+  return nil
 end
 
 --- Get a rating color
 ---@param rating number
 ---@param useRIOScoreColor boolean
 ---@param isPreviousSeason boolean
+---@return ColorMixin|nil
 function AE_GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
   local color
   local RIO = _G["RaiderIO"]

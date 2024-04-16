@@ -258,6 +258,8 @@ local dataAffixes = {
   {id = AFFIX_INCORPOREAL, base = 0, name = "", description = "", fileDataID = nil},
 }
 
+local dataCurrentAffixes = {}
+
 -- Rotation: https://mythicpl.us
 local dataAffixRotations = {
   {
@@ -409,6 +411,28 @@ function AlterEgo:GetRaidDifficulties(unfiltered)
   return filtered
 end
 
+function AlterEgo:GetCurrentAffixes()
+  if AE_table_count(dataCurrentAffixes) == 0 then
+    dataCurrentAffixes = C_MythicPlus.GetCurrentAffixes()
+  end
+  return dataCurrentAffixes
+end
+
+function AlterEgo:GetAffixes(base)
+  local result = {}
+  for _, affix in pairs(dataAffixes) do
+    if not base or affix.base == 1 then
+      table.insert(result, affix)
+    end
+  end
+
+  -- table.sort(result, function(a, b)
+  --     return a.id < b.id
+  -- end)
+
+  return result
+end
+
 function AlterEgo:GetAffixRotation()
   local activeRotation = AE_table_get(dataAffixRotations, "seasonID", self:GetSeasonID())
   if activeRotation and activeRotation.rotation then
@@ -428,21 +452,6 @@ function AlterEgo:GetActiveAffixRotation(currentAffixes)
     end)
   end
   return index
-end
-
-function AlterEgo:GetAffixes(base)
-  local result = {}
-  for _, affix in pairs(dataAffixes) do
-    if not base or affix.base == 1 then
-      table.insert(result, affix)
-    end
-  end
-
-  -- table.sort(result, function(a, b)
-  --     return a.id < b.id
-  -- end)
-
-  return result
 end
 
 function AlterEgo:GetKeystoneItemID()
