@@ -418,21 +418,17 @@ function AlterEgo:GetCurrentAffixes()
   return dataCurrentAffixes
 end
 
-function AlterEgo:GetAffixes(base)
-  local result = {}
-  for _, affix in pairs(dataAffixes) do
-    if not base or affix.base == 1 then
-      table.insert(result, affix)
-    end
-  end
-
-  -- table.sort(result, function(a, b)
-  --     return a.id < b.id
-  -- end)
-
-  return result
+--- Get either all affixes or just the base seasonal affixes
+---@param baseOnly boolean|nil
+---@return table
+function AlterEgo:GetAffixes(baseOnly)
+  return AE_table_filter(dataAffixes, function(dataAffix)
+    return not baseOnly or dataAffix.base == 1
+  end)
 end
 
+--- Get affix rotation of the season
+---@return table
 function AlterEgo:GetAffixRotation()
   local activeRotation = AE_table_get(dataAffixRotations, "seasonID", self:GetSeasonID())
   if activeRotation and activeRotation.rotation then
@@ -441,6 +437,9 @@ function AlterEgo:GetAffixRotation()
   return {}
 end
 
+--- Get the index of the active affix week
+---@param currentAffixes table|nil
+---@return number
 function AlterEgo:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
   local index = 0
@@ -454,6 +453,8 @@ function AlterEgo:GetActiveAffixRotation(currentAffixes)
   return index
 end
 
+--- Get the Keystone ItemID of the current season
+---@return number|nil
 function AlterEgo:GetKeystoneItemID()
   local keystone = AE_table_get(dataKeystones, "seasonID", self:GetSeasonID())
 
@@ -886,7 +887,7 @@ function AlterEgo:UpdateVault()
   wipe(character.vault.slots or {})
   for i = 1, 3 do
     local slots = C_WeeklyRewards.GetActivities(i)
-    for _, slot in ipairs(slots) do
+    AE_table_foreach(slots, function(slot)
       slot.exampleRewardLink = ""
       slot.exampleRewardUpgradeLink = ""
       if slot.progress >= slot.threshold then
@@ -895,7 +896,7 @@ function AlterEgo:UpdateVault()
         slot.exampleRewardUpgradeLink = upgradeItemLink
       end
       table.insert(character.vault.slots, slot)
-    end
+    end)
   end
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
@@ -906,11 +907,6 @@ function AlterEgo:UpdateMythicPlus()
   local character = self:GetCharacter()
   local dungeons = self:GetDungeons()
   local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
-  if not ratingSummary then
-    C_MythicPlus.RequestMapInfo()
-    ---@diagnostic disable-next-line: undefined-field
-    return self:ScheduleTimer("UpdateMythicPlus", 2)
-  end
   local runHistory = C_MythicPlus.GetRunHistory(true, true)
   local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
   local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
@@ -919,6 +915,7 @@ function AlterEgo:UpdateMythicPlus()
   local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
   local affixes = self:GetAffixes()
 
+  -- TODO: Move this to a season task
   if currentSeason then
     for _, char in pairs(self.db.global.characters) do
       if char.currentSeason == nil or char.currentSeason < currentSeason then

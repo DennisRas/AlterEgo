@@ -768,24 +768,28 @@ function AlterEgo:GetCharacterColumn(parent, index)
   return CharacterColumns[index]
 end
 
+--- Hide all character columns
 function AlterEgo:HideCharacterColumns()
-  for _, CharacterColumn in ipairs(CharacterColumns) do
+  AE_table_foreach(CharacterColumns, function(CharacterColumn)
     CharacterColumn:Hide()
-  end
+  end)
 end
 
+--- Does the main window need scrollbars?
+---@return boolean
 function AlterEgo:IsScrollbarNeeded()
-  local characters = self:GetCharacters()
-  local numCharacters = AE_table_count(characters)
+  local numCharacters = AE_table_count(self:GetCharacters())
   return numCharacters > 0 and self.constants.sizes.sidebar.width + numCharacters * self.constants.sizes.column > self:GetMaxWindowWidth()
 end
 
+--- Calculate the main window size
+---@return number, number
 function AlterEgo:GetWindowSize()
-  local characters = self:GetCharacters()
-  local numCharacters = AE_table_count(characters)
-  local dungeons = self:GetDungeons()
-  local raids = self:GetRaids()
-  local difficulties = self:GetRaidDifficulties()
+  local numCharacters = AE_table_count(self:GetCharacters())
+  local numDungeons = AE_table_count(self:GetDungeons())
+  local numRaids = AE_table_count(self:GetRaids())
+  local numDifficulties = AE_table_count(self:GetRaidDifficulties())
+  local numCharacterInfo = AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled == true end))
   local width = 0
   local maxWidth = self:GetMaxWindowWidth()
   local height = 0
@@ -805,12 +809,11 @@ function AlterEgo:GetWindowSize()
   end
 
   -- Height
-  height = height + self.constants.sizes.titlebar.height                                                                                                                          -- Titlebar duh
-  height = height + AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled == true end)) * self.constants.sizes.row -- Character info
-  height = height + self.constants.sizes.row                                                                                                                                      -- DungeonHeader
-  height = height + AE_table_count(dungeons) * self.constants.sizes.row                                                                                                           -- Dungeon rows
+  height = height + self.constants.sizes.titlebar.height                          -- Titlebar duh
+  height = height + numCharacterInfo * self.constants.sizes.row                   -- Character info
+  height = height + (numDungeons + 1) * self.constants.sizes.row                  -- Dungeons
   if self.db.global.raids.enabled == true then
-    height = height + AE_table_count(raids) * (AE_table_count(difficulties) + 1) * self.constants.sizes.row                                                                       -- Raids
+    height = height + numRaids * (numDifficulties + 1) * self.constants.sizes.row -- Raids
   end
 
   return width, height
@@ -1587,8 +1590,7 @@ function AlterEgo:UpdateUI()
 
   local affixes = self:GetAffixes(true)
   local characters = self:GetCharacters()
-  local numCharacters = AE_table_count(self:GetCharacters())
-  local charactersUnfiltered = self:GetCharacters(true)
+  local numCharacters = AE_table_count(characters)
   local dungeons = self:GetDungeons()
   local raids = self:GetRaids()
   local difficulties = self:GetRaidDifficulties(true)
