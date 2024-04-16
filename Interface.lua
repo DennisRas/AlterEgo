@@ -156,7 +156,7 @@ function AlterEgo:GetCharacterInfo()
       label = STAT_AVERAGE_ITEM_LEVEL,
       value = function(character)
         local itemLevel = "-"
-        local itemLevelColor = LIGHTGRAY_FONT_COLOR
+        local itemLevelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
         if character.info.ilvl ~= nil then
           if character.info.ilvl.level ~= nil then
             itemLevel = tostring(floor(character.info.ilvl.level))
@@ -164,10 +164,10 @@ function AlterEgo:GetCharacterInfo()
           if character.info.ilvl.color then
             itemLevelColor = character.info.ilvl.color
           else
-            itemLevelColor = WHITE_FONT_COLOR
+            itemLevelColor = WHITE_FONT_COLOR:GenerateHexColor()
           end
         end
-        return itemLevelColor:WrapTextInColorCode(itemLevel)
+        return WrapTextInColorCode(itemLevel, itemLevelColor)
       end,
       OnEnter = function(character)
         local itemLevelTooltip = ""
@@ -387,33 +387,39 @@ function AlterEgo:GetCharacterInfo()
         local value = {}
         if character.vault.slots ~= nil then
           local slots = AE_table_filter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestActivityType.Raid
+            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
           end)
-          AE_table_foreach(slots, function(slot)
-            local name = "-"
-            local nameColor = LIGHTGRAY_FONT_COLOR
-            if slot.level > 0 then
-              local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
-              if dataDifficulty then
-                name = dataDifficulty.abbr
-                if self.db.global.raids.colors then
-                  nameColor = dataDifficulty.color
+          if #slots > 0 then
+            AE_table_foreach(slots, function(slot)
+              local name = "-"
+              local nameColor = LIGHTGRAY_FONT_COLOR
+              if slot.level > 0 then
+                local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
+                if dataDifficulty then
+                  name = dataDifficulty.abbr
+                  if self.db.global.raids.colors then
+                    nameColor = dataDifficulty.color
+                  end
+                end
+                if name == nil then
+                  local difficultyName = GetDifficultyInfo(slot.level)
+                  if difficultyName ~= nil then
+                    name = tostring(difficultyName):sub(1, 1)
+                  else
+                    name = "?"
+                  end
+                end
+                if nameColor == nil then
+                  nameColor = UNCOMMON_GREEN_COLOR
                 end
               end
-              if name == nil then
-                local difficultyName = GetDifficultyInfo(slot.level)
-                if difficultyName ~= nil then
-                  name = tostring(difficultyName):sub(1, 1)
-                else
-                  name = "?"
-                end
-              end
-              if nameColor == nil then
-                nameColor = UNCOMMON_GREEN_COLOR
-              end
+              table.insert(value, nameColor:WrapTextInColorCode(name))
+            end)
+          else
+            for i = 1, 3 do
+              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
             end
-            table.insert(value, nameColor:WrapTextInColorCode(name))
-          end)
+          end
         else
           for i = 1, 3 do
             table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
@@ -451,7 +457,9 @@ function AlterEgo:GetCharacterInfo()
             return slot.type == Enum.WeeklyRewardChestThresholdType.Raid and slot.progress < slot.threshold
           end)
           if AE_table_count(incompleteSlots) > 0 then
-            table.sort(incompleteSlots, function(a, b) return a.threshold < b.threshold end)
+            table.sort(incompleteSlots, function(a, b)
+              return a.threshold < b.threshold
+            end)
             GameTooltip:AddLine(" ")
             local tooltip = ""
             if AE_table_count(incompleteSlots) == AE_table_count(slots) then
@@ -475,16 +483,24 @@ function AlterEgo:GetCharacterInfo()
       value = function(character)
         local value = {}
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
-          AE_table_foreach(slots, function(slot)
-            local level = "-"
-            local color = LIGHTGRAY_FONT_COLOR
-            if slot.progress >= slot.threshold then
-              level = tostring(slot.level)
-              color = UNCOMMON_GREEN_COLOR
-            end
-            table.insert(value, color:WrapTextInColorCode(level))
+          local slots = AE_table_filter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.Activities
           end)
+          if #slots > 0 then
+            AE_table_foreach(slots, function(slot)
+              local level = "-"
+              local color = LIGHTGRAY_FONT_COLOR
+              if slot.progress >= slot.threshold then
+                level = tostring(slot.level)
+                color = UNCOMMON_GREEN_COLOR
+              end
+              table.insert(value, color:WrapTextInColorCode(level))
+            end)
+          else
+            for i = 1, 3 do
+              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
+            end
+          end
         else
           for i = 1, 3 do
             table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
@@ -493,7 +509,9 @@ function AlterEgo:GetCharacterInfo()
         return table.concat(value, "  ")
       end,
       OnEnter = function(character)
-        local weeklyRuns = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
+        local weeklyRuns = AE_table_filter(character.mythicplus.runHistory, function(run)
+          return run.thisWeek == true
+        end)
         local weeklyRunsCount = AE_table_count(weeklyRuns) or 0
         GameTooltip:AddLine("Vault Progress", 1, 1, 1);
         -- GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. tostring(weeklyRunsCount) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
@@ -541,9 +559,13 @@ function AlterEgo:GetCharacterInfo()
 
         if weeklyRunsCount > 0 then
           GameTooltip_AddBlankLineToTooltip(GameTooltip)
-          table.sort(weeklyRuns, function(a, b) return a.level > b.level end)
+          table.sort(weeklyRuns, function(a, b)
+            return a.level > b.level
+          end)
           for runIndex, run in ipairs(weeklyRuns) do
-            local threshold = AE_table_find(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold end)
+            local threshold = AE_table_find(character.vault.slots, function(slot)
+              return slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold
+            end)
             local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
             local dungeon = AE_table_get(dungeons, "challengeModeID", run.mapChallengeModeID)
             local color = WHITE_FONT_COLOR
@@ -687,7 +709,9 @@ function AlterEgo:CreateCharacterColumn(parent, index)
       GameTooltip:AddLine(affix.description, nil, nil, nil, true);
       GameTooltip:Show()
     end)
-    AffixFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    AffixFrame:SetScript("OnLeave", function()
+      GameTooltip:Hide()
+    end)
   end
 
   -- Dungeon rows
@@ -789,7 +813,9 @@ function AlterEgo:GetWindowSize()
   local numDungeons = AE_table_count(self:GetDungeons())
   local numRaids = AE_table_count(self:GetRaids())
   local numDifficulties = AE_table_count(self:GetRaidDifficulties())
-  local numCharacterInfo = AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label) return label.enabled == nil or label.enabled == true end))
+  local numCharacterInfo = AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label)
+    return label.enabled == nil or label.enabled == true
+  end))
   local width = 0
   local maxWidth = self:GetMaxWindowWidth()
   local height = 0
@@ -922,8 +948,12 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
     winMain.TitleBar.SettingsButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
     winMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
-    winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function() return true end
-    winMain.TitleBar.SettingsButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.SettingsButton.Dropdown) end)
+    winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function()
+      return true
+    end
+    winMain.TitleBar.SettingsButton:SetScript("OnClick", function()
+      ToggleDropDownMenu(1, nil, winMain.TitleBar.SettingsButton.Dropdown)
+    end)
     winMain.TitleBar.SettingsButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER")
     winMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
@@ -1211,8 +1241,12 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", winMain.TitleBar)
     winMain.TitleBar.SortingButton:SetPoint("RIGHT", winMain.TitleBar.SettingsButton, "LEFT", 0, 0)
     winMain.TitleBar.SortingButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
-    winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function() return true end
-    winMain.TitleBar.SortingButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.SortingButton.Dropdown) end)
+    winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function()
+      return true
+    end
+    winMain.TitleBar.SortingButton:SetScript("OnClick", function()
+      ToggleDropDownMenu(1, nil, winMain.TitleBar.SortingButton.Dropdown)
+    end)
     winMain.TitleBar.SortingButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER")
     winMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
@@ -1257,8 +1291,12 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
     winMain.TitleBar.CharactersButton:SetPoint("RIGHT", winMain.TitleBar.SortingButton, "LEFT", 0, 0)
     winMain.TitleBar.CharactersButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
-    winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function() return true end
-    winMain.TitleBar.CharactersButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.CharactersButton.Dropdown) end)
+    winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function()
+      return true
+    end
+    winMain.TitleBar.CharactersButton:SetScript("OnClick", function()
+      ToggleDropDownMenu(1, nil, winMain.TitleBar.CharactersButton.Dropdown)
+    end)
     winMain.TitleBar.CharactersButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER")
     winMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
@@ -1313,9 +1351,14 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
     winMain.TitleBar.AnnounceButton:SetPoint("RIGHT", winMain.TitleBar.CharactersButton, "LEFT", 0, 0)
     winMain.TitleBar.AnnounceButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
-    winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function() return true end
-    winMain.TitleBar.AnnounceButton:SetScript("OnClick", function() ToggleDropDownMenu(1, nil, winMain.TitleBar.AnnounceButton.Dropdown) end)
-    winMain.TitleBar.AnnounceButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
+    winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function()
+      return true
+    end
+    winMain.TitleBar.AnnounceButton:SetScript("OnClick", function()
+      ToggleDropDownMenu(1, nil, winMain.TitleBar.AnnounceButton.Dropdown)
+    end)
+    winMain.TitleBar.AnnounceButton.Icon = winMain.TitleBar:CreateTexture(
+      winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER")
     winMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
     winMain.TitleBar.AnnounceButton.Icon:SetTexture(self.constants.media.IconAnnounce)
@@ -1407,7 +1450,7 @@ function AlterEgo:CreateUI()
   --     window.Body = CreateFrame("Frame", "$parentBody", window)
   --     window.Body:SetPoint("TOPLEFT", window.TitleBar, "BOTTOMLEFT")
   --     window.Body:SetPoint("TOPRIGHT", window.TitleBar, "BOTTOMRIGHT")
-  --selfAlterEgo:SetBackgroundColor(window.Body, 0, 0, 0, 0)
+  -- selfAlterEgo:SetBackgroundColor(window.Body, 0, 0, 0, 0)
   -- end
 
   do -- No characters enabled
@@ -1501,7 +1544,9 @@ function AlterEgo:CreateUI()
         GameTooltip:SetText(raid.name, 1, 1, 1);
         GameTooltip:Show()
       end)
-      RaidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+      RaidFrame:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+      end)
       RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
       RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", self.constants.sizes.padding, 0)
       RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
@@ -1523,7 +1568,9 @@ function AlterEgo:CreateUI()
           GameTooltip:SetText(difficulty.name, 1, 1, 1);
           GameTooltip:Show()
         end)
-        DifficultFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        DifficultFrame:SetScript("OnLeave", function()
+          GameTooltip:Hide()
+        end)
         DifficultFrame.Text = DifficultFrame:CreateFontString(DifficultFrame:GetName() .. "Text", "OVERLAY")
         DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", self.constants.sizes.padding, -3)
         DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
@@ -1586,7 +1633,9 @@ end
 
 function AlterEgo:UpdateUI()
   local winMain = self:GetWindow("Main")
-  if not winMain then return end
+  if not winMain then
+    return
+  end
 
   local affixes = self:GetAffixes(true)
   local characters = self:GetCharacters()
@@ -1650,7 +1699,9 @@ function AlterEgo:UpdateUI()
             GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             GameTooltip:Show()
           end)
-          affixButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+          affixButton:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+          end)
         end
       end
       if i == 1 then
@@ -1737,7 +1788,9 @@ function AlterEgo:UpdateUI()
         end
         GameTooltip:Show()
       end)
-      Label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+      Label:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+      end)
       anchorFrame = Label
     end
   end
@@ -1789,7 +1842,6 @@ function AlterEgo:UpdateUI()
         anchorFrame = CharacterColumn
         for labelIndex, info in ipairs(labels) do
           local CharacterFrame = _G[CharacterColumn:GetName() .. "Info" .. labelIndex]
-
 
           CharacterFrame.Text:SetText(info.value(character))
           if info.OnEnter then

@@ -4,7 +4,9 @@
 ---@return table|nil, number|nil
 function AE_table_find(tbl, callback)
   for i, v in ipairs(tbl) do
-    if callback(v, i) then return v, i end
+    if callback(v, i) then
+      return v, i
+    end
   end
   return nil, nil
 end
@@ -49,7 +51,7 @@ end
 ---@param from table
 ---@param to table|nil
 ---@param recursion_check table|nil
----@return table|nil
+---@return table|nil|string
 function AE_table_copy(from, to, recursion_check)
   local table = to
   if to == nil then
