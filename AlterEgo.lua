@@ -90,7 +90,7 @@ function AlterEgo:OnEnable()
 end
 
 function AlterEgo:OnMythicPlusData()
-  local seasonID = C_MythicPlus.GetCurrentSeason()
+  local seasonID = self:GetCurrentSeason()
   if seasonID == nil or seasonID == -1 then
     return self:ScheduleTimer("OnMythicPlusData", 1)
   end

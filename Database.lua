@@ -211,6 +211,10 @@ local defaultCharacter = {
 local tooltipScan = CreateFrame("GameTooltip", "AE_Tooltip_Scan", nil, "GameTooltipTemplate")
 tooltipScan:SetOwner(UIParent, "ANCHOR_NONE")
 
+---@class Inventory
+---@field id number
+---@field name string
+---@type table<number, Inventory>
 local dataInventory = {
   {id = INVSLOT_HEAD,     name = "HEADSLOT"},
   {id = INVSLOT_NECK,     name = "NECKSLOT"},
@@ -243,6 +247,14 @@ local AFFIX_ENTANGLING = 134
 local AFFIX_AFFLICTED = 135
 local AFFIX_INCORPOREAL = 136
 
+---@alias AffixesBase 0 | 1
+---@class Affixes
+---@field id number
+---@field base AffixesBase
+---@field name string
+---@field description string
+---@field fileDataID number|nil
+---@type table<number, Affixes>
 local dataAffixes = {
   {id = AFFIX_VOLCANIC,    base = 0, name = "", description = "", fileDataID = nil},
   {id = AFFIX_RAGING,      base = 0, name = "", description = "", fileDataID = nil},
@@ -261,9 +273,15 @@ local dataAffixes = {
 local dataCurrentAffixes = {}
 
 -- Rotation: https://mythicpl.us
+---@class AffixRotation
+---@field seasonID number
+---@field seasonDisplayID number
+---@field rotation table<number, table<number, number, number>>
+---@type table<number, AffixRotation>
 local dataAffixRotations = {
   {
     seasonID = 11,
+    seasonDisplayID = 3,
     rotation = {
       {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
       {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
@@ -294,11 +312,27 @@ local dataAffixRotations = {
   -- }
 }
 
+---@class Keystone
+---@field seasonID number
+---@field seasonDisplayID number
+---@field itemID number
+---@type table<number, Keystone>
 local dataKeystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 180653},
   {seasonID = 12, seasonDisplayID = 4, itemID = 151086},
 }
 
+---@class Dungeon
+---@field seasonID number
+---@field seasonDisplayID number
+---@field challengeModeID number
+---@field mapId number
+---@field spellID number
+---@field time number
+---@field abbr string
+---@field name string
+---@field short string?
+---@type table<number, Dungeon>
 local dataDungeons = {
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078, time = 0, abbr = "NL",   name = "Neltharion's Lair"},
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071, time = 0, abbr = "FH",   name = "Freehold"},
@@ -326,6 +360,18 @@ local dataDungeons = {
   {seasonID = 12, seasonDisplayID = 4, challengeModeID = 406, mapId = 2527, spellID = 393283, time = 0, abbr = "HOI",  name = "Halls of Infusion"},
 }
 
+---@class Raid
+---@field seasonID number
+---@field seasonDisplayID number
+---@field journalInstanceID number
+---@field instanceID number
+---@field order number
+---@field numEncounters number
+---@field encounters table
+---@field abbr string
+---@field name string
+---@field short string?
+---@type table<number, Raid>
 local dataRaids = {
   {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
   {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
@@ -335,6 +381,14 @@ local dataRaids = {
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
 }
 
+---@class RaidDifficulty
+---@field id number
+---@field color table
+---@field order number
+---@field abbr string
+---@field name string
+---@field short string?
+---@type table<number, RaidDifficulty>
 local dataRaidDifficulties = {
   {id = 14, color = RARE_BLUE_COLOR,        order = 2, abbr = "N",   name = "Normal"},
   {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "HC",  name = "Heroic"},
@@ -342,40 +396,64 @@ local dataRaidDifficulties = {
   {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
 }
 
--- TODO: Find the new currencies
+---@alias CurrencyType "crest" | "upgrade" | "catalyst"
+---@class Currency
+---@field id number
+---@field seasonID number
+---@field seasonDisplayID number
+---@field currencyType string<CurrencyType>
+---@type table<number, Currency>
 local dataCurrencies = {
-  {seasonID = 11, id = 2709, currencyType = "crest"},    -- Aspect
-  {seasonID = 11, id = 2708, currencyType = "crest"},    -- Wyrm
-  {seasonID = 11, id = 2707, currencyType = "crest"},    -- Drake
-  {seasonID = 11, id = 2706, currencyType = "crest"},    -- Whelpling
-  {seasonID = 11, id = 2245, currencyType = "upgrade"},  -- Flightstones
-  {seasonID = 11, id = 2796, currencyType = "catalyst"}, -- Catalyst
-  -- {seasonID = 12, id = 2709, currencyType = "crest"},    -- Aspect
-  -- {seasonID = 12, id = 2708, currencyType = "crest"},    -- Wyrm
-  -- {seasonID = 12, id = 2707, currencyType = "crest"},    -- Drake
-  -- {seasonID = 12, id = 2706, currencyType = "crest"},    -- Whelpling
-  -- {seasonID = 12, id = 2245, currencyType = "upgrade"},  -- Flightstones
-  -- {seasonID = 12, id = 2796, currencyType = "catalyst"}, -- Catalyst
+  {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},    -- Aspect
+  {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},    -- Wyrm
+  {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},    -- Drake
+  {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},    -- Whelpling
+  {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},  -- Flightstones
+  {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"}, -- Catalyst
+  -- TODO: Find the new currencies
+  -- {seasonID = 12, seasonDisplayID = 4, id = 2709, currencyType = "crest"},    -- Aspect
+  -- {seasonID = 12, seasonDisplayID = 4, id = 2708, currencyType = "crest"},    -- Wyrm
+  -- {seasonID = 12, seasonDisplayID = 4, id = 2707, currencyType = "crest"},    -- Drake
+  -- {seasonID = 12, seasonDisplayID = 4, id = 2706, currencyType = "crest"},    -- Whelpling
+  -- {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},  -- Flightstones
+  -- {seasonID = 12, seasonDisplayID = 4, id = 2796, currencyType = "catalyst"}, -- Catalyst
 }
 
+--- Initiate AceDB
 function AlterEgo:InitDB()
   self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
 end
 
-function AlterEgo:GetSeasonID()
-  return C_MythicPlus.GetCurrentSeason() or 0
+local cacheSeasonID, cacheSeasonDisplayID
+--- Get the current Season IDs
+---@return number, number
+function AlterEgo:GetCurrentSeason()
+  if not cacheSeasonID then
+    cacheSeasonID = C_MythicPlus.GetCurrentSeason()
+  end
+  if not cacheSeasonDisplayID then
+    cacheSeasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
+  end
+  return cacheSeasonID or 0, cacheSeasonDisplayID or 0
 end
 
 function AlterEgo:GetCurrencies()
-  local seasonID = self:GetSeasonID()
+  local seasonID = self:GetCurrentSeason()
   return AE_table_filter(dataCurrencies, function(dataCurrency)
     return dataCurrency.seasonID == seasonID
   end)
 end
 
+---Get stored character by GUID
+---@param playerGUID string?
+---@return table|nil
 function AlterEgo:GetCharacter(playerGUID)
   if playerGUID == nil then
     playerGUID = UnitGUID("player")
+  end
+
+  if playerGUID == nil then
+    return nil
   end
 
   if self.db.global.characters[playerGUID] == nil then
@@ -387,6 +465,9 @@ function AlterEgo:GetCharacter(playerGUID)
   return self.db.global.characters[playerGUID]
 end
 
+---Get all of the raids in the current season
+---@param unfiltered boolean?
+---@return table
 function AlterEgo:GetRaidDifficulties(unfiltered)
   local result = {}
   for _, difficulty in pairs(dataRaidDifficulties) do
@@ -430,7 +511,8 @@ end
 --- Get affix rotation of the season
 ---@return table
 function AlterEgo:GetAffixRotation()
-  local activeRotation = AE_table_get(dataAffixRotations, "seasonID", self:GetSeasonID())
+  local seasonID = self:GetCurrentSeason()
+  local activeRotation = AE_table_get(dataAffixRotations, "seasonID", seasonID)
   if activeRotation and activeRotation.rotation then
     return activeRotation.rotation
   end
@@ -456,7 +538,8 @@ end
 --- Get the Keystone ItemID of the current season
 ---@return number|nil
 function AlterEgo:GetKeystoneItemID()
-  local keystone = AE_table_get(dataKeystones, "seasonID", self:GetSeasonID())
+  local seasonID = self:GetCurrentSeason()
+  local keystone = AE_table_get(dataKeystones, "seasonID", seasonID)
 
   if keystone ~= nil then
     return keystone.itemID
@@ -465,36 +548,37 @@ function AlterEgo:GetKeystoneItemID()
   return nil
 end
 
+--- Get all of the M+ dungeons in the current season
+---@return table
 function AlterEgo:GetDungeons()
-  local result = {}
-  for _, dungeon in pairs(dataDungeons) do
-    if dungeon.seasonID == self:GetSeasonID() then
-      table.insert(result, dungeon)
-    end
-  end
+  local seasonID = self:GetCurrentSeason()
+  local dungeons = AE_table_filter(dataDungeons, function(dataDungeon)
+    return dataDungeon.seasonID == seasonID
+  end)
 
-  table.sort(result, function(a, b)
+  table.sort(dungeons, function(a, b)
     return strcmputf8i(a.name, b.name) < 0
   end)
 
-  return result
+  return dungeons
 end
 
 function AlterEgo:GetRaids()
-  local result = {}
-  for _, raid in pairs(dataRaids) do
-    if raid.seasonID == self:GetSeasonID() then
-      table.insert(result, raid)
-    end
-  end
+  local seasonID = self:GetCurrentSeason()
+  local raids = AE_table_filter(dataRaids, function(dataRaid)
+    return dataRaid.seasonID == seasonID
+  end)
 
-  table.sort(result, function(a, b)
+  table.sort(raids, function(a, b)
     return a.order < b.order
   end)
 
-  return result
+  return raids
 end
 
+--- Get user characters
+---@param unfiltered boolean|nil
+---@return table
 function AlterEgo:GetCharacters(unfiltered)
   local characters = {}
   for _, character in pairs(self.db.global.characters) do
@@ -667,6 +751,9 @@ end
 
 function AlterEgo:UpdateRaidInstances()
   local character = self:GetCharacter()
+  if not character then
+    return
+  end
   local raids = self:GetRaids();
   local numSavedInstances = GetNumSavedInstances()
   character.raids.savedInstances = {}
@@ -724,6 +811,9 @@ end
 
 function AlterEgo:UpdateCharacterInfo()
   local character = self:GetCharacter()
+  if not character then
+    return
+  end
   local playerName = UnitName("player")
   local playerRealm = GetRealmName()
   local playerLevel = UnitLevel("player")
@@ -828,6 +918,9 @@ end
 
 function AlterEgo:UpdateKeystoneItem()
   local character = self:GetCharacter()
+  if not character then
+    return
+  end
   local dungeons = self:GetDungeons()
   local keystoneItemID = self:GetKeystoneItemID()
   -- character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
@@ -884,6 +977,9 @@ end
 
 function AlterEgo:UpdateVault()
   local character = self:GetCharacter()
+  if not character then
+    return
+  end
   wipe(character.vault.slots or {})
   for i = 1, 3 do
     local slots = C_WeeklyRewards.GetActivities(i)
@@ -905,27 +1001,30 @@ end
 
 function AlterEgo:UpdateMythicPlus()
   local character = self:GetCharacter()
+  if not character then
+    return
+  end
   local dungeons = self:GetDungeons()
   local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
   local runHistory = C_MythicPlus.GetRunHistory(true, true)
   local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
   local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
-  local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
   local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
   local affixes = self:GetAffixes()
 
   -- TODO: Move this to a season task
-  if currentSeason then
-    for _, char in pairs(self.db.global.characters) do
-      if char.currentSeason == nil or char.currentSeason < currentSeason then
-        wipe(char.mythicplus.runHistory or {})
-        wipe(char.mythicplus.dungeons or {})
-        char.mythicplus.rating = 0
-        char.currentSeason = currentSeason
-      end
-    end
-  end
+  -- local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+  -- if currentSeason then
+  --   for _, char in pairs(self.db.global.characters) do
+  --     if char.currentSeason == nil or char.currentSeason < currentSeason then
+  --       wipe(char.mythicplus.runHistory or {})
+  --       wipe(char.mythicplus.dungeons or {})
+  --       char.mythicplus.rating = 0
+  --       char.currentSeason = currentSeason
+  --     end
+  --   end
+  -- end
 
   if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
   if runHistory ~= nil then character.mythicplus.runHistory = runHistory end

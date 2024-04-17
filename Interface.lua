@@ -2,6 +2,7 @@
 function AlterEgo:GetCharacterInfo()
   local dungeons = self:GetDungeons()
   local difficulties = self:GetRaidDifficulties(true)
+  local _, seasonDisplayID = self:GetCurrentSeason()
   return {
     {
       label = CHARACTER,
@@ -222,11 +223,7 @@ function AlterEgo:GetCharacterInfo()
         end
         if character.mythicplus.bestSeasonScore ~= nil then
           bestSeasonScore = character.mythicplus.bestSeasonScore
-          -- local color = C_ChallengeMode.GetDungeonScoreRarityColor(bestSeasonScore)
-          -- if color ~= nil then
-          --     bestSeasonScoreColor = color.GenerateHexColor(color)
-          -- end
-          local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < self:GetSeasonID())
+          local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
           if color ~= nil then
             bestSeasonScoreColor = color
           end
@@ -236,17 +233,6 @@ function AlterEgo:GetCharacterInfo()
           if color ~= nil then
             ratingColor = color
           end
-          -- if self.db.global.useRIOScoreColor and _G.RaiderIO then
-          --     local color = CreateColor(_G.RaiderIO.GetScoreColor(character.mythicplus.rating))
-          --     if color then
-          --         ratingColor = color.GenerateHexColor(color)
-          --     end
-          -- else
-          --     local color = C_ChallengeMode.GetDungeonScoreRarityColor(character.mythicplus.rating)
-          --     if color ~= nil then
-          --         ratingColor = color.GenerateHexColor(color)
-          --     end
-          -- end
           rating = tostring(character.mythicplus.rating)
         end
         GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
@@ -630,6 +616,12 @@ function AlterEgo:GetCharacterInfo()
   }
 end
 
+--- Set the background color for a parent frame
+---@param parent table
+---@param r number
+---@param g number
+---@param b number
+---@param a number
 function AlterEgo:SetBackgroundColor(parent, r, g, b, a)
   if not parent.Background then
     parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
@@ -1893,8 +1885,6 @@ function AlterEgo:UpdateUI()
       end
 
       do -- Affix header
-        -- CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        -- CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
         if CharacterColumn.AffixHeader then
           CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
           CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1915,10 +1905,8 @@ function AlterEgo:UpdateUI()
               end)
             end
             if active then
-              -- AffixFrame.Icon:SetDesaturation(0)
               AffixFrame:SetAlpha(1)
             else
-              -- AffixFrame.Icon:SetDesaturation(1)
               AffixFrame:SetAlpha(0.2)
             end
           end
