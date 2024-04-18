@@ -838,24 +838,26 @@ function AlterEgo:GetWindowSize()
 end
 
 function AlterEgo:CreateUI()
-  local dungeons = self:GetDungeons()
-  local raids = self:GetRaids()
+  local currentAffixes = self:GetCurrentAffixes()
+  local activeWeek = self:GetActiveAffixRotation(currentAffixes)
+  local affixes = self:GetAffixes()
+  local affixRotation = self:GetAffixRotation()
   local difficulties = self:GetRaidDifficulties(true)
+  local dungeons = self:GetDungeons()
   local labels = self:GetCharacterInfo()
+  local raids = self:GetRaids()
   local anchorFrame
 
   local winMain = self:CreateWindow("Main", "AlterEgo", UIParent)
-  local winEquipment = self:CreateWindow("Character", "Character", UIParent)
   local winAffixRotation = self:CreateWindow("Affixes", "Affixes", UIParent)
+  local winEquipment = self:CreateWindow("Character", "Character", UIParent)
   local winKeyManager = self:CreateWindow("KeyManager", "KeyManager", UIParent)
 
   winEquipment.Body.Table = self.Table:New()
   winEquipment.Body.Table.frame:SetParent(winEquipment.Body)
   winEquipment.Body.Table.frame:SetPoint("TOPLEFT", winEquipment.Body, "TOPLEFT")
 
-  winAffixRotation.Body.Table = self.Table:New({
-    rowHeight = 28
-  })
+  winAffixRotation.Body.Table = self.Table:New({rowHeight = 28})
   winAffixRotation.Body.Table.frame:SetParent(winAffixRotation.Body)
   winAffixRotation.Body.Table.frame:SetPoint("TOPLEFT", winAffixRotation.Body, "TOPLEFT")
   winAffixRotation.TitleBar.Text:SetText("Weekly Affixes")
@@ -866,11 +868,27 @@ function AlterEgo:CreateUI()
     for i = 1, 3 do
       local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
       affixButton:SetSize(20, 20)
+      if AE_table_count(currentAffixes) > 0 then
+        local currentAffix = currentAffixes[i]
+        if currentAffix ~= nil then
+          local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
+          affixButton:SetNormalTexture(fileDataID)
+          affixButton:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
+            GameTooltip:SetText(name, 1, 1, 1);
+            GameTooltip:AddLine(desc, nil, nil, nil, true)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
+          end)
+          affixButton:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+          end)
+        end
+      end
       affixButton:SetScript("OnClick", function()
-        local currentAffixes = self:GetCurrentAffixes()
-        local affixRotation = self:GetAffixRotation()
-        local activeWeek = self:GetActiveAffixRotation(currentAffixes)
-        local affixes = self:GetAffixes()
         local data
 
         if AE_table_count(affixRotation) < 1 then
@@ -881,7 +899,7 @@ function AlterEgo:CreateUI()
             rows = {
               {
                 cols = {
-                  {text = "The weekly schedule is currently unknown. Check back next addon update!"}
+                  {text = "The weekly schedule is not updated. Check back next addon update!"}
                 }
               }
             }
@@ -1630,6 +1648,7 @@ function AlterEgo:UpdateUI()
   end
 
   local affixes = self:GetAffixes(true)
+  local currentAffixes = self:GetCurrentAffixes();
   local characters = self:GetCharacters()
   local numCharacters = AE_table_count(characters)
   local dungeons = self:GetDungeons()
@@ -1671,49 +1690,34 @@ function AlterEgo:UpdateUI()
     winMain.Footer:Hide()
   end
 
-  local currentAffixes = self:GetCurrentAffixes();
-  anchorFrame = winMain.TitleBar
-  for i = 1, 3 do
-    local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
-    if affixButton ~= nil then
-      if AE_table_count(currentAffixes) > 0 then
-        local currentAffix = currentAffixes[i]
-        if currentAffix ~= nil then
-          local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
-          affixButton:SetNormalTexture(fileDataID)
-          affixButton:SetScript("OnEnter", function()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
-            GameTooltip:SetText(name, 1, 1, 1);
-            GameTooltip:AddLine(desc, nil, nil, nil, true)
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-            GameTooltip:Show()
-          end)
-          affixButton:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-          end)
-        end
-      end
-      if i == 1 then
-        affixButton:ClearAllPoints()
-        if numCharacters == 1 then
-          affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
-          winMain.TitleBar.Text:Hide()
+  do -- TitleBar
+    anchorFrame = winMain.TitleBar
+    if numCharacters == 1 then
+      winMain.TitleBar.Text:Hide()
+    else
+      winMain.TitleBar.Text:Show()
+    end
+    if currentAffixes and self.db.global.showAffixHeader then
+      winMain.TitleBar.Affixes:Show()
+    else
+      winMain.TitleBar.Affixes:Hide()
+    end
+
+    for i = 1, 3 do
+      local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
+      if affixButton ~= nil then
+        if i == 1 then
+          affixButton:ClearAllPoints()
+          if numCharacters == 1 then
+            affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
+          else
+            affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
+          end
         else
-          affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
-          winMain.TitleBar.Text:Show()
+          affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
         end
-      else
-        affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
+        anchorFrame = affixButton
       end
-      if self.db.global.showAffixHeader then
-        affixButton:Show()
-      else
-        affixButton:Hide()
-      end
-      anchorFrame = affixButton
     end
   end
 
