@@ -1428,7 +1428,6 @@ function AlterEgo:CreateUI()
           checked = self.db.global.announceKeystones.multilineNames,
           keepShownOnClick = true,
           isNotRadio = true,
-          disabled = not self.db.global.announceKeystones.multiline,
           tooltipTitle = "Add character names before each keystone",
           tooltipText = "Character names are only added if multiple chat messages is enabled.",
           tooltipOnButton = true,
