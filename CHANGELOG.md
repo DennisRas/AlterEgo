@@ -17,6 +17,7 @@
 
 - Fixed some string sorting issues with unicode characters
 - Fixed an old bug with the score colors. They should now show the correct colors individually.
+- Fixed a couple of currency bugs. You may have to relog characters to save correct data.
 
 ## v1.1.2 - 2024-04-11
 

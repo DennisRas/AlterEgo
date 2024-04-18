@@ -688,11 +688,11 @@ function AlterEgo:TaskWeeklyReset()
     AE_table_foreach(self.db.global.characters, function(character)
       if character.currencies ~= nil then
         AE_table_foreach(character.currencies, function(currency)
-          if currency.currencyType == "crest" then
+          if currency.currencyType == "crest" and currency.maxQuantity > 0 then
             currency.maxQuantity = currency.maxQuantity + 90
           end
           if currency.currencyType == "catalyst" then
-            currency.quantity = math.max(currency.quantity + 1, 8)
+            currency.quantity = math.min(currency.quantity + 1, 8)
           end
         end)
       end
@@ -1014,6 +1014,7 @@ function AlterEgo:UpdateMythicPlus()
   local affixes = self:GetAffixes()
 
   -- TODO: Move this to a season task
+  -- TODO: Reset currencies too
   -- local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
   -- if currentSeason then
   --   for _, char in pairs(self.db.global.characters) do
