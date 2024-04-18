@@ -276,13 +276,14 @@ local dataCurrentAffixes = {}
 ---@class AffixRotation
 ---@field seasonID number
 ---@field seasonDisplayID number
----@field rotation table<number, table<number, number, number>>
+---@field affixes table<number, table<number, number, number>>
 ---@type table<number, AffixRotation>
 local dataAffixRotations = {
   {
     seasonID = 11,
     seasonDisplayID = 3,
-    rotation = {
+    activation = {2, 7, 14},
+    affixes = {
       {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
       {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
       {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
@@ -295,21 +296,23 @@ local dataAffixRotations = {
       {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
     }
   },
-  -- {
-  --   seasonID = 12,
-  --   rotation = {
-  --     {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
-  --     {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
-  --     {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
-  --     {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
-  --     {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
-  --     {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
-  --     {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
-  --     {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
-  --     {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
-  --     {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
-  --   }
-  -- }
+  {
+    seasonID = 12,
+    seasonDisplayID = 4,
+    activation = {2, 5, 10},
+    affixes = {
+      {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
+      {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
+      {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
+      {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
+      {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
+      {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
+      {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
+      {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
+      {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
+      {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
+    }
+  }
 }
 
 ---@class Keystone
@@ -434,6 +437,7 @@ function AlterEgo:GetCurrentSeason()
   if not cacheSeasonDisplayID then
     cacheSeasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
+  -- return 12, 4
   return cacheSeasonID or 0, cacheSeasonDisplayID or 0
 end
 
@@ -509,14 +513,10 @@ function AlterEgo:GetAffixes(baseOnly)
 end
 
 --- Get affix rotation of the season
----@return table
+---@return table|nil
 function AlterEgo:GetAffixRotation()
   local seasonID = self:GetCurrentSeason()
-  local activeRotation = AE_table_get(dataAffixRotations, "seasonID", seasonID)
-  if activeRotation and activeRotation.rotation then
-    return activeRotation.rotation
-  end
-  return {}
+  return AE_table_get(dataAffixRotations, "seasonID", seasonID)
 end
 
 --- Get the index of the active affix week
@@ -525,8 +525,8 @@ end
 function AlterEgo:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
   local index = 0
-  if currentAffixes then
-    AE_table_foreach(affixRotation, function(affix, i)
+  if currentAffixes and affixRotation then
+    AE_table_foreach(affixRotation.affixes, function(affix, i)
       if affix[1] == currentAffixes[1].id and affix[2] == currentAffixes[2].id and affix[3] == currentAffixes[3].id then
         index = i
       end
