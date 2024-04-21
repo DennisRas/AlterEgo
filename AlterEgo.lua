@@ -81,18 +81,23 @@ function AlterEgo:OnInitialize()
 end
 
 function AlterEgo:OnEnable()
+  self:RequestGameData()
+  self:CheckGameData()
+end
+
+function AlterEgo:RequestGameData()
   C_MythicPlus.RequestCurrentAffixes();
   C_MythicPlus.RequestMapInfo()
   C_MythicPlus.RequestRewards()
   RequestRaidInfo()
-
-  self:OnMythicPlusData()
 end
 
-function AlterEgo:OnMythicPlusData()
-  local seasonID = self:GetCurrentSeason()
-  if seasonID == nil or seasonID == -1 then
-    return self:ScheduleTimer("OnMythicPlusData", 1)
+function AlterEgo:CheckGameData()
+  local seasonID = C_MythicPlus.GetCurrentSeason()
+  local currentUIDisplaySeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+  if seasonID == nil or seasonID == -1 or currentUIDisplaySeason == nil then
+    self:RequestGameData()
+    return self:ScheduleTimer("CheckGameData", 1)
   end
 
   self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "ITEM_CHANGED"}, 3, function()
