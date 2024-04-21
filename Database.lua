@@ -1,4 +1,4 @@
-local dbVersion = 15
+local dbVersion = 16
 local defaultDB = {
   global = {
     weeklyReset = 0,
@@ -603,7 +603,6 @@ function AlterEgo:GetCharacters(unfiltered)
 end
 
 function AlterEgo:UpdateDB()
-  self:TaskWeeklyReset()
   self:UpdateRaidInstances()
   self:UpdateCharacterInfo()
   self:UpdateKeystoneItem()
@@ -645,6 +644,13 @@ function AlterEgo:MigrateDB()
         end
       end
     end
+    if self.db.global.dbVersion == 15 then
+      for _, character in pairs(self.db.global.characters) do
+        if character.currentSeason ~= nil and character.currentSeason == 3 then
+          character.currentSeason = 11
+        end
+      end
+    end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
@@ -677,6 +683,21 @@ function AlterEgo:TaskWeeklyReset()
     end)
   end
   self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
+end
+
+function AlterEgo:TaskSeasonReset()
+  local seasonID = self:GetCurrentSeason()
+  if seasonID then
+    AE_table_foreach(self.db.global.characters, function(character)
+      if character.currentSeason == nil or character.currentSeason < seasonID then
+        wipe(character.mythicplus.runHistory or {})
+        wipe(character.mythicplus.dungeons or {})
+        wipe(character.currencies or {})
+        character.mythicplus.rating = 0
+        character.currentSeason = seasonID
+      end
+    end)
+  end
 end
 
 function AlterEgo:loadGameData()
@@ -982,20 +1003,6 @@ function AlterEgo:UpdateMythicPlus()
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
   local affixes = self:GetAffixes()
-
-  -- TODO: Move this to a season task
-  -- TODO: Reset currencies too
-  -- local currentSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
-  -- if currentSeason then
-  --   for _, char in pairs(self.db.global.characters) do
-  --     if char.currentSeason == nil or char.currentSeason < currentSeason then
-  --       wipe(char.mythicplus.runHistory or {})
-  --       wipe(char.mythicplus.dungeons or {})
-  --       char.mythicplus.rating = 0
-  --       char.currentSeason = currentSeason
-  --     end
-  --   end
-  -- end
 
   if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
   if runHistory ~= nil then character.mythicplus.runHistory = runHistory end

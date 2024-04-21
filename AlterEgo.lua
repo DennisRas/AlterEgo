@@ -127,6 +127,8 @@ function AlterEgo:CheckGameData()
 
   self:loadGameData()
   self:MigrateDB()
+  self:TaskWeeklyReset()
+  self:TaskSeasonReset()
   self:CreateUI()
   self:UpdateDB()
 end
