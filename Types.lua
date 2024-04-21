@@ -15,7 +15,7 @@
 ---@field id number
 ---@field seasonID number
 ---@field seasonDisplayID number
----@field currencyType "crest" | "upgrade" | "catalyst"
+---@field currencyType "crest" | "upgrade" | "catalyst" | "dinar"
 
 ---@class Dungeon
 ---@field seasonID number

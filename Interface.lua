@@ -47,7 +47,8 @@ function AlterEgo:GetCharacterInfo()
           AE_table_foreach(dataCurrencies, function(dataCurrency)
             local characterCurrency = AE_table_get(character.currencies, "id", dataCurrency.id)
             if characterCurrency then
-              local currencyLabel = format("%s %s", CreateSimpleTextureMarkup(characterCurrency.iconFileID), characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
+              local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+              local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
               local currencyValue = characterCurrency.maxQuantity
               if characterCurrency.useTotalEarnedForMaxQty then
                 if characterCurrency.maxQuantity > 0 then

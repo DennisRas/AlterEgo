@@ -363,13 +363,13 @@ local dataCurrencies = {
   {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},    -- Whelpling
   {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},  -- Flightstones
   {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"}, -- Catalyst
-  -- TODO: Find the new currencies
-  -- {seasonID = 12, seasonDisplayID = 4, id = 2709, currencyType = "crest"},    -- Aspect
-  -- {seasonID = 12, seasonDisplayID = 4, id = 2708, currencyType = "crest"},    -- Wyrm
-  -- {seasonID = 12, seasonDisplayID = 4, id = 2707, currencyType = "crest"},    -- Drake
-  -- {seasonID = 12, seasonDisplayID = 4, id = 2706, currencyType = "crest"},    -- Whelpling
-  -- {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},  -- Flightstones
-  -- {seasonID = 12, seasonDisplayID = 4, id = 2796, currencyType = "catalyst"}, -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 2812, currencyType = "crest"},    -- Aspect
+  {seasonID = 12, seasonDisplayID = 4, id = 2809, currencyType = "crest"},    -- Wyrm
+  {seasonID = 12, seasonDisplayID = 4, id = 2807, currencyType = "crest"},    -- Drake
+  {seasonID = 12, seasonDisplayID = 4, id = 2806, currencyType = "crest"},    -- Whelpling
+  {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},  -- Flightstones
+  {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"}, -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar"},    -- Dinar
 }
 
 --- Initiate AceDB
@@ -658,8 +658,8 @@ function AlterEgo:TaskWeeklyReset()
           if currency.currencyType == "crest" and currency.maxQuantity > 0 then
             currency.maxQuantity = currency.maxQuantity + 90
           end
-          if currency.currencyType == "catalyst" then
-            currency.quantity = math.min(currency.quantity + 1, 8)
+          if currency.currencyType == "catalyst" or currency.currencyType == "dinar" then
+            currency.quantity = math.min(currency.quantity + 1, currency.maxQuantity)
           end
         end)
       end
@@ -876,9 +876,11 @@ function AlterEgo:UpdateCharacterInfo()
   end
   AE_table_foreach(dataCurrencies, function(dataCurrency)
     local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-    currency.id = dataCurrency.id
-    currency.currencyType = dataCurrency.currencyType
-    table.insert(character.currencies, currency)
+    if currency then
+      currency.id = dataCurrency.id
+      currency.currencyType = dataCurrency.currencyType
+      table.insert(character.currencies, currency)
+    end
   end)
   character.lastUpdate = GetServerTime()
   self:UpdateUI()

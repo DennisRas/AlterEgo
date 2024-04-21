@@ -7,6 +7,7 @@
 - Added PvP vault progress
 - Added a new setting: Toggle Raid difficulties
 - Added a new setting: Show Awakened raids only (active in Season 4)
+- Added new Season 4 currencies
 
 ### Updated
 
