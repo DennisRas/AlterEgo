@@ -17,6 +17,7 @@
 - Updated addon description with new features
 - Updated addon events and UI updates for a better performance
 - Moved and clarified the settings regarding manual keystone announcements
+- Reduce and optimize addon images
 
 ### Fixed
 
