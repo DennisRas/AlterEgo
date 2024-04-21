@@ -534,7 +534,7 @@ function AlterEgo:GetRaids(unfiltered)
     return raids
   end
 
-  if self.db.global.raids.modifiedInstanceOnly then
+  if self.db.global.raids.modifiedInstanceOnly and seasonID == 12 then
     raids = AE_table_filter(raids, function(raid)
       return raid.modifiedInstanceInfo
     end)
