@@ -45,6 +45,7 @@
 ---@field order number
 ---@field numEncounters number
 ---@field encounters table
+---@field modifiedInstanceInfo table|nil
 ---@field abbr string
 ---@field name string
 ---@field short string?

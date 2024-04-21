@@ -649,7 +649,7 @@ end
 function AlterEgo:CreateCharacterColumn(parent, index)
   local affixes = self:GetAffixes(true)
   local dungeons = self:GetDungeons()
-  local raids = self:GetRaids()
+  local raids = self:GetRaids(true)
   local difficulties = self:GetRaidDifficulties(true)
   local anchorFrame
 
@@ -854,12 +854,13 @@ end
 function AlterEgo:CreateUI()
   local currentAffixes = self:GetCurrentAffixes()
   local activeWeek = self:GetActiveAffixRotation(currentAffixes)
+  local seasonID = self:GetCurrentSeason()
   local affixes = self:GetAffixes()
   local affixRotation = self:GetAffixRotation()
   local difficulties = self:GetRaidDifficulties(true)
   local dungeons = self:GetDungeons()
   local labels = self:GetCharacterInfo()
-  local raids = self:GetRaids()
+  local raids = self:GetRaids(true)
   local anchorFrame
 
   local winMain = self:CreateWindow("Main", "AlterEgo", UIParent)
@@ -1114,6 +1115,21 @@ function AlterEgo:CreateUI()
             hasArrow = true,
             menuList = "raiddifficulties"
           })
+          if seasonID == 12 then
+            UIDropDownMenu_AddButton({
+              text = "Show |cFF00FFFFAwakened|r raids only",
+              checked = self.db.global.raids and self.db.global.raids.modifiedInstanceOnly,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
+              tooltipText = "It's time to move on!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                self.db.global.raids.modifiedInstanceOnly = checked
+                self:UpdateUI()
+              end
+            })
+          end
           UIDropDownMenu_AddButton({
             text = "Show difficulty colors",
             checked = self.db.global.raids and self.db.global.raids.colors,
@@ -1539,18 +1555,33 @@ function AlterEgo:CreateUI()
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(RaidFrame, "ANCHOR_RIGHT")
         GameTooltip:SetText(raid.name, 1, 1, 1);
+        if raid.modifiedInstanceInfo then
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
+        end
         GameTooltip:Show()
       end)
       RaidFrame:SetScript("OnLeave", function()
         GameTooltip:Hide()
       end)
       RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
-      RaidFrame.Text:SetPoint("TOPLEFT", RaidFrame, "TOPLEFT", self.constants.sizes.padding, 0)
-      RaidFrame.Text:SetPoint("BOTTOMRIGHT", RaidFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
+      RaidFrame.Text:SetPoint("LEFT", RaidFrame, "LEFT", self.constants.sizes.padding, 0)
       RaidFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
       RaidFrame.Text:SetJustifyH("LEFT")
       RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
+      RaidFrame.Text:SetWordWrap(false)
       RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+      RaidFrame.ModifiedIcon = RaidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
+      RaidFrame.ModifiedIcon:SetSize(18, 18)
+      RaidFrame.ModifiedIcon:SetPoint("RIGHT", RaidFrame, "RIGHT", -(self.constants.sizes.padding / 2), 0)
+      if raid.modifiedInstanceInfo then
+        RaidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
+        RaidFrame.ModifiedIcon:Show()
+        RaidFrame.Text:SetPoint("RIGHT", RaidFrame.ModifiedIcon, "LEFT", -(self.constants.sizes.padding / 2), 0)
+      else
+        RaidFrame.ModifiedIcon:Hide()
+        RaidFrame.Text:SetPoint("RIGHT", RaidFrame, "RIGHT", -self.constants.sizes.padding, 0)
+      end
       anchorFrame = RaidFrame
 
       for difficultyIndex, difficulty in ipairs(difficulties) do
@@ -1639,7 +1670,7 @@ function AlterEgo:UpdateUI()
   local characters = self:GetCharacters()
   local numCharacters = AE_table_count(characters)
   local dungeons = self:GetDungeons()
-  local raids = self:GetRaids()
+  local raids = self:GetRaids(true)
   local difficulties = self:GetRaidDifficulties(true)
   local labels = self:GetCharacterInfo()
   local anchorFrame
@@ -1779,10 +1810,10 @@ function AlterEgo:UpdateUI()
   end
 
   do -- Raids & Difficulties
-    for raidIndex in ipairs(raids) do
+    for raidIndex, raid in ipairs(raids) do
       local RaidFrame = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
       if RaidFrame then
-        if self.db.global.raids.enabled then
+        if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
           RaidFrame:Show()
           RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
           RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -2010,7 +2041,7 @@ function AlterEgo:UpdateUI()
       do -- Raid Rows
         for raidIndex, raid in ipairs(raids) do
           local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
-          if self.db.global.raids.enabled then
+          if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
             RaidFrame:Show()
             RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")

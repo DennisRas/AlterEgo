@@ -1,4 +1,4 @@
-local dbVersion = 14
+local dbVersion = 15
 local defaultDB = {
   global = {
     weeklyReset = 0,
@@ -29,7 +29,8 @@ local defaultDB = {
       colors = true,
       currentTierOnly = true,
       hiddenDifficulties = {},
-      boxes = false
+      boxes = false,
+      modifiedInstanceOnly = true,
     },
     interface = {
       -- fontSize = 12,
@@ -338,12 +339,12 @@ local dataDungeons = {
 
 ---@type Raid[]
 local dataRaids = {
-  {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, abbr = "VOTI", name = "Vault of the Incarnates"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
+  {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
 }
 
 ---@type RaidDifficulty[]
@@ -517,8 +518,9 @@ function AlterEgo:GetDungeons()
 end
 
 --- Get all of the raids in the current season
+---@param unfiltered boolean?
 ---@return Raid[]
-function AlterEgo:GetRaids()
+function AlterEgo:GetRaids(unfiltered)
   local seasonID = self:GetCurrentSeason()
   local raids = AE_table_filter(dataRaids, function(dataRaid)
     return dataRaid.seasonID == seasonID
@@ -527,6 +529,16 @@ function AlterEgo:GetRaids()
   table.sort(raids, function(a, b)
     return a.order < b.order
   end)
+
+  if unfiltered then
+    return raids
+  end
+
+  if self.db.global.raids.modifiedInstanceOnly then
+    raids = AE_table_filter(raids, function(raid)
+      return raid.modifiedInstanceInfo
+    end)
+  end
 
   return raids
 end
@@ -687,6 +699,7 @@ function AlterEgo:loadGameData()
       }
       raid.encounters[encounterIndex] = encounter
     end
+    raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
   end
 
   for _, dungeon in pairs(dataDungeons) do
