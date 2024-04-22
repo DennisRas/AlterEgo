@@ -1,30 +1,30 @@
 # Changelog
 
-## v1.1.3 - 2024-04-??
+## v1.1.3 - 2024-04-22
 
 ### Added
 
-- Added PvP vault progress
 - Added a new setting: Toggle Raid difficulties
+- Added a new setting: Show PvP vault progress
 - Added a new setting: Show Awakened raids only (active in Season 4)
-- Added new Season 4 currencies (active in Season 4)
-- Added a new icon for the currently Awakened raid (active in Season 4)
+- Added Season 4 currencies (active in Season 4)
+- Added a new raid icon for the active Awakened raid (active in Season 4)
 - Added a video spotlight (Thanks [@Sunshade](https://www.youtube.com/@SunshadeWoW))
 
 ### Updated
 
 - Updated Season 4 keystone data (active in Season 4)
-- Updated addon description with new features
-- Updated addon events and UI updates for a better performance
+- Updated the addon description with new features
+- Updated the addon events and UI updates for a better performance
 - Moved and clarified the settings regarding manual keystone announcements
-- Reduce and optimize addon images
+- Reduced and optimized addon images. Addon package is now much, much smaller
 
 ### Fixed
 
-- Fixed some string sorting issues with unicode characters
-- Fixed an old bug with the score colors. They should now show the correct colors individually.
-- Fixed a couple of currency bugs. You may have to relog characters to save correct data.
-- Fixed some bugs with currencies having their maxQuantity removed by Blizzard
+- Fixed string sorting issues with unicode characters
+- Fixed an old bug with the score colors. They will now show the correct colors individually
+- Fixed a couple of currency bugs. You may have to relog characters to save new data
+- Fixed some bugs for when currencies have their maxQuantity removed by Blizzard
 
 ## v1.1.2 - 2024-04-11
 
