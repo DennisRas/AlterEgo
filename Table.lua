@@ -7,8 +7,8 @@ function Table:New(config)
     rowFrames = {},
     config = {
       width = 600,
-      rowHeight = AlterEgo.constants.sizes.row,
-      cellPadding = AlterEgo.constants.sizes.padding
+      rowHeight = 22,
+      cellPadding = 8,
     },
     data = {
       columns = {
