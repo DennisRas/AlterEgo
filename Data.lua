@@ -1,5 +1,4 @@
 local addonName, AlterEgo = ...
-local Core = AlterEgo.Core
 local Utils = AlterEgo.Utils
 local dbVersion = 16
 local Data = {}
@@ -858,9 +857,9 @@ function Data:UpdateCharacterInfo()
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
       expacID, setID, isCraftingReagent = GetItemInfo(inventoryItemLink)
 
-      Data.tooltipScan:ClearLines()
-      Data.tooltipScan:SetHyperlink(inventoryItemLink)
-      Utils:TableForEach({Data.tooltipScan:GetRegions()}, function(region)
+      self.tooltipScan:ClearLines()
+      self.tooltipScan:SetHyperlink(inventoryItemLink)
+      Utils:TableForEach({self.tooltipScan:GetRegions()}, function(region)
         if region:IsObjectType("FontString") then
           local text = region:GetText()
           if text then
