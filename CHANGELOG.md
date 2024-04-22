@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.4 - 2024-04-22
+
+### Fixed
+
+- Fixed a bug with the raid section not showing before the new season (Thanks Kaivalya)
+
 ## v1.1.3 - 2024-04-22
 
 ### Added
