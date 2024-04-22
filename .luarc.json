@@ -146,6 +146,7 @@
         "UIDropDownMenuButton_OpenColorPicker",
         "CreateSimpleTextureMarkup",
         "ITEM_UPGRADE_TOOLTIP_FORMAT_STRING",
-        "RED_FONT_COLOR"
+        "RED_FONT_COLOR",
+        "PVPUtil"
     ]
 }
