@@ -1,3 +1,5 @@
+local addonName, AlterEgo = ...
+local Utils = AlterEgo.Utils
 local Table = {}
 AlterEgo.Table = Table
 
@@ -77,12 +79,12 @@ function Table:Update()
       rowFrame:SetPoint("TOPRIGHT", rowFrames[rowIndex - 1], "BOTTOMRIGHT", 0, 0)
 
       if rowIndex % 2 == 1 then
-        AlterEgo:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
+        Utils:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
       end
     else
       rowFrame:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, 0)
       rowFrame:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", 0, 0)
-      -- AlterEgo:SetBackgroundColor(rowFrame, 0, 0, 0, .3)
+      -- Utils:SetBackgroundColor(rowFrame, 0, 0, 0, .3)
     end
 
     rowFrame:SetHeight(self.config.rowHeight)
@@ -119,22 +121,22 @@ function Table:Update()
           column.OnEnter(column)
           GameTooltip:Show()
           if not column.backgroundColor then
-            AlterEgo:SetBackgroundColor(colFrame, 1, 1, 1, 0.05)
+            Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0.05)
           end
         end)
         colFrame:SetScript("OnLeave", function()
           GameTooltip:Hide()
           if not column.backgroundColor then
-            AlterEgo:SetBackgroundColor(colFrame, 1, 1, 1, 0)
+            Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0)
           end
         end)
       else
         if not column.backgroundColor then
           colFrame:SetScript("OnEnter", function()
-            AlterEgo:SetBackgroundColor(colFrame, 1, 1, 1, 0.05)
+            Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0.05)
           end)
           colFrame:SetScript("OnLeave", function()
-            AlterEgo:SetBackgroundColor(colFrame, 1, 1, 1, 0)
+            Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0)
           end)
         end
       end
@@ -146,7 +148,7 @@ function Table:Update()
       end
 
       if column.backgroundColor then
-        AlterEgo:SetBackgroundColor(colFrame, column.backgroundColor.r, column.backgroundColor.g, column.backgroundColor.b, column.backgroundColor.a)
+        Utils:SetBackgroundColor(colFrame, column.backgroundColor.r, column.backgroundColor.g, column.backgroundColor.b, column.backgroundColor.a)
       end
 
       colFrame:SetSize(self.data.columns[colIndex].width, self.config.rowHeight)

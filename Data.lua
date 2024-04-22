@@ -1,46 +1,55 @@
+local addonName, AlterEgo = ...
+local Core = AlterEgo.Core
+local Utils = AlterEgo.Utils
 local dbVersion = 16
-local defaultDB = {
-  global = {
-    weeklyReset = 0,
-    characters = {},
-    minimap = {
-      minimapPos = 195,
-      hide = false,
-      lock = false
-    },
-    sorting = "lastUpdate",
-    showTiers = true,
-    showAffixColors = true,
-    showAffixHeader = true,
-    showZeroRatedCharacters = true,
-    showRealms = true,
-    announceKeystones = {
-      autoParty = true,
-      autoGuild = false,
-      multiline = false,
-      multilineNames = false,
-    },
-    announceResets = true,
-    pvp = {
-      enabled = false,
-    },
-    raids = {
-      enabled = true,
-      colors = true,
-      currentTierOnly = true,
-      hiddenDifficulties = {},
-      boxes = false,
-      modifiedInstanceOnly = true,
-    },
-    interface = {
-      -- fontSize = 12,
-      windowScale = 100,
-      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-    },
-    useRIOScoreColor = false,
-  }
-}
-local defaultCharacter = {
+local Data = {}
+AlterEgo.Data = Data
+Data.db = LibStub("AceDB-3.0"):New(
+  "AlterEgoDB",
+  {
+    global = {
+      weeklyReset = 0,
+      characters = {},
+      minimap = {
+        minimapPos = 195,
+        hide = false,
+        lock = false
+      },
+      sorting = "lastUpdate",
+      showTiers = true,
+      showAffixColors = true,
+      showAffixHeader = true,
+      showZeroRatedCharacters = true,
+      showRealms = true,
+      announceKeystones = {
+        autoParty = true,
+        autoGuild = false,
+        multiline = false,
+        multilineNames = false,
+      },
+      announceResets = true,
+      pvp = {
+        enabled = false,
+      },
+      raids = {
+        enabled = true,
+        colors = true,
+        currentTierOnly = true,
+        hiddenDifficulties = {},
+        boxes = false,
+        modifiedInstanceOnly = true,
+      },
+      interface = {
+        -- fontSize = 12,
+        windowScale = 100,
+        windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+      },
+      useRIOScoreColor = false,
+    }
+  },
+  true
+)
+Data.defaultCharacter = {
   GUID = "",
   lastUpdate = 0,
   currentSeason = 0,
@@ -209,11 +218,11 @@ local defaultCharacter = {
   },
 }
 
-local tooltipScan = CreateFrame("GameTooltip", "AE_Tooltip_Scan", nil, "GameTooltipTemplate") --[[@as GameTooltip]]
-tooltipScan:SetOwner(UIParent, "ANCHOR_NONE")
+Data.tooltipScan = CreateFrame("GameTooltip", "AE_Tooltip_Scan", nil, "GameTooltipTemplate") --[[@as GameTooltip]]
+Data.tooltipScan:SetOwner(UIParent, "ANCHOR_NONE")
 
 ---@type Inventory[]
-local dataInventory = {
+Data.inventory = {
   {id = INVSLOT_HEAD,     name = "HEADSLOT"},
   {id = INVSLOT_NECK,     name = "NECKSLOT"},
   {id = INVSLOT_SHOULDER, name = "SHOULDERSLOT"},
@@ -246,7 +255,7 @@ local AFFIX_AFFLICTED = 135
 local AFFIX_INCORPOREAL = 136
 
 ---@type Affix[]
-local dataAffixes = {
+Data.affixes = {
   {id = AFFIX_VOLCANIC,    base = 0, name = "", description = "", fileDataID = nil},
   {id = AFFIX_RAGING,      base = 0, name = "", description = "", fileDataID = nil},
   {id = AFFIX_BOLSTERING,  base = 0, name = "", description = "", fileDataID = nil},
@@ -261,12 +270,9 @@ local dataAffixes = {
   {id = AFFIX_INCORPOREAL, base = 0, name = "", description = "", fileDataID = nil},
 }
 
----@type MythicPlusKeystoneAffix[]
-local dataCurrentAffixes = {}
-
 -- Rotation: https://mythicpl.us
 ---@type AffixRotation[]
-local dataAffixRotations = {
+Data.affixRotations = {
   {
     seasonID = 11,
     seasonDisplayID = 3,
@@ -304,13 +310,13 @@ local dataAffixRotations = {
 }
 
 ---@type Keystone[]
-local dataKeystones = {
+Data.keystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 180653},
   {seasonID = 12, seasonDisplayID = 4, itemID = 151086},
 }
 
 ---@type Dungeon[]
-local dataDungeons = {
+Data.dungeons = {
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078, time = 0, abbr = "NL",   name = "Neltharion's Lair"},
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071, time = 0, abbr = "FH",   name = "Freehold"},
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 251, mapId = 1841, spellID = 410074, time = 0, abbr = "UNDR", name = "The Underrot"},
@@ -338,7 +344,7 @@ local dataDungeons = {
 }
 
 ---@type Raid[]
-local dataRaids = {
+Data.raids = {
   {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
   {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
   {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
@@ -348,7 +354,7 @@ local dataRaids = {
 }
 
 ---@type RaidDifficulty[]
-local dataRaidDifficulties = {
+Data.raidDifficulties = {
   {id = 14, color = RARE_BLUE_COLOR,        order = 2, abbr = "N",   name = "Normal"},
   {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "HC",  name = "Heroic"},
   {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M",   name = "Mythic"},
@@ -356,7 +362,7 @@ local dataRaidDifficulties = {
 }
 
 ---@type Currency[]
-local dataCurrencies = {
+Data.currencies = {
   {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},    -- Aspect
   {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},    -- Wyrm
   {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},    -- Drake
@@ -372,30 +378,31 @@ local dataCurrencies = {
   {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar"},    -- Dinar
 }
 
---- Initiate AceDB
-function AlterEgo:InitDB()
-  self.db = self.Libs.AceDB:New("AlterEgoDB", defaultDB, true)
-end
+Data.cache = {
+  seasonID = nil,
+  seasonDisplayID = nil,
+  ---@type MythicPlusKeystoneAffix[]
+  currentAffixes = {}
+}
 
-local cacheSeasonID, cacheSeasonDisplayID
 --- Get the current Season IDs
 ---@return number, number
-function AlterEgo:GetCurrentSeason()
-  if not cacheSeasonID then
-    cacheSeasonID = C_MythicPlus.GetCurrentSeason()
+function Data:GetCurrentSeason()
+  if not self.cache.seasonID then
+    self.cache.seasonID = C_MythicPlus.GetCurrentSeason()
   end
-  if not cacheSeasonDisplayID then
-    cacheSeasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
+  if not self.cache.seasonDisplayID then
+    self.cache.seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
   -- return 12, 4
-  return cacheSeasonID or 0, cacheSeasonDisplayID or 0
+  return self.cache.seasonID or 0, self.cache.seasonDisplayID or 0
 end
 
 --- Get the currencies of the current season
 ---@return Currency[]
-function AlterEgo:GetCurrencies()
+function Data:GetCurrencies()
   local seasonID = self:GetCurrentSeason()
-  return AE_table_filter(dataCurrencies, function(dataCurrency)
+  return Utils:TableFilter(self.currencies, function(dataCurrency)
     return dataCurrency.seasonID == seasonID
   end)
 end
@@ -403,7 +410,7 @@ end
 --- Get stored character by GUID
 ---@param playerGUID string?
 ---@return table|nil
-function AlterEgo:GetCharacter(playerGUID)
+function Data:GetCharacter(playerGUID)
   if playerGUID == nil then
     playerGUID = UnitGUID("player")
   end
@@ -413,7 +420,7 @@ function AlterEgo:GetCharacter(playerGUID)
   end
 
   if self.db.global.characters[playerGUID] == nil then
-    self.db.global.characters[playerGUID] = AE_table_copy(defaultCharacter)
+    self.db.global.characters[playerGUID] = Utils:TableCopy(Data.defaultCharacter)
   end
 
   self.db.global.characters[playerGUID].GUID = playerGUID
@@ -424,9 +431,9 @@ end
 ---Get all of the raids in the current season
 ---@param unfiltered boolean?
 ---@return RaidDifficulty[]
-function AlterEgo:GetRaidDifficulties(unfiltered)
+function Data:GetRaidDifficulties(unfiltered)
   local result = {}
-  for _, difficulty in pairs(dataRaidDifficulties) do
+  for _, difficulty in pairs(self.raidDifficulties) do
     table.insert(result, difficulty)
   end
 
@@ -450,37 +457,37 @@ end
 
 --- Get the current affixes of the season
 ---@return MythicPlusKeystoneAffix[]
-function AlterEgo:GetCurrentAffixes()
-  if AE_table_count(dataCurrentAffixes) == 0 then
-    dataCurrentAffixes = C_MythicPlus.GetCurrentAffixes()
+function Data:GetCurrentAffixes()
+  if Utils:TableCount(self.cache.currentAffixes) == 0 then
+    self.cache.currentAffixes = C_MythicPlus.GetCurrentAffixes()
   end
-  return dataCurrentAffixes
+  return self.cache.currentAffixes
 end
 
 --- Get either all affixes or just the base seasonal affixes
 ---@param baseOnly boolean?
 ---@return Affix[]
-function AlterEgo:GetAffixes(baseOnly)
-  return AE_table_filter(dataAffixes, function(dataAffix)
+function Data:GetAffixes(baseOnly)
+  return Utils:TableFilter(self.affixes, function(dataAffix)
     return not baseOnly or dataAffix.base == 1
   end)
 end
 
 --- Get affix rotation of the season
 ---@return AffixRotation|nil
-function AlterEgo:GetAffixRotation()
+function Data:GetAffixRotation()
   local seasonID = self:GetCurrentSeason()
-  return AE_table_get(dataAffixRotations, "seasonID", seasonID)
+  Utils:TableGet(self.affixRotations, "seasonID", seasonID)
 end
 
 --- Get the index of the active affix week
 ---@param currentAffixes MythicPlusKeystoneAffix|nil
 ---@return number
-function AlterEgo:GetActiveAffixRotation(currentAffixes)
+function Data:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
   local index = 0
   if currentAffixes and affixRotation then
-    AE_table_foreach(affixRotation.affixes, function(affix, i)
+    Utils:TableForEach(affixRotation.affixes, function(affix, i)
       if affix[1] == currentAffixes[1].id and affix[2] == currentAffixes[2].id and affix[3] == currentAffixes[3].id then
         index = i
       end
@@ -491,9 +498,9 @@ end
 
 --- Get the Keystone ItemID of the current season
 ---@return Keystone|nil
-function AlterEgo:GetKeystoneItemID()
+function Data:GetKeystoneItemID()
   local seasonID = self:GetCurrentSeason()
-  local keystone = AE_table_get(dataKeystones, "seasonID", seasonID)
+  local keystone = Utils:TableGet(self.keystones, "seasonID", seasonID)
 
   if keystone ~= nil then
     return keystone.itemID
@@ -504,9 +511,9 @@ end
 
 --- Get all of the M+ dungeons in the current season
 ---@return Dungeon[]
-function AlterEgo:GetDungeons()
+function Data:GetDungeons()
   local seasonID = self:GetCurrentSeason()
-  local dungeons = AE_table_filter(dataDungeons, function(dataDungeon)
+  local dungeons = Utils:TableFilter(self.dungeons, function(dataDungeon)
     return dataDungeon.seasonID == seasonID
   end)
 
@@ -520,9 +527,9 @@ end
 --- Get all of the raids in the current season
 ---@param unfiltered boolean?
 ---@return Raid[]
-function AlterEgo:GetRaids(unfiltered)
+function Data:GetRaids(unfiltered)
   local seasonID = self:GetCurrentSeason()
-  local raids = AE_table_filter(dataRaids, function(dataRaid)
+  local raids = Utils:TableFilter(self.raids, function(dataRaid)
     return dataRaid.seasonID == seasonID
   end)
 
@@ -535,7 +542,7 @@ function AlterEgo:GetRaids(unfiltered)
   end
 
   if self.db.global.raids.modifiedInstanceOnly and seasonID == 12 then
-    raids = AE_table_filter(raids, function(raid)
+    raids = Utils:TableFilter(raids, function(raid)
       return raid.modifiedInstanceInfo
     end)
   end
@@ -546,7 +553,7 @@ end
 --- Get user characters
 ---@param unfiltered boolean?
 ---@return table
-function AlterEgo:GetCharacters(unfiltered)
+function Data:GetCharacters(unfiltered)
   local characters = {}
   for _, character in pairs(self.db.global.characters) do
     if character.info.level ~= nil and character.info.level == 70 then
@@ -602,7 +609,7 @@ function AlterEgo:GetCharacters(unfiltered)
   return charactersFiltered
 end
 
-function AlterEgo:UpdateDB()
+function Data:UpdateDB()
   self:UpdateRaidInstances()
   self:UpdateCharacterInfo()
   self:UpdateKeystoneItem()
@@ -610,7 +617,7 @@ function AlterEgo:UpdateDB()
   self:UpdateMythicPlus()
 end
 
-function AlterEgo:MigrateDB()
+function Data:MigrateDB()
   if type(self.db.global.dbVersion) ~= "number" then
     self.db.global.dbVersion = dbVersion
   end
@@ -633,9 +640,9 @@ function AlterEgo:MigrateDB()
       for characterIndex in pairs(self.db.global.characters) do
         local character = self.db.global.characters[characterIndex]
         if character.mythicplus.dungeons ~= nil then
-          AE_table_foreach(character.mythicplus.dungeons, function(dungeon)
-            AE_table_foreach(dungeon.affixScores, function(affixScore)
-              local affix = AE_table_get(affixes, "name", affixScore.name)
+          Utils:TableForEach(character.mythicplus.dungeons, function(dungeon)
+            Utils:TableForEach(dungeon.affixScores, function(affixScore)
+              local affix = Utils:TableGet(affixes, "name", affixScore.name)
               if affixScore.id == nil then
                 affixScore.id = affix and affix.id or 0
               end
@@ -656,11 +663,11 @@ function AlterEgo:MigrateDB()
   end
 end
 
-function AlterEgo:TaskWeeklyReset()
+function Data:TaskWeeklyReset()
   if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
-    AE_table_foreach(self.db.global.characters, function(character)
+    Utils:TableForEach(self.db.global.characters, function(character)
       if character.currencies ~= nil then
-        AE_table_foreach(character.currencies, function(currency)
+        Utils:TableForEach(character.currencies, function(currency)
           if currency.currencyType == "crest" and currency.maxQuantity > 0 then
             currency.maxQuantity = currency.maxQuantity + 90
           end
@@ -669,12 +676,12 @@ function AlterEgo:TaskWeeklyReset()
           end
         end)
       end
-      AE_table_foreach(character.vault.slots, function(slot)
+      Utils:TableForEach(character.vault.slots, function(slot)
         if slot.progress >= slot.threshold then
           character.vault.hasAvailableRewards = true
         end
       end)
-      AE_table_foreach(character.mythicplus.runHistory, function(run)
+      Utils:TableForEach(character.mythicplus.runHistory, function(run)
         run.thisWeek = false
       end)
       wipe(character.vault.slots or {})
@@ -685,10 +692,10 @@ function AlterEgo:TaskWeeklyReset()
   self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
 end
 
-function AlterEgo:TaskSeasonReset()
+function Data:TaskSeasonReset()
   local seasonID = self:GetCurrentSeason()
   if seasonID then
-    AE_table_foreach(self.db.global.characters, function(character)
+    Utils:TableForEach(self.db.global.characters, function(character)
       if character.currentSeason == nil or character.currentSeason < seasonID then
         wipe(character.mythicplus.runHistory or {})
         wipe(character.mythicplus.dungeons or {})
@@ -700,8 +707,8 @@ function AlterEgo:TaskSeasonReset()
   end
 end
 
-function AlterEgo:loadGameData()
-  for _, raid in pairs(dataRaids) do
+function Data:loadGameData()
+  for _, raid in pairs(self.raids) do
     -- EncounterJournal Quirk: This has to be called first before we can get encounter journal info.
     EJ_SelectInstance(raid.journalInstanceID)
     wipe(raid.encounters or {})
@@ -723,14 +730,14 @@ function AlterEgo:loadGameData()
     raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
   end
 
-  for _, dungeon in pairs(dataDungeons) do
+  for _, dungeon in pairs(self.dungeons) do
     local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
     dungeon.name = dungeonName
     dungeon.time = dungeonTimeLimit
     dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
   end
 
-  for _, affix in pairs(dataAffixes) do
+  for affixIndex, affix in pairs(self.affixes) do
     local name, description, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id);
     affix.name = name
     affix.description = description
@@ -738,7 +745,7 @@ function AlterEgo:loadGameData()
   end
 end
 
-function AlterEgo:UpdateRaidInstances()
+function Data:UpdateRaidInstances()
   local character = self:GetCharacter()
   if not character then
     return
@@ -749,7 +756,7 @@ function AlterEgo:UpdateRaidInstances()
   if numSavedInstances > 0 then
     for savedInstanceIndex = 1, numSavedInstances do
       local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
-      local raid = AE_table_get(raids, "instanceID", instanceID)
+      local raid = Utils:TableGet(raids, "instanceID", instanceID)
       local savedInstance = {
         index = savedInstanceIndex,
         id = lockoutId,
@@ -778,7 +785,7 @@ function AlterEgo:UpdateRaidInstances()
         local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
         local instanceEncounterID = 0
         if raid then
-          local raidEncounter = AE_table_get(raid.encounters, "name", bossName)
+          local raidEncounter = Utils:TableGet(raid.encounters, "name", bossName)
           if raidEncounter then
             instanceEncounterID = raidEncounter.instanceEncounterID
           end
@@ -798,7 +805,7 @@ function AlterEgo:UpdateRaidInstances()
   self:UpdateUI()
 end
 
-function AlterEgo:UpdateCharacterInfo()
+function Data:UpdateCharacterInfo()
   local character = self:GetCharacter()
   if not character then
     return
@@ -814,15 +821,15 @@ function AlterEgo:UpdateCharacterInfo()
   if playerName then character.info.name = playerName end
   if playerRealm then character.info.realm = playerRealm end
   if playerLevel then character.info.level = playerLevel end
-  if type(character.info.race) ~= "table" then character.info.race = defaultCharacter.info.race end
+  if type(character.info.race) ~= "table" then character.info.race = Data.defaultCharacter.info.race end
   if playerRaceName then character.info.race.name = playerRaceName end
   if playerRaceFile then character.info.race.file = playerRaceFile end
   if playerRaceID then character.info.race.id = playerRaceID end
-  if type(character.info.class) ~= "table" then character.info.class = defaultCharacter.info.class end
+  if type(character.info.class) ~= "table" then character.info.class = Data.defaultCharacter.info.class end
   if playerClassName then character.info.class.name = playerClassName end
   if playerClassFile then character.info.class.file = playerClassFile end
   if playerClassID then character.info.class.id = playerClassID end
-  if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = defaultCharacter.info.factionGroup end
+  if type(character.info.factionGroup) ~= "table" then character.info.factionGroup = Data.defaultCharacter.info.factionGroup end
   if playerFactionGroupEnglish then character.info.factionGroup.english = playerFactionGroupEnglish end
   if playerFactionGroupLocalized then character.info.factionGroup.localized = playerFactionGroupLocalized end
   if avgItemLevel then character.info.ilvl.level = avgItemLevel end
@@ -843,7 +850,7 @@ function AlterEgo:UpdateCharacterInfo()
   local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
   upgradePattern = upgradePattern:format("(.+)", "(%d)", "(%d)")
-  for _, slot in ipairs(dataInventory) do
+  for slotIndex, slot in ipairs(self.inventory) do
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if inventoryItemLink then
       local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
@@ -851,9 +858,9 @@ function AlterEgo:UpdateCharacterInfo()
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
       expacID, setID, isCraftingReagent = GetItemInfo(inventoryItemLink)
 
-      tooltipScan:ClearLines()
-      tooltipScan:SetHyperlink(inventoryItemLink)
-      AE_table_foreach({tooltipScan:GetRegions()}, function(region)
+      Data.tooltipScan:ClearLines()
+      Data.tooltipScan:SetHyperlink(inventoryItemLink)
+      Utils:TableForEach({Data.tooltipScan:GetRegions()}, function(region)
         if region:IsObjectType("FontString") then
           local text = region:GetText()
           if text then
@@ -895,7 +902,7 @@ function AlterEgo:UpdateCharacterInfo()
       end
     end
   end
-  AE_table_foreach(dataCurrencies, function(dataCurrency)
+  Utils:TableForEach(self.currencies, function(dataCurrency)
     local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
     if currency then
       currency.id = dataCurrency.id
@@ -907,14 +914,14 @@ function AlterEgo:UpdateCharacterInfo()
   self:UpdateUI()
 end
 
-function AlterEgo:UpdateKeystoneItem()
+function Data:UpdateKeystoneItem()
   local character = self:GetCharacter()
   if not character then
     return
   end
   local dungeons = self:GetDungeons()
   local keystoneItemID = self:GetKeystoneItemID()
-  -- character.mythicplus.keystone = AE_table_copy(defaultCharacter.mythicplus.keystone)
+  -- character.mythicplus.keystone = Utils:TableCopy(Data.defaultCharacter.mythicplus.keystone)
   if keystoneItemID ~= nil then
     for bagId = 0, NUM_BAG_SLOTS do
       for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
@@ -922,7 +929,7 @@ function AlterEgo:UpdateKeystoneItem()
         if itemId and itemId == keystoneItemID then
           local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
           local _, _, challengeModeID, level = strsplit(":", itemLink)
-          local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
+          local dungeon = Utils:TableGet(dungeons, "challengeModeID", tonumber(challengeModeID))
           if dungeon then
             local newKeystone = false
             if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
@@ -966,7 +973,7 @@ function AlterEgo:UpdateKeystoneItem()
   self:UpdateUI()
 end
 
-function AlterEgo:UpdateVault()
+function Data:UpdateVault()
   local character = self:GetCharacter()
   if not character then
     return
@@ -974,7 +981,7 @@ function AlterEgo:UpdateVault()
   wipe(character.vault.slots or {})
   for i = 1, 3 do
     local slots = C_WeeklyRewards.GetActivities(i)
-    AE_table_foreach(slots, function(slot)
+    Utils:TableForEach(slots, function(slot)
       slot.exampleRewardLink = ""
       slot.exampleRewardUpgradeLink = ""
       if slot.progress >= slot.threshold then
@@ -990,7 +997,7 @@ function AlterEgo:UpdateVault()
   self:UpdateUI()
 end
 
-function AlterEgo:UpdateMythicPlus()
+function Data:UpdateMythicPlus()
   local character = self:GetCharacter()
   if not character then
     return
@@ -1034,8 +1041,8 @@ function AlterEgo:UpdateMythicPlus()
     if bestTimedRun ~= nil then dungeon.bestTimedRun = bestTimedRun end
     if bestNotTimedRun ~= nil then dungeon.bestNotTimedRun = bestNotTimedRun end
     if affixScores ~= nil then
-      AE_table_foreach(affixScores, function(affixScore)
-        local affix = AE_table_get(affixes, "name", affixScore.name)
+      Utils:TableForEach(affixScores, function(affixScore)
+        local affix = Utils:TableGet(affixes, "name", affixScore.name)
         affixScore.id = affix and affix.id or 0
       end)
       dungeon.affixScores = affixScores
@@ -1055,9 +1062,9 @@ function AlterEgo:UpdateMythicPlus()
   self:UpdateUI()
 end
 
-function AlterEgo:OnEncounterEnd(instanceEncounterID, encounterName, difficultyID, groupSize, success)
-  if success then
-    RequestRaidInfo()
-  end
-  self:UpdateUI()
-end
+-- function Data:OnEncounterEnd(instanceEncounterID, encounterName, difficultyID, groupSize, success)
+--   if success then
+--     RequestRaidInfo()
+--   end
+--   self:UpdateUI()
+-- end

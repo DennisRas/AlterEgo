@@ -1,8 +1,28 @@
+local addonName, AlterEgo = ...
+local Utils = {}
+AlterEgo.Utils = Utils
+
+--- Set the background color for a parent frame
+---@param parent table
+---@param r number
+---@param g number
+---@param b number
+---@param a number
+function Utils:SetBackgroundColor(parent, r, g, b, a)
+  if not parent.Background then
+    parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
+    parent.Background:SetTexture("Interface/BUTTONS/WHITE8X8")
+    parent.Background:SetAllPoints()
+  end
+
+  parent.Background:SetVertexColor(r, g, b, a)
+end
+
 --- Find a table item by callback
 ---@param tbl table
 ---@param callback function
 ---@return table|nil, number|nil
-function AE_table_find(tbl, callback)
+function Utils:TableFind(tbl, callback)
   for i, v in ipairs(tbl) do
     if callback(v, i) then
       return v, i
@@ -16,8 +36,8 @@ end
 ---@param key string
 ---@param val any
 ---@return table|nil
-function AE_table_get(tbl, key, val)
-  return AE_table_find(tbl, function(elm)
+function Utils:TableGet(tbl, key, val)
+  return Utils:TableFind(tbl, function(elm)
     return elm[key] and elm[key] == val
   end)
 end
@@ -26,7 +46,7 @@ end
 ---@param tbl table
 ---@param callback function
 ---@return table
-function AE_table_filter(tbl, callback)
+function Utils:TableFilter(tbl, callback)
   local t = {}
   for i, v in ipairs(tbl) do
     if callback(v, i) then
@@ -39,7 +59,7 @@ end
 --- Count table items
 ---@param tbl table
 ---@return number
-function AE_table_count(tbl)
+function Utils:TableCount(tbl)
   local n = 0
   for _ in pairs(tbl) do
     n = n + 1
@@ -52,7 +72,7 @@ end
 ---@param to table|nil
 ---@param recursion_check table|nil
 ---@return table|nil|string
-function AE_table_copy(from, to, recursion_check)
+function Utils:TableCopy(from, to, recursion_check)
   local table = to
   if to == nil then
     table = {}
@@ -65,7 +85,7 @@ function AE_table_copy(from, to, recursion_check)
   end
   recursion_check[from] = true
   for k, v in pairs(from) do
-    table[k] = type(v) == "table" and AE_table_copy(v, nil, recursion_check) or v
+    table[k] = type(v) == "table" and Utils:TableCopy(v, nil, recursion_check) or v
   end
   return table
 end
@@ -74,7 +94,7 @@ end
 ---@param tbl table
 ---@param callback function
 ---@return table
-function AE_table_map(tbl, callback)
+function Utils:TableMap(tbl, callback)
   local t = {}
   for ik, iv in pairs(tbl) do
     local fv, fk = callback(iv, ik)
@@ -87,7 +107,7 @@ end
 ---@param tbl table
 ---@param callback function
 ---@return table
-function AE_table_foreach(tbl, callback)
+function Utils:TableForEach(tbl, callback)
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
   end
@@ -97,8 +117,8 @@ end
 --- Get character activity progress
 ---@param character table
 ---@return table|nil, table|nil
-function AE_GetActivitiesProgress(character)
-  local activities = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
+function Utils:GetActivitiesProgress(character)
+  local activities = Utils:TableFilter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
   table.sort(activities, function(left, right) return left.index < right.index; end);
   local lastCompletedIndex = 0;
   for i, activityInfo in ipairs(activities) do
@@ -120,7 +140,7 @@ function AE_GetActivitiesProgress(character)
   return activities[lastCompletedIndex], nextInfo;
 end
 
-function AE_GetLowestLevelInTopDungeonRuns(character, numRuns)
+function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
   local lowestLevel;
   local lowestCount   = 0;
   local numHeroic     = 0;
@@ -144,7 +164,7 @@ function AE_GetLowestLevelInTopDungeonRuns(character, numRuns)
     return lowestLevel, lowestCount;
   end
 
-  local runHistory = AE_table_filter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end);
+  local runHistory = Utils:TableFilter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end);
   table.sort(runHistory, function(left, right) return left.level > right.level; end);
   for i = math.min(numRuns, #runHistory), 1, -1 do
     local run = runHistory[i];
@@ -162,7 +182,7 @@ end
 
 --- Get the group type
 ---@return string|nil
-function AE_GetGroupChannel()
+function Utils:GetGroupChannel()
   if IsInRaid() then
     return "RAID"
   end
@@ -177,7 +197,7 @@ end
 ---@param useRIOScoreColor boolean
 ---@param isPreviousSeason boolean
 ---@return ColorMixin|nil
-function AE_GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
+function Utils:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
   local color
   local RIO = _G["RaiderIO"]
   if useRIOScoreColor and RIO then

@@ -1,5 +1,10 @@
----@diagnostic disable: inject-field, deprecated
-function AlterEgo:GetCharacterInfo()
+local addonName, AlterEgo = ...
+local Core = AlterEgo.Core
+local Utils = AlterEgo.Utils
+local DB = AlterEgo.DB
+local Main = Core:NewModule("Main", "AceEvent-3.0")
+
+function Main:GetCharacterInfo()
   local dungeons = self:GetDungeons()
   local difficulties = self:GetRaidDifficulties(true)
   local _, seasonDisplayID = self:GetCurrentSeason()
@@ -41,11 +46,11 @@ function AlterEgo:GetCharacterInfo()
         if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
           GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
         end
-        if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
+        if character.currencies ~= nil and Utils:TableCount(character.currencies) > 0 then
           local dataCurrencies = self:GetCurrencies()
           local characterCurrencies = {}
-          AE_table_foreach(dataCurrencies, function(dataCurrency)
-            local characterCurrency = AE_table_get(character.currencies, "id", dataCurrency.id)
+          Utils:TableForEach(dataCurrencies, function(dataCurrency)
+            local characterCurrency = Utils:TableGet(character.currencies, "id", dataCurrency.id)
             if characterCurrency then
               local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
               local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
@@ -63,10 +68,10 @@ function AlterEgo:GetCharacterInfo()
               })
             end
           end)
-          if AE_table_count(characterCurrencies) > 0 then
+          if Utils:TableCount(characterCurrencies) > 0 then
             GameTooltip:AddLine(" ");
             GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-            AE_table_foreach(characterCurrencies, function(characterCurrency)
+            Utils:TableForEach(characterCurrencies, function(characterCurrency)
               GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
             end)
           end
@@ -105,7 +110,7 @@ function AlterEgo:GetCharacterInfo()
           }
         }
         if type(character.equipment) == "table" then
-          AE_table_foreach(character.equipment, function(item)
+          Utils:TableForEach(character.equipment, function(item)
             local upgradeLevel = ""
             if item.itemUpgradeTrack ~= "" then
               upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
@@ -214,7 +219,7 @@ function AlterEgo:GetCharacterInfo()
         local ratingColor = LIGHTGRAY_FONT_COLOR
         if character.mythicplus.rating ~= nil then
           rating = tostring(character.mythicplus.rating)
-          local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          local color = Utils:GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = color
           else
@@ -231,20 +236,20 @@ function AlterEgo:GetCharacterInfo()
         local bestSeasonNumber = nil
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+          numSeasonRuns = Utils:TableCount(character.mythicplus.runHistory)
         end
         if character.mythicplus.bestSeasonNumber ~= nil then
           bestSeasonNumber = character.mythicplus.bestSeasonNumber
         end
         if character.mythicplus.bestSeasonScore ~= nil then
           bestSeasonScore = character.mythicplus.bestSeasonScore
-          local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
+          local color = Utils:GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
           if color ~= nil then
             bestSeasonScoreColor = color
           end
         end
         if character.mythicplus.rating ~= nil then
-          local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          local color = Utils:GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = color
           end
@@ -261,7 +266,7 @@ function AlterEgo:GetCharacterInfo()
           end
           GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
         end
-        if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
+        if character.mythicplus.dungeons ~= nil and Utils:TableCount(character.mythicplus.dungeons) > 0 then
           GameTooltip:AddLine(" ")
           local characterDungeons = CopyTable(character.mythicplus.dungeons)
           for _, dungeon in pairs(characterDungeons) do
@@ -295,10 +300,10 @@ function AlterEgo:GetCharacterInfo()
       OnClick = function(character)
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+          numSeasonRuns = Utils:TableCount(character.mythicplus.runHistory)
         end
         if character.mythicplus.dungeons ~= nil
-          and AE_table_count(character.mythicplus.dungeons) > 0
+          and Utils:TableCount(character.mythicplus.dungeons) > 0
           and numSeasonRuns > 0
           and IsModifiedClick("CHATLINK")
         then
@@ -335,9 +340,9 @@ function AlterEgo:GetCharacterInfo()
         if character.mythicplus.keystone ~= nil then
           local dungeon
           if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
-            dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+            dungeon = Utils:TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
           elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
-            dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
+            dungeon = Utils:TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
           end
           if dungeon ~= nil then
             currentKeystone = dungeon.abbr
@@ -387,15 +392,15 @@ function AlterEgo:GetCharacterInfo()
       value = function(character)
         local value = {}
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot)
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
           end)
           if #slots > 0 then
-            AE_table_foreach(slots, function(slot)
+            Utils:TableForEach(slots, function(slot)
               local name = "-"
               local nameColor = LIGHTGRAY_FONT_COLOR
               if slot.level > 0 then
-                local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
+                local dataDifficulty = Utils:TableGet(difficulties, "id", slot.level)
                 if dataDifficulty then
                   name = dataDifficulty.abbr
                   if self.db.global.raids.colors then
@@ -431,7 +436,7 @@ function AlterEgo:GetCharacterInfo()
       OnEnter = function(character)
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot)
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
           end)
           for _, slot in ipairs(slots) do
@@ -442,7 +447,7 @@ function AlterEgo:GetCharacterInfo()
               if slot.exampleRewardLink ~= nil and slot.exampleRewardLink ~= "" then
                 local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
                 local difficultyName = GetDifficultyInfo(slot.level)
-                local dataDifficulty = AE_table_get(difficulties, "id", slot.level)
+                local dataDifficulty = Utils:TableGet(difficulties, "id", slot.level)
                 if dataDifficulty then
                   difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
                 end
@@ -454,16 +459,16 @@ function AlterEgo:GetCharacterInfo()
             GameTooltip:AddDoubleLine(format("%d boss kills:", slot.threshold), result, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
           end
 
-          local incompleteSlots = AE_table_filter(character.vault.slots, function(slot)
+          local incompleteSlots = Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.Raid and slot.progress < slot.threshold
           end)
-          if AE_table_count(incompleteSlots) > 0 then
+          if Utils:TableCount(incompleteSlots) > 0 then
             table.sort(incompleteSlots, function(a, b)
               return a.threshold < b.threshold
             end)
             GameTooltip:AddLine(" ")
             local tooltip = ""
-            if AE_table_count(incompleteSlots) == AE_table_count(slots) then
+            if Utils:TableCount(incompleteSlots) == Utils:TableCount(slots) then
               tooltip = format("Defeat %d bosses this week to unlock your first Great Vault reward.", incompleteSlots[1].threshold)
             else
               local diff = incompleteSlots[1].threshold - incompleteSlots[1].progress
@@ -484,11 +489,11 @@ function AlterEgo:GetCharacterInfo()
       value = function(character)
         local value = {}
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot)
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.Activities
           end)
           if #slots > 0 then
-            AE_table_foreach(slots, function(slot)
+            Utils:TableForEach(slots, function(slot)
               local level = "-"
               local color = LIGHTGRAY_FONT_COLOR
               if slot.progress >= slot.threshold then
@@ -510,10 +515,10 @@ function AlterEgo:GetCharacterInfo()
         return table.concat(value, "  ")
       end,
       OnEnter = function(character)
-        local weeklyRuns = AE_table_filter(character.mythicplus.runHistory, function(run)
+        local weeklyRuns = Utils:TableFilter(character.mythicplus.runHistory, function(run)
           return run.thisWeek == true
         end)
-        local weeklyRunsCount = AE_table_count(weeklyRuns) or 0
+        local weeklyRunsCount = Utils:TableCount(weeklyRuns) or 0
         GameTooltip:AddLine("Vault Progress", 1, 1, 1);
         -- GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. tostring(weeklyRunsCount) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 
@@ -533,7 +538,7 @@ function AlterEgo:GetCharacterInfo()
         end
         GameTooltip_AddBlankLineToTooltip(GameTooltip);
 
-        local lastCompletedActivityInfo, nextActivityInfo = AE_GetActivitiesProgress(character);
+        local lastCompletedActivityInfo, nextActivityInfo = Utils:GetActivitiesProgress(character);
         if not lastCompletedActivityInfo then
           GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE);
         else
@@ -542,7 +547,7 @@ function AlterEgo:GetCharacterInfo()
             GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress));
           else
             GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
-            local level, count = AE_GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold);
+            local level, count = Utils:GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold);
             if level == WeeklyRewardsUtil.HeroicLevel then
               GameTooltip_AddBlankLineToTooltip(GameTooltip);
               GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
@@ -564,11 +569,11 @@ function AlterEgo:GetCharacterInfo()
             return a.level > b.level
           end)
           for runIndex, run in ipairs(weeklyRuns) do
-            local threshold = AE_table_find(character.vault.slots, function(slot)
+            local threshold = Utils:TableFind(character.vault.slots, function(slot)
               return slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold
             end)
             local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
-            local dungeon = AE_table_get(dungeons, "challengeModeID", run.mapChallengeModeID)
+            local dungeon = Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
             local color = WHITE_FONT_COLOR
             if threshold then
               color = GREEN_FONT_COLOR
@@ -590,10 +595,10 @@ function AlterEgo:GetCharacterInfo()
         local text = "- / -"
         local textColor = LIGHTGRAY_FONT_COLOR
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot)
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
           end)
-          local completed = AE_table_filter(slots, function(slot)
+          local completed = Utils:TableFilter(slots, function(slot)
             return slot.progress >= slot.threshold
           end)
           if #slots > 0 then
@@ -612,10 +617,10 @@ function AlterEgo:GetCharacterInfo()
       OnEnter = function(character)
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot)
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
           end)
-          AE_table_foreach(slots, function(slot)
+          Utils:TableForEach(slots, function(slot)
             local value = "Locked"
             local valueColor = LIGHTGRAY_FONT_COLOR
             if slot.progress >= slot.threshold then
@@ -631,23 +636,7 @@ function AlterEgo:GetCharacterInfo()
   }
 end
 
---- Set the background color for a parent frame
----@param parent table
----@param r number
----@param g number
----@param b number
----@param a number
-function AlterEgo:SetBackgroundColor(parent, r, g, b, a)
-  if not parent.Background then
-    parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
-    parent.Background:SetTexture(self.constants.media.WhiteSquare)
-    parent.Background:SetAllPoints()
-  end
-
-  parent.Background:SetVertexColor(r, g, b, a)
-end
-
-function AlterEgo:CreateCharacterColumn(parent, index)
+function Main:CreateCharacterColumn(parent, index)
   local affixes = self:GetAffixes(true)
   local dungeons = self:GetDungeons()
   local raids = self:GetRaids(true)
@@ -791,7 +780,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
 end
 
 local CharacterColumns = {}
-function AlterEgo:GetCharacterColumn(parent, index)
+function Main:GetCharacterColumn(parent, index)
   if CharacterColumns[index] == nil then
     CharacterColumns[index] = self:CreateCharacterColumn(parent, index)
   end
@@ -800,27 +789,27 @@ function AlterEgo:GetCharacterColumn(parent, index)
 end
 
 --- Hide all character columns
-function AlterEgo:HideCharacterColumns()
-  AE_table_foreach(CharacterColumns, function(CharacterColumn)
+function Main:HideCharacterColumns()
+  Utils:TableForEach(CharacterColumns, function(CharacterColumn)
     CharacterColumn:Hide()
   end)
 end
 
 --- Does the main window need scrollbars?
 ---@return boolean
-function AlterEgo:IsScrollbarNeeded()
-  local numCharacters = AE_table_count(self:GetCharacters())
+function Main:IsScrollbarNeeded()
+  local numCharacters = Utils:TableCount(self:GetCharacters())
   return numCharacters > 0 and self.constants.sizes.sidebar.width + numCharacters * self.constants.sizes.column > self:GetMaxWindowWidth()
 end
 
 --- Calculate the main window size
 ---@return number, number
-function AlterEgo:GetWindowSize()
-  local numCharacters = AE_table_count(self:GetCharacters())
-  local numDungeons = AE_table_count(self:GetDungeons())
-  local numRaids = AE_table_count(self:GetRaids())
-  local numDifficulties = AE_table_count(self:GetRaidDifficulties())
-  local numCharacterInfo = AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label)
+function Main:GetWindowSize()
+  local numCharacters = Utils:TableCount(self:GetCharacters())
+  local numDungeons = Utils:TableCount(self:GetDungeons())
+  local numRaids = Utils:TableCount(self:GetRaids())
+  local numDifficulties = Utils:TableCount(self:GetRaidDifficulties())
+  local numCharacterInfo = Utils:TableCount(Utils:TableFilter(self:GetCharacterInfo(), function(label)
     return label.enabled == nil or label.enabled == true
   end))
   local width = 0
@@ -852,7 +841,7 @@ function AlterEgo:GetWindowSize()
   return width, height
 end
 
-function AlterEgo:CreateUI()
+function Main:CreateUI()
   local currentAffixes = self:GetCurrentAffixes()
   local activeWeek = self:GetActiveAffixRotation(currentAffixes)
   local seasonID = self:GetCurrentSeason()
@@ -884,17 +873,17 @@ function AlterEgo:CreateUI()
       table.insert(data.columns, {width = 500})
       table.insert(data.rows, {cols = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
     else
-      AE_table_foreach(affixRotation.activation, function(activationLevel)
+      Utils:TableForEach(affixRotation.activation, function(activationLevel)
         table.insert(data.columns, {width = 140})
         table.insert(firstRow.cols, {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}})
       end)
       table.insert(data.rows, firstRow)
-      AE_table_foreach(affixRotation.affixes, function(affixValues, weekIndex)
+      Utils:TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
         local row = {cols = {}}
         local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
-        AE_table_foreach(affixValues, function(affixValue)
+        Utils:TableForEach(affixValues, function(affixValue)
           if type(affixValue) == "number" then
-            local affix = AE_table_get(affixes, "id", affixValue)
+            local affix = Utils:TableGet(affixes, "id", affixValue)
             if affix then
               local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
               table.insert(row.cols, {
@@ -927,7 +916,7 @@ function AlterEgo:CreateUI()
     for i = 1, 3 do
       local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
       affixButton:SetSize(20, 20)
-      if AE_table_count(currentAffixes) > 0 then
+      if Utils:TableCount(currentAffixes) > 0 then
         local currentAffix = currentAffixes[i]
         if currentAffix ~= nil then
           local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
@@ -974,7 +963,7 @@ function AlterEgo:CreateUI()
       winMain.TitleBar.SettingsButton.Dropdown,
       function(frame, level, subMenuName)
         if subMenuName == "raiddifficulties" then
-          AE_table_foreach(difficulties, function(difficulty)
+          Utils:TableForEach(difficulties, function(difficulty)
             UIDropDownMenu_AddButton(
               {
                 text = difficulty.name,
@@ -1660,7 +1649,7 @@ function AlterEgo:CreateUI()
   self:UpdateUI()
 end
 
-function AlterEgo:UpdateUI()
+function Main:UpdateUI()
   local winMain = self:GetWindow("Main")
   if not winMain then
     return
@@ -1669,7 +1658,7 @@ function AlterEgo:UpdateUI()
   local affixes = self:GetAffixes(true)
   local currentAffixes = self:GetCurrentAffixes();
   local characters = self:GetCharacters()
-  local numCharacters = AE_table_count(characters)
+  local numCharacters = Utils:TableCount(characters)
   local dungeons = self:GetDungeons()
   local raids = self:GetRaids(true)
   local difficulties = self:GetRaidDifficulties(true)
@@ -1921,7 +1910,7 @@ function AlterEgo:UpdateUI()
             local active = false
             local AffixFrame = _G[CharacterColumn.AffixHeader:GetName() .. affixIndex]
             if AffixFrame then
-              AE_table_foreach(currentAffixes, function(currentAffix)
+              Utils:TableForEach(currentAffixes, function(currentAffix)
                 if currentAffix.id == affix.id then
                   active = true
                 end
@@ -1940,9 +1929,9 @@ function AlterEgo:UpdateUI()
         -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
         for dungeonIndex, dungeon in ipairs(dungeons) do
           local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
-          local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+          local characterDungeon = Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
           local overallScoreColor = HIGHLIGHT_FONT_COLOR
-          if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
+          if characterDungeon and characterDungeon.affixScores and Utils:TableCount(characterDungeon.affixScores) > 0 then
             if (characterDungeon.rating) then
               local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
               if color ~= nil then
@@ -1955,7 +1944,7 @@ function AlterEgo:UpdateUI()
             GameTooltip:ClearLines()
             GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText(dungeon.name, 1, 1, 1);
-            if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
+            if characterDungeon and characterDungeon.affixScores and Utils:TableCount(characterDungeon.affixScores) > 0 then
               if (characterDungeon.rating) then
                 GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(overallScoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
               end
@@ -1997,7 +1986,7 @@ function AlterEgo:UpdateUI()
                 level = "-"
                 levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
               else
-                local affixScore = AE_table_get(characterDungeon.affixScores, "id", affix.id)
+                local affixScore = Utils:TableGet(characterDungeon.affixScores, "id", affix.id)
                 if affixScore then
                   level = affixScore.level
 
@@ -2064,7 +2053,7 @@ function AlterEgo:UpdateUI()
                     GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
                     GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
                     if character.raids.savedInstances ~= nil then
-                      local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                      local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                         return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                       end)
                       if savedInstance ~= nil then
@@ -2075,11 +2064,11 @@ function AlterEgo:UpdateUI()
                     for _, encounter in ipairs(raid.encounters) do
                       local color = LIGHTGRAY_FONT_COLOR
                       if character.raids.savedInstances then
-                        local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                        local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                           return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                         end)
                         if savedInstance ~= nil then
-                          local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
+                          local savedEncounter = Utils:TableFind(savedInstance.encounters, function(enc)
                             return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
                           end)
                           if savedEncounter ~= nil then
@@ -2111,11 +2100,11 @@ function AlterEgo:UpdateUI()
                       self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                     end
                     if character.raids.savedInstances then
-                      local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                      local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                         return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                       end)
                       if savedInstance ~= nil then
-                        local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
+                        local savedEncounter = Utils:TableFind(savedInstance.encounters, function(enc)
                           return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
                         end)
                         if savedEncounter ~= nil then

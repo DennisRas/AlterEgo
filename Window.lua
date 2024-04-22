@@ -1,35 +1,40 @@
+local addonName, AlterEgo = ...
+local Utils = AlterEgo.Utils
+local Window = {}
+AlterEgo.Window = Window
+
 local windows = {}
-function AlterEgo:GetWindow(name)
+function Window:GetWindow(name)
   name = "AlterEgo" .. name
   return windows[name]
 end
 
-function AlterEgo:SetWindowScale(scale)
-  AE_table_foreach(windows, function(window)
+function Window:SetWindowScale(scale)
+  Utils:TableForEach(windows, function(window)
     window:SetScale(scale)
   end)
 end
 
-function AlterEgo:SetWindowBackgroundColor(color)
-  AE_table_foreach(windows, function(window)
+function Window:SetWindowBackgroundColor(color)
+  Utils:TableForEach(windows, function(window)
     self:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
   end)
 end
 
-function AlterEgo:SetHeight(name, height)
+function Window:SetHeight(name, height)
   if name == nil then name = "Main" end
   local window = self:GetWindow(name)
   if not window then return end
 end
 
-function AlterEgo:SetTitle(name, title)
+function Window:SetTitle(name, title)
   if name == nil then name = "Main" end
   local window = self:GetWindow(name)
   if not window then return end
   window.Titlebar.Text:SetText(title)
 end
 
-function AlterEgo:CreateWindow(name, title, parent)
+function Window:CreateWindow(name, title, parent)
   name = "AlterEgo" .. name
   local window = self:GetWindow(name)
   if window then
@@ -41,7 +46,7 @@ function AlterEgo:CreateWindow(name, title, parent)
 
   local windowFrame = CreateFrame("Frame", name, parent)
   windowFrame:SetFrameStrata("HIGH")
-  windowFrame:SetFrameLevel(1000 + 100 * (AE_table_count(windows) + 1))
+  windowFrame:SetFrameLevel(1000 + 100 * (Utils:TableCount(windows) + 1))
   windowFrame:SetClampedToScreen(true)
   windowFrame:SetMovable(true)
   windowFrame:SetUserPlaced(true)
@@ -118,11 +123,11 @@ function AlterEgo:CreateWindow(name, title, parent)
   return windows[name]
 end
 
-function AlterEgo:GetMaxWindowWidth()
+function Window:GetMaxWindowWidth()
   return GetScreenWidth() - 100
 end
 
-function AlterEgo:ToggleWindow(name)
+function Window:ToggleWindow(name)
   if name == nil or name == "" then name = "Main" end
   local window = self:GetWindow(name)
   if not window then return end
