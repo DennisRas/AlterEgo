@@ -23,6 +23,7 @@ function AlterEgo:GetCharacterInfo()
       OnEnter = function(character)
         local name = "-"
         local nameColor = "ffffffff"
+        local characterCurrencies = {}
         if character.info.name ~= nil then
           name = character.info.name
         end
@@ -43,19 +44,20 @@ function AlterEgo:GetCharacterInfo()
         end
         if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
           local dataCurrencies = self:GetCurrencies()
-          local characterCurrencies = {}
           AE_table_foreach(dataCurrencies, function(dataCurrency)
             local characterCurrency = AE_table_get(character.currencies, "id", dataCurrency.id)
             if characterCurrency then
               local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
               local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
-              local currencyValue = characterCurrency.maxQuantity
+              local currencyValue = ""
               if characterCurrency.useTotalEarnedForMaxQty then
                 if characterCurrency.maxQuantity > 0 then
                   currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
                 else
                   currencyValue = "No limit"
                 end
+              elseif characterCurrency.maxQuantity > 0 then
+                currencyValue = characterCurrency.maxQuantity
               end
               table.insert(characterCurrencies, {
                 currencyLabel,
@@ -63,13 +65,13 @@ function AlterEgo:GetCharacterInfo()
               })
             end
           end)
-          if AE_table_count(characterCurrencies) > 0 then
-            GameTooltip:AddLine(" ");
-            GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-            AE_table_foreach(characterCurrencies, function(characterCurrency)
-              GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
-            end)
-          end
+        end
+        if AE_table_count(characterCurrencies) > 0 then
+          GameTooltip:AddLine(" ");
+          GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
+          AE_table_foreach(characterCurrencies, function(characterCurrency)
+            GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
+          end)
         end
         if character.lastUpdate ~= nil then
           GameTooltip:AddLine(" ");
