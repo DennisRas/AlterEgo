@@ -1474,7 +1474,11 @@ function AlterEgo:CreateUI()
     winMain.Body.NoCharacterText:SetJustifyH("CENTER")
     winMain.Body.NoCharacterText:SetJustifyV("CENTER")
     winMain.Body.NoCharacterText:SetFontObject("GameFontHighlight_NoShadow")
-    winMain.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+    local introductionText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
+    if not self.db.global.showZeroRatedCharacters and AE_table_count(self:GetCharacters(true)) > 0 then
+      introductionText = introductionText .. "\n\n|cff00ee00New Season?|r\nYou are currently hiding characters with zero rating. If this is not your intention then enable the setting |cffffffffShow characters with zero rating|r"
+    end
+    winMain.Body.NoCharacterText:SetText(introductionText)
     winMain.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
     winMain.Body.NoCharacterText:Hide()
   end
