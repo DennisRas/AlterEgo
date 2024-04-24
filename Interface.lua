@@ -1820,7 +1820,7 @@ function AlterEgo:UpdateUI()
     for raidIndex, raid in ipairs(raids) do
       local RaidFrame = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
       if RaidFrame then
-        if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
+        if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo or self:GetCurrentSeason() ~= 12) then
           RaidFrame:Show()
           RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
           RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -2048,7 +2048,7 @@ function AlterEgo:UpdateUI()
       do -- Raid Rows
         for raidIndex, raid in ipairs(raids) do
           local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
-          if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
+          if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo or self:GetCurrentSeason() ~= 12) then
             RaidFrame:Show()
             RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")

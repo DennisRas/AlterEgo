@@ -18,7 +18,7 @@
 
 ### Fixed
 
-- Fixed an issue with raids not showing for some players
+- Fixed a bug with the raid section not showing before the new season (Thanks Kaivalya)
 
 ## v1.1.3 - 2024-04-22
 
