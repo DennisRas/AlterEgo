@@ -662,7 +662,7 @@ function AlterEgo:TaskWeeklyReset()
       if character.currencies ~= nil then
         AE_table_foreach(character.currencies, function(currency)
           if currency.currencyType == "crest" and currency.maxQuantity > 0 then
-            currency.maxQuantity = currency.maxQuantity + 90
+            currency.maxQuantity = currency.maxQuantity + 120
           end
           if currency.currencyType == "catalyst" or currency.currencyType == "dinar" then
             currency.quantity = math.min(currency.quantity + 1, currency.maxQuantity)
