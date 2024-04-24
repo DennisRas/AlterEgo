@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.1.5 - 2024-04-24
+
+### Added
+
+- Added a warning if the setting for hiding characters with zero rating is enabled when transitioning into a new season
+
+### Updated
+
+- Updated the teleportation tooltips from +20 to +10
+
+### Fixed
+
+- Fixed an issue with the new Antique Bronze Bullion currency
+
 ## v1.1.4 - 2024-04-22
 
 ### Fixed

@@ -23,6 +23,7 @@ function AlterEgo:GetCharacterInfo()
       OnEnter = function(character)
         local name = "-"
         local nameColor = "ffffffff"
+        local characterCurrencies = {}
         if character.info.name ~= nil then
           name = character.info.name
         end
@@ -43,19 +44,20 @@ function AlterEgo:GetCharacterInfo()
         end
         if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
           local dataCurrencies = self:GetCurrencies()
-          local characterCurrencies = {}
           AE_table_foreach(dataCurrencies, function(dataCurrency)
             local characterCurrency = AE_table_get(character.currencies, "id", dataCurrency.id)
             if characterCurrency then
               local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
               local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
-              local currencyValue = characterCurrency.maxQuantity
+              local currencyValue = ""
               if characterCurrency.useTotalEarnedForMaxQty then
                 if characterCurrency.maxQuantity > 0 then
                   currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
                 else
                   currencyValue = "No limit"
                 end
+              elseif characterCurrency.maxQuantity > 0 then
+                currencyValue = characterCurrency.maxQuantity
               end
               table.insert(characterCurrencies, {
                 currencyLabel,
@@ -63,13 +65,13 @@ function AlterEgo:GetCharacterInfo()
               })
             end
           end)
-          if AE_table_count(characterCurrencies) > 0 then
-            GameTooltip:AddLine(" ");
-            GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-            AE_table_foreach(characterCurrencies, function(characterCurrency)
-              GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
-            end)
-          end
+        end
+        if AE_table_count(characterCurrencies) > 0 then
+          GameTooltip:AddLine(" ");
+          GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
+          AE_table_foreach(characterCurrencies, function(characterCurrency)
+            GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
+          end)
         end
         if character.lastUpdate ~= nil then
           GameTooltip:AddLine(" ");
@@ -1474,7 +1476,11 @@ function AlterEgo:CreateUI()
     winMain.Body.NoCharacterText:SetJustifyH("CENTER")
     winMain.Body.NoCharacterText:SetJustifyV("CENTER")
     winMain.Body.NoCharacterText:SetFontObject("GameFontHighlight_NoShadow")
-    winMain.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+    local introductionText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
+    if not self.db.global.showZeroRatedCharacters and AE_table_count(self:GetCharacters(true)) > 0 then
+      introductionText = introductionText .. "\n\n|cff00ee00New Season?|r\nYou are currently hiding characters with zero rating. If this is not your intention then enable the setting |cffffffffShow characters with zero rating|r"
+    end
+    winMain.Body.NoCharacterText:SetText(introductionText)
     winMain.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
     winMain.Body.NoCharacterText:Hide()
   end
@@ -1798,7 +1804,7 @@ function AlterEgo:UpdateUI()
             GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
           else
-            GameTooltip:AddLine("Time this dungeon on level 20 or above to unlock teleportation.", nil, nil, nil, true)
+            GameTooltip:AddLine("Time this dungeon on level 10 or above to unlock teleportation.", nil, nil, nil, true)
           end
         end
         GameTooltip:Show()
