@@ -1,656 +1,29 @@
 local addonName, AlterEgo = ...
-local Core = AlterEgo.Core
+local Constants = AlterEgo.Constants
 local Utils = AlterEgo.Utils
-local DB = AlterEgo.DB
+local Window = AlterEgo.Window
+local Core = AlterEgo.Core
+local Data = AlterEgo.Data
 local Main = Core:NewModule("Main", "AceEvent-3.0")
 
-function Main:GetCharacterInfo()
-  local dungeons = self:GetDungeons()
-  local difficulties = self:GetRaidDifficulties(true)
-  local _, seasonDisplayID = self:GetCurrentSeason()
-  return {
-    {
-      label = CHARACTER,
-      value = function(character)
-        local name = "-"
-        local nameColor = "ffffffff"
-        if character.info.name ~= nil then
-          name = character.info.name
-        end
-        if character.info.class.file ~= nil then
-          local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-          if classColor ~= nil then
-            nameColor = classColor.GenerateHexColor(classColor)
-          end
-        end
-        return "|c" .. nameColor .. name .. "|r"
-      end,
-      OnEnter = function(character)
-        local name = "-"
-        local nameColor = "ffffffff"
-        if character.info.name ~= nil then
-          name = character.info.name
-        end
-        if character.info.class.file ~= nil then
-          local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-          if classColor ~= nil then
-            nameColor = classColor.GenerateHexColor(classColor)
-          end
-        end
-        name = "|c" .. nameColor .. name .. "|r"
-        if not self.db.global.showRealms then
-          name = name .. format(" (%s)", character.info.realm)
-        end
-        GameTooltip:AddLine(name, 1, 1, 1);
-        GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1);
-        if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
-          GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
-        end
-        if character.currencies ~= nil and Utils:TableCount(character.currencies) > 0 then
-          local dataCurrencies = self:GetCurrencies()
-          local characterCurrencies = {}
-          Utils:TableForEach(dataCurrencies, function(dataCurrency)
-            local characterCurrency = Utils:TableGet(character.currencies, "id", dataCurrency.id)
-            if characterCurrency then
-              local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
-              local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
-              local currencyValue = characterCurrency.maxQuantity
-              if characterCurrency.useTotalEarnedForMaxQty then
-                if characterCurrency.maxQuantity > 0 then
-                  currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
-                else
-                  currencyValue = "No limit"
-                end
-              end
-              table.insert(characterCurrencies, {
-                currencyLabel,
-                currencyValue
-              })
-            end
-          end)
-          if Utils:TableCount(characterCurrencies) > 0 then
-            GameTooltip:AddLine(" ");
-            GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-            Utils:TableForEach(characterCurrencies, function(characterCurrency)
-              GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
-            end)
-          end
-        end
-        if character.lastUpdate ~= nil then
-          GameTooltip:AddLine(" ");
-          GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        end
-        if type(character.equipment) == "table" then
-          GameTooltip:AddLine(" ")
-          GameTooltip:AddLine("<Click to View Equipment>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-        end
-      end,
-      OnClick = function(character)
-        local windowCharacter = self:GetWindow("Character")
-        if windowCharacter.character and windowCharacter.character == character and windowCharacter:IsVisible() then
-          windowCharacter:Hide()
-          return
-        end
-        local data = {
-          columns = {
-            {width = 100},
-            {width = 280},
-            {width = 80, align = "CENTER"},
-            {width = 120},
-          },
-          rows = {
-            {
-              cols = {
-                {text = "Slot",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-              }
-            }
-          }
-        }
-        if type(character.equipment) == "table" then
-          Utils:TableForEach(character.equipment, function(item)
-            local upgradeLevel = ""
-            if item.itemUpgradeTrack ~= "" then
-              upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
-              if item.itemUpgradeLevel == item.itemUpgradeMax then
-                upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-              end
-            end
-            local row = {
-              cols = {
-                {text = _G[item.itemSlotName]},
-                {
-                  text = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
-                  OnEnter = function()
-                    GameTooltip:SetHyperlink(item.itemLink)
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-                  end,
-                  OnClick = function()
-                    if IsModifiedClick("CHATLINK") then
-                      if not ChatEdit_InsertLink(item.itemLink) then
-                        ChatFrame_OpenChat(item.itemLink);
-                      end
-                    end
-                  end
-                },
-                {text = WrapTextInColorCode(item.itemLevel, select(4, GetItemQualityColor(item.itemQuality)))},
-                {text = upgradeLevel},
-              }
-            }
-            table.insert(data.rows, row)
-          end)
-          windowCharacter.Body.Table:SetData(data)
-          local w, h = windowCharacter.Body.Table:GetSize()
-          windowCharacter:SetSize(w, h + self.constants.sizes.titlebar.height)
-          local nameColor = WHITE_FONT_COLOR
-          if character.info.class.file ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-            if classColor ~= nil then
-              nameColor = classColor
-            end
-          end
-          windowCharacter.TitleBar.Text:SetText(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
-          windowCharacter:Show()
-          windowCharacter.character = character
-        end
-      end,
-      enabled = true,
-    },
-    {
-      label = "Realm",
-      value = function(character)
-        local realm = "-"
-        local realmColor = LIGHTGRAY_FONT_COLOR
-        if character.info.realm ~= nil then
-          realm = character.info.realm
-          realmColor = WHITE_FONT_COLOR
-        end
-        return realmColor:WrapTextInColorCode(realm)
-      end,
-      tooltip = false,
-      enabled = self.db.global.showRealms,
-    },
-    {
-      label = STAT_AVERAGE_ITEM_LEVEL,
-      value = function(character)
-        local itemLevel = "-"
-        local itemLevelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-        if character.info.ilvl ~= nil then
-          if character.info.ilvl.level ~= nil then
-            itemLevel = tostring(floor(character.info.ilvl.level))
-          end
-          if character.info.ilvl.color then
-            itemLevelColor = character.info.ilvl.color
-          else
-            itemLevelColor = WHITE_FONT_COLOR:GenerateHexColor()
-          end
-        end
-        return WrapTextInColorCode(itemLevel, itemLevelColor)
-      end,
-      OnEnter = function(character)
-        local itemLevelTooltip = ""
-        local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
-        if character.info.ilvl ~= nil then
-          if character.info.ilvl.level ~= nil then
-            itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.info.ilvl.level)
-          end
-          if character.info.ilvl.level ~= nil and character.info.ilvl.equipped ~= nil and character.info.ilvl.level ~= character.info.ilvl.equipped then
-            itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped);
-          end
-          if character.info.ilvl.level ~= nil then
-            itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
-          end
-          if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
-            itemLevelTooltip2 = itemLevelTooltip2 .. "\n\n" .. STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
-          end
-        end
-        GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
-        GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-      end,
-      enabled = true,
-    },
-    {
-      label = "Rating",
-      value = function(character)
-        local rating = "-"
-        local ratingColor = LIGHTGRAY_FONT_COLOR
-        if character.mythicplus.rating ~= nil then
-          rating = tostring(character.mythicplus.rating)
-          local color = Utils:GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
-          if color ~= nil then
-            ratingColor = color
-          else
-            ratingColor = WHITE_FONT_COLOR
-          end
-        end
-        return ratingColor:WrapTextInColorCode(rating)
-      end,
-      OnEnter = function(character)
-        local rating = "-"
-        local ratingColor = WHITE_FONT_COLOR
-        local bestSeasonScore = nil
-        local bestSeasonScoreColor = WHITE_FONT_COLOR
-        local bestSeasonNumber = nil
-        local numSeasonRuns = 0
-        if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = Utils:TableCount(character.mythicplus.runHistory)
-        end
-        if character.mythicplus.bestSeasonNumber ~= nil then
-          bestSeasonNumber = character.mythicplus.bestSeasonNumber
-        end
-        if character.mythicplus.bestSeasonScore ~= nil then
-          bestSeasonScore = character.mythicplus.bestSeasonScore
-          local color = Utils:GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
-          if color ~= nil then
-            bestSeasonScoreColor = color
-          end
-        end
-        if character.mythicplus.rating ~= nil then
-          local color = Utils:GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
-          if color ~= nil then
-            ratingColor = color
-          end
-          rating = tostring(character.mythicplus.rating)
-        end
-        GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
-        GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
-          local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(bestSeasonScore)
-          if bestSeasonNumber > 0 then
-            local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
-            bestSeasonValue = format("%s %s", bestSeasonValue, season)
-          end
-          GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        end
-        if character.mythicplus.dungeons ~= nil and Utils:TableCount(character.mythicplus.dungeons) > 0 then
-          GameTooltip:AddLine(" ")
-          local characterDungeons = CopyTable(character.mythicplus.dungeons)
-          for _, dungeon in pairs(characterDungeons) do
-            local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
-            if dungeonName ~= nil then
-              dungeon.name = dungeonName
-            else
-              dungeon.name = ""
-            end
-          end
-          table.sort(characterDungeons, function(a, b)
-            return strcmputf8i(a.name, b.name) < 0
-          end)
-          for _, dungeon in pairs(characterDungeons) do
-            if dungeon.name ~= "" then
-              local levelColor = LIGHTGRAY_FONT_COLOR
-              local levelValue = "-"
-              if dungeon.level > 0 then
-                levelColor = WHITE_FONT_COLOR
-                levelValue = "+" .. tostring(dungeon.level)
-              end
-              GameTooltip:AddDoubleLine(dungeon.name, levelValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, levelColor.r, levelColor.g, levelColor.b)
-            end
-          end
-          if numSeasonRuns > 0 then
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-          end
-        end
-      end,
-      OnClick = function(character)
-        local numSeasonRuns = 0
-        if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = Utils:TableCount(character.mythicplus.runHistory)
-        end
-        if character.mythicplus.dungeons ~= nil
-          and Utils:TableCount(character.mythicplus.dungeons) > 0
-          and numSeasonRuns > 0
-          and IsModifiedClick("CHATLINK")
-        then
-          local dungeonScoreDungeonTable = {};
-          for _, dungeon in pairs(character.mythicplus.dungeons) do
-            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
-            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
-            table.insert(dungeonScoreDungeonTable, dungeon.level);
-          end
-          local dungeonScoreTable = {
-            character.mythicplus.rating,
-            character.GUID,
-            character.info.name,
-            character.info.class.id,
-            math.ceil(character.info.ilvl.level),
-            character.info.level,
-            numSeasonRuns,
-            character.mythicplus.bestSeasonScore,
-            character.mythicplus.bestSeasonNumber,
-            unpack(dungeonScoreDungeonTable)
-          };
-          local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
-          if not ChatEdit_InsertLink(link) then
-            ChatFrame_OpenChat(link);
-          end
-        end
-      end,
-      enabled = true,
-    },
-    {
-      label = "Current Keystone",
-      value = function(character)
-        local currentKeystone = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-")
-        if character.mythicplus.keystone ~= nil then
-          local dungeon
-          if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
-            dungeon = Utils:TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
-          elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
-            dungeon = Utils:TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
-          end
-          if dungeon ~= nil then
-            currentKeystone = dungeon.abbr
-            if type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
-              currentKeystone = format("%s +%s", currentKeystone, tostring(character.mythicplus.keystone.level))
-            end
-          end
-        end
-        return currentKeystone
-      end,
-      enabled = true,
-      OnEnter = function(character)
-        if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
-          GameTooltip:SetHyperlink(character.mythicplus.keystone.itemLink)
-          GameTooltip:AddLine(" ")
-          GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-        end
-      end,
-      OnClick = function(character)
-        if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
-          if IsModifiedClick("CHATLINK") then
-            if not ChatEdit_InsertLink(character.mythicplus.keystone.itemLink) then
-              ChatFrame_OpenChat(character.mythicplus.keystone.itemLink);
-            end
-          end
-        end
-      end,
-    },
-    {
-      label = "Vault",
-      value = function(character)
-        if character.vault.hasAvailableRewards == true then
-          return GREEN_FONT_COLOR:WrapTextInColorCode("Rewards")
-        end
-        return ""
-      end,
-      OnEnter = function(character)
-        if character.vault.hasAvailableRewards == true then
-          GameTooltip:AddLine("It's payday!", WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
-          GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
-        end
-      end,
-      backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
-    },
-    {
-      label = WHITE_FONT_COLOR:WrapTextInColorCode("Raids"),
-      value = function(character)
-        local value = {}
-        if character.vault.slots ~= nil then
-          local slots = Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
-          end)
-          if #slots > 0 then
-            Utils:TableForEach(slots, function(slot)
-              local name = "-"
-              local nameColor = LIGHTGRAY_FONT_COLOR
-              if slot.level > 0 then
-                local dataDifficulty = Utils:TableGet(difficulties, "id", slot.level)
-                if dataDifficulty then
-                  name = dataDifficulty.abbr
-                  if self.db.global.raids.colors then
-                    nameColor = dataDifficulty.color
-                  end
-                end
-                if name == nil then
-                  local difficultyName = GetDifficultyInfo(slot.level)
-                  if difficultyName ~= nil then
-                    name = tostring(difficultyName):sub(1, 1)
-                  else
-                    name = "?"
-                  end
-                end
-                if nameColor == nil then
-                  nameColor = UNCOMMON_GREEN_COLOR
-                end
-              end
-              table.insert(value, nameColor:WrapTextInColorCode(name))
-            end)
-          else
-            for i = 1, 3 do
-              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
-            end
-          end
-        else
-          for i = 1, 3 do
-            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
-          end
-        end
-        return table.concat(value, "  ")
-      end,
-      OnEnter = function(character)
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
-        if character.vault.slots ~= nil then
-          local slots = Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
-          end)
-          for _, slot in ipairs(slots) do
-            local color = LIGHTGRAY_FONT_COLOR
-            local result = "Locked"
-            if slot.progress >= slot.threshold then
-              color = WHITE_FONT_COLOR
-              if slot.exampleRewardLink ~= nil and slot.exampleRewardLink ~= "" then
-                local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
-                local difficultyName = GetDifficultyInfo(slot.level)
-                local dataDifficulty = Utils:TableGet(difficulties, "id", slot.level)
-                if dataDifficulty then
-                  difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
-                end
-                result = format("%s (%d+)", difficultyName, itemLevel)
-              else
-                result = "?"
-              end
-            end
-            GameTooltip:AddDoubleLine(format("%d boss kills:", slot.threshold), result, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
-          end
-
-          local incompleteSlots = Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid and slot.progress < slot.threshold
-          end)
-          if Utils:TableCount(incompleteSlots) > 0 then
-            table.sort(incompleteSlots, function(a, b)
-              return a.threshold < b.threshold
-            end)
-            GameTooltip:AddLine(" ")
-            local tooltip = ""
-            if Utils:TableCount(incompleteSlots) == Utils:TableCount(slots) then
-              tooltip = format("Defeat %d bosses this week to unlock your first Great Vault reward.", incompleteSlots[1].threshold)
-            else
-              local diff = incompleteSlots[1].threshold - incompleteSlots[1].progress
-              if diff == 1 then
-                tooltip = format("Defeat %d more boss this week to unlock another Great Vault reward.", diff)
-              else
-                tooltip = format("Defeat another %d bosses this week to unlock another Great Vault reward.", diff)
-              end
-            end
-            GameTooltip:AddLine(tooltip, nil, nil, nil, true)
-          end
-        end
-      end,
-      enabled = self.db.global.raids.enabled,
-    },
-    {
-      label = WHITE_FONT_COLOR:WrapTextInColorCode("Dungeons"),
-      value = function(character)
-        local value = {}
-        if character.vault.slots ~= nil then
-          local slots = Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.Activities
-          end)
-          if #slots > 0 then
-            Utils:TableForEach(slots, function(slot)
-              local level = "-"
-              local color = LIGHTGRAY_FONT_COLOR
-              if slot.progress >= slot.threshold then
-                level = tostring(slot.level)
-                color = UNCOMMON_GREEN_COLOR
-              end
-              table.insert(value, color:WrapTextInColorCode(level))
-            end)
-          else
-            for i = 1, 3 do
-              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
-            end
-          end
-        else
-          for i = 1, 3 do
-            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
-          end
-        end
-        return table.concat(value, "  ")
-      end,
-      OnEnter = function(character)
-        local weeklyRuns = Utils:TableFilter(character.mythicplus.runHistory, function(run)
-          return run.thisWeek == true
-        end)
-        local weeklyRunsCount = Utils:TableCount(weeklyRuns) or 0
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1);
-        -- GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. tostring(weeklyRunsCount) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-
-        if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
-          local numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
-          if numHeroic > 0 then
-            GameTooltip:AddLine("Heroic runs this Week: " .. "|cffffffff" .. tostring(numHeroic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-          end
-          local numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
-          if numMythic > 0 then
-            GameTooltip:AddLine("Mythic runs this Week: " .. "|cffffffff" .. tostring(numMythic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-          end
-          local numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
-          if numMythicPlus > 0 then
-            GameTooltip:AddLine("Mythic+ runs this Week: " .. "|cffffffff" .. tostring(numMythicPlus) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-          end
-        end
-        GameTooltip_AddBlankLineToTooltip(GameTooltip);
-
-        local lastCompletedActivityInfo, nextActivityInfo = Utils:GetActivitiesProgress(character);
-        if not lastCompletedActivityInfo then
-          GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE);
-        else
-          if nextActivityInfo then
-            local globalString = (lastCompletedActivityInfo.index == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND;
-            GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress));
-          else
-            GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
-            local level, count = Utils:GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold);
-            if level == WeeklyRewardsUtil.HeroicLevel then
-              GameTooltip_AddBlankLineToTooltip(GameTooltip);
-              GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
-              GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count));
-            else
-              local nextLevel = WeeklyRewardsUtil.GetNextMythicLevel(level);
-              if nextLevel < 20 then
-                GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
-                GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, nextLevel));
-              end
-            end
-          end
-        end
-
-        if weeklyRunsCount > 0 then
-          GameTooltip_AddBlankLineToTooltip(GameTooltip)
-          table.sort(weeklyRuns, function(a, b)
-            return a.level > b.level
-          end)
-          for runIndex, run in ipairs(weeklyRuns) do
-            local threshold = Utils:TableFind(character.vault.slots, function(slot)
-              return slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold
-            end)
-            local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
-            local dungeon = Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
-            local color = WHITE_FONT_COLOR
-            if threshold then
-              color = GREEN_FONT_COLOR
-            end
-            if dungeon then
-              GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
-            end
-            if runIndex == 8 then
-              break
-            end
-          end
-        end
-      end,
-      enabled = true,
-    },
-    {
-      label = WHITE_FONT_COLOR:WrapTextInColorCode("PvP"),
-      value = function(character)
-        local text = "- / -"
-        local textColor = LIGHTGRAY_FONT_COLOR
-        if character.vault.slots ~= nil then
-          local slots = Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
-          end)
-          local completed = Utils:TableFilter(slots, function(slot)
-            return slot.progress >= slot.threshold
-          end)
-          if #slots > 0 then
-            text = format("%d / %d", #completed, #slots)
-          end
-          if #completed > 0 then
-            if #slots == #completed then
-              textColor = UNCOMMON_GREEN_COLOR
-            else
-              textColor = WHITE_FONT_COLOR
-            end
-          end
-        end
-        return textColor:WrapTextInColorCode(text)
-      end,
-      OnEnter = function(character)
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
-        if character.vault.slots ~= nil then
-          local slots = Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
-          end)
-          Utils:TableForEach(slots, function(slot)
-            local value = "Locked"
-            local valueColor = LIGHTGRAY_FONT_COLOR
-            if slot.progress >= slot.threshold then
-              value = "Unlocked"
-              valueColor = WHITE_FONT_COLOR
-            end
-            GameTooltip:AddDoubleLine(format("%d Honor:", slot.threshold), value, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, valueColor.r, valueColor.g, valueColor.b)
-          end)
-        end
-      end,
-      enabled = self.db.global.pvp and self.db.global.pvp.enabled == true,
-    },
-  }
-end
+local SIDEBAR_WIDTH = 150
+local CHARACTER_WIDTH = 120
 
 function Main:CreateCharacterColumn(parent, index)
-  local affixes = self:GetAffixes(true)
-  local dungeons = self:GetDungeons()
-  local raids = self:GetRaids(true)
-  local difficulties = self:GetRaidDifficulties(true)
+  local affixes = Data:GetAffixes(true)
+  local dungeons = Data:GetDungeons()
+  local raids = Data:GetRaids(true)
+  local difficulties = Data:GetRaidDifficulties(true)
   local anchorFrame
 
   local CharacterColumn = CreateFrame("Frame", "$parentCharacterColumn" .. index, parent)
-  CharacterColumn:SetWidth(self.constants.sizes.column)
+  CharacterColumn:SetWidth(CHARACTER_WIDTH)
   self:SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
   anchorFrame = CharacterColumn
 
   -- Character info
   do
-    local labels = self:GetCharacterInfo()
+    local labels = Data:GetCharacterInfo()
     for labelIndex, info in ipairs(labels) do
       local CharacterFrame = CreateFrame(info.OnClick and "Button" or "Frame", "$parentInfo" .. labelIndex, CharacterColumn)
       if labelIndex > 1 then
@@ -661,10 +34,10 @@ function Main:CreateCharacterColumn(parent, index)
         CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
       end
 
-      CharacterFrame:SetHeight(self.constants.sizes.row)
+      CharacterFrame:SetHeight(Constants.sizes.row)
       CharacterFrame.Text = CharacterFrame:CreateFontString(CharacterFrame:GetName() .. "Text", "OVERLAY")
-      CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", self.constants.sizes.padding, 0)
-      CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -self.constants.sizes.padding, 0)
+      CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", Constants.sizes.padding, 0)
+      CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -Constants.sizes.padding, 0)
       CharacterFrame.Text:SetJustifyH("CENTER")
       CharacterFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
       if info.backgroundColor then
@@ -679,7 +52,7 @@ function Main:CreateCharacterColumn(parent, index)
   CharacterColumn.AffixHeader = CreateFrame("Frame", "$parentAffixes", CharacterColumn)
   CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
   CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-  CharacterColumn.AffixHeader:SetHeight(self.constants.sizes.row)
+  CharacterColumn.AffixHeader:SetHeight(Constants.sizes.row)
   self:SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
   anchorFrame = CharacterColumn.AffixHeader
 
@@ -713,7 +86,7 @@ function Main:CreateCharacterColumn(parent, index)
   -- Dungeon rows
   for dungeonIndex in ipairs(dungeons) do
     local DungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, CharacterColumn)
-    DungeonFrame:SetHeight(self.constants.sizes.row)
+    DungeonFrame:SetHeight(Constants.sizes.row)
     DungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     DungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
     self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
@@ -747,7 +120,7 @@ function Main:CreateCharacterColumn(parent, index)
   -- Raid Rows
   for raidIndex, raid in ipairs(raids) do
     local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, CharacterColumn)
-    RaidFrame:SetHeight(self.constants.sizes.row)
+    RaidFrame:SetHeight(Constants.sizes.row)
     RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
     self:SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
@@ -757,18 +130,18 @@ function Main:CreateCharacterColumn(parent, index)
       local DifficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
       DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
       DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-      DifficultyFrame:SetHeight(self.constants.sizes.row)
+      DifficultyFrame:SetHeight(Constants.sizes.row)
       self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
       anchorFrame = DifficultyFrame
 
       for encounterIndex in ipairs(raid.encounters) do
         local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
-        local size = self.constants.sizes.column
-        size = size - self.constants.sizes.padding -- left/right cell padding
+        local size = CHARACTER_WIDTH
+        size = size - Constants.sizes.padding      -- left/right cell padding
         size = size - (raid.numEncounters - 1) * 4 -- gaps
         size = size / raid.numEncounters           -- box sizes
-        EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
-        EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
+        EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", Constants.sizes.padding / 2, 0)
+        EncounterFrame:SetSize(size, Constants.sizes.row - 12)
         self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
         anchorFrame = EncounterFrame
       end
@@ -799,116 +172,170 @@ end
 ---@return boolean
 function Main:IsScrollbarNeeded()
   local numCharacters = Utils:TableCount(self:GetCharacters())
-  return numCharacters > 0 and self.constants.sizes.sidebar.width + numCharacters * self.constants.sizes.column > self:GetMaxWindowWidth()
+  return numCharacters > 0 and SIDEBAR_WIDTH + numCharacters * CHARACTER_WIDTH > self:GetMaxWindowWidth()
 end
 
 --- Calculate the main window size
 ---@return number, number
 function Main:GetWindowSize()
   local numCharacters = Utils:TableCount(self:GetCharacters())
-  local numDungeons = Utils:TableCount(self:GetDungeons())
-  local numRaids = Utils:TableCount(self:GetRaids())
-  local numDifficulties = Utils:TableCount(self:GetRaidDifficulties())
-  local numCharacterInfo = Utils:TableCount(Utils:TableFilter(self:GetCharacterInfo(), function(label)
+  local numDungeons = Utils:TableCount(Data:GetDungeons())
+  local numRaids = Utils:TableCount(Data:GetRaids())
+  local numDifficulties = Utils:TableCount(Data:GetRaidDifficulties())
+  local numCharacterInfo = Utils:TableCount(Utils:TableFilter(Data:GetCharacterInfo(), function(label)
     return label.enabled == nil or label.enabled == true
   end))
   local width = 0
-  local maxWidth = self:GetMaxWindowWidth()
+  local maxWidth = Window:GetMaxWindowWidth()
   local height = 0
 
   -- Width
   if numCharacters == 0 then
     width = 500
   else
-    width = width + self.constants.sizes.sidebar.width
-    width = width + numCharacters * self.constants.sizes.column
+    width = width + SIDEBAR_WIDTH
+    width = width + numCharacters * CHARACTER_WIDTH
   end
   if width > maxWidth then
     width = maxWidth
     if numCharacters > 0 then
-      height = height + self.constants.sizes.footer.height -- Shoes?
+      height = height + Constants.sizes.footer.height -- Shoes?
     end
   end
 
   -- Height
-  height = height + self.constants.sizes.titlebar.height                          -- Titlebar duh
-  height = height + numCharacterInfo * self.constants.sizes.row                   -- Character info
-  height = height + (numDungeons + 1) * self.constants.sizes.row                  -- Dungeons
-  if self.db.global.raids.enabled == true then
-    height = height + numRaids * (numDifficulties + 1) * self.constants.sizes.row -- Raids
+  height = height + Constants.sizes.titlebar.height                          -- Titlebar duh
+  height = height + numCharacterInfo * Constants.sizes.row                   -- Character info
+  height = height + (numDungeons + 1) * Constants.sizes.row                  -- Dungeons
+  if Data.db.global.raids.enabled == true then
+    height = height + numRaids * (numDifficulties + 1) * Constants.sizes.row -- Raids
   end
 
   return width, height
 end
 
+function Main:Render()
+  local currentAffixes = Data:GetCurrentAffixes()
+  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
+  local seasonID = Data:GetCurrentSeason()
+  local affixes = Data:GetAffixes()
+  local affixRotation = Data:GetAffixRotation()
+  local difficulties = Data:GetRaidDifficulties(true)
+  local dungeons = Data:GetDungeons()
+  local labels = Data:GetCharacterInfo()
+  local raids = Data:GetRaids(true)
+  local characters = self:GetCharacters()
+
+  local anchorFrame
+
+  if not self.window then
+    self.window = Window:CreateWindow({
+      name = "Main",
+      title = addonName,
+      sidebar = true
+    })
+  end
+
+  -- Zero characters
+  if not self.zeroCharacters then
+    self.zeroCharacters = self.window.body:CreateFontString("$parentNoCharacterText", "ARTWORK")
+    self.zeroCharacters:SetPoint("TOPLEFT", self.window.body, "TOPLEFT", 50, -50)
+    self.zeroCharacters:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", -50, 50)
+    self.zeroCharacters:SetJustifyH("CENTER")
+    self.zeroCharacters:SetJustifyV("CENTER")
+    self.zeroCharacters:SetFontObject("GameFontHighlight_NoShadow")
+    self.zeroCharacters:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
+    self.zeroCharacters:SetVertexColor(1.0, 0.82, 0.0, 1)
+    self.zeroCharacters:Hide()
+  end
+
+  -- Affixes
+  if not self.window.affixes then
+    self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window.TitleBar)
+    self.window.affixes.buttons = {}
+  end
+  if Utils:TableCount(currentAffixes) > 0 then
+    Utils:TableForEach(currentAffixes, function(currentAffix, i)
+      local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
+      local button = self.window.affixes.buttons[i]
+      if not button then
+        button = CreateFrame("Button", "$parent" .. i, self.window.affixes)
+        button:SetScript("OnEnter", function()
+          GameTooltip:ClearAllPoints()
+          GameTooltip:ClearLines()
+          GameTooltip:SetOwner(button, "ANCHOR_TOP")
+          GameTooltip:SetText(name, 1, 1, 1);
+          GameTooltip:AddLine(desc, nil, nil, nil, true)
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+          GameTooltip:Show()
+        end)
+        button:SetScript("OnLeave", function()
+          GameTooltip:Hide()
+        end)
+        button:SetScript("OnClick", function()
+          self:SendMessage("AE_WEEKLYAFFIXES_TOGGLE")
+        end)
+        self.window.affixes.buttons[i] = button
+      end
+      button:SetSize(20, 20)
+      button:SetNormalTexture(fileDataID)
+    end)
+    self.window.affixes:Show()
+  else
+    self.window.affixes:Hide()
+  end
+
+  if self:IsScrollbarNeeded() then
+    self.window.Footer.Scrollbar:SetMinMaxValues(0, self.window.body.ScrollFrame.ScrollChild:GetWidth() - self.window.body.ScrollFrame:GetWidth())
+    self.window.Footer.Scrollbar.thumb:SetWidth(self.window.Footer.Scrollbar:GetWidth() / 10)
+    self.window.body:SetPoint("BOTTOMLEFT", self.window.Footer, "TOPLEFT")
+    self.window.body:SetPoint("BOTTOMRIGHT", self.window.Footer, "TOPRIGHT")
+    self.window.Footer:Show()
+  else
+    self.window.body.ScrollFrame:SetHorizontalScroll(0)
+    self.window.body:SetPoint("BOTTOMLEFT", self.window, "BOTTOMLEFT")
+    self.window.body:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT")
+    self.window.Footer:Hide()
+  end
+
+  if Utils:TableCount(characters) <= 0 then
+    self.zeroCharacters:Show()
+    self.window.body.Sidebar:Hide()
+    self.window.body.ScrollFrame:Hide()
+    self.window.Footer:Hide()
+  else
+    self.zeroCharacters:Hide()
+    self.window.body.Sidebar:Show()
+    self.window.body.ScrollFrame:Show()
+    self.window.Footer:Show()
+  end
+
+  self.window:SetSize(self:GetWindowSize())
+  self.window.body.ScrollFrame.ScrollChild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.ScrollFrame:GetHeight())
+  Window:SetWindowScale(Data.db.global.interface.windowScale / 100)
+  Window:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+end
+
 function Main:CreateUI()
-  local currentAffixes = self:GetCurrentAffixes()
-  local activeWeek = self:GetActiveAffixRotation(currentAffixes)
-  local seasonID = self:GetCurrentSeason()
-  local affixes = self:GetAffixes()
-  local affixRotation = self:GetAffixRotation()
-  local difficulties = self:GetRaidDifficulties(true)
-  local dungeons = self:GetDungeons()
-  local labels = self:GetCharacterInfo()
-  local raids = self:GetRaids(true)
+  local currentAffixes = Data:GetCurrentAffixes()
+  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
+  local seasonID = Data:GetCurrentSeason()
+  local affixes = Data:GetAffixes()
+  local affixRotation = Data:GetAffixRotation()
+  local difficulties = Data:GetRaidDifficulties(true)
+  local dungeons = Data:GetDungeons()
+  local labels = Data:GetCharacterInfo()
+  local raids = Data:GetRaids(true)
   local anchorFrame
 
   local winMain = self:CreateWindow("Main", "AlterEgo", UIParent)
-  local winAffixRotation = self:CreateWindow("Affixes", "Affixes", UIParent)
   local winEquipment = self:CreateWindow("Character", "Character", UIParent)
   local winKeyManager = self:CreateWindow("KeyManager", "KeyManager", UIParent)
 
   winEquipment.Body.Table = self.Table:New()
   winEquipment.Body.Table.frame:SetParent(winEquipment.Body)
   winEquipment.Body.Table.frame:SetPoint("TOPLEFT", winEquipment.Body, "TOPLEFT")
-
-  do -- Affix window
-    local data = {columns = {}, rows = {}}
-    local firstRow = {cols = {}}
-    winAffixRotation.Body.Table = self.Table:New({rowHeight = 28})
-    winAffixRotation.Body.Table.frame:SetParent(winAffixRotation.Body)
-    winAffixRotation.Body.Table.frame:SetPoint("TOPLEFT", winAffixRotation.Body, "TOPLEFT")
-    winAffixRotation.TitleBar.Text:SetText("Weekly Affixes")
-    if not affixRotation then
-      table.insert(data.columns, {width = 500})
-      table.insert(data.rows, {cols = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
-    else
-      Utils:TableForEach(affixRotation.activation, function(activationLevel)
-        table.insert(data.columns, {width = 140})
-        table.insert(firstRow.cols, {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}})
-      end)
-      table.insert(data.rows, firstRow)
-      Utils:TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
-        local row = {cols = {}}
-        local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
-        Utils:TableForEach(affixValues, function(affixValue)
-          if type(affixValue) == "number" then
-            local affix = Utils:TableGet(affixes, "id", affixValue)
-            if affix then
-              local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
-              table.insert(row.cols, {
-                text = "|T" .. affix.fileDataID .. ":0|t " .. name,
-                backgroundColor = backgroundColor or nil,
-                OnEnter = function()
-                  GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true);
-                  GameTooltip:AddLine(affix.description, nil, nil, nil, true);
-                end,
-              })
-            end
-          else
-            table.insert(row.cols, {
-              text = affixValue,
-              backgroundColor = backgroundColor or nil,
-            })
-          end
-        end)
-        table.insert(data.rows, row)
-      end)
-    end
-    winAffixRotation.Body.Table:SetData(data)
-    local w, h = winAffixRotation.Body.Table:GetSize()
-    winAffixRotation:SetSize(w, h + self.constants.sizes.titlebar.height)
-  end
 
   do -- TitleBar
     anchorFrame = winMain.TitleBar
@@ -942,7 +369,7 @@ function Main:CreateUI()
     end
     winMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", winMain.TitleBar)
     winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
-    winMain.TitleBar.SettingsButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.SettingsButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
     winMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
     winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function()
       return true
@@ -953,12 +380,12 @@ function Main:CreateUI()
     winMain.TitleBar.SettingsButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER")
     winMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
-    winMain.TitleBar.SettingsButton.Icon:SetTexture(self.constants.media.IconSettings)
+    winMain.TitleBar.SettingsButton.Icon:SetTexture(Constants.media.IconSettings)
     winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SettingsButton:GetName() .. "Dropdown", winMain.TitleBar, "UIDropDownMenuTemplate")
     winMain.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER", 0, -6)
     winMain.TitleBar.SettingsButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.SettingsButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.SettingsButton.Dropdown, Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.SettingsButton.Dropdown,
       function(frame, level, subMenuName)
@@ -968,10 +395,10 @@ function Main:CreateUI()
               {
                 text = difficulty.name,
                 value = difficulty.id,
-                checked = self.db.global.raids.hiddenDifficulties and not self.db.global.raids.hiddenDifficulties[difficulty.id],
+                checked = Data.db.global.raids.hiddenDifficulties and not Data.db.global.raids.hiddenDifficulties[difficulty.id],
                 keepShownOnClick = true,
                 func = function(button, arg1, arg2, checked)
-                  self.db.global.raids.hiddenDifficulties[button.value] = not checked
+                  Data.db.global.raids.hiddenDifficulties[button.value] = not checked
                   self:UpdateUI()
                 end
               },
@@ -984,10 +411,10 @@ function Main:CreateUI()
               {
                 text = i .. "%",
                 value = i,
-                checked = self.db.global.interface.windowScale == i,
+                checked = Data.db.global.interface.windowScale == i,
                 keepShownOnClick = false,
                 func = function(button)
-                  self.db.global.interface.windowScale = button.value
+                  Data.db.global.interface.windowScale = button.value
                   self:UpdateUI()
                 end
               },
@@ -998,46 +425,46 @@ function Main:CreateUI()
           UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show the weekly affixes",
-            checked = self.db.global.showAffixHeader,
+            checked = Data.db.global.showAffixHeader,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show the weekly affixes",
             tooltipText = "The affixes will be shown at the top.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showAffixHeader = checked
+              Data.db.global.showAffixHeader = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Show characters with zero rating",
-            checked = self.db.global.showZeroRatedCharacters,
+            checked = Data.db.global.showZeroRatedCharacters,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show characters with zero rating",
             tooltipText = "Too many alts?",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showZeroRatedCharacters = checked
+              Data.db.global.showZeroRatedCharacters = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Show realm names",
-            checked = self.db.global.showRealms,
+            checked = Data.db.global.showRealms,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show realm names",
             tooltipText = "One big party!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showRealms = checked
+              Data.db.global.showRealms = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Use Raider.io rating colors",
-            checked = self.db.global.useRIOScoreColor,
+            checked = Data.db.global.useRIOScoreColor,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Use Raider.io rating colors",
@@ -1045,61 +472,61 @@ function Main:CreateUI()
             tooltipOnButton = true,
             disabled = type(_G.RaiderIO) == "nil",
             func = function(button, arg1, arg2, checked)
-              self.db.global.useRIOScoreColor = checked
+              Data.db.global.useRIOScoreColor = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Announce instance resets",
-            checked = self.db.global.announceResets,
+            checked = Data.db.global.announceResets,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Announce instance resets",
             tooltipText = "Let others in your group know when you've reset the instances.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.announceResets = checked
+              Data.db.global.announceResets = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Announce new keystones (Party)",
-            checked = self.db.global.announceKeystones.autoParty,
+            checked = Data.db.global.announceKeystones.autoParty,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "New keystones (Party)",
             tooltipText = "Announce to your party when you loot a new keystone.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.announceKeystones.autoParty = checked
+              Data.db.global.announceKeystones.autoParty = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Announce new keystones (Guild)",
-            checked = self.db.global.announceKeystones.autoGuild,
+            checked = Data.db.global.announceKeystones.autoGuild,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "New keystones (Guild)",
             tooltipText = "Announce to your guild when you loot a new keystone.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.announceKeystones.autoGuild = checked
+              Data.db.global.announceKeystones.autoGuild = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show raid progress",
-            checked = self.db.global.raids and self.db.global.raids.enabled,
+            checked = Data.db.global.raids and Data.db.global.raids.enabled,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show raid progress",
             tooltipText = "Because Mythic Plus ain't enough!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.raids.enabled = checked
+              Data.db.global.raids.enabled = checked
               self:UpdateUI()
             end,
             hasArrow = true,
@@ -1108,97 +535,97 @@ function Main:CreateUI()
           if seasonID == 12 then
             UIDropDownMenu_AddButton({
               text = "Show |cFF00FFFFAwakened|r raids only",
-              checked = self.db.global.raids and self.db.global.raids.modifiedInstanceOnly,
+              checked = Data.db.global.raids and Data.db.global.raids.modifiedInstanceOnly,
               keepShownOnClick = true,
               isNotRadio = true,
               tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
               tooltipText = "It's time to move on!",
               tooltipOnButton = true,
               func = function(button, arg1, arg2, checked)
-                self.db.global.raids.modifiedInstanceOnly = checked
+                Data.db.global.raids.modifiedInstanceOnly = checked
                 self:UpdateUI()
               end
             })
           end
           UIDropDownMenu_AddButton({
             text = "Show difficulty colors",
-            checked = self.db.global.raids and self.db.global.raids.colors,
+            checked = Data.db.global.raids and Data.db.global.raids.colors,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show difficulty colors",
             tooltipText = "Argharhggh! So much greeeen!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.raids.colors = checked
+              Data.db.global.raids.colors = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show timed icons",
-            checked = self.db.global.showTiers,
+            checked = Data.db.global.showTiers,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show timed icons",
             tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showTiers = checked
+              Data.db.global.showTiers = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Show score colors",
-            checked = self.db.global.showAffixColors,
+            checked = Data.db.global.showAffixColors,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show score colors",
             tooltipText = "Show some colors!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showAffixColors = checked
+              Data.db.global.showAffixColors = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "PvP", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show PvP progress",
-            checked = self.db.global.pvp and self.db.global.pvp.enabled,
+            checked = Data.db.global.pvp and Data.db.global.pvp.enabled,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show PvP progress",
             tooltipText = "Because Mythic Plus ain't enough!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.pvp.enabled = checked
+              Data.db.global.pvp.enabled = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show the minimap button",
-            checked = not self.db.global.minimap.hide,
+            checked = not Data.db.global.minimap.hide,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show the minimap button",
             tooltipText = "It does get crowded around the minimap sometimes.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.minimap.hide = not checked
-              self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+              Data.db.global.minimap.hide = not checked
+              self.Libs.LDBIcon:Refresh("AlterEgo", Data.db.global.minimap)
             end
           })
           UIDropDownMenu_AddButton({
             text = "Lock the minimap button",
-            checked = self.db.global.minimap.lock,
+            checked = Data.db.global.minimap.lock,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Lock the minimap button",
             tooltipText = "No more moving the button around accidentally!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.minimap.lock = checked
-              self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+              Data.db.global.minimap.lock = checked
+              self.Libs.LDBIcon:Refresh("AlterEgo", Data.db.global.minimap)
             end
           })
           UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
@@ -1207,26 +634,26 @@ function Main:CreateUI()
             keepShownOnClick = false,
             notCheckable = true,
             hasColorSwatch = true,
-            r = self.db.global.interface.windowColor.r,
-            g = self.db.global.interface.windowColor.g,
-            b = self.db.global.interface.windowColor.b,
+            r = Data.db.global.interface.windowColor.r,
+            g = Data.db.global.interface.windowColor.g,
+            b = Data.db.global.interface.windowColor.b,
             -- notClickable = true,
             hasOpacity = false,
             func = UIDropDownMenuButton_OpenColorPicker,
             swatchFunc = function()
               local r, g, b = ColorPickerFrame:GetColorRGB();
-              self.db.global.interface.windowColor.r = r
-              self.db.global.interface.windowColor.g = g
-              self.db.global.interface.windowColor.b = b
-              self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
-              -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+              Data.db.global.interface.windowColor.r = r
+              Data.db.global.interface.windowColor.g = g
+              Data.db.global.interface.windowColor.b = b
+              self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+              -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
             end,
             cancelFunc = function(color)
-              self.db.global.interface.windowColor.r = color.r
-              self.db.global.interface.windowColor.g = color.g
-              self.db.global.interface.windowColor.b = color.b
-              self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
-              -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+              Data.db.global.interface.windowColor.r = color.r
+              Data.db.global.interface.windowColor.g = color.g
+              Data.db.global.interface.windowColor.b = color.b
+              self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+              -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
             end
           })
           UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
@@ -1251,7 +678,7 @@ function Main:CreateUI()
     end)
     winMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", winMain.TitleBar)
     winMain.TitleBar.SortingButton:SetPoint("RIGHT", winMain.TitleBar.SettingsButton, "LEFT", 0, 0)
-    winMain.TitleBar.SortingButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.SortingButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
     winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function()
       return true
     end
@@ -1261,22 +688,22 @@ function Main:CreateUI()
     winMain.TitleBar.SortingButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER")
     winMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
-    winMain.TitleBar.SortingButton.Icon:SetTexture(self.constants.media.IconSorting)
+    winMain.TitleBar.SortingButton.Icon:SetTexture(Constants.media.IconSorting)
     winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SortingButton:GetName() .. "Dropdown", winMain.TitleBar.SortingButton, "UIDropDownMenuTemplate")
     winMain.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER", 0, -6)
     winMain.TitleBar.SortingButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.SortingButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.SortingButton.Dropdown, Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.SortingButton.Dropdown,
       function()
-        for _, option in ipairs(self.constants.sortingOptions) do
+        for _, option in ipairs(Constants.sortingOptions) do
           UIDropDownMenu_AddButton({
             text = option.text,
-            checked = self.db.global.sorting == option.value,
+            checked = Data.db.global.sorting == option.value,
             arg1 = option.value,
             func = function(button, arg1, arg2, checked)
-              self.db.global.sorting = arg1
+              Data.db.global.sorting = arg1
               self:UpdateUI()
             end
           })
@@ -1301,7 +728,7 @@ function Main:CreateUI()
     end)
     winMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
     winMain.TitleBar.CharactersButton:SetPoint("RIGHT", winMain.TitleBar.SortingButton, "LEFT", 0, 0)
-    winMain.TitleBar.CharactersButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.CharactersButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
     winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function()
       return true
     end
@@ -1311,12 +738,12 @@ function Main:CreateUI()
     winMain.TitleBar.CharactersButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER")
     winMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
-    winMain.TitleBar.CharactersButton.Icon:SetTexture(self.constants.media.IconCharacters)
+    winMain.TitleBar.CharactersButton.Icon:SetTexture(Constants.media.IconCharacters)
     winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.CharactersButton:GetName() .. "Dropdown", winMain.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
     winMain.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER", 0, -6)
     winMain.TitleBar.CharactersButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.CharactersButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.CharactersButton.Dropdown, Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.CharactersButton.Dropdown,
       function()
@@ -1336,7 +763,7 @@ function Main:CreateUI()
             keepShownOnClick = true,
             arg1 = character.GUID,
             func = function(button, arg1, arg2, checked)
-              self.db.global.characters[arg1].enabled = checked
+              Data.db.global.characters[arg1].enabled = checked
               self:UpdateUI()
             end
           })
@@ -1361,7 +788,7 @@ function Main:CreateUI()
     end)
     winMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
     winMain.TitleBar.AnnounceButton:SetPoint("RIGHT", winMain.TitleBar.CharactersButton, "LEFT", 0, 0)
-    winMain.TitleBar.AnnounceButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.AnnounceButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
     winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function()
       return true
     end
@@ -1372,12 +799,12 @@ function Main:CreateUI()
       winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER")
     winMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
-    winMain.TitleBar.AnnounceButton.Icon:SetTexture(self.constants.media.IconAnnounce)
+    winMain.TitleBar.AnnounceButton.Icon:SetTexture(Constants.media.IconAnnounce)
     winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.AnnounceButton:GetName() .. "Dropdown", winMain.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
     winMain.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER", 0, -6)
     winMain.TitleBar.AnnounceButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.AnnounceButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.AnnounceButton.Dropdown, Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.AnnounceButton.Dropdown,
       function()
@@ -1414,26 +841,26 @@ function Main:CreateUI()
         UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
           text = "Multiple chat messages",
-          checked = self.db.global.announceKeystones.multiline,
+          checked = Data.db.global.announceKeystones.multiline,
           keepShownOnClick = true,
           isNotRadio = true,
           tooltipTitle = "Announce keystones with multiple chat messages",
           tooltipText = "With too many alts it could get spammy though.",
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
-            self.db.global.announceKeystones.multiline = checked
+            Data.db.global.announceKeystones.multiline = checked
           end
         })
         UIDropDownMenu_AddButton({
           text = "With character names",
-          checked = self.db.global.announceKeystones.multilineNames,
+          checked = Data.db.global.announceKeystones.multilineNames,
           keepShownOnClick = true,
           isNotRadio = true,
           tooltipTitle = "Add character names before each keystone",
           tooltipText = "Character names are only added if multiple chat messages is enabled.",
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
-            self.db.global.announceKeystones.multilineNames = checked
+            Data.db.global.announceKeystones.multilineNames = checked
           end
         })
       end,
@@ -1456,23 +883,12 @@ function Main:CreateUI()
     end)
   end
 
-  do -- No characters enabled
-    winMain.Body.NoCharacterText = winMain.Body:CreateFontString("$parentNoCharacterText", "ARTWORK")
-    winMain.Body.NoCharacterText:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", 50, -50)
-    winMain.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", winMain.Body, "BOTTOMRIGHT", -50, 50)
-    winMain.Body.NoCharacterText:SetJustifyH("CENTER")
-    winMain.Body.NoCharacterText:SetJustifyV("CENTER")
-    winMain.Body.NoCharacterText:SetFontObject("GameFontHighlight_NoShadow")
-    winMain.Body.NoCharacterText:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
-    winMain.Body.NoCharacterText:SetVertexColor(1.0, 0.82, 0.0, 1)
-    winMain.Body.NoCharacterText:Hide()
-  end
 
   do -- Sidebar
     winMain.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", winMain.Body)
     winMain.Body.Sidebar:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT")
     winMain.Body.Sidebar:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT")
-    winMain.Body.Sidebar:SetWidth(self.constants.sizes.sidebar.width)
+    winMain.Body.Sidebar:SetWidth(SIDEBAR_WIDTH)
     self:SetBackgroundColor(winMain.Body.Sidebar, 0, 0, 0, 0.3)
     anchorFrame = winMain.Body.Sidebar
   end
@@ -1487,10 +903,10 @@ function Main:CreateUI()
         Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
         Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
       end
-      Label:SetHeight(self.constants.sizes.row)
+      Label:SetHeight(Constants.sizes.row)
       Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-      Label.Text:SetPoint("LEFT", Label, "LEFT", self.constants.sizes.padding, 0)
-      Label.Text:SetPoint("RIGHT", Label, "RIGHT", -self.constants.sizes.padding, 0)
+      Label.Text:SetPoint("LEFT", Label, "LEFT", Constants.sizes.padding, 0)
+      Label.Text:SetPoint("RIGHT", Label, "RIGHT", -Constants.sizes.padding, 0)
       Label.Text:SetJustifyH("LEFT")
       Label.Text:SetFontObject("GameFontHighlight_NoShadow")
       Label.Text:SetText(info.label)
@@ -1503,10 +919,10 @@ function Main:CreateUI()
     local Label = CreateFrame("Frame", "$parentMythicPlusLabel", winMain.Body.Sidebar)
     Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    Label:SetHeight(self.constants.sizes.row)
+    Label:SetHeight(Constants.sizes.row)
     Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-    Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", self.constants.sizes.padding, 0)
-    Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
+    Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", Constants.sizes.padding, 0)
+    Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
     Label.Text:SetFontObject("GameFontHighlight_NoShadow")
     Label.Text:SetJustifyH("LEFT")
     Label.Text:SetText("Mythic Plus")
@@ -1519,14 +935,14 @@ function Main:CreateUI()
       local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, winMain.Body.Sidebar, "InsecureActionButtonTemplate")
       Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
       Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
-      Label:SetHeight(self.constants.sizes.row)
+      Label:SetHeight(Constants.sizes.row)
       Label.Icon = Label:CreateTexture(Label:GetName() .. "Icon", "ARTWORK")
       Label.Icon:SetSize(16, 16)
-      Label.Icon:SetPoint("LEFT", Label:GetName(), "LEFT", self.constants.sizes.padding, 0)
+      Label.Icon:SetPoint("LEFT", Label:GetName(), "LEFT", Constants.sizes.padding, 0)
       Label.Icon:SetTexture(dungeon.icon)
       Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-      Label.Text:SetPoint("TOPLEFT", Label:GetName(), "TOPLEFT", 16 + self.constants.sizes.padding * 2, -3)
-      Label.Text:SetPoint("BOTTOMRIGHT", Label:GetName(), "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
+      Label.Text:SetPoint("TOPLEFT", Label:GetName(), "TOPLEFT", 16 + Constants.sizes.padding * 2, -3)
+      Label.Text:SetPoint("BOTTOMRIGHT", Label:GetName(), "BOTTOMRIGHT", -Constants.sizes.padding, 3)
       Label.Text:SetJustifyH("LEFT")
       Label.Text:SetFontObject("GameFontHighlight_NoShadow")
       Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
@@ -1537,7 +953,7 @@ function Main:CreateUI()
   do -- Raids & Difficulties
     for raidIndex, raid in ipairs(raids) do
       local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, winMain.Body.Sidebar)
-      RaidFrame:SetHeight(self.constants.sizes.row)
+      RaidFrame:SetHeight(Constants.sizes.row)
       RaidFrame:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
       RaidFrame:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
       RaidFrame:SetScript("OnEnter", function()
@@ -1555,7 +971,7 @@ function Main:CreateUI()
         GameTooltip:Hide()
       end)
       RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
-      RaidFrame.Text:SetPoint("LEFT", RaidFrame, "LEFT", self.constants.sizes.padding, 0)
+      RaidFrame.Text:SetPoint("LEFT", RaidFrame, "LEFT", Constants.sizes.padding, 0)
       RaidFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
       RaidFrame.Text:SetJustifyH("LEFT")
       RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
@@ -1563,14 +979,14 @@ function Main:CreateUI()
       RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
       RaidFrame.ModifiedIcon = RaidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
       RaidFrame.ModifiedIcon:SetSize(18, 18)
-      RaidFrame.ModifiedIcon:SetPoint("RIGHT", RaidFrame, "RIGHT", -(self.constants.sizes.padding / 2), 0)
+      RaidFrame.ModifiedIcon:SetPoint("RIGHT", RaidFrame, "RIGHT", -(Constants.sizes.padding / 2), 0)
       if raid.modifiedInstanceInfo then
         RaidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
         RaidFrame.ModifiedIcon:Show()
-        RaidFrame.Text:SetPoint("RIGHT", RaidFrame.ModifiedIcon, "LEFT", -(self.constants.sizes.padding / 2), 0)
+        RaidFrame.Text:SetPoint("RIGHT", RaidFrame.ModifiedIcon, "LEFT", -(Constants.sizes.padding / 2), 0)
       else
         RaidFrame.ModifiedIcon:Hide()
-        RaidFrame.Text:SetPoint("RIGHT", RaidFrame, "RIGHT", -self.constants.sizes.padding, 0)
+        RaidFrame.Text:SetPoint("RIGHT", RaidFrame, "RIGHT", -Constants.sizes.padding, 0)
       end
       anchorFrame = RaidFrame
 
@@ -1578,7 +994,7 @@ function Main:CreateUI()
         local DifficultFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
         DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        DifficultFrame:SetHeight(self.constants.sizes.row)
+        DifficultFrame:SetHeight(Constants.sizes.row)
         DifficultFrame:SetScript("OnEnter", function()
           GameTooltip:ClearAllPoints()
           GameTooltip:ClearLines()
@@ -1590,14 +1006,14 @@ function Main:CreateUI()
           GameTooltip:Hide()
         end)
         DifficultFrame.Text = DifficultFrame:CreateFontString(DifficultFrame:GetName() .. "Text", "OVERLAY")
-        DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", self.constants.sizes.padding, -3)
-        DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
+        DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", Constants.sizes.padding, -3)
+        DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
         DifficultFrame.Text:SetJustifyH("LEFT")
         DifficultFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
         DifficultFrame.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
         -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
         -- RaidLabel.Icon:SetSize(16, 16)
-        -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", self.constants.sizes.padding, 0)
+        -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", Constants.sizes.padding, 0)
         -- RaidLabel.Icon:SetTexture(raid.icon)
         anchorFrame = DifficultFrame
       end
@@ -1605,22 +1021,22 @@ function Main:CreateUI()
   end
 
   winMain.Body.ScrollFrame = CreateFrame("ScrollFrame", "$parentScrollFrame", winMain.Body)
-  winMain.Body.ScrollFrame:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", self.constants.sizes.sidebar.width, 0)
-  winMain.Body.ScrollFrame:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT", self.constants.sizes.sidebar.width, 0)
+  winMain.Body.ScrollFrame:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", SIDEBAR_WIDTH, 0)
+  winMain.Body.ScrollFrame:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT", SIDEBAR_WIDTH, 0)
   winMain.Body.ScrollFrame:SetPoint("BOTTOMRIGHT", winMain.Body, "BOTTOMRIGHT")
   winMain.Body.ScrollFrame:SetPoint("TOPRIGHT", winMain.Body, "TOPRIGHT")
   winMain.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", "$parentScrollChild", winMain.Body.ScrollFrame)
   winMain.Body.ScrollFrame:SetScrollChild(winMain.Body.ScrollFrame.ScrollChild)
 
   winMain.Footer = CreateFrame("Frame", "$parentFooter", winMain)
-  winMain.Footer:SetHeight(self.constants.sizes.footer.height)
+  winMain.Footer:SetHeight(Constants.sizes.footer.height)
   winMain.Footer:SetPoint("BOTTOMLEFT", winMain, "BOTTOMLEFT")
   winMain.Footer:SetPoint("BOTTOMRIGHT", winMain, "BOTTOMRIGHT")
   self:SetBackgroundColor(winMain.Footer, 0, 0, 0, .3)
 
   winMain.Footer.Scrollbar = CreateFrame("Slider", "$parentScrollbar", winMain.Footer, "UISliderTemplate")
-  winMain.Footer.Scrollbar:SetPoint("TOPLEFT", winMain.Footer, "TOPLEFT", self.constants.sizes.sidebar.width, 0)
-  winMain.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", winMain.Footer, "BOTTOMRIGHT", -self.constants.sizes.padding / 2, 0)
+  winMain.Footer.Scrollbar:SetPoint("TOPLEFT", winMain.Footer, "TOPLEFT", SIDEBAR_WIDTH, 0)
+  winMain.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", winMain.Footer, "BOTTOMRIGHT", -Constants.sizes.padding / 2, 0)
   winMain.Footer.Scrollbar:SetMinMaxValues(0, 100)
   winMain.Footer.Scrollbar:SetValue(0)
   winMain.Footer.Scrollbar:SetValueStep(1)
@@ -1630,7 +1046,7 @@ function Main:CreateUI()
   winMain.Footer.Scrollbar.thumb = winMain.Footer.Scrollbar:GetThumbTexture()
   winMain.Footer.Scrollbar.thumb:SetPoint("CENTER")
   winMain.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
-  winMain.Footer.Scrollbar.thumb:SetHeight(self.constants.sizes.footer.height - 10)
+  winMain.Footer.Scrollbar.thumb:SetHeight(Constants.sizes.footer.height - 10)
   winMain.Footer.Scrollbar:SetScript("OnValueChanged", function(_, value)
     winMain.Body.ScrollFrame:SetHorizontalScroll(value)
   end)
@@ -1655,35 +1071,22 @@ function Main:UpdateUI()
     return
   end
 
-  local affixes = self:GetAffixes(true)
-  local currentAffixes = self:GetCurrentAffixes();
+  local affixes = Data:GetAffixes(true)
+  local currentAffixes = Data:GetCurrentAffixes();
   local characters = self:GetCharacters()
   local numCharacters = Utils:TableCount(characters)
-  local dungeons = self:GetDungeons()
-  local raids = self:GetRaids(true)
-  local difficulties = self:GetRaidDifficulties(true)
-  local labels = self:GetCharacterInfo()
+  local dungeons = Data:GetDungeons()
+  local raids = Data:GetRaids(true)
+  local difficulties = Data:GetRaidDifficulties(true)
+  local labels = Data:GetCharacterInfo()
   local anchorFrame
 
-  if numCharacters == 0 then
-    winMain.Body.Sidebar:Hide()
-    winMain.Body.ScrollFrame:Hide()
-    winMain.Footer:Hide()
-    winMain.Body.NoCharacterText:Show()
-  else
-    winMain.Body.Sidebar:Show()
-    winMain.Body.ScrollFrame:Show()
-    winMain.Footer:Show()
-    winMain.Body.NoCharacterText:Hide()
-  end
 
-  winMain:SetSize(self:GetWindowSize())
-
-  self:SetWindowScale(self.db.global.interface.windowScale / 100)
-  self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
-  -- winMain:SetScale(self.db.global.interface.windowScale / 100)
-  -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
-  winMain.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * self.constants.sizes.column, winMain.Body.ScrollFrame:GetHeight())
+  self:SetWindowScale(Data.db.global.interface.windowScale / 100)
+  self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+  -- winMain:SetScale(Data.db.global.interface.windowScale / 100)
+  -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
+  winMain.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * CHARACTER_WIDTH, winMain.Body.ScrollFrame:GetHeight())
 
   if self:IsScrollbarNeeded() then
     winMain.Footer.Scrollbar:SetMinMaxValues(0, winMain.Body.ScrollFrame.ScrollChild:GetWidth() - winMain.Body.ScrollFrame:GetWidth())
@@ -1705,7 +1108,7 @@ function Main:UpdateUI()
     else
       winMain.TitleBar.Text:Show()
     end
-    if currentAffixes and self.db.global.showAffixHeader then
+    if currentAffixes and Data.db.global.showAffixHeader then
       winMain.TitleBar.Affixes:Show()
     else
       winMain.TitleBar.Affixes:Hide()
@@ -1803,7 +1206,7 @@ function Main:UpdateUI()
     for raidIndex, raid in ipairs(raids) do
       local RaidFrame = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
       if RaidFrame then
-        if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
+        if Data.db.global.raids.enabled and (not Data.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
           RaidFrame:Show()
           RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
           RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1811,7 +1214,7 @@ function Main:UpdateUI()
           for difficultyIndex, difficulty in ipairs(difficulties) do
             local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
             if DifficultyFrame then
-              if self.db.global.raids.hiddenDifficulties and self.db.global.raids.hiddenDifficulties[difficulty.id] then
+              if Data.db.global.raids.hiddenDifficulties and Data.db.global.raids.hiddenDifficulties[difficulty.id] then
                 DifficultyFrame:Hide()
               else
                 DifficultyFrame:Show()
@@ -2000,7 +1403,7 @@ function Main:UpdateUI()
 
                   if tier == "" then
                     levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                  elseif self.db.global.showAffixColors then
+                  elseif Data.db.global.showAffixColors then
                     local scoreColor = C_ChallengeMode.GetSpecificDungeonScoreRarityColor(affixScore.score)
                     if scoreColor ~= nil then
                       levelColor = scoreColor:GenerateHexColor()
@@ -2013,7 +1416,7 @@ function Main:UpdateUI()
 
               AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
               AffixFrame.Tier:SetText(tier)
-              if self.db.global.showTiers then
+              if Data.db.global.showTiers then
                 AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
                 AffixFrame.Text:SetJustifyH("RIGHT")
                 AffixFrame.Tier:Show()
@@ -2031,7 +1434,7 @@ function Main:UpdateUI()
       do -- Raid Rows
         for raidIndex, raid in ipairs(raids) do
           local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
-          if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
+          if Data.db.global.raids.enabled and (not Data.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo) then
             RaidFrame:Show()
             RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -2039,7 +1442,7 @@ function Main:UpdateUI()
             for difficultyIndex, difficulty in pairs(difficulties) do
               local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
               if DifficultyFrame then
-                if self.db.global.raids.hiddenDifficulties and self.db.global.raids.hiddenDifficulties[difficulty.id] then
+                if Data.db.global.raids.hiddenDifficulties and Data.db.global.raids.hiddenDifficulties[difficulty.id] then
                   DifficultyFrame:Hide()
                 else
                   DifficultyFrame:Show()
@@ -2091,12 +1494,12 @@ function Main:UpdateUI()
                     local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
                     if not EncounterFrame then
                       EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
-                      local size = self.constants.sizes.column
-                      size = size - self.constants.sizes.padding -- left/right cell padding
+                      local size = CHARACTER_WIDTH
+                      size = size - Constants.sizes.padding      -- left/right cell padding
                       size = size - (raid.numEncounters - 1) * 4 -- gaps
                       size = size / raid.numEncounters           -- box sizes
-                      EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
-                      EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
+                      EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", Constants.sizes.padding / 2, 0)
+                      EncounterFrame:SetSize(size, Constants.sizes.row - 12)
                       self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                     end
                     if character.raids.savedInstances then
@@ -2109,7 +1512,7 @@ function Main:UpdateUI()
                         end)
                         if savedEncounter ~= nil then
                           color = UNCOMMON_GREEN_COLOR
-                          if self.db.global.raids.colors then
+                          if Data.db.global.raids.colors then
                             color = difficulty.color
                           end
                           alpha = 0.5

@@ -1067,3 +1067,636 @@ end
 --   end
 --   self:UpdateUI()
 -- end
+
+
+function Main:GetCharacterInfo()
+  local dungeons = Data:GetDungeons()
+  local difficulties = Data:GetRaidDifficulties(true)
+  local _, seasonDisplayID = Data:GetCurrentSeason()
+  return {
+    {
+      label = CHARACTER,
+      value = function(character)
+        local name = "-"
+        local nameColor = "ffffffff"
+        if character.info.name ~= nil then
+          name = character.info.name
+        end
+        if character.info.class.file ~= nil then
+          local classColor = C_ClassColor.GetClassColor(character.info.class.file)
+          if classColor ~= nil then
+            nameColor = classColor.GenerateHexColor(classColor)
+          end
+        end
+        return "|c" .. nameColor .. name .. "|r"
+      end,
+      OnEnter = function(character)
+        local name = "-"
+        local nameColor = "ffffffff"
+        if character.info.name ~= nil then
+          name = character.info.name
+        end
+        if character.info.class.file ~= nil then
+          local classColor = C_ClassColor.GetClassColor(character.info.class.file)
+          if classColor ~= nil then
+            nameColor = classColor.GenerateHexColor(classColor)
+          end
+        end
+        name = "|c" .. nameColor .. name .. "|r"
+        if not self.db.global.showRealms then
+          name = name .. format(" (%s)", character.info.realm)
+        end
+        GameTooltip:AddLine(name, 1, 1, 1);
+        GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1);
+        if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
+          GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
+        end
+        if character.currencies ~= nil and Utils:TableCount(character.currencies) > 0 then
+          local dataCurrencies = self:GetCurrencies()
+          local characterCurrencies = {}
+          Utils:TableForEach(dataCurrencies, function(dataCurrency)
+            local characterCurrency = Utils:TableGet(character.currencies, "id", dataCurrency.id)
+            if characterCurrency then
+              local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+              local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
+              local currencyValue = characterCurrency.maxQuantity
+              if characterCurrency.useTotalEarnedForMaxQty then
+                if characterCurrency.maxQuantity > 0 then
+                  currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
+                else
+                  currencyValue = "No limit"
+                end
+              end
+              table.insert(characterCurrencies, {
+                currencyLabel,
+                currencyValue
+              })
+            end
+          end)
+          if Utils:TableCount(characterCurrencies) > 0 then
+            GameTooltip:AddLine(" ");
+            GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
+            Utils:TableForEach(characterCurrencies, function(characterCurrency)
+              GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
+            end)
+          end
+        end
+        if character.lastUpdate ~= nil then
+          GameTooltip:AddLine(" ");
+          GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        end
+        if type(character.equipment) == "table" then
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine("<Click to View Equipment>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+        end
+      end,
+      OnClick = function(character)
+        local windowCharacter = self:GetWindow("Character")
+        if windowCharacter.character and windowCharacter.character == character and windowCharacter:IsVisible() then
+          windowCharacter:Hide()
+          return
+        end
+        local data = {
+          columns = {
+            {width = 100},
+            {width = 280},
+            {width = 80, align = "CENTER"},
+            {width = 120},
+          },
+          rows = {
+            {
+              cols = {
+                {text = "Slot",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+                {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+              }
+            }
+          }
+        }
+        if type(character.equipment) == "table" then
+          Utils:TableForEach(character.equipment, function(item)
+            local upgradeLevel = ""
+            if item.itemUpgradeTrack ~= "" then
+              upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
+              if item.itemUpgradeLevel == item.itemUpgradeMax then
+                upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
+              end
+            end
+            local row = {
+              cols = {
+                {text = _G[item.itemSlotName]},
+                {
+                  text = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
+                  OnEnter = function()
+                    GameTooltip:SetHyperlink(item.itemLink)
+                    GameTooltip:AddLine(" ")
+                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                  end,
+                  OnClick = function()
+                    if IsModifiedClick("CHATLINK") then
+                      if not ChatEdit_InsertLink(item.itemLink) then
+                        ChatFrame_OpenChat(item.itemLink);
+                      end
+                    end
+                  end
+                },
+                {text = WrapTextInColorCode(item.itemLevel, select(4, GetItemQualityColor(item.itemQuality)))},
+                {text = upgradeLevel},
+              }
+            }
+            table.insert(data.rows, row)
+          end)
+          windowCharacter.Body.Table:SetData(data)
+          local w, h = windowCharacter.Body.Table:GetSize()
+          windowCharacter:SetSize(w, h + self.constants.sizes.titlebar.height)
+          local nameColor = WHITE_FONT_COLOR
+          if character.info.class.file ~= nil then
+            local classColor = C_ClassColor.GetClassColor(character.info.class.file)
+            if classColor ~= nil then
+              nameColor = classColor
+            end
+          end
+          windowCharacter.TitleBar.Text:SetText(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
+          windowCharacter:Show()
+          windowCharacter.character = character
+        end
+      end,
+      enabled = true,
+    },
+    {
+      label = "Realm",
+      value = function(character)
+        local realm = "-"
+        local realmColor = LIGHTGRAY_FONT_COLOR
+        if character.info.realm ~= nil then
+          realm = character.info.realm
+          realmColor = WHITE_FONT_COLOR
+        end
+        return realmColor:WrapTextInColorCode(realm)
+      end,
+      tooltip = false,
+      enabled = self.db.global.showRealms,
+    },
+    {
+      label = STAT_AVERAGE_ITEM_LEVEL,
+      value = function(character)
+        local itemLevel = "-"
+        local itemLevelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+        if character.info.ilvl ~= nil then
+          if character.info.ilvl.level ~= nil then
+            itemLevel = tostring(floor(character.info.ilvl.level))
+          end
+          if character.info.ilvl.color then
+            itemLevelColor = character.info.ilvl.color
+          else
+            itemLevelColor = WHITE_FONT_COLOR:GenerateHexColor()
+          end
+        end
+        return WrapTextInColorCode(itemLevel, itemLevelColor)
+      end,
+      OnEnter = function(character)
+        local itemLevelTooltip = ""
+        local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
+        if character.info.ilvl ~= nil then
+          if character.info.ilvl.level ~= nil then
+            itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.info.ilvl.level)
+          end
+          if character.info.ilvl.level ~= nil and character.info.ilvl.equipped ~= nil and character.info.ilvl.level ~= character.info.ilvl.equipped then
+            itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped);
+          end
+          if character.info.ilvl.level ~= nil then
+            itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
+          end
+          if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
+            itemLevelTooltip2 = itemLevelTooltip2 .. "\n\n" .. STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
+          end
+        end
+        GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
+        GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+      end,
+      enabled = true,
+    },
+    {
+      label = "Rating",
+      value = function(character)
+        local rating = "-"
+        local ratingColor = LIGHTGRAY_FONT_COLOR
+        if character.mythicplus.rating ~= nil then
+          rating = tostring(character.mythicplus.rating)
+          local color = Utils:GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          if color ~= nil then
+            ratingColor = color
+          else
+            ratingColor = WHITE_FONT_COLOR
+          end
+        end
+        return ratingColor:WrapTextInColorCode(rating)
+      end,
+      OnEnter = function(character)
+        local rating = "-"
+        local ratingColor = WHITE_FONT_COLOR
+        local bestSeasonScore = nil
+        local bestSeasonScoreColor = WHITE_FONT_COLOR
+        local bestSeasonNumber = nil
+        local numSeasonRuns = 0
+        if character.mythicplus.runHistory ~= nil then
+          numSeasonRuns = Utils:TableCount(character.mythicplus.runHistory)
+        end
+        if character.mythicplus.bestSeasonNumber ~= nil then
+          bestSeasonNumber = character.mythicplus.bestSeasonNumber
+        end
+        if character.mythicplus.bestSeasonScore ~= nil then
+          bestSeasonScore = character.mythicplus.bestSeasonScore
+          local color = Utils:GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
+          if color ~= nil then
+            bestSeasonScoreColor = color
+          end
+        end
+        if character.mythicplus.rating ~= nil then
+          local color = Utils:GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          if color ~= nil then
+            ratingColor = color
+          end
+          rating = tostring(character.mythicplus.rating)
+        end
+        GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
+        GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
+          local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(bestSeasonScore)
+          if bestSeasonNumber > 0 then
+            local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
+            bestSeasonValue = format("%s %s", bestSeasonValue, season)
+          end
+          GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        end
+        if character.mythicplus.dungeons ~= nil and Utils:TableCount(character.mythicplus.dungeons) > 0 then
+          GameTooltip:AddLine(" ")
+          local characterDungeons = CopyTable(character.mythicplus.dungeons)
+          for _, dungeon in pairs(characterDungeons) do
+            local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
+            if dungeonName ~= nil then
+              dungeon.name = dungeonName
+            else
+              dungeon.name = ""
+            end
+          end
+          table.sort(characterDungeons, function(a, b)
+            return strcmputf8i(a.name, b.name) < 0
+          end)
+          for _, dungeon in pairs(characterDungeons) do
+            if dungeon.name ~= "" then
+              local levelColor = LIGHTGRAY_FONT_COLOR
+              local levelValue = "-"
+              if dungeon.level > 0 then
+                levelColor = WHITE_FONT_COLOR
+                levelValue = "+" .. tostring(dungeon.level)
+              end
+              GameTooltip:AddDoubleLine(dungeon.name, levelValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, levelColor.r, levelColor.g, levelColor.b)
+            end
+          end
+          if numSeasonRuns > 0 then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+          end
+        end
+      end,
+      OnClick = function(character)
+        local numSeasonRuns = 0
+        if character.mythicplus.runHistory ~= nil then
+          numSeasonRuns = Utils:TableCount(character.mythicplus.runHistory)
+        end
+        if character.mythicplus.dungeons ~= nil
+          and Utils:TableCount(character.mythicplus.dungeons) > 0
+          and numSeasonRuns > 0
+          and IsModifiedClick("CHATLINK")
+        then
+          local dungeonScoreDungeonTable = {};
+          for _, dungeon in pairs(character.mythicplus.dungeons) do
+            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
+            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
+            table.insert(dungeonScoreDungeonTable, dungeon.level);
+          end
+          local dungeonScoreTable = {
+            character.mythicplus.rating,
+            character.GUID,
+            character.info.name,
+            character.info.class.id,
+            math.ceil(character.info.ilvl.level),
+            character.info.level,
+            numSeasonRuns,
+            character.mythicplus.bestSeasonScore,
+            character.mythicplus.bestSeasonNumber,
+            unpack(dungeonScoreDungeonTable)
+          };
+          local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+          if not ChatEdit_InsertLink(link) then
+            ChatFrame_OpenChat(link);
+          end
+        end
+      end,
+      enabled = true,
+    },
+    {
+      label = "Current Keystone",
+      value = function(character)
+        local currentKeystone = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-")
+        if character.mythicplus.keystone ~= nil then
+          local dungeon
+          if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
+            dungeon = Utils:TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+          elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
+            dungeon = Utils:TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
+          end
+          if dungeon ~= nil then
+            currentKeystone = dungeon.abbr
+            if type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
+              currentKeystone = format("%s +%s", currentKeystone, tostring(character.mythicplus.keystone.level))
+            end
+          end
+        end
+        return currentKeystone
+      end,
+      enabled = true,
+      OnEnter = function(character)
+        if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
+          GameTooltip:SetHyperlink(character.mythicplus.keystone.itemLink)
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+        end
+      end,
+      OnClick = function(character)
+        if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
+          if IsModifiedClick("CHATLINK") then
+            if not ChatEdit_InsertLink(character.mythicplus.keystone.itemLink) then
+              ChatFrame_OpenChat(character.mythicplus.keystone.itemLink);
+            end
+          end
+        end
+      end,
+    },
+    {
+      label = "Vault",
+      value = function(character)
+        if character.vault.hasAvailableRewards == true then
+          return GREEN_FONT_COLOR:WrapTextInColorCode("Rewards")
+        end
+        return ""
+      end,
+      OnEnter = function(character)
+        if character.vault.hasAvailableRewards == true then
+          GameTooltip:AddLine("It's payday!", WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
+          GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
+        end
+      end,
+      backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
+    },
+    {
+      label = WHITE_FONT_COLOR:WrapTextInColorCode("Raids"),
+      value = function(character)
+        local value = {}
+        if character.vault.slots ~= nil then
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
+          end)
+          if #slots > 0 then
+            Utils:TableForEach(slots, function(slot)
+              local name = "-"
+              local nameColor = LIGHTGRAY_FONT_COLOR
+              if slot.level > 0 then
+                local dataDifficulty = Utils:TableGet(difficulties, "id", slot.level)
+                if dataDifficulty then
+                  name = dataDifficulty.abbr
+                  if self.db.global.raids.colors then
+                    nameColor = dataDifficulty.color
+                  end
+                end
+                if name == nil then
+                  local difficultyName = GetDifficultyInfo(slot.level)
+                  if difficultyName ~= nil then
+                    name = tostring(difficultyName):sub(1, 1)
+                  else
+                    name = "?"
+                  end
+                end
+                if nameColor == nil then
+                  nameColor = UNCOMMON_GREEN_COLOR
+                end
+              end
+              table.insert(value, nameColor:WrapTextInColorCode(name))
+            end)
+          else
+            for i = 1, 3 do
+              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
+            end
+          end
+        else
+          for i = 1, 3 do
+            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
+          end
+        end
+        return table.concat(value, "  ")
+      end,
+      OnEnter = function(character)
+        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
+        if character.vault.slots ~= nil then
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid
+          end)
+          for _, slot in ipairs(slots) do
+            local color = LIGHTGRAY_FONT_COLOR
+            local result = "Locked"
+            if slot.progress >= slot.threshold then
+              color = WHITE_FONT_COLOR
+              if slot.exampleRewardLink ~= nil and slot.exampleRewardLink ~= "" then
+                local itemLevel = GetDetailedItemLevelInfo(slot.exampleRewardLink)
+                local difficultyName = GetDifficultyInfo(slot.level)
+                local dataDifficulty = Utils:TableGet(difficulties, "id", slot.level)
+                if dataDifficulty then
+                  difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
+                end
+                result = format("%s (%d+)", difficultyName, itemLevel)
+              else
+                result = "?"
+              end
+            end
+            GameTooltip:AddDoubleLine(format("%d boss kills:", slot.threshold), result, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
+          end
+
+          local incompleteSlots = Utils:TableFilter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.Raid and slot.progress < slot.threshold
+          end)
+          if Utils:TableCount(incompleteSlots) > 0 then
+            table.sort(incompleteSlots, function(a, b)
+              return a.threshold < b.threshold
+            end)
+            GameTooltip:AddLine(" ")
+            local tooltip = ""
+            if Utils:TableCount(incompleteSlots) == Utils:TableCount(slots) then
+              tooltip = format("Defeat %d bosses this week to unlock your first Great Vault reward.", incompleteSlots[1].threshold)
+            else
+              local diff = incompleteSlots[1].threshold - incompleteSlots[1].progress
+              if diff == 1 then
+                tooltip = format("Defeat %d more boss this week to unlock another Great Vault reward.", diff)
+              else
+                tooltip = format("Defeat another %d bosses this week to unlock another Great Vault reward.", diff)
+              end
+            end
+            GameTooltip:AddLine(tooltip, nil, nil, nil, true)
+          end
+        end
+      end,
+      enabled = self.db.global.raids.enabled,
+    },
+    {
+      label = WHITE_FONT_COLOR:WrapTextInColorCode("Dungeons"),
+      value = function(character)
+        local value = {}
+        if character.vault.slots ~= nil then
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.Activities
+          end)
+          if #slots > 0 then
+            Utils:TableForEach(slots, function(slot)
+              local level = "-"
+              local color = LIGHTGRAY_FONT_COLOR
+              if slot.progress >= slot.threshold then
+                level = tostring(slot.level)
+                color = UNCOMMON_GREEN_COLOR
+              end
+              table.insert(value, color:WrapTextInColorCode(level))
+            end)
+          else
+            for i = 1, 3 do
+              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
+            end
+          end
+        else
+          for i = 1, 3 do
+            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
+          end
+        end
+        return table.concat(value, "  ")
+      end,
+      OnEnter = function(character)
+        local weeklyRuns = Utils:TableFilter(character.mythicplus.runHistory, function(run)
+          return run.thisWeek == true
+        end)
+        local weeklyRunsCount = Utils:TableCount(weeklyRuns) or 0
+        GameTooltip:AddLine("Vault Progress", 1, 1, 1);
+        -- GameTooltip:AddLine("Runs this Week: " .. "|cffffffff" .. tostring(weeklyRunsCount) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+
+        if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
+          local numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
+          if numHeroic > 0 then
+            GameTooltip:AddLine("Heroic runs this Week: " .. "|cffffffff" .. tostring(numHeroic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+          end
+          local numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
+          if numMythic > 0 then
+            GameTooltip:AddLine("Mythic runs this Week: " .. "|cffffffff" .. tostring(numMythic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+          end
+          local numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
+          if numMythicPlus > 0 then
+            GameTooltip:AddLine("Mythic+ runs this Week: " .. "|cffffffff" .. tostring(numMythicPlus) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+          end
+        end
+        GameTooltip_AddBlankLineToTooltip(GameTooltip);
+
+        local lastCompletedActivityInfo, nextActivityInfo = Utils:GetActivitiesProgress(character);
+        if not lastCompletedActivityInfo then
+          GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE);
+        else
+          if nextActivityInfo then
+            local globalString = (lastCompletedActivityInfo.index == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND;
+            GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress));
+          else
+            GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
+            local level, count = Utils:GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold);
+            if level == WeeklyRewardsUtil.HeroicLevel then
+              GameTooltip_AddBlankLineToTooltip(GameTooltip);
+              GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
+              GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count));
+            else
+              local nextLevel = WeeklyRewardsUtil.GetNextMythicLevel(level);
+              if nextLevel < 20 then
+                GameTooltip_AddBlankLineToTooltip(GameTooltip);
+                GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
+                GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, nextLevel));
+              end
+            end
+          end
+        end
+
+        if weeklyRunsCount > 0 then
+          GameTooltip_AddBlankLineToTooltip(GameTooltip)
+          table.sort(weeklyRuns, function(a, b)
+            return a.level > b.level
+          end)
+          for runIndex, run in ipairs(weeklyRuns) do
+            local threshold = Utils:TableFind(character.vault.slots, function(slot)
+              return slot.type == Enum.WeeklyRewardChestThresholdType.Activities and runIndex == slot.threshold
+            end)
+            local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
+            local dungeon = Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
+            local color = WHITE_FONT_COLOR
+            if threshold then
+              color = GREEN_FONT_COLOR
+            end
+            if dungeon then
+              GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
+            end
+            if runIndex == 8 then
+              break
+            end
+          end
+        end
+      end,
+      enabled = true,
+    },
+    {
+      label = WHITE_FONT_COLOR:WrapTextInColorCode("PvP"),
+      value = function(character)
+        local text = "- / -"
+        local textColor = LIGHTGRAY_FONT_COLOR
+        if character.vault.slots ~= nil then
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
+          end)
+          local completed = Utils:TableFilter(slots, function(slot)
+            return slot.progress >= slot.threshold
+          end)
+          if #slots > 0 then
+            text = format("%d / %d", #completed, #slots)
+          end
+          if #completed > 0 then
+            if #slots == #completed then
+              textColor = UNCOMMON_GREEN_COLOR
+            else
+              textColor = WHITE_FONT_COLOR
+            end
+          end
+        end
+        return textColor:WrapTextInColorCode(text)
+      end,
+      OnEnter = function(character)
+        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
+        if character.vault.slots ~= nil then
+          local slots = Utils:TableFilter(character.vault.slots, function(slot)
+            return slot.type == Enum.WeeklyRewardChestThresholdType.RankedPvP
+          end)
+          Utils:TableForEach(slots, function(slot)
+            local value = "Locked"
+            local valueColor = LIGHTGRAY_FONT_COLOR
+            if slot.progress >= slot.threshold then
+              value = "Unlocked"
+              valueColor = WHITE_FONT_COLOR
+            end
+            GameTooltip:AddDoubleLine(format("%d Honor:", slot.threshold), value, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, valueColor.r, valueColor.g, valueColor.b)
+          end)
+        end
+      end,
+      enabled = self.db.global.pvp and self.db.global.pvp.enabled == true,
+    },
+  }
+end
