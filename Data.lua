@@ -1069,10 +1069,10 @@ end
 -- end
 
 
-function Main:GetCharacterInfo()
-  local dungeons = Data:GetDungeons()
-  local difficulties = Data:GetRaidDifficulties(true)
-  local _, seasonDisplayID = Data:GetCurrentSeason()
+function Data:GetCharacterInfo()
+  local dungeons = self:GetDungeons()
+  local difficulties = self:GetRaidDifficulties(true)
+  local _, seasonDisplayID = self:GetCurrentSeason()
   return {
     {
       label = CHARACTER,
@@ -1151,76 +1151,7 @@ function Main:GetCharacterInfo()
         end
       end,
       OnClick = function(character)
-        local windowCharacter = self:GetWindow("Character")
-        if windowCharacter.character and windowCharacter.character == character and windowCharacter:IsVisible() then
-          windowCharacter:Hide()
-          return
-        end
-        local data = {
-          columns = {
-            {width = 100},
-            {width = 280},
-            {width = 80, align = "CENTER"},
-            {width = 120},
-          },
-          rows = {
-            {
-              cols = {
-                {text = "Slot",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-                {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-              }
-            }
-          }
-        }
-        if type(character.equipment) == "table" then
-          Utils:TableForEach(character.equipment, function(item)
-            local upgradeLevel = ""
-            if item.itemUpgradeTrack ~= "" then
-              upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
-              if item.itemUpgradeLevel == item.itemUpgradeMax then
-                upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-              end
-            end
-            local row = {
-              cols = {
-                {text = _G[item.itemSlotName]},
-                {
-                  text = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
-                  OnEnter = function()
-                    GameTooltip:SetHyperlink(item.itemLink)
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-                  end,
-                  OnClick = function()
-                    if IsModifiedClick("CHATLINK") then
-                      if not ChatEdit_InsertLink(item.itemLink) then
-                        ChatFrame_OpenChat(item.itemLink);
-                      end
-                    end
-                  end
-                },
-                {text = WrapTextInColorCode(item.itemLevel, select(4, GetItemQualityColor(item.itemQuality)))},
-                {text = upgradeLevel},
-              }
-            }
-            table.insert(data.rows, row)
-          end)
-          windowCharacter.Body.Table:SetData(data)
-          local w, h = windowCharacter.Body.Table:GetSize()
-          windowCharacter:SetSize(w, h + self.constants.sizes.titlebar.height)
-          local nameColor = WHITE_FONT_COLOR
-          if character.info.class.file ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-            if classColor ~= nil then
-              nameColor = classColor
-            end
-          end
-          windowCharacter.TitleBar.Text:SetText(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
-          windowCharacter:Show()
-          windowCharacter.character = character
-        end
+        self:SendMessage("AE_EQUIPMENT_OPEN", character)
       end,
       enabled = true,
     },
