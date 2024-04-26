@@ -305,8 +305,8 @@ local dataAffixRotations = {
 
 ---@type Keystone[]
 local dataKeystones = {
-  {seasonID = 11, seasonDisplayID = 3, itemID = 180653},
-  {seasonID = 12, seasonDisplayID = 4, itemID = 151086},
+  {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
+  {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
 }
 
 ---@type Dungeon[]

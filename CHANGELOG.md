@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.6 - 2024-04-26
+
+### Fixed
+
+- Fixed an issue with keystones not being announced automatically.
+
 ## v1.1.5 - 2024-04-24
 
 ### Added
