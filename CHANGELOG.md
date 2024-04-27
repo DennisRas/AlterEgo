@@ -1,10 +1,11 @@
 # Changelog
 
-## v1.1.6 - 2024-04-26
+## v1.1.6 - 2024-04-27
 
 ### Fixed
 
-- Fixed an issue with keystones not being announced automatically.
+- Fixed an issue with keystones not being announced automatically
+- Fixed an issue with Sennarth, The Cold Breath not showing as killed in the raid progress
 
 ## v1.1.5 - 2024-04-24
 
