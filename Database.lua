@@ -1,4 +1,4 @@
-local dbVersion = 16
+local dbVersion = 17
 local defaultDB = {
   global = {
     weeklyReset = 0,
@@ -305,8 +305,8 @@ local dataAffixRotations = {
 
 ---@type Keystone[]
 local dataKeystones = {
-  {seasonID = 11, seasonDisplayID = 3, itemID = 180653},
-  {seasonID = 12, seasonDisplayID = 4, itemID = 151086},
+  {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
+  {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
 }
 
 ---@type Dungeon[]
@@ -628,6 +628,7 @@ function AlterEgo:MigrateDB()
         end
       end
     end
+    -- Add missing affix IDs
     if self.db.global.dbVersion == 10 then
       local affixes = self:GetAffixes()
       for characterIndex in pairs(self.db.global.characters) do
@@ -644,10 +645,27 @@ function AlterEgo:MigrateDB()
         end
       end
     end
+    -- Convert season ID from display ID to season major version ID
     if self.db.global.dbVersion == 15 then
       for _, character in pairs(self.db.global.characters) do
         if character.currentSeason ~= nil and character.currentSeason == 3 then
           character.currentSeason = 11
+        end
+      end
+    end
+    -- Fix SavedInstance/EncounterJournal name mismatch for "Sennarth, t|The Cold Breath"
+    if self.db.global.dbVersion == 16 then
+      for _, character in pairs(self.db.global.characters) do
+        if character.raids and character.raids.savedInstances then
+          for _, savedInstance in pairs(character.raids.savedInstances) do
+            if savedInstance.instanceID == 2522 and savedInstance.encounters then
+              for _, encounter in pairs(savedInstance.encounters) do
+                if encounter.index and encounter.index == 5 and encounter.instanceEncounterID == 0 then
+                  encounter.instanceEncounterID = 2592
+                end
+              end
+            end
+          end
         end
       end
     end
@@ -778,10 +796,11 @@ function AlterEgo:UpdateRaidInstances()
         local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
         local instanceEncounterID = 0
         if raid then
-          local raidEncounter = AE_table_get(raid.encounters, "name", bossName)
-          if raidEncounter then
-            instanceEncounterID = raidEncounter.instanceEncounterID
-          end
+          AE_table_foreach(raid.encounters, function(encounter)
+            if string.lower(encounter.name) == string.lower(bossName) then
+              instanceEncounterID = encounter.instanceEncounterID
+            end
+          end)
         end
         local encounter = {
           index = encounterIndex,
