@@ -222,7 +222,7 @@ function Main:Render()
   local affixRotation = Data:GetAffixRotation()
   local difficulties = Data:GetRaidDifficulties(true)
   local dungeons = Data:GetDungeons()
-  local labels = Data:GetCharacterInfo()
+  local characterInfo = Data:GetCharacterInfo()
   local raids = Data:GetRaids(true)
   local characters = self:GetCharacters()
 
@@ -251,15 +251,15 @@ function Main:Render()
 
   -- Affixes
   if not self.window.affixes then
-    self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window.TitleBar)
+    self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window.titlebar)
     self.window.affixes.buttons = {}
   end
-  if Utils:TableCount(currentAffixes) > 0 then
+  if Utils:TableCount(currentAffixes) > 0 and Data.db.global.showAffixHeader then
     Utils:TableForEach(currentAffixes, function(currentAffix, i)
       local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
       local button = self.window.affixes.buttons[i]
       if not button then
-        button = CreateFrame("Button", "$parent" .. i, self.window.affixes)
+        button = CreateFrame("Button", "$parentAffix" .. i, self.window.affixes)
         button:SetScript("OnEnter", function()
           GameTooltip:ClearAllPoints()
           GameTooltip:ClearLines()
@@ -274,17 +274,226 @@ function Main:Render()
           GameTooltip:Hide()
         end)
         button:SetScript("OnClick", function()
-          self:SendMessage("AE_WEEKLYAFFIXES_TOGGLE")
+          local module = Core:GetModule("WeeklyAffixes")
+          if module then
+            module:Open()
+          end
         end)
         self.window.affixes.buttons[i] = button
       end
+
       button:SetSize(20, 20)
       button:SetNormalTexture(fileDataID)
+      button:ClearAllPoints()
+      if i == 1 then
+        if Utils:TableCount(characters) == 1 then
+          button:SetPoint("LEFT", self.window.titlebar.icon, "RIGHT", 6, 0)
+        else
+          button:SetPoint("CENTER", self.window.titlebar, "CENTER", -26, 0)
+        end
+      else
+        button:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
+      end
+      anchorFrame = button
     end)
     self.window.affixes:Show()
   else
     self.window.affixes:Hide()
   end
+
+  -- Sidebar
+  anchorFrame = self.window.sidebar
+
+  do -- CharacterInfo Labels
+    if not self.window.sidebar.characterlabels then self.window.sidebar.characterlabels = {} end
+    Utils:TableForEach(self.window.sidebar.characterlabels, function(label) label:Hide() end)
+    Utils:TableForEach(characterInfo, function(info, i)
+      local label = self.window.sidebar.characterlabels[i]
+      if not label then
+        label = CreateFrame("Frame", "$parentCharacterInfo" .. i, self.window.sidebar)
+        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+        label.text:SetPoint("LEFT", label, "LEFT", Constants.sizes.padding, 0)
+        label.text:SetPoint("RIGHT", label, "RIGHT", -Constants.sizes.padding, 0)
+        label.text:SetJustifyH("LEFT")
+        label.text:SetFontObject("GameFontHighlight_NoShadow")
+        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.window.sidebar.characterlabels[i] = label
+      end
+      label:SetHeight(Constants.sizes.row)
+      label.text:SetText(info.label)
+      if info.enabled then
+        if i > 1 then
+          label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+          label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+        else
+          label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+          label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+        end
+        label:Show()
+        anchorFrame = label
+      else
+        label:Hide()
+      end
+    end)
+  end
+
+  do -- MythicPlus Label Header
+    local label = self.window.sidebar.mpluslabel
+    if not label then
+      label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
+      label:SetHeight(Constants.sizes.row)
+      label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+      label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
+      label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
+      label.text:SetFontObject("GameFontHighlight_NoShadow")
+      label.text:SetJustifyH("LEFT")
+      label.text:SetText("Mythic Plus")
+      label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+      self.window.sidebar.mpluslabel = label
+    end
+    label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+    label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+    anchorFrame = label
+  end
+
+  do -- MythicPlus Labels
+    if not self.window.sidebar.mpluslabels then self.window.sidebar.mpluslabels = {} end
+    Utils:TableForEach(self.window.sidebar.mpluslabels, function(label) label:Hide() end)
+    if Utils:TableCount(dungeons) > 0 then
+      Utils:TableForEach(dungeons, function(dungeon, i)
+        local label = self.window.sidebar.mpluslabels[i]
+        if not label then
+          label = CreateFrame("Button", "$parentDungeon" .. i, self.window.sidebar, "InsecureActionButtonTemplate")
+          label:RegisterForClicks("AnyUp", "AnyDown")
+          label:EnableMouse(true)
+          label:SetHeight(Constants.sizes.row)
+          label.icon = label:CreateTexture(label:GetName() .. "Icon", "ARTWORK")
+          label.icon:SetSize(16, 16)
+          label.icon:SetPoint("LEFT", label, "LEFT", Constants.sizes.padding, 0)
+          -- label.icon:SetTexture(dungeon.icon)
+          label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+          label.text:SetPoint("TOPLEFT", label, "TOPLEFT", 16 + Constants.sizes.padding * 2, -3)
+          label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
+          label.text:SetJustifyH("LEFT")
+          label.text:SetFontObject("GameFontHighlight_NoShadow")
+          self.window.sidebar.mpluslabels[i] = label
+        end
+
+        if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
+          label:SetAttribute("type", "spell")
+          label:SetAttribute("spell", dungeon.spellID)
+        end
+
+        label:SetScript("OnEnter", function()
+          GameTooltip:ClearAllPoints()
+          GameTooltip:ClearLines()
+          GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
+          GameTooltip:SetText(dungeon.name, 1, 1, 1);
+          if dungeon.spellID then
+            if IsSpellKnown(dungeon.spellID) then
+              GameTooltip:ClearLines()
+              GameTooltip:SetSpellByID(dungeon.spellID)
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+              _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+            else
+              GameTooltip:AddLine("Time this dungeon on level 10 or above to unlock teleportation.", nil, nil, nil, true)
+            end
+          end
+          GameTooltip:Show()
+        end)
+
+        label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+        label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+        label.icon:SetTexture(tostring(dungeon.texture))
+        label.text:SetText(dungeon.short and dungeon.short or dungeon.name)
+        anchorFrame = label
+      end)
+    end
+  end
+
+  do -- Raid Labels
+    if not self.window.sidebar.raidlabels then self.window.sidebar.raidlabels = {} end
+    if not self.window.sidebar.difficultylabels then self.window.sidebar.difficultylabels = {} end
+    Utils:TableForEach(self.window.sidebar.raidlabels, function(label) label:Hide() end)
+    Utils:TableForEach(self.window.sidebar.difficultylabels, function(label) label:Hide() end)
+    if Data.db.global.raids.enabled then
+      if Utils:TableCount(raids) > 0 then
+        Utils:TableForEach(raids, function(raid, i)
+          local frameName = "Raid" .. i
+          local label = self.window.sidebar.raidlabels[frameName]
+          if not label then
+            label = CreateFrame("Frame", "$parent" .. frameName, self.window.sidebar)
+            label:SetHeight(Constants.sizes.row)
+            label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+            label.text:SetPoint("LEFT", label, "LEFT", Constants.sizes.padding, 0)
+            label.text:SetFontObject("GameFontHighlight_NoShadow")
+            label.text:SetJustifyH("LEFT")
+            label.text:SetWordWrap(false)
+            label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+            label.ModifiedIcon = label:CreateTexture("$parentModifiedIcon", "ARTWORK")
+            label.ModifiedIcon:SetSize(18, 18)
+            label.ModifiedIcon:SetPoint("RIGHT", label, "RIGHT", -(Constants.sizes.padding / 2), 0)
+            self.window.sidebar.raidlabels[i] = label
+          end
+          label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+          label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+          label:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
+            GameTooltip:SetText(raid.name, 1, 1, 1);
+            if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
+            end
+            GameTooltip:Show()
+          end)
+          label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+          label.text:SetText(raid.short and raid.short or raid.name)
+          if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
+            label.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
+            label.ModifiedIcon:Show()
+            label.text:SetPoint("RIGHT", label.ModifiedIcon, "LEFT", -(Constants.sizes.padding / 2), 0)
+          else
+            label.ModifiedIcon:Hide()
+            label.text:SetPoint("RIGHT", label, "RIGHT", -Constants.sizes.padding, 0)
+          end
+          anchorFrame = label
+
+          if Utils:TableCount(difficulties) > 0 then
+            Utils:TableForEach(difficulties, function(difficulty, j)
+              frameName = frameName .. "Difficulty" .. j
+              label = self.window.sidebar.difficultylabels[frameName]
+              if not label then
+                label = CreateFrame("Frame", "$parent" .. frameName, self.window.sidebar)
+                label:SetHeight(Constants.sizes.row)
+                label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+                label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, -3)
+                label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
+                label.text:SetJustifyH("LEFT")
+                label.text:SetFontObject("GameFontHighlight_NoShadow")
+                self.window.sidebar.difficultylabels[i] = label
+              end
+              label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+              label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+              label:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
+                GameTooltip:SetText(difficulty.name, 1, 1, 1);
+                GameTooltip:Show()
+              end)
+              label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+              label.text:SetText(difficulty.short and difficulty.short or difficulty.name)
+              anchorFrame = label
+            end)
+          end
+        end)
+      end
+    end
+  end
+
 
   if self:IsScrollbarNeeded() then
     self.window.Footer.Scrollbar:SetMinMaxValues(0, self.window.body.ScrollFrame.ScrollChild:GetWidth() - self.window.body.ScrollFrame:GetWidth())
@@ -311,6 +520,12 @@ function Main:Render()
     self.window.Footer:Show()
   end
 
+  if Utils:TableCount(characters) == 1 then
+    self.window.titlebar.text:Hide()
+  else
+    self.window.titlebar.text:Show()
+  end
+
   self.window:SetSize(self:GetWindowSize())
   self.window.body.ScrollFrame.ScrollChild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.ScrollFrame:GetHeight())
   Window:SetWindowScale(Data.db.global.interface.windowScale / 100)
@@ -329,591 +544,593 @@ function Main:CreateUI()
   local raids = Data:GetRaids(true)
   local anchorFrame
 
-  local winMain = self:CreateWindow("Main", "AlterEgo", UIParent)
-  local winEquipment = self:CreateWindow("Character", "Character", UIParent)
-  local winKeyManager = self:CreateWindow("KeyManager", "KeyManager", UIParent)
+  -- local winMain = self:CreateWindow("Main", "AlterEgo", UIParent)
+  -- local winEquipment = self:CreateWindow("Character", "Character", UIParent)
+  -- local winKeyManager = self:CreateWindow("KeyManager", "KeyManager", UIParent)
 
-  winEquipment.Body.Table = self.Table:New()
-  winEquipment.Body.Table.frame:SetParent(winEquipment.Body)
-  winEquipment.Body.Table.frame:SetPoint("TOPLEFT", winEquipment.Body, "TOPLEFT")
+  -- winEquipment.Body.Table = self.Table:New()
+  -- winEquipment.Body.Table.frame:SetParent(winEquipment.Body)
+  -- winEquipment.Body.Table.frame:SetPoint("TOPLEFT", winEquipment.Body, "TOPLEFT")
 
   do -- TitleBar
-    anchorFrame = winMain.TitleBar
-    winMain.TitleBar.Affixes = CreateFrame("Button", "$parentAffixes", winMain.TitleBar)
-    for i = 1, 3 do
-      local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
-      affixButton:SetSize(20, 20)
-      if Utils:TableCount(currentAffixes) > 0 then
-        local currentAffix = currentAffixes[i]
-        if currentAffix ~= nil then
-          local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
-          affixButton:SetNormalTexture(fileDataID)
-          affixButton:SetScript("OnEnter", function()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
-            GameTooltip:SetText(name, 1, 1, 1);
-            GameTooltip:AddLine(desc, nil, nil, nil, true)
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-            GameTooltip:Show()
-          end)
-          affixButton:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-          end)
-        end
+    -- anchorFrame = winMain.TitleBar
+    -- winMain.TitleBar.Affixes = CreateFrame("Button", "$parentAffixes", winMain.TitleBar)
+    -- for i = 1, 3 do
+    --   local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
+    --   affixButton:SetSize(20, 20)
+    --   if Utils:TableCount(currentAffixes) > 0 then
+    --     local currentAffix = currentAffixes[i]
+    --     if currentAffix ~= nil then
+    --       local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
+    --       affixButton:SetNormalTexture(fileDataID)
+    --       affixButton:SetScript("OnEnter", function()
+    --         GameTooltip:ClearAllPoints()
+    --         GameTooltip:ClearLines()
+    --         GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
+    --         GameTooltip:SetText(name, 1, 1, 1);
+    --         GameTooltip:AddLine(desc, nil, nil, nil, true)
+    --         GameTooltip:AddLine(" ")
+    --         GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+    --         GameTooltip:Show()
+    --       end)
+    --       affixButton:SetScript("OnLeave", function()
+    --         GameTooltip:Hide()
+    --       end)
+    --     end
+    --   end
+    --   affixButton:SetScript("OnClick", function()
+    --     self:ToggleWindow("Affixes")
+    --   end)
+    -- end
+    do
+      winMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", winMain.TitleBar)
+      winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
+      winMain.TitleBar.SettingsButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
+      winMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
+      winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function()
+        return true
       end
-      affixButton:SetScript("OnClick", function()
-        self:ToggleWindow("Affixes")
+      winMain.TitleBar.SettingsButton:SetScript("OnClick", function()
+        ToggleDropDownMenu(1, nil, winMain.TitleBar.SettingsButton.Dropdown)
       end)
-    end
-    winMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", winMain.TitleBar)
-    winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
-    winMain.TitleBar.SettingsButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
-    winMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
-    winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function()
-      return true
-    end
-    winMain.TitleBar.SettingsButton:SetScript("OnClick", function()
-      ToggleDropDownMenu(1, nil, winMain.TitleBar.SettingsButton.Dropdown)
-    end)
-    winMain.TitleBar.SettingsButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
-    winMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER")
-    winMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
-    winMain.TitleBar.SettingsButton.Icon:SetTexture(Constants.media.IconSettings)
-    winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    winMain.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SettingsButton:GetName() .. "Dropdown", winMain.TitleBar, "UIDropDownMenuTemplate")
-    winMain.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER", 0, -6)
-    winMain.TitleBar.SettingsButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.SettingsButton.Dropdown, Constants.sizes.titlebar.height)
-    UIDropDownMenu_Initialize(
-      winMain.TitleBar.SettingsButton.Dropdown,
-      function(frame, level, subMenuName)
-        if subMenuName == "raiddifficulties" then
-          Utils:TableForEach(difficulties, function(difficulty)
-            UIDropDownMenu_AddButton(
-              {
-                text = difficulty.name,
-                value = difficulty.id,
-                checked = Data.db.global.raids.hiddenDifficulties and not Data.db.global.raids.hiddenDifficulties[difficulty.id],
-                keepShownOnClick = true,
-                func = function(button, arg1, arg2, checked)
-                  Data.db.global.raids.hiddenDifficulties[button.value] = not checked
-                  self:UpdateUI()
-                end
-              },
-              level
-            )
-          end)
-        elseif subMenuName == "windowscale" then
-          for i = 80, 200, 10 do
-            UIDropDownMenu_AddButton(
-              {
-                text = i .. "%",
-                value = i,
-                checked = Data.db.global.interface.windowScale == i,
-                keepShownOnClick = false,
-                func = function(button)
-                  Data.db.global.interface.windowScale = button.value
-                  self:UpdateUI()
-                end
-              },
-              level
-            )
-          end
-        elseif level == 1 then
-          UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Show the weekly affixes",
-            checked = Data.db.global.showAffixHeader,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show the weekly affixes",
-            tooltipText = "The affixes will be shown at the top.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.showAffixHeader = checked
-              self:UpdateUI()
+      winMain.TitleBar.SettingsButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
+      winMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER")
+      winMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
+      winMain.TitleBar.SettingsButton.Icon:SetTexture(Constants.media.IconSettings)
+      winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+      winMain.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SettingsButton:GetName() .. "Dropdown", winMain.TitleBar, "UIDropDownMenuTemplate")
+      winMain.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER", 0, -6)
+      winMain.TitleBar.SettingsButton.Dropdown.Button:Hide()
+      UIDropDownMenu_SetWidth(winMain.TitleBar.SettingsButton.Dropdown, Constants.sizes.titlebar.height)
+      UIDropDownMenu_Initialize(
+        winMain.TitleBar.SettingsButton.Dropdown,
+        function(frame, level, subMenuName)
+          if subMenuName == "raiddifficulties" then
+            Utils:TableForEach(difficulties, function(difficulty)
+              UIDropDownMenu_AddButton(
+                {
+                  text = difficulty.name,
+                  value = difficulty.id,
+                  checked = Data.db.global.raids.hiddenDifficulties and not Data.db.global.raids.hiddenDifficulties[difficulty.id],
+                  keepShownOnClick = true,
+                  func = function(button, arg1, arg2, checked)
+                    Data.db.global.raids.hiddenDifficulties[button.value] = not checked
+                    self:UpdateUI()
+                  end
+                },
+                level
+              )
+            end)
+          elseif subMenuName == "windowscale" then
+            for i = 80, 200, 10 do
+              UIDropDownMenu_AddButton(
+                {
+                  text = i .. "%",
+                  value = i,
+                  checked = Data.db.global.interface.windowScale == i,
+                  keepShownOnClick = false,
+                  func = function(button)
+                    Data.db.global.interface.windowScale = button.value
+                    self:UpdateUI()
+                  end
+                },
+                level
+              )
             end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Show characters with zero rating",
-            checked = Data.db.global.showZeroRatedCharacters,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show characters with zero rating",
-            tooltipText = "Too many alts?",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.showZeroRatedCharacters = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Show realm names",
-            checked = Data.db.global.showRealms,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show realm names",
-            tooltipText = "One big party!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.showRealms = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Use Raider.io rating colors",
-            checked = Data.db.global.useRIOScoreColor,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Use Raider.io rating colors",
-            tooltipText = "So many colors!",
-            tooltipOnButton = true,
-            disabled = type(_G.RaiderIO) == "nil",
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.useRIOScoreColor = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Announce instance resets",
-            checked = Data.db.global.announceResets,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Announce instance resets",
-            tooltipText = "Let others in your group know when you've reset the instances.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.announceResets = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Announce new keystones (Party)",
-            checked = Data.db.global.announceKeystones.autoParty,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "New keystones (Party)",
-            tooltipText = "Announce to your party when you loot a new keystone.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.announceKeystones.autoParty = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Announce new keystones (Guild)",
-            checked = Data.db.global.announceKeystones.autoGuild,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "New keystones (Guild)",
-            tooltipText = "Announce to your guild when you loot a new keystone.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.announceKeystones.autoGuild = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Show raid progress",
-            checked = Data.db.global.raids and Data.db.global.raids.enabled,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show raid progress",
-            tooltipText = "Because Mythic Plus ain't enough!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.raids.enabled = checked
-              self:UpdateUI()
-            end,
-            hasArrow = true,
-            menuList = "raiddifficulties"
-          })
-          if seasonID == 12 then
+          elseif level == 1 then
+            UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
             UIDropDownMenu_AddButton({
-              text = "Show |cFF00FFFFAwakened|r raids only",
-              checked = Data.db.global.raids and Data.db.global.raids.modifiedInstanceOnly,
+              text = "Show the weekly affixes",
+              checked = Data.db.global.showAffixHeader,
               keepShownOnClick = true,
               isNotRadio = true,
-              tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
-              tooltipText = "It's time to move on!",
+              tooltipTitle = "Show the weekly affixes",
+              tooltipText = "The affixes will be shown at the top.",
               tooltipOnButton = true,
               func = function(button, arg1, arg2, checked)
-                Data.db.global.raids.modifiedInstanceOnly = checked
+                Data.db.global.showAffixHeader = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Show characters with zero rating",
+              checked = Data.db.global.showZeroRatedCharacters,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show characters with zero rating",
+              tooltipText = "Too many alts?",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.showZeroRatedCharacters = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Show realm names",
+              checked = Data.db.global.showRealms,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show realm names",
+              tooltipText = "One big party!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.showRealms = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Use Raider.io rating colors",
+              checked = Data.db.global.useRIOScoreColor,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Use Raider.io rating colors",
+              tooltipText = "So many colors!",
+              tooltipOnButton = true,
+              disabled = type(_G.RaiderIO) == "nil",
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.useRIOScoreColor = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+              text = "Announce instance resets",
+              checked = Data.db.global.announceResets,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Announce instance resets",
+              tooltipText = "Let others in your group know when you've reset the instances.",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.announceResets = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Announce new keystones (Party)",
+              checked = Data.db.global.announceKeystones.autoParty,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "New keystones (Party)",
+              tooltipText = "Announce to your party when you loot a new keystone.",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.announceKeystones.autoParty = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Announce new keystones (Guild)",
+              checked = Data.db.global.announceKeystones.autoGuild,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "New keystones (Guild)",
+              tooltipText = "Announce to your guild when you loot a new keystone.",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.announceKeystones.autoGuild = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+              text = "Show raid progress",
+              checked = Data.db.global.raids and Data.db.global.raids.enabled,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show raid progress",
+              tooltipText = "Because Mythic Plus ain't enough!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.raids.enabled = checked
+                self:UpdateUI()
+              end,
+              hasArrow = true,
+              menuList = "raiddifficulties"
+            })
+            if seasonID == 12 then
+              UIDropDownMenu_AddButton({
+                text = "Show |cFF00FFFFAwakened|r raids only",
+                checked = Data.db.global.raids and Data.db.global.raids.modifiedInstanceOnly,
+                keepShownOnClick = true,
+                isNotRadio = true,
+                tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
+                tooltipText = "It's time to move on!",
+                tooltipOnButton = true,
+                func = function(button, arg1, arg2, checked)
+                  Data.db.global.raids.modifiedInstanceOnly = checked
+                  self:UpdateUI()
+                end
+              })
+            end
+            UIDropDownMenu_AddButton({
+              text = "Show difficulty colors",
+              checked = Data.db.global.raids and Data.db.global.raids.colors,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show difficulty colors",
+              tooltipText = "Argharhggh! So much greeeen!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.raids.colors = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+              text = "Show timed icons",
+              checked = Data.db.global.showTiers,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show timed icons",
+              tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.showTiers = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Show score colors",
+              checked = Data.db.global.showAffixColors,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show score colors",
+              tooltipText = "Show some colors!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.showAffixColors = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({text = "PvP", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+              text = "Show PvP progress",
+              checked = Data.db.global.pvp and Data.db.global.pvp.enabled,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show PvP progress",
+              tooltipText = "Because Mythic Plus ain't enough!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.pvp.enabled = checked
+                self:UpdateUI()
+              end
+            })
+            UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+              text = "Show the minimap button",
+              checked = not Data.db.global.minimap.hide,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Show the minimap button",
+              tooltipText = "It does get crowded around the minimap sometimes.",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.minimap.hide = not checked
+                self.Libs.LDBIcon:Refresh("AlterEgo", Data.db.global.minimap)
+              end
+            })
+            UIDropDownMenu_AddButton({
+              text = "Lock the minimap button",
+              checked = Data.db.global.minimap.lock,
+              keepShownOnClick = true,
+              isNotRadio = true,
+              tooltipTitle = "Lock the minimap button",
+              tooltipText = "No more moving the button around accidentally!",
+              tooltipOnButton = true,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.minimap.lock = checked
+                self.Libs.LDBIcon:Refresh("AlterEgo", Data.db.global.minimap)
+              end
+            })
+            UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
+            UIDropDownMenu_AddButton({
+              text = "Window color",
+              keepShownOnClick = false,
+              notCheckable = true,
+              hasColorSwatch = true,
+              r = Data.db.global.interface.windowColor.r,
+              g = Data.db.global.interface.windowColor.g,
+              b = Data.db.global.interface.windowColor.b,
+              -- notClickable = true,
+              hasOpacity = false,
+              func = UIDropDownMenuButton_OpenColorPicker,
+              swatchFunc = function()
+                local r, g, b = ColorPickerFrame:GetColorRGB();
+                Data.db.global.interface.windowColor.r = r
+                Data.db.global.interface.windowColor.g = g
+                Data.db.global.interface.windowColor.b = b
+                self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+                -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
+              end,
+              cancelFunc = function(color)
+                Data.db.global.interface.windowColor.r = color.r
+                Data.db.global.interface.windowColor.g = color.g
+                Data.db.global.interface.windowColor.b = color.b
+                self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+                -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
+              end
+            })
+            UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
+          end
+        end,
+        "MENU"
+      )
+      winMain.TitleBar.SettingsButton:SetScript("OnEnter", function()
+        winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        self:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(winMain.TitleBar.SettingsButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:Show()
+      end)
+      winMain.TitleBar.SettingsButton:SetScript("OnLeave", function()
+        winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+      end)
+      winMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", winMain.TitleBar)
+      winMain.TitleBar.SortingButton:SetPoint("RIGHT", winMain.TitleBar.SettingsButton, "LEFT", 0, 0)
+      winMain.TitleBar.SortingButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
+      winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function()
+        return true
+      end
+      winMain.TitleBar.SortingButton:SetScript("OnClick", function()
+        ToggleDropDownMenu(1, nil, winMain.TitleBar.SortingButton.Dropdown)
+      end)
+      winMain.TitleBar.SortingButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
+      winMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER")
+      winMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
+      winMain.TitleBar.SortingButton.Icon:SetTexture(Constants.media.IconSorting)
+      winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+      winMain.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SortingButton:GetName() .. "Dropdown", winMain.TitleBar.SortingButton, "UIDropDownMenuTemplate")
+      winMain.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER", 0, -6)
+      winMain.TitleBar.SortingButton.Dropdown.Button:Hide()
+      UIDropDownMenu_SetWidth(winMain.TitleBar.SortingButton.Dropdown, Constants.sizes.titlebar.height)
+      UIDropDownMenu_Initialize(
+        winMain.TitleBar.SortingButton.Dropdown,
+        function()
+          for _, option in ipairs(Constants.sortingOptions) do
+            UIDropDownMenu_AddButton({
+              text = option.text,
+              checked = Data.db.global.sorting == option.value,
+              arg1 = option.value,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.sorting = arg1
                 self:UpdateUI()
               end
             })
           end
-          UIDropDownMenu_AddButton({
-            text = "Show difficulty colors",
-            checked = Data.db.global.raids and Data.db.global.raids.colors,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show difficulty colors",
-            tooltipText = "Argharhggh! So much greeeen!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.raids.colors = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Show timed icons",
-            checked = Data.db.global.showTiers,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show timed icons",
-            tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.showTiers = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Show score colors",
-            checked = Data.db.global.showAffixColors,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show score colors",
-            tooltipText = "Show some colors!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.showAffixColors = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({text = "PvP", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Show PvP progress",
-            checked = Data.db.global.pvp and Data.db.global.pvp.enabled,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show PvP progress",
-            tooltipText = "Because Mythic Plus ain't enough!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.pvp.enabled = checked
-              self:UpdateUI()
-            end
-          })
-          UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Show the minimap button",
-            checked = not Data.db.global.minimap.hide,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show the minimap button",
-            tooltipText = "It does get crowded around the minimap sometimes.",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.minimap.hide = not checked
-              self.Libs.LDBIcon:Refresh("AlterEgo", Data.db.global.minimap)
-            end
-          })
-          UIDropDownMenu_AddButton({
-            text = "Lock the minimap button",
-            checked = Data.db.global.minimap.lock,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Lock the minimap button",
-            tooltipText = "No more moving the button around accidentally!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.minimap.lock = checked
-              self.Libs.LDBIcon:Refresh("AlterEgo", Data.db.global.minimap)
-            end
-          })
-          UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
-          UIDropDownMenu_AddButton({
-            text = "Window color",
-            keepShownOnClick = false,
-            notCheckable = true,
-            hasColorSwatch = true,
-            r = Data.db.global.interface.windowColor.r,
-            g = Data.db.global.interface.windowColor.g,
-            b = Data.db.global.interface.windowColor.b,
-            -- notClickable = true,
-            hasOpacity = false,
-            func = UIDropDownMenuButton_OpenColorPicker,
-            swatchFunc = function()
-              local r, g, b = ColorPickerFrame:GetColorRGB();
-              Data.db.global.interface.windowColor.r = r
-              Data.db.global.interface.windowColor.g = g
-              Data.db.global.interface.windowColor.b = b
-              self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
-              -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
-            end,
-            cancelFunc = function(color)
-              Data.db.global.interface.windowColor.r = color.r
-              Data.db.global.interface.windowColor.g = color.g
-              Data.db.global.interface.windowColor.b = color.b
-              self:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
-              -- self:SetBackgroundColor(winMain, Data.db.global.interface.windowColor.r, Data.db.global.interface.windowColor.g, Data.db.global.interface.windowColor.b, Data.db.global.interface.windowColor.a)
-            end
-          })
-          UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
-        end
-      end,
-      "MENU"
-    )
-    winMain.TitleBar.SettingsButton:SetScript("OnEnter", function()
-      winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0.05)
-      GameTooltip:ClearAllPoints()
-      GameTooltip:ClearLines()
-      GameTooltip:SetOwner(winMain.TitleBar.SettingsButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-      GameTooltip:Show()
-    end)
-    winMain.TitleBar.SettingsButton:SetScript("OnLeave", function()
-      winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0)
-      GameTooltip:Hide()
-    end)
-    winMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", winMain.TitleBar)
-    winMain.TitleBar.SortingButton:SetPoint("RIGHT", winMain.TitleBar.SettingsButton, "LEFT", 0, 0)
-    winMain.TitleBar.SortingButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
-    winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function()
-      return true
-    end
-    winMain.TitleBar.SortingButton:SetScript("OnClick", function()
-      ToggleDropDownMenu(1, nil, winMain.TitleBar.SortingButton.Dropdown)
-    end)
-    winMain.TitleBar.SortingButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
-    winMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER")
-    winMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
-    winMain.TitleBar.SortingButton.Icon:SetTexture(Constants.media.IconSorting)
-    winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    winMain.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SortingButton:GetName() .. "Dropdown", winMain.TitleBar.SortingButton, "UIDropDownMenuTemplate")
-    winMain.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER", 0, -6)
-    winMain.TitleBar.SortingButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.SortingButton.Dropdown, Constants.sizes.titlebar.height)
-    UIDropDownMenu_Initialize(
-      winMain.TitleBar.SortingButton.Dropdown,
-      function()
-        for _, option in ipairs(Constants.sortingOptions) do
-          UIDropDownMenu_AddButton({
-            text = option.text,
-            checked = Data.db.global.sorting == option.value,
-            arg1 = option.value,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.sorting = arg1
-              self:UpdateUI()
-            end
-          })
-        end
-      end,
-      "MENU"
-    )
-    winMain.TitleBar.SortingButton:SetScript("OnEnter", function()
-      winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0.05)
-      GameTooltip:ClearAllPoints()
-      GameTooltip:ClearLines()
-      GameTooltip:SetOwner(winMain.TitleBar.SortingButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-      GameTooltip:Show()
-    end)
-    winMain.TitleBar.SortingButton:SetScript("OnLeave", function()
-      winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0)
-      GameTooltip:Hide()
-    end)
-    winMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
-    winMain.TitleBar.CharactersButton:SetPoint("RIGHT", winMain.TitleBar.SortingButton, "LEFT", 0, 0)
-    winMain.TitleBar.CharactersButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
-    winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function()
-      return true
-    end
-    winMain.TitleBar.CharactersButton:SetScript("OnClick", function()
-      ToggleDropDownMenu(1, nil, winMain.TitleBar.CharactersButton.Dropdown)
-    end)
-    winMain.TitleBar.CharactersButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
-    winMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER")
-    winMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
-    winMain.TitleBar.CharactersButton.Icon:SetTexture(Constants.media.IconCharacters)
-    winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    winMain.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.CharactersButton:GetName() .. "Dropdown", winMain.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
-    winMain.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER", 0, -6)
-    winMain.TitleBar.CharactersButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.CharactersButton.Dropdown, Constants.sizes.titlebar.height)
-    UIDropDownMenu_Initialize(
-      winMain.TitleBar.CharactersButton.Dropdown,
-      function()
-        local charactersUnfilteredList = self:GetCharacters(true)
-        for _, character in ipairs(charactersUnfilteredList) do
-          local nameColor = "ffffffff"
-          if character.info.class.file ~= nil then
-            local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-            if classColor ~= nil then
-              nameColor = classColor.GenerateHexColor(classColor)
-            end
-          end
-          UIDropDownMenu_AddButton({
-            text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
-            checked = character.enabled,
-            isNotRadio = true,
-            keepShownOnClick = true,
-            arg1 = character.GUID,
-            func = function(button, arg1, arg2, checked)
-              Data.db.global.characters[arg1].enabled = checked
-              self:UpdateUI()
-            end
-          })
-        end
-      end,
-      "MENU"
-    )
-    winMain.TitleBar.CharactersButton:SetScript("OnEnter", function()
-      winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0.05)
-      GameTooltip:ClearAllPoints()
-      GameTooltip:ClearLines()
-      GameTooltip:SetOwner(winMain.TitleBar.CharactersButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-      GameTooltip:Show()
-    end)
-    winMain.TitleBar.CharactersButton:SetScript("OnLeave", function()
-      winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0)
-      GameTooltip:Hide()
-    end)
-    winMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
-    winMain.TitleBar.AnnounceButton:SetPoint("RIGHT", winMain.TitleBar.CharactersButton, "LEFT", 0, 0)
-    winMain.TitleBar.AnnounceButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
-    winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function()
-      return true
-    end
-    winMain.TitleBar.AnnounceButton:SetScript("OnClick", function()
-      ToggleDropDownMenu(1, nil, winMain.TitleBar.AnnounceButton.Dropdown)
-    end)
-    winMain.TitleBar.AnnounceButton.Icon = winMain.TitleBar:CreateTexture(
-      winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
-    winMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER")
-    winMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
-    winMain.TitleBar.AnnounceButton.Icon:SetTexture(Constants.media.IconAnnounce)
-    winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    winMain.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.AnnounceButton:GetName() .. "Dropdown", winMain.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
-    winMain.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER", 0, -6)
-    winMain.TitleBar.AnnounceButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.AnnounceButton.Dropdown, Constants.sizes.titlebar.height)
-    UIDropDownMenu_Initialize(
-      winMain.TitleBar.AnnounceButton.Dropdown,
-      function()
-        UIDropDownMenu_AddButton({
-          text = "Send to Party Chat",
-          isNotRadio = true,
-          notCheckable = true,
-          tooltipTitle = "Party",
-          tooltipText = "Announce all your keystones to the party chat",
-          tooltipOnButton = true,
-          func = function()
-            if not IsInGroup() then
-              self:Print("No announcement. You are not in a party.")
-              return
-            end
-            self:AnnounceKeystones("PARTY")
-          end
-        })
-        UIDropDownMenu_AddButton({
-          text = "Send to Guild Chat",
-          isNotRadio = true,
-          notCheckable = true,
-          tooltipTitle = "Guild",
-          tooltipText = "Announce all your keystones to the guild chat",
-          tooltipOnButton = true,
-          func = function()
-            if not IsInGuild() then
-              self:Print("No announcement. You are not in a guild.")
-              return
-            end
-            self:AnnounceKeystones("GUILD")
-          end
-        })
-        UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Multiple chat messages",
-          checked = Data.db.global.announceKeystones.multiline,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Announce keystones with multiple chat messages",
-          tooltipText = "With too many alts it could get spammy though.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            Data.db.global.announceKeystones.multiline = checked
-          end
-        })
-        UIDropDownMenu_AddButton({
-          text = "With character names",
-          checked = Data.db.global.announceKeystones.multilineNames,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Add character names before each keystone",
-          tooltipText = "Character names are only added if multiple chat messages is enabled.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            Data.db.global.announceKeystones.multilineNames = checked
-          end
-        })
-      end,
-      "MENU"
-    )
-    winMain.TitleBar.AnnounceButton:SetScript("OnEnter", function()
-      winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
-      GameTooltip:ClearAllPoints()
-      GameTooltip:ClearLines()
-      GameTooltip:SetOwner(winMain.TitleBar.AnnounceButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-      GameTooltip:Show()
-    end)
-    winMain.TitleBar.AnnounceButton:SetScript("OnLeave", function()
-      winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0)
-      GameTooltip:Hide()
-    end)
-  end
-
-
-  do -- Sidebar
-    winMain.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", winMain.Body)
-    winMain.Body.Sidebar:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT")
-    winMain.Body.Sidebar:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT")
-    winMain.Body.Sidebar:SetWidth(SIDEBAR_WIDTH)
-    self:SetBackgroundColor(winMain.Body.Sidebar, 0, 0, 0, 0.3)
-    anchorFrame = winMain.Body.Sidebar
-  end
-
-  do -- Character info
-    for labelIndex, info in ipairs(labels) do
-      local Label = CreateFrame("Frame", "$parentLabel" .. labelIndex, winMain.Body.Sidebar)
-      if labelIndex > 1 then
-        Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-      else
-        Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-        Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+        end,
+        "MENU"
+      )
+      winMain.TitleBar.SortingButton:SetScript("OnEnter", function()
+        winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        self:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(winMain.TitleBar.SortingButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:Show()
+      end)
+      winMain.TitleBar.SortingButton:SetScript("OnLeave", function()
+        winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+      end)
+      winMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
+      winMain.TitleBar.CharactersButton:SetPoint("RIGHT", winMain.TitleBar.SortingButton, "LEFT", 0, 0)
+      winMain.TitleBar.CharactersButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
+      winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function()
+        return true
       end
-      Label:SetHeight(Constants.sizes.row)
-      Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-      Label.Text:SetPoint("LEFT", Label, "LEFT", Constants.sizes.padding, 0)
-      Label.Text:SetPoint("RIGHT", Label, "RIGHT", -Constants.sizes.padding, 0)
-      Label.Text:SetJustifyH("LEFT")
-      Label.Text:SetFontObject("GameFontHighlight_NoShadow")
-      Label.Text:SetText(info.label)
-      Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
-      anchorFrame = Label
+      winMain.TitleBar.CharactersButton:SetScript("OnClick", function()
+        ToggleDropDownMenu(1, nil, winMain.TitleBar.CharactersButton.Dropdown)
+      end)
+      winMain.TitleBar.CharactersButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
+      winMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER")
+      winMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
+      winMain.TitleBar.CharactersButton.Icon:SetTexture(Constants.media.IconCharacters)
+      winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+      winMain.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.CharactersButton:GetName() .. "Dropdown", winMain.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
+      winMain.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER", 0, -6)
+      winMain.TitleBar.CharactersButton.Dropdown.Button:Hide()
+      UIDropDownMenu_SetWidth(winMain.TitleBar.CharactersButton.Dropdown, Constants.sizes.titlebar.height)
+      UIDropDownMenu_Initialize(
+        winMain.TitleBar.CharactersButton.Dropdown,
+        function()
+          local charactersUnfilteredList = self:GetCharacters(true)
+          for _, character in ipairs(charactersUnfilteredList) do
+            local nameColor = "ffffffff"
+            if character.info.class.file ~= nil then
+              local classColor = C_ClassColor.GetClassColor(character.info.class.file)
+              if classColor ~= nil then
+                nameColor = classColor.GenerateHexColor(classColor)
+              end
+            end
+            UIDropDownMenu_AddButton({
+              text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
+              checked = character.enabled,
+              isNotRadio = true,
+              keepShownOnClick = true,
+              arg1 = character.GUID,
+              func = function(button, arg1, arg2, checked)
+                Data.db.global.characters[arg1].enabled = checked
+                self:UpdateUI()
+              end
+            })
+          end
+        end,
+        "MENU"
+      )
+      winMain.TitleBar.CharactersButton:SetScript("OnEnter", function()
+        winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        self:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(winMain.TitleBar.CharactersButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:Show()
+      end)
+      winMain.TitleBar.CharactersButton:SetScript("OnLeave", function()
+        winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+      end)
+      winMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
+      winMain.TitleBar.AnnounceButton:SetPoint("RIGHT", winMain.TitleBar.CharactersButton, "LEFT", 0, 0)
+      winMain.TitleBar.AnnounceButton:SetSize(Constants.sizes.titlebar.height, Constants.sizes.titlebar.height)
+      winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function()
+        return true
+      end
+      winMain.TitleBar.AnnounceButton:SetScript("OnClick", function()
+        ToggleDropDownMenu(1, nil, winMain.TitleBar.AnnounceButton.Dropdown)
+      end)
+      winMain.TitleBar.AnnounceButton.Icon = winMain.TitleBar:CreateTexture(
+        winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
+      winMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER")
+      winMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
+      winMain.TitleBar.AnnounceButton.Icon:SetTexture(Constants.media.IconAnnounce)
+      winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+      winMain.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.AnnounceButton:GetName() .. "Dropdown", winMain.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
+      winMain.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER", 0, -6)
+      winMain.TitleBar.AnnounceButton.Dropdown.Button:Hide()
+      UIDropDownMenu_SetWidth(winMain.TitleBar.AnnounceButton.Dropdown, Constants.sizes.titlebar.height)
+      UIDropDownMenu_Initialize(
+        winMain.TitleBar.AnnounceButton.Dropdown,
+        function()
+          UIDropDownMenu_AddButton({
+            text = "Send to Party Chat",
+            isNotRadio = true,
+            notCheckable = true,
+            tooltipTitle = "Party",
+            tooltipText = "Announce all your keystones to the party chat",
+            tooltipOnButton = true,
+            func = function()
+              if not IsInGroup() then
+                self:Print("No announcement. You are not in a party.")
+                return
+              end
+              self:AnnounceKeystones("PARTY")
+            end
+          })
+          UIDropDownMenu_AddButton({
+            text = "Send to Guild Chat",
+            isNotRadio = true,
+            notCheckable = true,
+            tooltipTitle = "Guild",
+            tooltipText = "Announce all your keystones to the guild chat",
+            tooltipOnButton = true,
+            func = function()
+              if not IsInGuild() then
+                self:Print("No announcement. You are not in a guild.")
+                return
+              end
+              self:AnnounceKeystones("GUILD")
+            end
+          })
+          UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
+          UIDropDownMenu_AddButton({
+            text = "Multiple chat messages",
+            checked = Data.db.global.announceKeystones.multiline,
+            keepShownOnClick = true,
+            isNotRadio = true,
+            tooltipTitle = "Announce keystones with multiple chat messages",
+            tooltipText = "With too many alts it could get spammy though.",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+              Data.db.global.announceKeystones.multiline = checked
+            end
+          })
+          UIDropDownMenu_AddButton({
+            text = "With character names",
+            checked = Data.db.global.announceKeystones.multilineNames,
+            keepShownOnClick = true,
+            isNotRadio = true,
+            tooltipTitle = "Add character names before each keystone",
+            tooltipText = "Character names are only added if multiple chat messages is enabled.",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+              Data.db.global.announceKeystones.multilineNames = checked
+            end
+          })
+        end,
+        "MENU"
+      )
+      winMain.TitleBar.AnnounceButton:SetScript("OnEnter", function()
+        winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        self:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:ClearLines()
+        GameTooltip:SetOwner(winMain.TitleBar.AnnounceButton, "ANCHOR_TOP")
+        GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true);
+        GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:Show()
+      end)
+      winMain.TitleBar.AnnounceButton:SetScript("OnLeave", function()
+        winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        self:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0)
+        GameTooltip:Hide()
+      end)
     end
   end
+
+
+  -- do -- Sidebar
+  --   winMain.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", winMain.Body)
+  --   winMain.Body.Sidebar:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT")
+  --   winMain.Body.Sidebar:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT")
+  --   winMain.Body.Sidebar:SetWidth(SIDEBAR_WIDTH)
+  --   self:SetBackgroundColor(winMain.Body.Sidebar, 0, 0, 0, 0.3)
+  --   anchorFrame = winMain.Body.Sidebar
+  -- end
+
+  -- do -- Character info
+  --   for labelIndex, info in ipairs(labels) do
+  --     local Label = CreateFrame("Frame", "$parentLabel" .. labelIndex, winMain.Body.Sidebar)
+  --     if labelIndex > 1 then
+  --       Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+  --       Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+  --     else
+  --       Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+  --       Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+  --     end
+  --     Label:SetHeight(Constants.sizes.row)
+  --     Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
+  --     Label.Text:SetPoint("LEFT", Label, "LEFT", Constants.sizes.padding, 0)
+  --     Label.Text:SetPoint("RIGHT", Label, "RIGHT", -Constants.sizes.padding, 0)
+  --     Label.Text:SetJustifyH("LEFT")
+  --     Label.Text:SetFontObject("GameFontHighlight_NoShadow")
+  --     Label.Text:SetText(info.label)
+  --     Label.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
+  --     anchorFrame = Label
+  --   end
+  -- end
 
   do -- MythicPlus Label
     local Label = CreateFrame("Frame", "$parentMythicPlusLabel", winMain.Body.Sidebar)
@@ -1101,106 +1318,106 @@ function Main:UpdateUI()
     winMain.Footer:Hide()
   end
 
-  do -- TitleBar
-    anchorFrame = winMain.TitleBar
-    if numCharacters == 1 then
-      winMain.TitleBar.Text:Hide()
-    else
-      winMain.TitleBar.Text:Show()
-    end
-    if currentAffixes and Data.db.global.showAffixHeader then
-      winMain.TitleBar.Affixes:Show()
-    else
-      winMain.TitleBar.Affixes:Hide()
-    end
+  -- do -- TitleBar
+  -- anchorFrame = winMain.TitleBar
+  -- if numCharacters == 1 then
+  --   winMain.TitleBar.Text:Hide()
+  -- else
+  --   winMain.TitleBar.Text:Show()
+  -- end
+  -- if currentAffixes and Data.db.global.showAffixHeader then
+  --   winMain.TitleBar.Affixes:Show()
+  -- else
+  --   winMain.TitleBar.Affixes:Hide()
+  -- end
 
-    for i = 1, 3 do
-      local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
-      if affixButton ~= nil then
-        if i == 1 then
-          affixButton:ClearAllPoints()
-          if numCharacters == 1 then
-            affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
-          else
-            affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
-          end
-        else
-          affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
-        end
-        anchorFrame = affixButton
-      end
-    end
-  end
+  --   for i = 1, 3 do
+  --     local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
+  --     if affixButton ~= nil then
+  --       if i == 1 then
+  --         affixButton:ClearAllPoints()
+  --         if numCharacters == 1 then
+  --           affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
+  --         else
+  --           affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
+  --         end
+  --       else
+  --         affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
+  --       end
+  --       anchorFrame = affixButton
+  --     end
+  --   end
+  -- end
 
   self:HideCharacterColumns()
 
-  do -- Character Labels
-    anchorFrame = winMain.Body.Sidebar
-    for labelIndex, info in ipairs(labels) do
-      local Label = _G[winMain.Body.Sidebar:GetName() .. "Label" .. labelIndex]
-      if info.enabled ~= nil and info.enabled == false then
-        Label:Hide()
-      else
-        if labelIndex > 1 then
-          Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-          Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        else
-          Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-          Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
-        end
-        Label:Show()
-        anchorFrame = Label
-      end
-    end
-  end
+  -- do -- Character Labels
+  --   anchorFrame = winMain.Body.Sidebar
+  --   for labelIndex, info in ipairs(labels) do
+  --     local Label = _G[winMain.Body.Sidebar:GetName() .. "Label" .. labelIndex]
+  --     if info.enabled ~= nil and info.enabled == false then
+  --       Label:Hide()
+  --     else
+  --       if labelIndex > 1 then
+  --         Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+  --         Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+  --       else
+  --         Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
+  --         Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
+  --       end
+  --       Label:Show()
+  --       anchorFrame = Label
+  --     end
+  --   end
+  -- end
 
-  do -- MythicPlus Label
-    local Label = _G[winMain.Body.Sidebar:GetName() .. "MythicPlusLabel"]
-    if Label then
-      Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-      Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-      anchorFrame = Label
-    end
-  end
+  -- do -- MythicPlus Label
+  --   local Label = _G[winMain.Body.Sidebar:GetName() .. "MythicPlusLabel"]
+  --   if Label then
+  --     Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+  --     Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+  --     anchorFrame = Label
+  --   end
+  -- end
 
-  do -- Dungeon Labels
-    for dungeonIndex, dungeon in ipairs(dungeons) do
-      local Label = _G[winMain.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
-      Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
-      Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
-      Label.Icon:SetTexture(dungeon.icon)
-      Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
-      Label.Icon:SetTexture(tostring(dungeon.texture))
-      if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
-        Label:SetAttribute("type", "spell")
-        Label:SetAttribute("spell", dungeon.spellID)
-        Label:RegisterForClicks("AnyUp", "AnyDown")
-        Label:EnableMouse(true)
-      end
-      Label:SetScript("OnEnter", function()
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
-        GameTooltip:SetText(dungeon.name, 1, 1, 1);
-        if dungeon.spellID then
-          if IsSpellKnown(dungeon.spellID) then
-            GameTooltip:ClearLines()
-            GameTooltip:SetSpellByID(dungeon.spellID)
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-            _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
-          else
-            GameTooltip:AddLine("Time this dungeon on level 20 or above to unlock teleportation.", nil, nil, nil, true)
-          end
-        end
-        GameTooltip:Show()
-      end)
-      Label:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-      end)
-      anchorFrame = Label
-    end
-  end
+  -- do -- Dungeon Labels
+  --   for dungeonIndex, dungeon in ipairs(dungeons) do
+  --     local Label = _G[winMain.Body.Sidebar:GetName() .. "Dungeon" .. dungeonIndex]
+  --     Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
+  --     Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
+  --     Label.Icon:SetTexture(dungeon.icon)
+  --     Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
+  --     Label.Icon:SetTexture(tostring(dungeon.texture))
+  --     if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
+  --       Label:SetAttribute("type", "spell")
+  --       Label:SetAttribute("spell", dungeon.spellID)
+  --       Label:RegisterForClicks("AnyUp", "AnyDown")
+  --       Label:EnableMouse(true)
+  --     end
+  --     Label:SetScript("OnEnter", function()
+  --       GameTooltip:ClearAllPoints()
+  --       GameTooltip:ClearLines()
+  --       GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
+  --       GameTooltip:SetText(dungeon.name, 1, 1, 1);
+  --       if dungeon.spellID then
+  --         if IsSpellKnown(dungeon.spellID) then
+  --           GameTooltip:ClearLines()
+  --           GameTooltip:SetSpellByID(dungeon.spellID)
+  --           GameTooltip:AddLine(" ")
+  --           GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+  --           _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+  --         else
+  --           GameTooltip:AddLine("Time this dungeon on level 20 or above to unlock teleportation.", nil, nil, nil, true)
+  --         end
+  --       end
+  --       GameTooltip:Show()
+  --     end)
+  --     Label:SetScript("OnLeave", function()
+  --       GameTooltip:Hide()
+  --     end)
+  --     anchorFrame = Label
+  --   end
+  -- end
 
   do -- Raids & Difficulties
     for raidIndex, raid in ipairs(raids) do

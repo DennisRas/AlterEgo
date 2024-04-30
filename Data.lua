@@ -1,5 +1,6 @@
 local addonName, AlterEgo = ...
 local Utils = AlterEgo.Utils
+local Core = AlterEgo.Core
 local dbVersion = 16
 local Data = {}
 AlterEgo.Data = Data
@@ -1151,7 +1152,11 @@ function Data:GetCharacterInfo()
         end
       end,
       OnClick = function(character)
-        self:SendMessage("AE_EQUIPMENT_OPEN", character)
+        local module = Core:GetModule("Equipment")
+        if module then
+          module:Open(character)
+        end
+        -- self:SendMessage("AE_EQUIPMENT_OPEN", character)
       end,
       enabled = true,
     },

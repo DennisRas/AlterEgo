@@ -8,19 +8,16 @@ local Constants = AlterEgo.Constants
 local Module = Core:NewModule("WeeklyAffixes")
 
 function Module:OnEnable()
-  self:RegisterMessage("AE_WEEKLYAFFIXES_TOGGLE", "ToggleWindow")
   self:Render()
 end
 
 function Module:OnDisable()
-  self:UnregisterMessage("AE_WEEKLYAFFIXES_TOGGLE")
-  self:ToggleWindow(false)
+  self.window:Hide()
 end
 
-function Module:ToggleWindow(shown)
-  if self.window then
-    self.window:Toggle(shown)
-  end
+function Module:Open()
+  self:Render()
+  self.window:Show()
 end
 
 function Module:Render()

@@ -38,8 +38,8 @@ function Window:SetTitle(name, title)
   window.Titlebar.Title:SetText(title)
 end
 
-function Window:CreateWindow(config)
-  local defaultConfig = {
+function Window:CreateWindow(params)
+  local options = {
     name = "",
     title = "",
     parent = UIParent,
@@ -47,14 +47,14 @@ function Window:CreateWindow(config)
     sidebar = false,
     titlebar = true
   }
-  Mixin(defaultConfig, config or {})
+  Mixin(options, params or {})
 
-  local window = self:GetWindow(defaultConfig.name)
+  local window = self:GetWindow(options.name)
   if window then
     return window
   end
 
-  local frame = CreateFrame("Frame", "AlterEgo" .. defaultConfig.name, defaultConfig.parent)
+  local frame = CreateFrame("Frame", "AlterEgo" .. options.name, options.parent)
   frame:SetFrameStrata("HIGH")
   frame:SetFrameLevel(1000 + 100 * (Utils:TableCount(windows) + 1))
   frame:SetClampedToScreen(true)
@@ -65,17 +65,17 @@ function Window:CreateWindow(config)
   self:SetBackgroundColor(frame, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
 
   -- Border
-  if defaultConfig.border > 0 then
+  if options.border > 0 then
     frame.border = CreateFrame("Frame", "$parentBorder", frame, "BackdropTemplate")
     frame.border:SetPoint("TOPLEFT", frame, "TOPLEFT", -3, 3)
     frame.border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 3, -3)
-    frame.border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = defaultConfig.border, right = defaultConfig.border, top = defaultConfig.border, bottom = defaultConfig.border}})
+    frame.border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = options.border, right = options.border, top = options.border, bottom = options.border}})
     frame.border:SetBackdropBorderColor(0, 0, 0, .5)
     frame.border:Show()
   end
 
   -- Titlebar
-  if defaultConfig.titlebar then
+  if options.titlebar then
     frame.titlebar = CreateFrame("Frame", "$parentTitleBar", frame)
     frame.titlebar:EnableMouse(true)
     frame.titlebar:RegisterForDrag("LeftButton")
@@ -92,7 +92,7 @@ function Window:CreateWindow(config)
     frame.titlebar.title = frame.titlebar:CreateFontString("$parentText", "OVERLAY")
     frame.titlebar.title:SetPoint("LEFT", frame.titlebar, "LEFT", 20 + Constants.sizes.padding, 0)
     frame.titlebar.title:SetFontObject("SystemFont_Med3")
-    frame.titlebar.title:SetText(defaultConfig.title)
+    frame.titlebar.title:SetText(options.title)
     frame.titlebar.CloseButton = CreateFrame("Button", "$parentCloseButton", frame.titlebar)
     frame.titlebar.CloseButton:SetPoint("RIGHT", frame.titlebar, "RIGHT", 0, 0)
     frame.titlebar.CloseButton:SetSize(TITLEBAR_HEIGHT, TITLEBAR_HEIGHT)
@@ -122,11 +122,11 @@ function Window:CreateWindow(config)
   local topOffset = 0
   local leftOffset = 0
 
-  if defaultConfig.titlebar then
+  if options.titlebar then
     topOffset = -TITLEBAR_HEIGHT
   end
 
-  if defaultConfig.sidebar then
+  if options.sidebar then
     leftOffset = SIDEBAR_WIDTH
   end
 
@@ -140,7 +140,7 @@ function Window:CreateWindow(config)
 
   -- Sidebar
 
-  if defaultConfig.sidebar then
+  if options.sidebar then
     frame.sidebar = CreateFrame("Frame", "$parentSidebar", frame)
     frame.sidebar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, topOffset)
     frame.sidebar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
@@ -150,9 +150,9 @@ function Window:CreateWindow(config)
   end
 
   frame:Hide()
-  table.insert(UISpecialFrames, defaultConfig.name)
-  windows[defaultConfig.name] = frame
-  return windows[defaultConfig.name]
+  table.insert(UISpecialFrames, options.name)
+  windows[options.name] = frame
+  return windows[options.name]
 end
 
 function Window:GetMaxWindowWidth()
