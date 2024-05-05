@@ -21,7 +21,7 @@ end
 
 function Window:SetWindowBackgroundColor(color)
   Utils:TableForEach(windows, function(window)
-    self:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
+    Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
   end)
 end
 
@@ -45,7 +45,9 @@ function Window:CreateWindow(params)
     parent = UIParent,
     border = Constants.sizes.border,
     sidebar = false,
-    titlebar = true
+    titlebar = true,
+    windowScale = 100,
+    windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
   }
   Mixin(options, params or {})
 
@@ -62,7 +64,7 @@ function Window:CreateWindow(params)
   frame:SetUserPlaced(true)
   frame:SetPoint("CENTER")
   frame:SetSize(300, 300)
-  self:SetBackgroundColor(frame, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+  Utils:SetBackgroundColor(frame, options.windowColor.r, options.windowColor.g, options.windowColor.b, options.windowColor.a)
 
   -- Border
   if options.border > 0 then
@@ -84,7 +86,7 @@ function Window:CreateWindow(params)
     frame.titlebar:SetPoint("TOPLEFT", frame, "TOPLEFT")
     frame.titlebar:SetPoint("TOPRIGHT", frame, "TOPRIGHT")
     frame.titlebar:SetHeight(TITLEBAR_HEIGHT)
-    self:SetBackgroundColor(frame.titlebar, 0, 0, 0, 0.5)
+    Utils:SetBackgroundColor(frame.titlebar, 0, 0, 0, 0.5)
     frame.titlebar.icon = frame.titlebar:CreateTexture("$parentIcon", "ARTWORK")
     frame.titlebar.icon:SetPoint("LEFT", frame.titlebar, "LEFT", 6, 0)
     frame.titlebar.icon:SetSize(20, 20)
@@ -105,7 +107,7 @@ function Window:CreateWindow(params)
     frame.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     frame.titlebar.CloseButton:SetScript("OnEnter", function()
       frame.titlebar.CloseButton.Icon:SetVertexColor(1, 1, 1, 1)
-      self:SetBackgroundColor(frame.titlebar.CloseButton, 1, 0, 0, 0.2)
+      Utils:SetBackgroundColor(frame.titlebar.CloseButton, 1, 0, 0, 0.2)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(frame.titlebar.CloseButton, "ANCHOR_TOP")
@@ -114,7 +116,7 @@ function Window:CreateWindow(params)
     end)
     frame.titlebar.CloseButton:SetScript("OnLeave", function()
       frame.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(frame.titlebar.CloseButton, 1, 1, 1, 0)
+      Utils:SetBackgroundColor(frame.titlebar.CloseButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
   end
@@ -136,7 +138,7 @@ function Window:CreateWindow(params)
   frame.body:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, topOffset)
   frame.body:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", leftOffset, 0)
   frame.body:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-  self:SetBackgroundColor(frame.body, 0, 0, 0, 0)
+  Utils:SetBackgroundColor(frame.body, 0, 0, 0, 0)
 
   -- Sidebar
 
@@ -145,7 +147,7 @@ function Window:CreateWindow(params)
     frame.sidebar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, topOffset)
     frame.sidebar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
     frame.sidebar:SetWidth(SIDEBAR_WIDTH)
-    self:SetBackgroundColor(frame.sidebar, 0, 0, 0, 0.3)
+    Utils:SetBackgroundColor(frame.sidebar, 0, 0, 0, 0.3)
     frame.sidebar:Show()
   end
 

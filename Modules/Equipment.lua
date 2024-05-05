@@ -8,14 +8,11 @@ local Constants = AlterEgo.Constants
 local Module = Core:NewModule("Equipment")
 
 function Module:OnEnable()
-  self:RegisterMessage("AE_EQUIPMENT_TOGGLE", "ToggleWindow")
-  self:RegisterMessage("AE_EQUIPMENT_OPEN", "Open")
   self.character = nil
   self:Render()
 end
 
 function Module:OnDisable()
-  self:UnregisterMessage("AE_EQUIPMENT_TOGGLE")
   self.character = nil
   self:Render()
 end

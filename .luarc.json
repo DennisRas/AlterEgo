@@ -147,6 +147,8 @@
         "CreateSimpleTextureMarkup",
         "ITEM_UPGRADE_TOOLTIP_FORMAT_STRING",
         "RED_FONT_COLOR",
-        "PVPUtil"
+        "PVPUtil",
+        "hooksecurefunc",
+        "SendChatMessage"
     ]
 }
