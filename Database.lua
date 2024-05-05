@@ -452,7 +452,10 @@ end
 ---@return MythicPlusKeystoneAffix[]
 function AlterEgo:GetCurrentAffixes()
   if AE_table_count(dataCurrentAffixes) == 0 then
-    dataCurrentAffixes = C_MythicPlus.GetCurrentAffixes()
+    local currentAffixes = C_MythicPlus.GetCurrentAffixes()
+    if currentAffixes then
+      dataCurrentAffixes = currentAffixes
+    end
   end
   return dataCurrentAffixes
 end
@@ -479,7 +482,7 @@ end
 function AlterEgo:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
   local index = 0
-  if currentAffixes and affixRotation then
+  if currentAffixes and AE_table_count(currentAffixes) > 0 and affixRotation then
     AE_table_foreach(affixRotation.affixes, function(affix, i)
       if affix[1] == currentAffixes[1].id and affix[2] == currentAffixes[2].id and affix[3] == currentAffixes[3].id then
         index = i
