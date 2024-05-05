@@ -9,6 +9,9 @@ local Module = Core:NewModule("WeeklyAffixes")
 
 function Module:OnEnable()
   self:Render()
+  Core:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
+    self:Render()
+  end)
 end
 
 function Module:OnDisable()
@@ -32,8 +35,8 @@ function Module:Render()
       title = "Weekly Affixes"
     })
     self.table = Table:New({rowHeight = 28})
-    self.table.frame:SetParent(self.window.Body)
-    self.table.frame:SetPoint("TOPLEFT", self.window.Body, "TOPLEFT")
+    self.table.frame:SetParent(self.window.body)
+    self.table.frame:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
   end
 
   local data = {columns = {}, rows = {}}

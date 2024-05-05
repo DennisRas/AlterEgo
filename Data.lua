@@ -4,51 +4,6 @@ local Core = AlterEgo.Core
 local dbVersion = 16
 local Data = {}
 AlterEgo.Data = Data
-Data.db = LibStub("AceDB-3.0"):New(
-  "AlterEgoDB",
-  {
-    global = {
-      weeklyReset = 0,
-      characters = {},
-      minimap = {
-        minimapPos = 195,
-        hide = false,
-        lock = false
-      },
-      sorting = "lastUpdate",
-      showTiers = true,
-      showAffixColors = true,
-      showAffixHeader = true,
-      showZeroRatedCharacters = true,
-      showRealms = true,
-      announceKeystones = {
-        autoParty = true,
-        autoGuild = false,
-        multiline = false,
-        multilineNames = false,
-      },
-      announceResets = true,
-      pvp = {
-        enabled = false,
-      },
-      raids = {
-        enabled = true,
-        colors = true,
-        currentTierOnly = true,
-        hiddenDifficulties = {},
-        boxes = false,
-        modifiedInstanceOnly = true,
-      },
-      interface = {
-        -- fontSize = 12,
-        windowScale = 100,
-        windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-      },
-      useRIOScoreColor = false,
-    }
-  },
-  true
-)
 Data.defaultCharacter = {
   GUID = "",
   lastUpdate = 0,
@@ -385,6 +340,54 @@ Data.cache = {
   currentAffixes = {}
 }
 
+function Data:Initialize()
+  self.db = LibStub("AceDB-3.0"):New(
+    "AlterEgoDB",
+    {
+      global = {
+        weeklyReset = 0,
+        characters = {},
+        minimap = {
+          minimapPos = 195,
+          hide = false,
+          lock = false
+        },
+        sorting = "lastUpdate",
+        showTiers = true,
+        showAffixColors = true,
+        showAffixHeader = true,
+        showZeroRatedCharacters = true,
+        showRealms = true,
+        announceKeystones = {
+          autoParty = true,
+          autoGuild = false,
+          multiline = false,
+          multilineNames = false,
+        },
+        announceResets = true,
+        pvp = {
+          enabled = false,
+        },
+        raids = {
+          enabled = true,
+          colors = true,
+          currentTierOnly = true,
+          hiddenDifficulties = {},
+          boxes = false,
+          modifiedInstanceOnly = true,
+        },
+        interface = {
+          -- fontSize = 12,
+          windowScale = 100,
+          windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+        },
+        useRIOScoreColor = false,
+      }
+    },
+    true
+  )
+end
+
 --- Get the current Season IDs
 ---@return number, number
 function Data:GetCurrentSeason()
@@ -459,7 +462,10 @@ end
 ---@return MythicPlusKeystoneAffix[]
 function Data:GetCurrentAffixes()
   if Utils:TableCount(self.cache.currentAffixes) == 0 then
-    self.cache.currentAffixes = C_MythicPlus.GetCurrentAffixes()
+    local currentAffixes = C_MythicPlus.GetCurrentAffixes()
+    if currentAffixes then
+      self.cache.currentAffixes = currentAffixes
+    end
   end
   return self.cache.currentAffixes
 end

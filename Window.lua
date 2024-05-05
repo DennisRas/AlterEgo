@@ -4,7 +4,7 @@ local Constants = AlterEgo.Constants
 local Window = {}
 AlterEgo.Window = Window
 
-local TITLEBAR_HEIGHT = 20
+local TITLEBAR_HEIGHT = 30
 local FOOTER_HEIGHT = 16
 local SIDEBAR_WIDTH = 150
 
@@ -35,7 +35,7 @@ function Window:SetTitle(name, title)
   if name == nil then name = "Main" end
   local window = self:GetWindow(name)
   if not window then return end
-  window.Titlebar.Title:SetText(title)
+  window.titlebar.title:SetText(title)
 end
 
 function Window:CreateWindow(params)
@@ -65,6 +65,30 @@ function Window:CreateWindow(params)
   frame:SetPoint("CENTER")
   frame:SetSize(300, 300)
   Utils:SetBackgroundColor(frame, options.windowColor.r, options.windowColor.g, options.windowColor.b, options.windowColor.a)
+
+  function frame:Toggle()
+    if frame:IsVisible() then
+      frame:Hide()
+    else
+      frame:Show()
+    end
+  end
+
+  function frame:SetBodyHeight(h)
+
+  end
+
+  function frame:SetBodySize(w, h)
+    local width = w
+    local height = h
+    if options.sidebar then
+      width = width + SIDEBAR_WIDTH
+    end
+    if options.titlebar then
+      height = height + TITLEBAR_HEIGHT
+    end
+    frame:SetSize(w, h)
+  end
 
   -- Border
   if options.border > 0 then
@@ -135,7 +159,7 @@ function Window:CreateWindow(params)
   -- Body
   frame.body = CreateFrame("Frame", "$parentBody", frame)
   frame.body:SetPoint("TOPLEFT", frame, "TOPLEFT", leftOffset, topOffset)
-  frame.body:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, topOffset)
+  frame.body:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, topOffset)
   frame.body:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", leftOffset, 0)
   frame.body:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
   Utils:SetBackgroundColor(frame.body, 0, 0, 0, 0)
@@ -151,7 +175,7 @@ function Window:CreateWindow(params)
     frame.sidebar:Show()
   end
 
-  frame:Hide()
+  frame:Show()
   table.insert(UISpecialFrames, options.name)
   windows[options.name] = frame
   return windows[options.name]

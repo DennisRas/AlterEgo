@@ -1,7 +1,6 @@
 local addonName, AlterEgo = ...
 local Utils = AlterEgo.Utils
 local Data = AlterEgo.Data
-local Window = AlterEgo.Window
 local Constants = AlterEgo.Constants
 local LibDataBroker = LibStub("LibDataBroker-1.1")
 local LibDBIcon = LibStub("LibDBIcon-1.0")
@@ -17,12 +16,13 @@ function Core:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
   self:RegisterChatCommand("ae", "ToggleWindow")
   self:RegisterChatCommand("alterego", "ToggleWindow")
+  Data:Initialize()
 
   local libDataObject = {
     label = addonName,
     tocname = addonName,
     type = "launcher",
-    icon = AlterEgo.Constants.media.Logo,
+    icon = Constants.media.Logo,
     OnClick = function()
       self:ToggleWindow()
     end,
@@ -45,20 +45,30 @@ function Core:OnInitialize()
 end
 
 function Core:ToggleWindow()
-  Window:ToggleWindow("Main")
+  local module = self:GetModule("Main")
+  if module then
+    module:ToggleWindow()
+  end
 end
 
 function Core:OnEnable()
-  self:RequestGameData()
-  self:CheckGameData()
-end
-
-function Core:RequestGameData()
+  -- self:RequestGameData()
+  -- self:CheckGameData()
   C_MythicPlus.RequestCurrentAffixes();
   C_MythicPlus.RequestMapInfo()
   C_MythicPlus.RequestRewards()
   RequestRaidInfo()
+  Data:MigrateDB()
+  Data:TaskWeeklyReset()
+  Data:TaskSeasonReset()
 end
+
+-- function Core:RequestGameData()
+--   C_MythicPlus.RequestCurrentAffixes();
+--   C_MythicPlus.RequestMapInfo()
+--   C_MythicPlus.RequestRewards()
+--   RequestRaidInfo()
+-- end
 
 function Core:CheckGameData()
   local seasonID = C_MythicPlus.GetCurrentSeason()
@@ -108,7 +118,7 @@ function Core:OnInstanceReset()
   if not groupChannel or not Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
     return
   end
-  SendChatMessage(AlterEgo.Constants.prefix .. "Resetting instances...", groupChannel)
+  SendChatMessage(Constants.prefix .. "Resetting instances...", groupChannel)
 end
 
 function Core:OnChatMessageSystem(_, msg)
@@ -119,7 +129,7 @@ function Core:OnChatMessageSystem(_, msg)
   local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
   Utils:TableForEach(resetPatterns, function(resetPattern)
     if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
-      SendChatMessage(AlterEgo.Constants.prefix .. msg, groupChannel)
+      SendChatMessage(Constants.prefix .. msg, groupChannel)
     end
   end)
 end
@@ -180,5 +190,5 @@ function Core:AnnounceKeystones(chatType)
     return
   end
 
-  SendChatMessage(AlterEgo.Constants.prefix .. "My keystones: " .. table.concat(keystonesCompact, " || "), chatType)
+  SendChatMessage(Constants.prefix .. "My keystones: " .. table.concat(keystonesCompact, " || "), chatType)
 end
