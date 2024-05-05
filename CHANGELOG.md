@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.7 - 2024-05-05
+
+### Fixed
+
+- Fixed an issue with missing affix data causing errors
+
 ## v1.1.6 - 2024-04-27
 
 ### Fixed

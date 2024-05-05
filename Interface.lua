@@ -929,7 +929,7 @@ function AlterEgo:CreateUI()
     for i = 1, 3 do
       local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
       affixButton:SetSize(20, 20)
-      if AE_table_count(currentAffixes) > 0 then
+      if currentAffixes and AE_table_count(currentAffixes) > 0 then
         local currentAffix = currentAffixes[i]
         if currentAffix ~= nil then
           local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
@@ -1722,7 +1722,7 @@ function AlterEgo:UpdateUI()
     else
       winMain.TitleBar.Text:Show()
     end
-    if currentAffixes and self.db.global.showAffixHeader then
+    if currentAffixes and AE_table_count(currentAffixes) > 0 and self.db.global.showAffixHeader then
       winMain.TitleBar.Affixes:Show()
     else
       winMain.TitleBar.Affixes:Hide()
@@ -1922,7 +1922,7 @@ function AlterEgo:UpdateUI()
       end
 
       do -- Affix header icons
-        if currentAffixes then
+        if currentAffixes and AE_table_count(currentAffixes) > 0 then
           for affixIndex, affix in ipairs(affixes) do
             local active = false
             local AffixFrame = _G[CharacterColumn.AffixHeader:GetName() .. affixIndex]
