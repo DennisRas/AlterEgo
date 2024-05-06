@@ -81,13 +81,11 @@ function Module:Render()
   local seasonID = Data:GetCurrentSeason()
   local dungeons = Data:GetDungeons()
   local affixRotation = Data:GetAffixRotation()
-  local difficulties = Data:GetRaidDifficulties(true)
+  local difficulties = Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
-  local raids = Data:GetRaids(true)
+  local raids = Data:GetRaids()
   local characters = Data:GetCharacters()
   local affixes = Data:GetAffixes(true)
-
-  local anchorFrame
 
   if not self.window then
     self.window = Window:CreateWindow({
@@ -153,59 +151,62 @@ function Module:Render()
     end)
   end
 
-  -- Affixes
-  if Utils:TableCount(currentAffixes) > 0 and Data.db.global.showAffixHeader then
-    Utils:TableForEach(currentAffixes, function(affix, affixIndex)
-      local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id);
-      local affixFrame = self.window.affixes.buttons[affixIndex]
-      if not affixFrame then
-        affixFrame = CreateFrame("Button", "$parentAffix" .. affixIndex, self.window.affixes)
-        self.window.affixes.buttons[affixIndex] = affixFrame
-      end
+  do -- Titlebar: Affixes
+    local affixAnchor = self.window.titlebar
+    if currentAffixes and Utils:TableCount(currentAffixes) > 0 and Data.db.global.showAffixHeader then
+      Utils:TableForEach(currentAffixes, function(affix, affixIndex)
+        local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id);
+        local affixFrame = self.window.affixes.buttons[affixIndex]
+        if not affixFrame then
+          affixFrame = CreateFrame("Button", "$parentAffix" .. affixIndex, self.window.affixes)
+          self.window.affixes.buttons[affixIndex] = affixFrame
+        end
 
-      affixFrame:ClearAllPoints()
-      affixFrame:SetSize(20, 20)
-      affixFrame:SetNormalTexture(fileDataID)
-      affixFrame:SetScript("OnEnter", function()
-        GameTooltip:ClearAllPoints()
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(affixFrame, "ANCHOR_TOP")
-        GameTooltip:SetText(name, 1, 1, 1);
-        GameTooltip:AddLine(desc, nil, nil, nil, true)
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-        GameTooltip:Show()
-      end)
-      affixFrame:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-      end)
-      affixFrame:SetScript("OnClick", function()
-        local module = Core:GetModule("WeeklyAffixes")
-        if module then
-          module:Open()
-        end
-      end)
-      if affixIndex == 1 then
-        if Utils:TableCount(characters) == 1 then
-          affixFrame:SetPoint("LEFT", self.window.titlebar.icon, "RIGHT", 6, 0)
+        affixFrame:ClearAllPoints()
+        affixFrame:SetSize(20, 20)
+        affixFrame:SetNormalTexture(fileDataID)
+        affixFrame:SetScript("OnEnter", function()
+          GameTooltip:ClearAllPoints()
+          GameTooltip:ClearLines()
+          GameTooltip:SetOwner(affixFrame, "ANCHOR_TOP")
+          GameTooltip:SetText(name, 1, 1, 1);
+          GameTooltip:AddLine(desc, nil, nil, nil, true)
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+          GameTooltip:Show()
+        end)
+        affixFrame:SetScript("OnLeave", function()
+          GameTooltip:Hide()
+        end)
+        affixFrame:SetScript("OnClick", function()
+          local module = Core:GetModule("WeeklyAffixes")
+          if module then
+            module:Open()
+          end
+        end)
+        if affixIndex == 1 then
+          if Utils:TableCount(characters) == 1 then
+            affixFrame:SetPoint("LEFT", self.window.titlebar.icon, "RIGHT", 6, 0)
+          else
+            affixFrame:SetPoint("CENTER", self.window.titlebar, "CENTER", -26, 0)
+          end
         else
-          affixFrame:SetPoint("CENTER", self.window.titlebar, "CENTER", -26, 0)
+          affixFrame:SetPoint("LEFT", affixAnchor, "RIGHT", 6, 0)
         end
-      else
-        affixFrame:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
-      end
-      anchorFrame = affixFrame
-    end)
-    self.window.affixes:Show()
-  else
-    self.window.affixes:Hide()
+        affixAnchor = affixFrame
+      end)
+      self.window.affixes:Show()
+    else
+      self.window.affixes:Hide()
+    end
   end
 
+  local rowCount = 0
   do -- Sidebar: CharacterInfo Labels
-    anchorFrame = self.window.sidebar
+    local info = Utils:TableFilter(characterInfo, function(i) return i.enabled end)
     self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
     Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
-    Utils:TableForEach(characterInfo, function(info, infoIndex)
+    Utils:TableForEach(info, function(info, infoIndex)
       local infoFrame = self.window.sidebar.infoFrames[infoIndex]
       if not infoFrame then
         infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
@@ -218,19 +219,12 @@ function Module:Render()
         self.window.sidebar.infoFrames[infoIndex] = infoFrame
       end
 
-      if info.enabled then
-        if infoIndex == 1 then
-          infoFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-          infoFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
-        else
-          infoFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-          infoFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        end
-        infoFrame:SetHeight(Constants.sizes.row)
-        infoFrame.text:SetText(info.label)
-        infoFrame:Show()
-        anchorFrame = infoFrame
-      end
+      infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+      infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+      infoFrame:SetHeight(Constants.sizes.row)
+      infoFrame.text:SetText(info.label)
+      infoFrame:Show()
+      rowCount = rowCount + 1
     end)
   end
 
@@ -248,10 +242,11 @@ function Module:Render()
       label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
       self.window.sidebar.mpluslabel = label
     end
+
+    label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+    label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
     label:Show()
-    label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-    label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    anchorFrame = label
+    rowCount = rowCount + 1
   end
 
   do -- Sidebar: MythicPlus Labels
@@ -304,12 +299,12 @@ function Module:Render()
           GameTooltip:Hide()
         end)
 
-        dungeonFrame:Show()
-        dungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        dungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+        dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+        dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
         dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
         dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
-        anchorFrame = dungeonFrame
+        dungeonFrame:Show()
+        rowCount = rowCount + 1
       end)
     end
   end
@@ -320,534 +315,495 @@ function Module:Render()
     Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
     Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
     if Data.db.global.raids.enabled then
-      if Utils:TableCount(raids) > 0 then
-        Utils:TableForEach(raids, function(raid, raidIndex)
-          if Data.db.global.raids.modifiedInstanceOnly and not raid.modifiedInstanceInfo then
-            return
+      Utils:TableForEach(raids, function(raid, raidIndex)
+        local raidFrame = self.window.sidebar.raidFrames[raidIndex]
+        if not raidFrame then
+          raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
+          raidFrame.difficultyFrames = {}
+          raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
+          raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", Constants.sizes.padding, 0)
+          raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+          raidFrame.text:SetJustifyH("LEFT")
+          raidFrame.text:SetWordWrap(false)
+          raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+          raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
+          raidFrame.ModifiedIcon:SetSize(18, 18)
+          raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(Constants.sizes.padding / 2), 0)
+          self.window.sidebar.raidFrames[raidIndex] = raidFrame
+        end
+
+        if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
+          raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
+          raidFrame.ModifiedIcon:Show()
+          raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(Constants.sizes.padding / 2), 0)
+        else
+          raidFrame.ModifiedIcon:Hide()
+          raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -Constants.sizes.padding, 0)
+        end
+
+        raidFrame:SetHeight(Constants.sizes.row)
+        raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+        raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+        raidFrame:SetScript("OnEnter", function()
+          GameTooltip:ClearAllPoints()
+          GameTooltip:ClearLines()
+          GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
+          GameTooltip:SetText(raid.name, 1, 1, 1);
+          if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
           end
-          local raidFrame = self.window.sidebar.raidFrames[raidIndex]
-          if not raidFrame then
-            raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
-            raidFrame.difficultyFrames = {}
-            raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
-            raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", Constants.sizes.padding, 0)
-            raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-            raidFrame.text:SetJustifyH("LEFT")
-            raidFrame.text:SetWordWrap(false)
-            raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-            raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
-            raidFrame.ModifiedIcon:SetSize(18, 18)
-            raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(Constants.sizes.padding / 2), 0)
-            self.window.sidebar.raidFrames[raidIndex] = raidFrame
+          GameTooltip:Show()
+        end)
+        raidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        raidFrame.text:SetText(raid.short and raid.short or raid.name)
+        raidFrame:Show()
+        rowCount = rowCount + 1
+
+        -- Difficulties
+        Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
+        Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
+          local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
+          if not difficultyFrame then
+            difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
+            difficultyFrame:SetHeight(Constants.sizes.row)
+            difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+            difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
+            difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
+            difficultyFrame.text:SetJustifyH("LEFT")
+            difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+            raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
           end
 
-          raidFrame:Show()
-          raidFrame:SetHeight(Constants.sizes.row)
-          raidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-          raidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-          raidFrame:SetScript("OnEnter", function()
+          difficultyFrame:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText(raid.name, 1, 1, 1);
-            if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
-            end
+            GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(difficulty.name, 1, 1, 1);
             GameTooltip:Show()
           end)
-          raidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-          raidFrame.text:SetText(raid.short and raid.short or raid.name)
-
-          if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
-            raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
-            raidFrame.ModifiedIcon:Show()
-            raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(Constants.sizes.padding / 2), 0)
-          else
-            raidFrame.ModifiedIcon:Hide()
-            raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -Constants.sizes.padding, 0)
-          end
-
-          -- Difficulties
-          anchorFrame = raidFrame
-          Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-          if Utils:TableCount(difficulties) > 0 then
-            Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
-              if Data.db.global.raids.hiddenDifficulties and Data.db.global.raids.hiddenDifficulties[difficulty.id] then
-                return
-              end
-              local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
-              if not difficultyFrame then
-                difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
-                difficultyFrame:SetHeight(Constants.sizes.row)
-                difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-                difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
-                difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
-                difficultyFrame.text:SetJustifyH("LEFT")
-                difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-                raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
-              end
-
-              difficultyFrame:Show()
-              difficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-              difficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-              difficultyFrame:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
-                GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(difficulty.name, 1, 1, 1);
-                GameTooltip:Show()
-              end)
-              difficultyFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-              difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
-              anchorFrame = difficultyFrame
-            end)
-          end
+          difficultyFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+          difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+          difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+          difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
+          difficultyFrame:Show()
+          rowCount = rowCount + 1
         end)
-      end
+      end)
     end
   end
 
   do -- Body
-    anchorFrame = self.window.body.ScrollFrame.ScrollChild
+    local characterAnchor = self.window.body.ScrollFrame.ScrollChild
     self.window.characterFrames = self.window.characterFrames or {}
     Utils:TableForEach(self.window.characterFrames, function(f) f:Hide() end)
+    Utils:TableForEach(characters, function(character, characterIndex)
+      local characterRow = 0
+      local characterFrame = self.window.characterFrames[characterIndex]
+      if not characterFrame then
+        characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.ScrollFrame.ScrollChild)
+        characterFrame.infoFrames = {}
+        characterFrame.dungeonFrames = {}
+        characterFrame.affixFrames = {}
+        characterFrame.raidFrames = {}
+        characterFrame.affixHeaderFrame = CreateFrame("Frame", "$parentAffixes", characterFrame)
+        Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
+        self.window.characterFrames[characterIndex] = characterFrame
+      end
 
-    if Utils:TableCount(characters) > 0 then
-      Utils:TableForEach(characters, function(character, characterIndex)
-        local characterFrame = self.window.characterFrames[characterIndex]
-        if not characterFrame then
-          characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.ScrollFrame.ScrollChild)
-          characterFrame.infoFrames = {}
-          characterFrame.dungeonFrames = {}
-          characterFrame.affixFrames = {}
-          characterFrame.raidFrames = {}
-          characterFrame.affixHeaderFrame = CreateFrame("Frame", "$parentAffixes", characterFrame)
-          Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
-          self.window.characterFrames[characterIndex] = characterFrame
-        end
+      if characterIndex == 1 then
+        characterFrame:SetPoint("TOPLEFT", characterAnchor, "TOPLEFT")
+        characterFrame:SetPoint("BOTTOMLEFT", characterAnchor, "BOTTOMLEFT")
+      else
+        characterFrame:SetPoint("TOPLEFT", characterAnchor, "TOPRIGHT")
+        characterFrame:SetPoint("BOTTOMLEFT", characterAnchor, "BOTTOMRIGHT")
+      end
+      characterAnchor = characterFrame
 
-        if characterIndex == 1 then
-          characterFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-          characterFrame:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMLEFT")
-        else
-          characterFrame:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT")
-          characterFrame:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMRIGHT")
-        end
+      Utils:SetBackgroundColor(characterFrame, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
+      characterFrame:SetWidth(CHARACTER_WIDTH)
+      characterFrame:Show()
 
-        Utils:SetBackgroundColor(characterFrame, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
-        characterFrame:SetWidth(CHARACTER_WIDTH)
-        characterFrame:Show()
-
-        do -- Info
-          anchorFrame = characterFrame
-          Utils:TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
-          if Utils:TableCount(characterInfo) > 0 then
-            Utils:TableForEach(characterInfo, function(info, infoIndex)
-              if not info.enabled then
-                return
-              end
-              local infoFrame = characterFrame.infoFrames[infoIndex]
-              if not infoFrame then
-                infoFrame = CreateFrame(info.OnClick and "Button" or "Frame", "$parentInfo" .. infoIndex, characterFrame)
-                infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-                infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", Constants.sizes.padding, 0)
-                infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -Constants.sizes.padding, 0)
-                infoFrame.text:SetJustifyH("CENTER")
-                infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-                if info.backgroundColor then
-                  Utils:SetBackgroundColor(infoFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
-                end
-                characterFrame.infoFrames[infoIndex] = infoFrame
-              end
-
-              if infoIndex == 1 then
-                infoFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-                infoFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
-              else
-                infoFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                infoFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-              end
-
-              if info.value then
-                infoFrame.text:SetText(info.value(character))
-              end
-
-              if info.OnEnter then
-                infoFrame:SetScript("OnEnter", function()
-                  GameTooltip:ClearAllPoints()
-                  GameTooltip:ClearLines()
-                  GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
-                  info.OnEnter(character)
-                  GameTooltip:Show()
-                  if not info.backgroundColor then
-                    Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0.05)
-                  end
-                end)
-                infoFrame:SetScript("OnLeave", function()
-                  GameTooltip:Hide()
-                  if not info.backgroundColor then
-                    Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0)
-                  end
-                end)
-              else
-                if not info.backgroundColor then
-                  infoFrame:SetScript("OnEnter", function()
-                    Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0.05)
-                  end)
-                  infoFrame:SetScript("OnLeave", function()
-                    Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0)
-                  end)
-                end
-              end
-
-              if info.OnClick then
-                infoFrame:SetScript("OnClick", function()
-                  info.OnClick(character)
-                end)
-              end
-
-              infoFrame:SetHeight(Constants.sizes.row)
-              infoFrame:Show()
-              anchorFrame = infoFrame
-            end)
+      do -- Info
+        local info = Utils:TableFilter(characterInfo, function(i) return i.enabled end)
+        Utils:TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
+        Utils:TableForEach(info, function(info, infoIndex)
+          local infoFrame = characterFrame.infoFrames[infoIndex]
+          if not infoFrame then
+            infoFrame = CreateFrame(info.OnClick and "Button" or "Frame", "$parentInfo" .. infoIndex, characterFrame)
+            infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
+            infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", Constants.sizes.padding, 0)
+            infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -Constants.sizes.padding, 0)
+            infoFrame.text:SetJustifyH("CENTER")
+            infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+            if info.backgroundColor then
+              Utils:SetBackgroundColor(infoFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
+            end
+            characterFrame.infoFrames[infoIndex] = infoFrame
           end
-        end
 
-        characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-        characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        characterFrame.affixHeaderFrame:SetHeight(Constants.sizes.row)
+          if info.value then
+            infoFrame.text:SetText(info.value(character))
+          end
 
-        do -- Affix headers
-          anchorFrame = characterFrame.affixHeaderFrame
-          Utils:TableForEach(characterFrame.affixFrames, function(f) f:Hide() end)
-          if Utils:TableCount(affixes) > 0 then
-            Utils:TableForEach(affixes, function(affix, affixIndex)
-              local affixFrame = characterFrame.affixFrames[affixIndex]
-              if not affixFrame then
-                affixFrame = CreateFrame("Frame", "$parentAffix" .. affixIndex, characterFrame.affixHeaderFrame)
-                affixFrame.Icon = affixFrame:CreateTexture(affixFrame:GetName() .. "Icon", "ARTWORK")
-                affixFrame.Icon:SetSize(16, 16)
-                affixFrame.Icon:SetPoint("CENTER", affixFrame, "CENTER", 0, 0)
-                characterFrame.affixFrames[affixIndex] = affixFrame
-              end
-
-              if affixIndex == 1 then
-                affixFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-                affixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOM")
-              else
-                affixFrame:SetPoint("TOPLEFT", anchorFrame, "TOP")
-                affixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT")
-              end
-
-              affixFrame:Show()
-              affixFrame:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
-                GameTooltip:SetOwner(affixFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
-                GameTooltip:AddLine(affix.description, nil, nil, nil, true);
-                GameTooltip:Show()
-              end)
-              affixFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-              affixFrame.Icon:SetTexture(affix.fileDataID)
-
-              local active = false
-              if currentAffixes and Utils:TableCount(currentAffixes) > 0 then
-                Utils:TableForEach(currentAffixes, function(currentAffix)
-                  if currentAffix.id == affix.id then
-                    active = true
-                  end
-                end)
-              end
-              if active then
-                affixFrame:SetAlpha(1)
-              else
-                affixFrame:SetAlpha(0.2)
+          if info.OnEnter then
+            infoFrame:SetScript("OnEnter", function()
+              GameTooltip:ClearAllPoints()
+              GameTooltip:ClearLines()
+              GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
+              info.OnEnter(character)
+              GameTooltip:Show()
+              if not info.backgroundColor then
+                Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0.05)
               end
             end)
-          end
-          anchorFrame = characterFrame.affixHeaderFrame
-        end
-
-        do -- Dungeons
-          Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
-          if Utils:TableCount(dungeons) > 0 then
-            Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
-              local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
-              if not dungeonFrame then
-                dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
-                dungeonFrame.affixFrames = {}
-                characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
+            infoFrame:SetScript("OnLeave", function()
+              GameTooltip:Hide()
+              if not info.backgroundColor then
+                Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0)
               end
-
-              local characterDungeon = Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
-              local overallScoreColor = HIGHLIGHT_FONT_COLOR
-              if characterDungeon and characterDungeon.affixScores and Utils:TableCount(characterDungeon.affixScores) > 0 then
-                if characterDungeon.rating then
-                  local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
-                  if color ~= nil then
-                    overallScoreColor = color
-                  end
-                end
-              end
-
-              Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-              dungeonFrame:Show()
-              dungeonFrame:SetHeight(Constants.sizes.row)
-              dungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-              dungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-              dungeonFrame:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
-                GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(dungeon.name, 1, 1, 1);
-                if characterDungeon and characterDungeon.affixScores and Utils:TableCount(characterDungeon.affixScores) > 0 then
-                  if (characterDungeon.rating) then
-                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(overallScoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
-                  end
-                  for _, affixInfo in ipairs(characterDungeon.affixScores) do
-                    GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                    GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
-                    GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
-                    if (affixInfo.overTime) then
-                      if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
-                        GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, true)), LIGHTGRAY_FONT_COLOR);
-                      else
-                        GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, false)), LIGHTGRAY_FONT_COLOR);
-                      end
-                    else
-                      if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
-                        GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, true), HIGHLIGHT_FONT_COLOR);
-                      else
-                        GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, false), HIGHLIGHT_FONT_COLOR);
-                      end
-                    end
-                  end
-                end
-                GameTooltip:Show()
-                Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, 0.05)
-              end)
-              dungeonFrame:SetScript("OnLeave", function()
-                GameTooltip:Hide()
-                Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-              end)
-
-              anchorFrame = dungeonFrame
-              Utils:TableForEach(dungeonFrame.affixFrames, function(f) f:Hide() end)
-              if Utils:TableCount(affixes) > 0 then
-                Utils:TableForEach(affixes, function(affix, affixIndex)
-                  local affixFrame = dungeonFrame.affixFrames[affixIndex]
-                  if not affixFrame then
-                    affixFrame = CreateFrame("Frame", "$parentAffix" .. affixIndex, dungeonFrame)
-                    affixFrame.text = affixFrame:CreateFontString(affixFrame:GetName() .. "Text", "OVERLAY")
-                    affixFrame.text:SetPoint("TOPLEFT", affixFrame, "TOPLEFT", 1, -1)
-                    affixFrame.text:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOM", -1, 1)
-                    affixFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-                    affixFrame.text:SetJustifyH("RIGHT")
-                    affixFrame.tier = affixFrame:CreateFontString(affixFrame:GetName() .. "Tier", "OVERLAY")
-                    affixFrame.tier:SetPoint("TOPLEFT", affixFrame, "TOP", 1, -1)
-                    affixFrame.tier:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOMRIGHT", -1, 1)
-                    affixFrame.tier:SetFontObject("GameFontHighlight_NoShadow")
-                    affixFrame.tier:SetJustifyH("LEFT")
-                    dungeonFrame.affixFrames[affixIndex] = affixFrame
-                  end
-
-                  local level = "-"
-                  local levelColor = "ffffffff"
-                  local tier = ""
-
-                  if characterDungeon == nil or characterDungeon.affixScores == nil then
-                    level = "-"
-                    levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                  else
-                    local affixScore = Utils:TableGet(characterDungeon.affixScores, "id", affix.id)
-                    if affixScore then
-                      level = affixScore.level
-
-                      if affixScore.durationSec <= dungeon.time * 0.6 then
-                        tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                      elseif affixScore.durationSec <= dungeon.time * 0.8 then
-                        tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                      elseif affixScore.durationSec <= dungeon.time then
-                        tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                      end
-
-                      if tier == "" then
-                        levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                      elseif Data.db.global.showAffixColors then
-                        local scoreColor = C_ChallengeMode.GetSpecificDungeonScoreRarityColor(affixScore.score)
-                        if scoreColor ~= nil then
-                          levelColor = scoreColor:GenerateHexColor()
-                        else
-                          levelColor = overallScoreColor:GenerateHexColor()
-                        end
-                      end
-                    end
-                  end
-
-                  if Data.db.global.showTiers then
-                    affixFrame.text:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOM", -1, 1)
-                    affixFrame.text:SetJustifyH("RIGHT")
-                    affixFrame.tier:Show()
-                  else
-                    affixFrame.text:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOMRIGHT", -1, 1)
-                    affixFrame.text:SetJustifyH("CENTER")
-                    affixFrame.tier:Hide()
-                  end
-
-                  if affixIndex == 1 then
-                    affixFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-                    affixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOM")
-                  else
-                    affixFrame:SetPoint("TOPLEFT", anchorFrame, "TOP")
-                    affixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT")
-                  end
-
-                  affixFrame.text:SetText("|c" .. levelColor .. level .. "|r")
-                  affixFrame.tier:SetText(tier)
-                  affixFrame:Show()
-                end)
-              end
-              anchorFrame = dungeonFrame
             end)
-          end
-        end
-
-        do -- Raids
-          Utils:TableForEach(characterFrame.raidFrames, function(f) f:Hide() end)
-          if Data.db.global.raids.enabled then
-            if Utils:TableCount(raids) > 0 then
-              Utils:TableForEach(raids, function(raid, raidIndex)
-                if Data.db.global.raids.modifiedInstanceOnly and not raid.modifiedInstanceInfo then
-                  return
-                end
-                local raidFrame = characterFrame.raidFrames[raidIndex]
-                if not raidFrame then
-                  raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, characterFrame)
-                  raidFrame.difficultyFrames = {}
-                  Utils:SetBackgroundColor(raidFrame, 0, 0, 0, 0.3)
-                  characterFrame.raidFrames[raidIndex] = raidFrame
-                end
-
-                raidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                raidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                raidFrame:Show()
-
-                anchorFrame = raidFrame
-                Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-                if Utils:TableCount(difficulties) > 0 then
-                  Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
-                    if Data.db.global.raids.hiddenDifficulties and Data.db.global.raids.hiddenDifficulties[difficulty.id] then
-                      return
-                    end
-                    local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
-                    if not difficultyFrame then
-                      difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
-                      difficultyFrame.encounterFrames = {}
-                      raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
-                    end
-
-                    Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
-                    difficultyFrame:Show()
-                    difficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-                    difficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-                    difficultyFrame:SetHeight(Constants.sizes.row)
-                    difficultyFrame:SetScript("OnEnter", function()
-                      GameTooltip:ClearAllPoints()
-                      GameTooltip:ClearLines()
-                      GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-                      GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
-                      GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
-                      if character.raids.savedInstances ~= nil then
-                        local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                          return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                        end)
-                        if savedInstance ~= nil then
-                          GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
-                        end
-                      end
-                      GameTooltip:AddLine(" ")
-                      Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
-                        local color = LIGHTGRAY_FONT_COLOR
-                        if character.raids.savedInstances then
-                          local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                            return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                          end)
-                          if savedInstance ~= nil then
-                            local savedEncounter = Utils:TableFind(savedInstance.encounters, function(enc)
-                              return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
-                            end)
-                            if savedEncounter ~= nil then
-                              color = GREEN_FONT_COLOR
-                            end
-                          end
-                        end
-                        GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
-                      end)
-                      GameTooltip:Show()
-                      Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, 0.05)
-                    end)
-                    difficultyFrame:SetScript("OnLeave", function()
-                      GameTooltip:Hide()
-                      Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, 0)
-                    end)
-
-                    -- Encounters
-                    anchorFrame = difficultyFrame
-                    Utils:TableForEach(difficultyFrame.encounterFrames, function(f) f:Hide() end)
-                    if Utils:TableCount(raid.encounters) > 0 then
-                      Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
-                        local encounterFrame = difficultyFrame.encounterFrames[encounterIndex]
-                        if not encounterFrame then
-                          encounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
-                          difficultyFrame.encounterFrames[encounterIndex] = encounterFrame
-                        end
-
-                        local color = {r = 1, g = 1, b = 1}
-                        local alpha = 0.1
-                        local size = CHARACTER_WIDTH
-                        size = size - Constants.sizes.padding      -- left/right cell padding
-                        size = size - (raid.numEncounters - 1) * 4 -- gaps
-                        size = size / raid.numEncounters           -- box sizes
-
-                        if character.raids.savedInstances then
-                          local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                            return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                          end)
-                          if savedInstance ~= nil then
-                            local savedEncounter = Utils:TableFind(savedInstance.encounters, function(enc)
-                              return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
-                            end)
-                            if savedEncounter ~= nil then
-                              color = UNCOMMON_GREEN_COLOR
-                              if Data.db.global.raids.colors then
-                                color = difficulty.color
-                              end
-                              alpha = 0.5
-                            end
-                          end
-                        end
-
-                        Utils:SetBackgroundColor(encounterFrame, color.r, color.g, color.b, alpha)
-                        encounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", Constants.sizes.padding / 2, 0)
-                        encounterFrame:SetSize(size, Constants.sizes.row - 12)
-                        encounterFrame:Show()
-                        anchorFrame = encounterFrame
-                      end)
-                    end
-                    anchorFrame = difficultyFrame
-                  end)
-                end
-                anchorFrame = raidFrame
+          else
+            if not info.backgroundColor then
+              infoFrame:SetScript("OnEnter", function()
+                Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0.05)
+              end)
+              infoFrame:SetScript("OnLeave", function()
+                Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0)
               end)
             end
           end
-        end
 
-        anchorFrame = characterFrame
-      end)
-    end
+          if info.OnClick then
+            infoFrame:SetScript("OnClick", function()
+              info.OnClick(character)
+            end)
+          end
+
+          infoFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+          infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+          infoFrame:SetHeight(Constants.sizes.row)
+          infoFrame:Show()
+          characterRow = characterRow + 1
+        end)
+      end
+
+
+      do -- Affix headers
+        characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+        characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+        characterFrame.affixHeaderFrame:SetHeight(Constants.sizes.row)
+        Utils:TableForEach(characterFrame.affixFrames, function(f) f:Hide() end)
+        Utils:TableForEach(affixes, function(affix, affixIndex)
+          local affixFrame = characterFrame.affixFrames[affixIndex]
+          if not affixFrame then
+            affixFrame = CreateFrame("Frame", "$parentAffix" .. affixIndex, characterFrame.affixHeaderFrame)
+            affixFrame.Icon = affixFrame:CreateTexture(affixFrame:GetName() .. "Icon", "ARTWORK")
+            affixFrame.Icon:SetSize(16, 16)
+            affixFrame.Icon:SetPoint("CENTER", affixFrame, "CENTER", 0, 0)
+            characterFrame.affixFrames[affixIndex] = affixFrame
+          end
+
+          if affixIndex == 1 then
+            affixFrame:SetPoint("TOPLEFT", characterFrame.affixHeaderFrame, "TOPLEFT")
+            affixFrame:SetPoint("BOTTOMRIGHT", characterFrame.affixHeaderFrame, "BOTTOM")
+          else
+            affixFrame:SetPoint("TOPLEFT", characterFrame.affixHeaderFrame, "TOP")
+            affixFrame:SetPoint("BOTTOMRIGHT", characterFrame.affixHeaderFrame, "BOTTOMRIGHT")
+          end
+
+          affixFrame:Show()
+          affixFrame:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(affixFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
+            GameTooltip:AddLine(affix.description, nil, nil, nil, true);
+            GameTooltip:Show()
+          end)
+          affixFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+          affixFrame.Icon:SetTexture(affix.fileDataID)
+
+          local active = false
+          if currentAffixes and Utils:TableCount(currentAffixes) > 0 then
+            Utils:TableForEach(currentAffixes, function(currentAffix)
+              if currentAffix.id == affix.id then
+                active = true
+              end
+            end)
+          end
+          if active then
+            affixFrame:SetAlpha(1)
+          else
+            affixFrame:SetAlpha(0.2)
+          end
+        end)
+        characterRow = characterRow + 1
+      end
+
+      do -- Dungeons
+        Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
+        Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
+          local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
+          if not dungeonFrame then
+            dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
+            dungeonFrame.affixFrames = {}
+            characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
+          end
+
+          local characterDungeon = Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+          local overallScoreColor = HIGHLIGHT_FONT_COLOR
+          if characterDungeon and characterDungeon.affixScores and Utils:TableCount(characterDungeon.affixScores) > 0 then
+            if characterDungeon.rating then
+              local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
+              if color ~= nil then
+                overallScoreColor = color
+              end
+            end
+          end
+
+          dungeonFrame:SetScript("OnEnter", function()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(dungeon.name, 1, 1, 1);
+            if characterDungeon and characterDungeon.affixScores and Utils:TableCount(characterDungeon.affixScores) > 0 then
+              if (characterDungeon.rating) then
+                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(overallScoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
+              end
+              for _, affixInfo in ipairs(characterDungeon.affixScores) do
+                GameTooltip_AddBlankLineToTooltip(GameTooltip);
+                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
+                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
+                if (affixInfo.overTime) then
+                  if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
+                    GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, true)), LIGHTGRAY_FONT_COLOR);
+                  else
+                    GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, false)), LIGHTGRAY_FONT_COLOR);
+                  end
+                else
+                  if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
+                    GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, true), HIGHLIGHT_FONT_COLOR);
+                  else
+                    GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, false), HIGHLIGHT_FONT_COLOR);
+                  end
+                end
+              end
+            end
+            GameTooltip:Show()
+            Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, 0.05)
+          end)
+          dungeonFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+            Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+          end)
+
+          Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+          dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+          dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+          dungeonFrame:SetHeight(Constants.sizes.row)
+          dungeonFrame:Show()
+          characterRow = characterRow + 1
+
+          Utils:TableForEach(dungeonFrame.affixFrames, function(f) f:Hide() end)
+          Utils:TableForEach(affixes, function(affix, affixIndex)
+            local affixFrame = dungeonFrame.affixFrames[affixIndex]
+            if not affixFrame then
+              affixFrame = CreateFrame("Frame", "$parentAffix" .. affixIndex, dungeonFrame)
+              affixFrame.text = affixFrame:CreateFontString(affixFrame:GetName() .. "Text", "OVERLAY")
+              affixFrame.text:SetPoint("TOPLEFT", affixFrame, "TOPLEFT", 1, -1)
+              affixFrame.text:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOM", -1, 1)
+              affixFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+              affixFrame.text:SetJustifyH("RIGHT")
+              affixFrame.tier = affixFrame:CreateFontString(affixFrame:GetName() .. "Tier", "OVERLAY")
+              affixFrame.tier:SetPoint("TOPLEFT", affixFrame, "TOP", 1, -1)
+              affixFrame.tier:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOMRIGHT", -1, 1)
+              affixFrame.tier:SetFontObject("GameFontHighlight_NoShadow")
+              affixFrame.tier:SetJustifyH("LEFT")
+              dungeonFrame.affixFrames[affixIndex] = affixFrame
+            end
+
+            local level = "-"
+            local levelColor = "ffffffff"
+            local tier = ""
+
+            if characterDungeon == nil or characterDungeon.affixScores == nil then
+              level = "-"
+              levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+            else
+              local affixScore = Utils:TableGet(characterDungeon.affixScores, "id", affix.id)
+              if affixScore then
+                level = affixScore.level
+
+                if affixScore.durationSec <= dungeon.time * 0.6 then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                elseif affixScore.durationSec <= dungeon.time * 0.8 then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                elseif affixScore.durationSec <= dungeon.time then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                end
+
+                if tier == "" then
+                  levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+                elseif Data.db.global.showAffixColors then
+                  local scoreColor = C_ChallengeMode.GetSpecificDungeonScoreRarityColor(affixScore.score)
+                  if scoreColor ~= nil then
+                    levelColor = scoreColor:GenerateHexColor()
+                  else
+                    levelColor = overallScoreColor:GenerateHexColor()
+                  end
+                end
+              end
+            end
+
+            if Data.db.global.showTiers then
+              affixFrame.text:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOM", -1, 1)
+              affixFrame.text:SetJustifyH("RIGHT")
+              affixFrame.tier:Show()
+            else
+              affixFrame.text:SetPoint("BOTTOMRIGHT", affixFrame, "BOTTOMRIGHT", -1, 1)
+              affixFrame.text:SetJustifyH("CENTER")
+              affixFrame.tier:Hide()
+            end
+
+            if affixIndex == 1 then
+              affixFrame:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT")
+              affixFrame:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOM")
+            else
+              affixFrame:SetPoint("TOPLEFT", dungeonFrame, "TOP")
+              affixFrame:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT")
+            end
+
+            affixFrame.text:SetText("|c" .. levelColor .. level .. "|r")
+            affixFrame.tier:SetText(tier)
+            affixFrame:Show()
+          end)
+        end)
+      end
+
+      do -- Raids
+        Utils:TableForEach(characterFrame.raidFrames, function(f) f:Hide() end)
+        if Data.db.global.raids.enabled then
+          Utils:TableForEach(raids, function(raid, raidIndex)
+            local raidFrame = characterFrame.raidFrames[raidIndex]
+            if not raidFrame then
+              raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, characterFrame)
+              raidFrame.difficultyFrames = {}
+              Utils:SetBackgroundColor(raidFrame, 0, 0, 0, 0.3)
+              characterFrame.raidFrames[raidIndex] = raidFrame
+            end
+
+            raidFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+            raidFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+            raidFrame:Show()
+            characterRow = characterRow + 1
+
+            -- Difficulties
+            Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
+            Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
+              local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
+              if not difficultyFrame then
+                difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
+                difficultyFrame.encounterFrames = {}
+                raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+              end
+
+              Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+              difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+              difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+              difficultyFrame:SetHeight(Constants.sizes.row)
+              difficultyFrame:Show()
+              characterRow = characterRow + 1
+              difficultyFrame:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+                GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
+                GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
+                if character.raids.savedInstances ~= nil then
+                  local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                  end)
+                  if savedInstance ~= nil then
+                    GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
+                  end
+                end
+                GameTooltip:AddLine(" ")
+                Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+                  local color = LIGHTGRAY_FONT_COLOR
+                  if character.raids.savedInstances then
+                    local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                      return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                    end)
+                    if savedInstance ~= nil then
+                      local savedEncounter = Utils:TableFind(savedInstance.encounters, function(enc)
+                        return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
+                      end)
+                      if savedEncounter ~= nil then
+                        color = GREEN_FONT_COLOR
+                      end
+                    end
+                  end
+                  GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
+                end)
+                GameTooltip:Show()
+                Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, 0.05)
+              end)
+              difficultyFrame:SetScript("OnLeave", function()
+                GameTooltip:Hide()
+                Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, 0)
+              end)
+
+              -- Encounters
+              local anchorEncounter = difficultyFrame
+              Utils:TableForEach(difficultyFrame.encounterFrames, function(f) f:Hide() end)
+              Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+                local encounterFrame = difficultyFrame.encounterFrames[encounterIndex]
+                if not encounterFrame then
+                  encounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
+                  difficultyFrame.encounterFrames[encounterIndex] = encounterFrame
+                end
+
+                local color = {r = 1, g = 1, b = 1}
+                local alpha = 0.1
+                local size = CHARACTER_WIDTH
+                size = size - Constants.sizes.padding      -- left/right cell padding
+                size = size - (raid.numEncounters - 1) * 4 -- gaps
+                size = size / raid.numEncounters           -- box sizes
+
+                if character.raids.savedInstances then
+                  local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                  end)
+                  if savedInstance then
+                    local savedEncounter = Utils:TableFind(savedInstance.encounters, function(savedEncounter)
+                      return savedEncounter.instanceEncounterID == encounter.instanceEncounterID and savedEncounter.killed == true
+                    end)
+                    if savedEncounter then
+                      color = UNCOMMON_GREEN_COLOR
+                      if Data.db.global.raids.colors then
+                        color = difficulty.color
+                      end
+                      alpha = 0.5
+                    end
+                  end
+                end
+
+                Utils:SetBackgroundColor(encounterFrame, color.r, color.g, color.b, alpha)
+                if encounterIndex == 1 then
+                  encounterFrame:SetPoint("LEFT", anchorEncounter, "LEFT", Constants.sizes.padding / 2, 0)
+                else
+                  encounterFrame:SetPoint("LEFT", anchorEncounter, "RIGHT", Constants.sizes.padding / 2, 0)
+                end
+                encounterFrame:SetSize(size, Constants.sizes.row - 12)
+                encounterFrame:Show()
+                anchorEncounter = encounterFrame
+              end)
+            end)
+          end)
+        end
+      end
+    end)
   end
 
   if self:IsScrollbarNeeded() then
