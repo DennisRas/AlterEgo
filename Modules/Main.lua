@@ -199,194 +199,196 @@ function Module:Render()
     end
   end
 
-  local rowCount = 0
-  do -- Sidebar: CharacterInfo Labels
-    self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
-    Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
-    Utils:TableForEach(characterInfo, function(info, infoIndex)
-      local infoFrame = self.window.sidebar.infoFrames[infoIndex]
-      if not infoFrame then
-        infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
-        infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-        infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", Constants.sizes.padding, 0)
-        infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -Constants.sizes.padding, 0)
-        infoFrame.text:SetJustifyH("LEFT")
-        infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-        infoFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.window.sidebar.infoFrames[infoIndex] = infoFrame
+  do   -- Sidebar
+    local rowCount = 0
+    do -- CharacterInfo Labels
+      self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
+      Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
+      Utils:TableForEach(characterInfo, function(info, infoIndex)
+        local infoFrame = self.window.sidebar.infoFrames[infoIndex]
+        if not infoFrame then
+          infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
+          infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
+          infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", Constants.sizes.padding, 0)
+          infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -Constants.sizes.padding, 0)
+          infoFrame.text:SetJustifyH("LEFT")
+          infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+          infoFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+          self.window.sidebar.infoFrames[infoIndex] = infoFrame
+        end
+
+        infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+        infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+        infoFrame:SetHeight(Constants.sizes.row)
+        infoFrame.text:SetText(info.label)
+        infoFrame:Show()
+        rowCount = rowCount + 1
+      end)
+    end
+
+    do -- MythicPlus Header
+      local label = self.window.sidebar.mpluslabel
+      if not label then
+        label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
+        label:SetHeight(Constants.sizes.row)
+        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
+        label.text:SetFontObject("GameFontHighlight_NoShadow")
+        label.text:SetJustifyH("LEFT")
+        label.text:SetText("Mythic Plus")
+        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.window.sidebar.mpluslabel = label
       end
 
-      infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
-      infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
-      infoFrame:SetHeight(Constants.sizes.row)
-      infoFrame.text:SetText(info.label)
-      infoFrame:Show()
+      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+      label:Show()
       rowCount = rowCount + 1
-    end)
-  end
-
-  do -- Sidebar: MythicPlus Header
-    local label = self.window.sidebar.mpluslabel
-    if not label then
-      label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
-      label:SetHeight(Constants.sizes.row)
-      label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-      label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
-      label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
-      label.text:SetFontObject("GameFontHighlight_NoShadow")
-      label.text:SetJustifyH("LEFT")
-      label.text:SetText("Mythic Plus")
-      label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-      self.window.sidebar.mpluslabel = label
     end
 
-    label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
-    label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
-    label:Show()
-    rowCount = rowCount + 1
-  end
-
-  do -- Sidebar: MythicPlus Labels
-    self.window.sidebar.mpluslabels = self.window.sidebar.mpluslabels or {}
-    Utils:TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
-    if Utils:TableCount(dungeons) > 0 then
-      Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
-        local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
-        if not dungeonFrame then
-          dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
-          dungeonFrame:RegisterForClicks("AnyUp", "AnyDown")
-          dungeonFrame:EnableMouse(true)
-          dungeonFrame:SetHeight(Constants.sizes.row)
-          dungeonFrame.icon = dungeonFrame:CreateTexture(dungeonFrame:GetName() .. "Icon", "ARTWORK")
-          dungeonFrame.icon:SetSize(16, 16)
-          dungeonFrame.icon:SetPoint("LEFT", dungeonFrame, "LEFT", Constants.sizes.padding, 0)
-          -- label.icon:SetTexture(dungeon.icon)
-          dungeonFrame.text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
-          dungeonFrame.text:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT", 16 + Constants.sizes.padding * 2, -3)
-          dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
-          dungeonFrame.text:SetJustifyH("LEFT")
-          dungeonFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-          self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
-        end
-
-        if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
-          dungeonFrame:SetAttribute("type", "spell")
-          dungeonFrame:SetAttribute("spell", dungeon.spellID)
-        end
-
-        dungeonFrame:SetScript("OnEnter", function()
-          GameTooltip:ClearAllPoints()
-          GameTooltip:ClearLines()
-          GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
-          GameTooltip:SetText(dungeon.name, 1, 1, 1);
-          if dungeon.spellID then
-            if IsSpellKnown(dungeon.spellID) then
-              GameTooltip:ClearLines()
-              GameTooltip:SetSpellByID(dungeon.spellID)
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-              _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
-            else
-              GameTooltip:AddLine("Time this dungeon on level 10 or above to unlock teleportation.", nil, nil, nil, true)
-            end
-          end
-          GameTooltip:Show()
-        end)
-        dungeonFrame:SetScript("OnLeave", function()
-          GameTooltip:Hide()
-        end)
-
-        dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
-        dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
-        dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
-        dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
-        dungeonFrame:Show()
-        rowCount = rowCount + 1
-      end)
-    end
-  end
-
-  do -- Sidebar: Raid Labels
-    self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
-    self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
-    Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
-    Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
-    if Data.db.global.raids.enabled then
-      Utils:TableForEach(raids, function(raid, raidIndex)
-        local raidFrame = self.window.sidebar.raidFrames[raidIndex]
-        if not raidFrame then
-          raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
-          raidFrame.difficultyFrames = {}
-          raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
-          raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", Constants.sizes.padding, 0)
-          raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-          raidFrame.text:SetJustifyH("LEFT")
-          raidFrame.text:SetWordWrap(false)
-          raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-          raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
-          raidFrame.ModifiedIcon:SetSize(18, 18)
-          raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(Constants.sizes.padding / 2), 0)
-          self.window.sidebar.raidFrames[raidIndex] = raidFrame
-        end
-
-        if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
-          raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
-          raidFrame.ModifiedIcon:Show()
-          raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(Constants.sizes.padding / 2), 0)
-        else
-          raidFrame.ModifiedIcon:Hide()
-          raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -Constants.sizes.padding, 0)
-        end
-
-        raidFrame:SetHeight(Constants.sizes.row)
-        raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
-        raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
-        raidFrame:SetScript("OnEnter", function()
-          GameTooltip:ClearAllPoints()
-          GameTooltip:ClearLines()
-          GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
-          GameTooltip:SetText(raid.name, 1, 1, 1);
-          if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
-          end
-          GameTooltip:Show()
-        end)
-        raidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        raidFrame.text:SetText(raid.short and raid.short or raid.name)
-        raidFrame:Show()
-        rowCount = rowCount + 1
-
-        -- Difficulties
-        Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-        Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
-          local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
-          if not difficultyFrame then
-            difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
-            difficultyFrame:SetHeight(Constants.sizes.row)
-            difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-            difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
-            difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
-            difficultyFrame.text:SetJustifyH("LEFT")
-            difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-            raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+    do -- MythicPlus Labels
+      self.window.sidebar.mpluslabels = self.window.sidebar.mpluslabels or {}
+      Utils:TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
+      if Utils:TableCount(dungeons) > 0 then
+        Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
+          local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
+          if not dungeonFrame then
+            dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
+            dungeonFrame:RegisterForClicks("AnyUp", "AnyDown")
+            dungeonFrame:EnableMouse(true)
+            dungeonFrame:SetHeight(Constants.sizes.row)
+            dungeonFrame.icon = dungeonFrame:CreateTexture(dungeonFrame:GetName() .. "Icon", "ARTWORK")
+            dungeonFrame.icon:SetSize(16, 16)
+            dungeonFrame.icon:SetPoint("LEFT", dungeonFrame, "LEFT", Constants.sizes.padding, 0)
+            -- label.icon:SetTexture(dungeon.icon)
+            dungeonFrame.text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
+            dungeonFrame.text:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT", 16 + Constants.sizes.padding * 2, -3)
+            dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
+            dungeonFrame.text:SetJustifyH("LEFT")
+            dungeonFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+            self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
           end
 
-          difficultyFrame:SetScript("OnEnter", function()
+          if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
+            dungeonFrame:SetAttribute("type", "spell")
+            dungeonFrame:SetAttribute("spell", dungeon.spellID)
+          end
+
+          dungeonFrame:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
-            GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText(difficulty.name, 1, 1, 1);
+            GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(dungeon.name, 1, 1, 1);
+            if dungeon.spellID then
+              if IsSpellKnown(dungeon.spellID) then
+                GameTooltip:ClearLines()
+                GameTooltip:SetSpellByID(dungeon.spellID)
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+              else
+                GameTooltip:AddLine("Time this dungeon on level 10 or above to unlock teleportation.", nil, nil, nil, true)
+              end
+            end
             GameTooltip:Show()
           end)
-          difficultyFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-          difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
-          difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
-          difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
-          difficultyFrame:Show()
+          dungeonFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+          end)
+
+          dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+          dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+          dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
+          dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
+          dungeonFrame:Show()
           rowCount = rowCount + 1
         end)
-      end)
+      end
+
+      do -- Raid Labels
+        self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
+        self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
+        Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
+        Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
+        if Data.db.global.raids.enabled then
+          Utils:TableForEach(raids, function(raid, raidIndex)
+            local raidFrame = self.window.sidebar.raidFrames[raidIndex]
+            if not raidFrame then
+              raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
+              raidFrame.difficultyFrames = {}
+              raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
+              raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", Constants.sizes.padding, 0)
+              raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+              raidFrame.text:SetJustifyH("LEFT")
+              raidFrame.text:SetWordWrap(false)
+              raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+              raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
+              raidFrame.ModifiedIcon:SetSize(18, 18)
+              raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(Constants.sizes.padding / 2), 0)
+              self.window.sidebar.raidFrames[raidIndex] = raidFrame
+            end
+
+            if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
+              raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
+              raidFrame.ModifiedIcon:Show()
+              raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(Constants.sizes.padding / 2), 0)
+            else
+              raidFrame.ModifiedIcon:Hide()
+              raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -Constants.sizes.padding, 0)
+            end
+
+            raidFrame:SetHeight(Constants.sizes.row)
+            raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+            raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+            raidFrame:SetScript("OnEnter", function()
+              GameTooltip:ClearAllPoints()
+              GameTooltip:ClearLines()
+              GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetText(raid.name, 1, 1, 1);
+              if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
+              end
+              GameTooltip:Show()
+            end)
+            raidFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            raidFrame.text:SetText(raid.short and raid.short or raid.name)
+            raidFrame:Show()
+            rowCount = rowCount + 1
+
+            -- Difficulties
+            Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
+            Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
+              local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
+              if not difficultyFrame then
+                difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
+                difficultyFrame:SetHeight(Constants.sizes.row)
+                difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+                difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
+                difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
+                difficultyFrame.text:SetJustifyH("LEFT")
+                difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+                raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+              end
+
+              difficultyFrame:SetScript("OnEnter", function()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+                GameTooltip:SetText(difficulty.name, 1, 1, 1);
+                GameTooltip:Show()
+              end)
+              difficultyFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+              difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+              difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+              difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
+              difficultyFrame:Show()
+              rowCount = rowCount + 1
+            end)
+          end)
+        end
+      end
     end
   end
 
@@ -395,7 +397,7 @@ function Module:Render()
     self.window.characterFrames = self.window.characterFrames or {}
     Utils:TableForEach(self.window.characterFrames, function(f) f:Hide() end)
     Utils:TableForEach(characters, function(character, characterIndex)
-      local characterRow = 0
+      local rowCount = 0
       local characterFrame = self.window.characterFrames[characterIndex]
       if not characterFrame then
         characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.ScrollFrame.ScrollChild)
@@ -480,7 +482,7 @@ function Module:Render()
           infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
           infoFrame:SetHeight(Constants.sizes.row)
           infoFrame:Show()
-          characterRow = characterRow + 1
+          rowCount = rowCount + 1
         end)
       end
 
@@ -534,7 +536,7 @@ function Module:Render()
             affixFrame:SetAlpha(0.2)
           end
         end)
-        characterRow = characterRow + 1
+        rowCount = rowCount + 1
       end
 
       do -- Dungeons
@@ -599,7 +601,7 @@ function Module:Render()
           dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
           dungeonFrame:SetHeight(Constants.sizes.row)
           dungeonFrame:Show()
-          characterRow = characterRow + 1
+          rowCount = rowCount + 1
 
           Utils:TableForEach(dungeonFrame.affixFrames, function(f) f:Hide() end)
           Utils:TableForEach(affixes, function(affix, affixIndex)
@@ -692,7 +694,7 @@ function Module:Render()
             raidFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
             raidFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
             raidFrame:Show()
-            characterRow = characterRow + 1
+            rowCount = rowCount + 1
 
             -- Difficulties
             Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
@@ -709,7 +711,7 @@ function Module:Render()
               difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
               difficultyFrame:SetHeight(Constants.sizes.row)
               difficultyFrame:Show()
-              characterRow = characterRow + 1
+              rowCount = rowCount + 1
               difficultyFrame:SetScript("OnEnter", function()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:ClearLines()
