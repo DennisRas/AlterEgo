@@ -153,7 +153,7 @@ function Module:Render()
 
   do -- Titlebar: Affixes
     local affixAnchor = self.window.titlebar
-    if currentAffixes and Utils:TableCount(currentAffixes) > 0 and Data.db.global.showAffixHeader then
+    if Data.db.global.showAffixHeader then
       Utils:TableForEach(currentAffixes, function(affix, affixIndex)
         local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id);
         local affixFrame = self.window.affixes.buttons[affixIndex]
