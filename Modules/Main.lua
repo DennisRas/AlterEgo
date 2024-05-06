@@ -201,10 +201,8 @@ function Module:Render()
     self.window.affixes:Hide()
   end
 
-  -- Sidebar
-  anchorFrame = self.window.sidebar
-
-  do -- CharacterInfo Labels
+  do -- Sidebar: CharacterInfo Labels
+    anchorFrame = self.window.sidebar
     self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
     Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
     Utils:TableForEach(characterInfo, function(info, infoIndex)
@@ -236,7 +234,7 @@ function Module:Render()
     end)
   end
 
-  do -- MythicPlus Label Header
+  do -- Sidebar: MythicPlus Header
     local label = self.window.sidebar.mpluslabel
     if not label then
       label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
@@ -256,7 +254,7 @@ function Module:Render()
     anchorFrame = label
   end
 
-  do -- MythicPlus Labels
+  do -- Sidebar: MythicPlus Labels
     self.window.sidebar.mpluslabels = self.window.sidebar.mpluslabels or {}
     Utils:TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
     if Utils:TableCount(dungeons) > 0 then
@@ -316,7 +314,7 @@ function Module:Render()
     end
   end
 
-  do -- Raid Labels
+  do -- Sidebar: Raid Labels
     self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
     self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
     Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
