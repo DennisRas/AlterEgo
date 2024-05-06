@@ -791,6 +791,11 @@ function Module:Render()
     end)
   end
 
+  self.window:SetBodySize(self:GetBodySize())
+  self.window.body.scrollparent.scrollchild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.scrollparent:GetHeight())
+  Window:SetWindowScale(Data.db.global.interface.windowScale / 100)
+  Window:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
+
   if self.window.body.scrollparent.scrollchild:GetWidth() > self.window.body.scrollparent:GetWidth() then
     self.window.body.scrollbar:SetMinMaxValues(0, self.window.body.scrollparent.scrollchild:GetWidth() - self.window.body.scrollparent:GetWidth())
     self.window.body.scrollbar.thumb:SetWidth(self.window.body.scrollbar:GetWidth() / 10)
@@ -816,11 +821,6 @@ function Module:Render()
   else
     self.window.titlebar.title:Show()
   end
-
-  self.window:SetBodySize(self:GetBodySize())
-  self.window.body.scrollparent.scrollchild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.scrollparent:GetHeight())
-  Window:SetWindowScale(Data.db.global.interface.windowScale / 100)
-  Window:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
 end
 
 function Module:SetupButtons()
