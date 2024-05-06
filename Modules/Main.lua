@@ -23,9 +23,7 @@ function Module:GetWindowSize()
   local numDungeons = Utils:TableCount(Data:GetDungeons())
   local numRaids = Utils:TableCount(Data:GetRaids())
   local numDifficulties = Utils:TableCount(Data:GetRaidDifficulties())
-  local numCharacterInfo = Utils:TableCount(Utils:TableFilter(self:GetCharacterInfo(), function(label)
-    return label.enabled
-  end))
+  local numCharacterInfo = Utils:TableCount(self:GetCharacterInfo())
   local width = 0
   local maxWidth = Window:GetMaxWindowWidth()
   local height = 0
@@ -203,10 +201,9 @@ function Module:Render()
 
   local rowCount = 0
   do -- Sidebar: CharacterInfo Labels
-    local info = Utils:TableFilter(characterInfo, function(i) return i.enabled end)
     self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
     Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
-    Utils:TableForEach(info, function(info, infoIndex)
+    Utils:TableForEach(characterInfo, function(info, infoIndex)
       local infoFrame = self.window.sidebar.infoFrames[infoIndex]
       if not infoFrame then
         infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
@@ -425,9 +422,8 @@ function Module:Render()
       characterFrame:Show()
 
       do -- Info
-        local info = Utils:TableFilter(characterInfo, function(i) return i.enabled end)
         Utils:TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
-        Utils:TableForEach(info, function(info, infoIndex)
+        Utils:TableForEach(characterInfo, function(info, infoIndex)
           local infoFrame = characterFrame.infoFrames[infoIndex]
           if not infoFrame then
             infoFrame = CreateFrame(info.OnClick and "Button" or "Frame", "$parentInfo" .. infoIndex, characterFrame)
@@ -1363,11 +1359,11 @@ function Module:SetupButtons()
   end)
 end
 
-function Module:GetCharacterInfo()
+function Module:GetCharacterInfo(unfiltered)
   local dungeons = Data:GetDungeons()
   local difficulties = Data:GetRaidDifficulties(true)
   local _, seasonDisplayID = Data:GetCurrentSeason()
-  return {
+  local result = {
     {
       label = CHARACTER,
       enabled = true,
@@ -1929,4 +1925,12 @@ function Module:GetCharacterInfo()
       end,
     },
   }
+
+  if unfiltered then
+    return result
+  end
+
+  return Utils:TableFilter(result, function(info)
+    return info.enabled
+  end)
 end
