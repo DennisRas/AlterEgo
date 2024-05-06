@@ -18,7 +18,7 @@ end
 
 --- Calculate the main window size
 ---@return number, number
-function Module:GetWindowSize()
+function Module:GetBodySize()
   local numCharacters = Utils:TableCount(Data:GetCharacters())
   local numDungeons = Utils:TableCount(Data:GetDungeons())
   local numRaids = Utils:TableCount(Data:GetRaids())
@@ -44,13 +44,13 @@ function Module:GetWindowSize()
 
   -- Height
   -- height = height + Constants.sizes.titlebar.height                          -- Titlebar duh
-  height = height + numCharacterInfo * Constants.sizes.row                   -- Character info
-  height = height + (numDungeons + 1) * Constants.sizes.row                  -- Dungeons
-  if Data.db.global.raids.enabled == true then
-    height = height + numRaids * (numDifficulties + 1) * Constants.sizes.row -- Raids
-  end
+  height = height + numCharacterInfo * Constants.sizes.row                 -- Character info
+  height = height + (numDungeons + 1) * Constants.sizes.row                -- Dungeons
+  -- if Data.db.global.raids.enabled == true then
+  height = height + numRaids * (numDifficulties + 1) * Constants.sizes.row -- Raids
+  -- end
 
-  return width, height + 500
+  return width, height
 end
 
 function Module:OnEnable()
@@ -835,7 +835,7 @@ function Module:Render()
     self.window.titlebar.title:Show()
   end
 
-  self.window:SetBodySize(self:GetWindowSize())
+  self.window:SetBodySize(self:GetBodySize())
   self.window.body.ScrollFrame.ScrollChild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.ScrollFrame:GetHeight())
   Window:SetWindowScale(Data.db.global.interface.windowScale / 100)
   Window:SetWindowBackgroundColor(Data.db.global.interface.windowColor)

@@ -87,7 +87,7 @@ function Window:CreateWindow(params)
     if options.titlebar then
       height = height + TITLEBAR_HEIGHT
     end
-    frame:SetSize(w, h)
+    frame:SetSize(width, height)
   end
 
   -- Border
