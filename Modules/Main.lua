@@ -24,31 +24,23 @@ function Module:GetBodySize()
   local numRaids = Utils:TableCount(Data:GetRaids())
   local numDifficulties = Utils:TableCount(Data:GetRaidDifficulties())
   local numCharacterInfo = Utils:TableCount(self:GetCharacterInfo())
-  local width = 0
   local maxWidth = Window:GetMaxWindowWidth()
-  local height = 0
+  local width, height = 0, 0
 
   -- Width
   if numCharacters == 0 then
     width = 500
   else
-    -- width = width + SIDEBAR_WIDTH
     width = width + numCharacters * CHARACTER_WIDTH
   end
   if width > maxWidth then
     width = maxWidth
-    if numCharacters > 0 then
-      height = height + Constants.sizes.footer.height -- Shoes?
-    end
   end
 
   -- Height
-  -- height = height + Constants.sizes.titlebar.height                          -- Titlebar duh
   height = height + numCharacterInfo * Constants.sizes.row                 -- Character info
   height = height + (numDungeons + 1) * Constants.sizes.row                -- Dungeons
-  -- if Data.db.global.raids.enabled == true then
   height = height + numRaids * (numDifficulties + 1) * Constants.sizes.row -- Raids
-  -- end
 
   return width, height
 end
@@ -109,43 +101,38 @@ function Module:Render()
     self.zeroCharacters:Hide()
   end
 
-  if not self.window.body.ScrollFrame then
-    self.window.body.ScrollFrame = CreateFrame("ScrollFrame", "$parentScrollFrame", self.window.body)
-    self.window.body.ScrollFrame:SetAllPoints()
-    self.window.body.ScrollFrame.ScrollChild = CreateFrame("Frame", "$parentScrollChild", self.window.body.ScrollFrame)
-    self.window.body.ScrollFrame:SetScrollChild(self.window.body.ScrollFrame.ScrollChild)
-  end
-
-  if not self.window.footer then
-    self.window.footer = CreateFrame("Frame", "$parentFooter", self.window)
-    self.window.footer:SetHeight(Constants.sizes.footer.height)
-    self.window.footer:SetPoint("BOTTOMLEFT", self.window, "BOTTOMLEFT")
-    self.window.footer:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT")
-    Utils:SetBackgroundColor(self.window.footer, 0, 0, 0, .3)
-    self.window.footer.Scrollbar = CreateFrame("Slider", "$parentScrollbar", self.window.footer, "UISliderTemplate")
-    self.window.footer.Scrollbar:SetPoint("TOPLEFT", self.window.footer, "TOPLEFT", SIDEBAR_WIDTH, 0)
-    self.window.footer.Scrollbar:SetPoint("BOTTOMRIGHT", self.window.footer, "BOTTOMRIGHT", -Constants.sizes.padding / 2, 0)
-    self.window.footer.Scrollbar:SetMinMaxValues(0, 100)
-    self.window.footer.Scrollbar:SetValue(0)
-    self.window.footer.Scrollbar:SetValueStep(1)
-    self.window.footer.Scrollbar:SetOrientation("HORIZONTAL")
-    self.window.footer.Scrollbar:SetObeyStepOnDrag(true)
-    self.window.footer.Scrollbar.NineSlice:Hide()
-    self.window.footer.Scrollbar.thumb = self.window.footer.Scrollbar:GetThumbTexture()
-    self.window.footer.Scrollbar.thumb:SetPoint("CENTER")
-    self.window.footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
-    self.window.footer.Scrollbar.thumb:SetHeight(Constants.sizes.footer.height - 10)
-    self.window.footer.Scrollbar:SetScript("OnValueChanged", function(_, value)
-      self.window.body.ScrollFrame:SetHorizontalScroll(value)
+  if not self.window.body.scrollparent then
+    self.window.body.scrollparent = CreateFrame("ScrollFrame", "$parentScrollFrame", self.window.body)
+    self.window.body.scrollparent:SetAllPoints()
+    self.window.body.scrollparent.scrollchild = CreateFrame("Frame", "$parentScrollChild", self.window.body.scrollparent)
+    self.window.body.scrollparent:SetScrollChild(self.window.body.scrollparent.scrollchild)
+    self.window.body.scrollbar = CreateFrame("Slider", "$parentScrollbar", self.window.body, "UISliderTemplate")
+    self.window.body.scrollbar:SetPoint("BOTTOMLEFT", self.window.body, "BOTTOMLEFT", 0, 0)
+    self.window.body.scrollbar:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
+    self.window.body.scrollbar:SetHeight(6)
+    self.window.body.scrollbar:SetMinMaxValues(0, 100)
+    self.window.body.scrollbar:SetValue(0)
+    self.window.body.scrollbar:SetValueStep(1)
+    self.window.body.scrollbar:SetOrientation("HORIZONTAL")
+    self.window.body.scrollbar:SetObeyStepOnDrag(true)
+    if self.window.body.scrollbar.NineSlice then
+      self.window.body.scrollbar.NineSlice:Hide()
+    end
+    self.window.body.scrollbar.thumb = self.window.body.scrollbar:GetThumbTexture()
+    self.window.body.scrollbar.thumb:SetPoint("CENTER")
+    self.window.body.scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
+    self.window.body.scrollbar.thumb:SetHeight(10)
+    self.window.body.scrollbar:SetScript("OnValueChanged", function(_, value)
+      self.window.body.scrollparent:SetHorizontalScroll(value)
     end)
-    self.window.footer.Scrollbar:SetScript("OnEnter", function()
-      self.window.footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.2)
+    self.window.body.scrollbar:SetScript("OnEnter", function()
+      self.window.body.scrollbar.thumb:SetColorTexture(1, 1, 1, 0.2)
     end)
-    self.window.footer.Scrollbar:SetScript("OnLeave", function()
-      self.window.footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
+    self.window.body.scrollbar:SetScript("OnLeave", function()
+      self.window.body.scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
     end)
-    self.window.body.ScrollFrame:SetScript("OnMouseWheel", function(_, delta)
-      self.window.footer.Scrollbar:SetValue(self.window.footer.Scrollbar:GetValue() - delta * ((self.window.body.ScrollFrame.ScrollChild:GetWidth() - self.window.body.ScrollFrame:GetWidth()) * 0.1))
+    self.window.body.scrollparent:SetScript("OnMouseWheel", function(_, delta)
+      self.window.body.scrollbar:SetValue(self.window.body.scrollbar:GetValue() - delta * ((self.window.body.scrollparent.scrollchild:GetWidth() - self.window.body.scrollparent:GetWidth()) * 0.1))
     end)
   end
 
@@ -393,14 +380,14 @@ function Module:Render()
   end
 
   do -- Body
-    local characterAnchor = self.window.body.ScrollFrame.ScrollChild
+    local characterAnchor = self.window.body.scrollparent.scrollchild
     self.window.characterFrames = self.window.characterFrames or {}
     Utils:TableForEach(self.window.characterFrames, function(f) f:Hide() end)
     Utils:TableForEach(characters, function(character, characterIndex)
       local rowCount = 0
       local characterFrame = self.window.characterFrames[characterIndex]
       if not characterFrame then
-        characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.ScrollFrame.ScrollChild)
+        characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.scrollparent.scrollchild)
         characterFrame.infoFrames = {}
         characterFrame.dungeonFrames = {}
         characterFrame.affixFrames = {}
@@ -804,29 +791,24 @@ function Module:Render()
     end)
   end
 
-  if self:IsScrollbarNeeded() then
-    self.window.footer.Scrollbar:SetMinMaxValues(0, self.window.body.ScrollFrame.ScrollChild:GetWidth() - self.window.body.ScrollFrame:GetWidth())
-    self.window.footer.Scrollbar.thumb:SetWidth(self.window.footer.Scrollbar:GetWidth() / 10)
-    self.window.body:SetPoint("BOTTOMLEFT", self.window.footer, "TOPLEFT")
-    self.window.body:SetPoint("BOTTOMRIGHT", self.window.footer, "TOPRIGHT")
-    self.window.footer:Show()
+  if self.window.body.scrollparent.scrollchild:GetWidth() > self.window.body.scrollparent:GetWidth() then
+    self.window.body.scrollbar:SetMinMaxValues(0, self.window.body.scrollparent.scrollchild:GetWidth() - self.window.body.scrollparent:GetWidth())
+    self.window.body.scrollbar.thumb:SetWidth(self.window.body.scrollbar:GetWidth() / 10)
+    self.window.body.scrollbar.thumb:SetHeight(self.window.body.scrollbar:GetHeight())
+    self.window.body.scrollbar:Show()
   else
-    self.window.body.ScrollFrame:SetHorizontalScroll(0)
-    self.window.body:SetPoint("BOTTOMLEFT", self.window, "BOTTOMLEFT")
-    self.window.body:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT")
-    self.window.footer:Hide()
+    self.window.body.scrollparent:SetHorizontalScroll(0)
+    self.window.body.scrollbar:Hide()
   end
 
   if Utils:TableCount(characters) <= 0 then
     self.zeroCharacters:Show()
     self.window.sidebar:Hide()
     self.window.body:Hide()
-    self.window.footer:Hide()
   else
     self.zeroCharacters:Hide()
     self.window.sidebar:Show()
     self.window.body:Show()
-    self.window.footer:Show()
   end
 
   if Utils:TableCount(characters) == 1 then
@@ -836,7 +818,7 @@ function Module:Render()
   end
 
   self.window:SetBodySize(self:GetBodySize())
-  self.window.body.ScrollFrame.ScrollChild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.ScrollFrame:GetHeight())
+  self.window.body.scrollparent.scrollchild:SetSize(Utils:TableCount(characters) * CHARACTER_WIDTH, self.window.body.scrollparent:GetHeight())
   Window:SetWindowScale(Data.db.global.interface.windowScale / 100)
   Window:SetWindowBackgroundColor(Data.db.global.interface.windowColor)
 end
