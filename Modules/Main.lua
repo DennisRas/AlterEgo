@@ -46,14 +46,43 @@ function Module:GetBodySize()
 end
 
 function Module:OnEnable()
-  self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
-    DevTools_Dump("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
-    self:Render()
-  end)
-  self:RegisterEvent("WEEKLY_REWARDS_UPDATE", function()
-    DevTools_Dump("WEEKLY_REWARDS_UPDATE")
-    self:Render()
-  end)
+  Core:RegisterBucketEvent(
+    {
+      "BAG_UPDATE_DELAYED",
+      "BONUS_ROLL_RESULT",
+      "BOSS_KILL",
+      "CHALLENGE_MODE_COMPLETED",
+      "CHALLENGE_MODE_MAPS_UPDATE",
+      "CHALLENGE_MODE_RESET",
+      "CHAT_MSG_CURRENCY",
+      "CHAT_MSG_SYSTEM",
+      "CURRENCY_DISPLAY_UPDATE",
+      "ENCOUNTER_END",
+      "ITEM_CHANGED",
+      "LFG_LOCK_INFO_RECEIVED",
+      "LFG_UPDATE_RANDOM_INFO",
+      "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
+      "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
+      "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
+      "PLAYER_EQUIPMENT_CHANGED",
+      "PLAYER_LEVEL_UP",
+      "PLAYER_TRADE_CURRENCY",
+      "POST_MATCH_CURRENCY_REWARD_UPDATE",
+      "QUEST_CURRENCY_LOOT_RECEIVED",
+      "RAID_INSTANCE_WELCOME",
+      "SPELL_CONFIRMATION_PROMPT",
+      "TRADE_CURRENCY_CHANGED",
+      "TRADE_SKILL_CURRENCY_REWARD_RESULT",
+      "UNIT_INVENTORY_CHANGED",
+      "UPDATE_INSTANCE_INFO",
+      "WEEKLY_REWARDS_UPDATE",
+    },
+    1,
+    function(...)
+      DevTools_Dump({...})
+      self:Render()
+    end
+  )
   self:Render()
 end
 

@@ -52,23 +52,23 @@ function Core:ToggleWindow()
 end
 
 function Core:OnEnable()
-  -- self:RequestGameData()
-  -- self:CheckGameData()
+  self:RequestGameData()
+  self:CheckGameData()
+  -- C_MythicPlus.RequestCurrentAffixes();
+  -- C_MythicPlus.RequestMapInfo()
+  -- C_MythicPlus.RequestRewards()
+  -- RequestRaidInfo()
+  -- Data:MigrateDB()
+  -- Data:TaskWeeklyReset()
+  -- Data:TaskSeasonReset()
+end
+
+function Core:RequestGameData()
   C_MythicPlus.RequestCurrentAffixes();
   C_MythicPlus.RequestMapInfo()
   C_MythicPlus.RequestRewards()
   RequestRaidInfo()
-  Data:MigrateDB()
-  Data:TaskWeeklyReset()
-  Data:TaskSeasonReset()
 end
-
--- function Core:RequestGameData()
---   C_MythicPlus.RequestCurrentAffixes();
---   C_MythicPlus.RequestMapInfo()
---   C_MythicPlus.RequestRewards()
---   RequestRaidInfo()
--- end
 
 function Core:CheckGameData()
   local seasonID = C_MythicPlus.GetCurrentSeason()

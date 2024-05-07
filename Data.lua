@@ -388,6 +388,14 @@ function Data:Initialize()
   )
 end
 
+function Data:UpdateModules()
+  -- Utils:TableForEach(Core:IterateModules(), function(module)
+  --   if module.Render then
+  --     module:Render()
+  --   end
+  -- end)
+end
+
 --- Get the current Season IDs
 ---@return number, number
 function Data:GetCurrentSeason()
@@ -808,7 +816,7 @@ function Data:UpdateRaidInstances()
       character.raids.savedInstances[savedInstanceIndex] = savedInstance
     end
   end
-  -- self:UpdateUI()
+  self:UpdateModules()
 end
 
 function Data:UpdateCharacterInfo()
@@ -917,7 +925,7 @@ function Data:UpdateCharacterInfo()
     end
   end)
   character.lastUpdate = GetServerTime()
-  -- self:UpdateUI()
+  self:UpdateModules()
 end
 
 function Data:UpdateKeystoneItem()
@@ -976,7 +984,7 @@ function Data:UpdateKeystoneItem()
   local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
   if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) end
   if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) end
-  -- self:UpdateUI()
+  self:UpdateModules()
 end
 
 function Data:UpdateVault()
@@ -1000,7 +1008,7 @@ function Data:UpdateVault()
   end
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
-  -- self:UpdateUI()
+  self:UpdateModules()
 end
 
 function Data:UpdateMythicPlus()
@@ -1065,12 +1073,12 @@ function Data:UpdateMythicPlus()
     end
     table.insert(character.mythicplus.dungeons, dungeon)
   end
-  -- self:UpdateUI()
+  self:UpdateModules()
 end
 
 -- function Data:OnEncounterEnd(instanceEncounterID, encounterName, difficultyID, groupSize, success)
 --   if success then
 --     RequestRaidInfo()
 --   end
--- self:UpdateUI()
+-- self:UpdateModules()
 -- end
