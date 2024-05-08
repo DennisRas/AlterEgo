@@ -1474,7 +1474,7 @@ function AlterEgo:CreateUI()
     winMain.Body.NoCharacterText:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", 50, -50)
     winMain.Body.NoCharacterText:SetPoint("BOTTOMRIGHT", winMain.Body, "BOTTOMRIGHT", -50, 50)
     winMain.Body.NoCharacterText:SetJustifyH("CENTER")
-    winMain.Body.NoCharacterText:SetJustifyV("CENTER")
+    winMain.Body.NoCharacterText:SetJustifyV("MIDDLE")
     winMain.Body.NoCharacterText:SetFontObject("GameFontHighlight_NoShadow")
     local introductionText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
     if not self.db.global.showZeroRatedCharacters and AE_table_count(self:GetCharacters(true)) > 0 then
