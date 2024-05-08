@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.8 - 2024-05-08
+
+### Updated
+
+- Updated addon to Patch 10.2.7
+
+### Fixed
+
+- Fixed a major UI bug caused by the latest patch
+
 ## v1.1.7 - 2024-05-05
 
 ### Fixed
