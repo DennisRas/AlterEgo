@@ -369,7 +369,7 @@ local dataCurrencies = {
   {seasonID = 12, seasonDisplayID = 4, id = 2806,   currencyType = "crest"},    -- Whelpling
   {seasonID = 12, seasonDisplayID = 4, id = 2245,   currencyType = "upgrade"},  -- Flightstones
   {seasonID = 12, seasonDisplayID = 4, id = 2912,   currencyType = "catalyst"}, -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 213089, currencyType = "item"},     -- Dinar
+  {seasonID = 12, seasonDisplayID = 4, id = 3010,   currencyType = "dinar", itemID = 213089},     -- Dinar
 }
 
 --- Initiate AceDB
@@ -918,41 +918,15 @@ function AlterEgo:UpdateCharacterInfo()
     end
   end
   AE_table_foreach(dataCurrencies, function(dataCurrency)
-    if dataCurrency.currencyType == "item" then
-      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(dataCurrency.id)
-      local count = C_Item.GetItemCount(dataCurrency.id, true)
-      local iconFileID = GetItemIcon(dataCurrency.id)
-      local currency = {
-        id = dataCurrency.id,
-        name = itemName,
-        description = "",
-        isHeader = false,
-        isHeaderExpanded = false,
-        isTypeUnused = false,
-        isShowInBackpack = false,
-        quantity = count,
-        trackedQuantity = 0,
-        iconFileID = iconFileID,
-        maxQuantity = 0,
-        canEarnPerWeek = 0,
-        quantityEarnedThisWeek = 0,
-        isTradeable = bindType ~= 1,
-        quality = itemQuality,
-        maxWeeklyQuantity = 0,
-        totalEarned = 0,
-        discovered = false,
-        useTotalEarnedForMaxQty = false,
-        currencyType = dataCurrency.currencyType,
-        itemLink = itemLink,
-      }
-      table.insert(character.currencies, currency)
-    else
-      local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-      if currency then
-        currency.id = dataCurrency.id
-        currency.currencyType = dataCurrency.currencyType
-        table.insert(character.currencies, currency)
+    local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+    if currency then
+      currency.id = dataCurrency.id
+      currency.currencyType = dataCurrency.currencyType
+      if currency.currencyType == "dinar" then
+        currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
+        currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID)
       end
+      table.insert(character.currencies, currency)
     end
   end)
   character.lastUpdate = GetServerTime()
