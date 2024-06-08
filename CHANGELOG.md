@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.9 - 2024-06-09
+
+### Fixed
+
+- Fixed an issue with item upgrades being blocked by AlterEgo
+
 ## v1.1.8 - 2024-05-08
 
 ### Updated
