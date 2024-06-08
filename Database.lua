@@ -864,7 +864,7 @@ function AlterEgo:UpdateCharacterInfo()
 
   local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
-  upgradePattern = upgradePattern:format("(.+)", "(%d)", "(%d)")
+  upgradePattern = upgradePattern:format("(.+)", "(%d+)", "(%d+)")
   for _, slot in ipairs(dataInventory) do
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if inventoryItemLink then

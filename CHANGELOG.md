@@ -5,6 +5,7 @@
 ### Fixed
 
 - Fixed an issue with item upgrades being blocked by AlterEgo
+- Equipment window now shows Awakened upgrade levels correctly. Log every character for the fix.
 
 ## v1.1.8 - 2024-05-08
 

@@ -93,7 +93,7 @@ function AlterEgo:GetCharacterInfo()
             {width = 100},
             {width = 280},
             {width = 80, align = "CENTER"},
-            {width = 120},
+            {width = 150},
           },
           rows = {
             {
