@@ -922,9 +922,9 @@ function AlterEgo:UpdateCharacterInfo()
     if currency then
       currency.id = dataCurrency.id
       currency.currencyType = dataCurrency.currencyType
-      if currency.currencyType == "dinar" then
+      if currency.itemID then
         currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
-        currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID)
+        currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
       end
       table.insert(character.currencies, currency)
     end
