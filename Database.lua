@@ -357,19 +357,19 @@ local dataRaidDifficulties = {
 
 ---@type Currency[]
 local dataCurrencies = {
-  {seasonID = 11, seasonDisplayID = 3, id = 2709,   currencyType = "crest"},    -- Aspect
-  {seasonID = 11, seasonDisplayID = 3, id = 2708,   currencyType = "crest"},    -- Wyrm
-  {seasonID = 11, seasonDisplayID = 3, id = 2707,   currencyType = "crest"},    -- Drake
-  {seasonID = 11, seasonDisplayID = 3, id = 2706,   currencyType = "crest"},    -- Whelpling
-  {seasonID = 11, seasonDisplayID = 3, id = 2245,   currencyType = "upgrade"},  -- Flightstones
-  {seasonID = 11, seasonDisplayID = 3, id = 2796,   currencyType = "catalyst"}, -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 2812,   currencyType = "crest"},    -- Aspect
-  {seasonID = 12, seasonDisplayID = 4, id = 2809,   currencyType = "crest"},    -- Wyrm
-  {seasonID = 12, seasonDisplayID = 4, id = 2807,   currencyType = "crest"},    -- Drake
-  {seasonID = 12, seasonDisplayID = 4, id = 2806,   currencyType = "crest"},    -- Whelpling
-  {seasonID = 12, seasonDisplayID = 4, id = 2245,   currencyType = "upgrade"},  -- Flightstones
-  {seasonID = 12, seasonDisplayID = 4, id = 2912,   currencyType = "catalyst"}, -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 213089, currencyType = "item"},     -- Dinar
+  {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},                    -- Aspect
+  {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},                    -- Wyrm
+  {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},                    -- Drake
+  {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},                    -- Whelpling
+  {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},                  -- Flightstones
+  {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 2812, currencyType = "crest"},                    -- Aspect
+  {seasonID = 12, seasonDisplayID = 4, id = 2809, currencyType = "crest"},                    -- Wyrm
+  {seasonID = 12, seasonDisplayID = 4, id = 2807, currencyType = "crest"},                    -- Drake
+  {seasonID = 12, seasonDisplayID = 4, id = 2806, currencyType = "crest"},                    -- Whelpling
+  {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},                  -- Flightstones
+  {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar",   itemID = 213089}, -- Dinar
 }
 
 --- Initiate AceDB
@@ -685,7 +685,7 @@ function AlterEgo:TaskWeeklyReset()
           if currency.currencyType == "crest" and currency.maxQuantity > 0 then
             currency.maxQuantity = currency.maxQuantity + 120
           end
-          if currency.currencyType == "catalyst" or currency.currencyType == "dinar" then
+          if currency.currencyType == "catalyst" then
             currency.quantity = math.min(currency.quantity + 1, currency.maxQuantity)
           end
         end)
@@ -864,7 +864,7 @@ function AlterEgo:UpdateCharacterInfo()
 
   local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
-  upgradePattern = upgradePattern:format("(.+)", "(%d)", "(%d)")
+  upgradePattern = upgradePattern:format("(.+)", "(%d+)", "(%d+)")
   for _, slot in ipairs(dataInventory) do
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if inventoryItemLink then
@@ -918,41 +918,15 @@ function AlterEgo:UpdateCharacterInfo()
     end
   end
   AE_table_foreach(dataCurrencies, function(dataCurrency)
-    if dataCurrency.currencyType == "item" then
-      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(dataCurrency.id)
-      local count = C_Item.GetItemCount(dataCurrency.id, true)
-      local iconFileID = GetItemIcon(dataCurrency.id)
-      local currency = {
-        id = dataCurrency.id,
-        name = itemName,
-        description = "",
-        isHeader = false,
-        isHeaderExpanded = false,
-        isTypeUnused = false,
-        isShowInBackpack = false,
-        quantity = count,
-        trackedQuantity = 0,
-        iconFileID = iconFileID,
-        maxQuantity = 0,
-        canEarnPerWeek = 0,
-        quantityEarnedThisWeek = 0,
-        isTradeable = bindType ~= 1,
-        quality = itemQuality,
-        maxWeeklyQuantity = 0,
-        totalEarned = 0,
-        discovered = false,
-        useTotalEarnedForMaxQty = false,
-        currencyType = dataCurrency.currencyType,
-        itemLink = itemLink,
-      }
-      table.insert(character.currencies, currency)
-    else
-      local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-      if currency then
-        currency.id = dataCurrency.id
-        currency.currencyType = dataCurrency.currencyType
-        table.insert(character.currencies, currency)
+    local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+    if currency then
+      currency.id = dataCurrency.id
+      currency.currencyType = dataCurrency.currencyType
+      if dataCurrency.itemID then
+        currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
+        currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
       end
+      table.insert(character.currencies, currency)
     end
   end)
   character.lastUpdate = GetServerTime()

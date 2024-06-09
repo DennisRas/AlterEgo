@@ -9,6 +9,7 @@
 ## X-Wago-ID: mKOvqW6x
 ## X-WoWI-ID: 26718
 
+Libs\TaintLess\TaintLess.xml
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
