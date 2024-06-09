@@ -2,10 +2,14 @@
 
 ## v1.1.9 - 2024-06-09
 
+### Updated
+
+- The currency Antique Bronze Bullion now shows max quantity (relog characters). Thanks [@Numynum](https://github.com/Numynum)
+
 ### Fixed
 
 - Fixed an issue with item upgrades being blocked by AlterEgo
-- Equipment window now shows Awakened upgrade levels correctly. Log every character for the fix.
+- Equipment window now shows Awakened upgrade levels correctly (relog characters)
 
 ## v1.1.8 - 2024-05-08
 
