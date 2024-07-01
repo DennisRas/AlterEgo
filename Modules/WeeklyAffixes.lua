@@ -8,10 +8,10 @@ local Constants = AlterEgo.Constants
 local Module = Core:NewModule("WeeklyAffixes")
 
 function Module:OnEnable()
-  self:Render()
   Core:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
     self:Render()
   end)
+  self:Render()
 end
 
 function Module:OnDisable()

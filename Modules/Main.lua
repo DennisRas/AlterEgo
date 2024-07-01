@@ -78,8 +78,7 @@ function Module:OnEnable()
       "WEEKLY_REWARDS_UPDATE",
     },
     1,
-    function(...)
-      DevTools_Dump({...})
+    function()
       self:Render()
     end
   )

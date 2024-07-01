@@ -491,7 +491,7 @@ end
 ---@return AffixRotation|nil
 function Data:GetAffixRotation()
   local seasonID = self:GetCurrentSeason()
-  Utils:TableGet(self.affixRotations, "seasonID", seasonID)
+  return Utils:TableGet(self.affixRotations, "seasonID", seasonID)
 end
 
 --- Get the index of the active affix week
