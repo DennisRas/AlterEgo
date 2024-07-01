@@ -701,7 +701,12 @@ function Module:Render()
             if not raidFrame then
               raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, characterFrame)
               raidFrame.difficultyFrames = {}
-              Utils:SetBackgroundColor(raidFrame, 0, 0, 0, 0.3)
+              raidFrame.headerFrame = CreateFrame("Frame", "$parentHeader" .. raidIndex, characterFrame)
+              raidFrame.headerFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * Constants.sizes.row)
+              raidFrame.headerFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * Constants.sizes.row)
+              raidFrame.headerFrame:SetHeight(Constants.sizes.row)
+              raidFrame.headerFrame:Show()
+              Utils:SetBackgroundColor(raidFrame.headerFrame, 0, 0, 0, 0.3)
               characterFrame.raidFrames[raidIndex] = raidFrame
             end
 
