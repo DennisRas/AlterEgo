@@ -1,5 +1,59 @@
 # Changelog
 
+## v1.1.9 - 2024-06-09
+
+### Updated
+
+- The currency Antique Bronze Bullion now shows max quantity (relog characters). Thanks [@Numynum](https://github.com/Numynum)
+
+### Fixed
+
+- Fixed an issue with item upgrades being blocked by AlterEgo
+- Equipment window now shows Awakened upgrade levels correctly (relog characters)
+
+## v1.1.8 - 2024-05-08
+
+### Updated
+
+- Updated addon to Patch 10.2.7
+
+### Fixed
+
+- Fixed a major UI bug caused by the latest patch
+
+## v1.1.7 - 2024-05-05
+
+### Fixed
+
+- Fixed an issue with missing affix data causing errors
+
+## v1.1.6 - 2024-04-27
+
+### Fixed
+
+- Fixed an issue with keystones not being announced automatically
+- Fixed an issue with Sennarth, The Cold Breath not showing as killed in the raid progress
+
+## v1.1.5 - 2024-04-24
+
+### Added
+
+- Added a warning if the setting for hiding characters with zero rating is enabled when transitioning into a new season
+
+### Updated
+
+- Updated the teleportation tooltips from +20 to +10
+
+### Fixed
+
+- Fixed an issue with the new Antique Bronze Bullion currency
+
+## v1.1.4 - 2024-04-22
+
+### Fixed
+
+- Fixed a bug with the raid section not showing before the new season (Thanks Kaivalya)
+
 ## v1.1.3 - 2024-04-22
 
 ### Added

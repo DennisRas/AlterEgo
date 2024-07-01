@@ -149,6 +149,7 @@
         "RED_FONT_COLOR",
         "PVPUtil",
         "hooksecurefunc",
-        "SendChatMessage"
+        "SendChatMessage",
+        "strcmputf8i"
     ]
 }

@@ -1,7 +1,7 @@
 local addonName, AlterEgo = ...
 local Utils = AlterEgo.Utils
 local Core = AlterEgo.Core
-local dbVersion = 16
+local dbVersion = 17
 local Data = {}
 AlterEgo.Data = Data
 Data.defaultCharacter = {
@@ -266,8 +266,8 @@ Data.affixRotations = {
 
 ---@type Keystone[]
 Data.keystones = {
-  {seasonID = 11, seasonDisplayID = 3, itemID = 180653},
-  {seasonID = 12, seasonDisplayID = 4, itemID = 151086},
+  {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
+  {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
 }
 
 ---@type Dungeon[]
@@ -318,19 +318,19 @@ Data.raidDifficulties = {
 
 ---@type Currency[]
 Data.currencies = {
-  {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},    -- Aspect
-  {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},    -- Wyrm
-  {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},    -- Drake
-  {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},    -- Whelpling
-  {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},  -- Flightstones
-  {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"}, -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 2812, currencyType = "crest"},    -- Aspect
-  {seasonID = 12, seasonDisplayID = 4, id = 2809, currencyType = "crest"},    -- Wyrm
-  {seasonID = 12, seasonDisplayID = 4, id = 2807, currencyType = "crest"},    -- Drake
-  {seasonID = 12, seasonDisplayID = 4, id = 2806, currencyType = "crest"},    -- Whelpling
-  {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},  -- Flightstones
-  {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"}, -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar"},    -- Dinar
+  {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},                    -- Aspect
+  {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},                    -- Wyrm
+  {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},                    -- Drake
+  {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},                    -- Whelpling
+  {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},                  -- Flightstones
+  {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 2812, currencyType = "crest"},                    -- Aspect
+  {seasonID = 12, seasonDisplayID = 4, id = 2809, currencyType = "crest"},                    -- Wyrm
+  {seasonID = 12, seasonDisplayID = 4, id = 2807, currencyType = "crest"},                    -- Drake
+  {seasonID = 12, seasonDisplayID = 4, id = 2806, currencyType = "crest"},                    -- Whelpling
+  {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},                  -- Flightstones
+  {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar",   itemID = 213089}, -- Dinar
 }
 
 Data.cache = {
@@ -649,6 +649,7 @@ function Data:MigrateDB()
         end
       end
     end
+    -- Add missing affix IDs
     if self.db.global.dbVersion == 10 then
       local affixes = self:GetAffixes()
       for characterIndex in pairs(self.db.global.characters) do
@@ -665,10 +666,27 @@ function Data:MigrateDB()
         end
       end
     end
+    -- Convert season ID from display ID to season major version ID
     if self.db.global.dbVersion == 15 then
       for _, character in pairs(self.db.global.characters) do
         if character.currentSeason ~= nil and character.currentSeason == 3 then
           character.currentSeason = 11
+        end
+      end
+    end
+    -- Fix SavedInstance/EncounterJournal name mismatch for "Sennarth, t|The Cold Breath"
+    if self.db.global.dbVersion == 16 then
+      for _, character in pairs(self.db.global.characters) do
+        if character.raids and character.raids.savedInstances then
+          for _, savedInstance in pairs(character.raids.savedInstances) do
+            if savedInstance.instanceID == 2522 and savedInstance.encounters then
+              for _, encounter in pairs(savedInstance.encounters) do
+                if encounter.index and encounter.index == 5 and encounter.instanceEncounterID == 0 then
+                  encounter.instanceEncounterID = 2592
+                end
+              end
+            end
+          end
         end
       end
     end
@@ -683,9 +701,9 @@ function Data:TaskWeeklyReset()
       if character.currencies ~= nil then
         Utils:TableForEach(character.currencies, function(currency)
           if currency.currencyType == "crest" and currency.maxQuantity > 0 then
-            currency.maxQuantity = currency.maxQuantity + 90
+            currency.maxQuantity = currency.maxQuantity + 120
           end
-          if currency.currencyType == "catalyst" or currency.currencyType == "dinar" then
+          if currency.currencyType == "catalyst" then
             currency.quantity = math.min(currency.quantity + 1, currency.maxQuantity)
           end
         end)
@@ -799,10 +817,11 @@ function Data:UpdateRaidInstances()
         local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
         local instanceEncounterID = 0
         if raid then
-          local raidEncounter = Utils:TableGet(raid.encounters, "name", bossName)
-          if raidEncounter then
-            instanceEncounterID = raidEncounter.instanceEncounterID
-          end
+          Utils:TableForEach(raid.encounters, function(encounter)
+            if string.lower(encounter.name) == string.lower(bossName) then
+              instanceEncounterID = encounter.instanceEncounterID
+            end
+          end)
         end
         local encounter = {
           index = encounterIndex,
@@ -863,8 +882,8 @@ function Data:UpdateCharacterInfo()
 
   local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
-  upgradePattern = upgradePattern:format("(.+)", "(%d)", "(%d)")
-  for slotIndex, slot in ipairs(self.inventory) do
+  upgradePattern = upgradePattern:format("(.+)", "(%d+)", "(%d+)")
+  for _, slot in ipairs(self.inventory) do
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if inventoryItemLink then
       local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
@@ -921,6 +940,10 @@ function Data:UpdateCharacterInfo()
     if currency then
       currency.id = dataCurrency.id
       currency.currencyType = dataCurrency.currencyType
+      if dataCurrency.itemID then
+        currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
+        currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
+      end
       table.insert(character.currencies, currency)
     end
   end)
@@ -935,13 +958,12 @@ function Data:UpdateKeystoneItem()
   end
   local dungeons = self:GetDungeons()
   local keystoneItemID = self:GetKeystoneItemID()
-  -- character.mythicplus.keystone = Utils:TableCopy(Data.defaultCharacter.mythicplus.keystone)
   if keystoneItemID ~= nil then
-    for bagId = 0, NUM_BAG_SLOTS do
-      for slotId = 1, C_Container.GetContainerNumSlots(bagId) do
-        local itemId = C_Container.GetContainerItemID(bagId, slotId)
+    for bagID = 0, NUM_BAG_SLOTS do
+      for slotID = 1, C_Container.GetContainerNumSlots(bagID) do
+        local itemId = C_Container.GetContainerItemID(bagID, slotID)
         if itemId and itemId == keystoneItemID then
-          local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
+          local itemLink = C_Container.GetContainerItemLink(bagID, slotID)
           local _, _, challengeModeID, level = strsplit(":", itemLink)
           local dungeon = Utils:TableGet(dungeons, "challengeModeID", tonumber(challengeModeID))
           if dungeon then
