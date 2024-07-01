@@ -118,16 +118,15 @@ function Module:Render()
   end
 
   -- Zero characters
-  if not self.zeroCharacters then
-    self.zeroCharacters = self.window.body:CreateFontString("$parentNoCharacterText", "ARTWORK")
-    self.zeroCharacters:SetPoint("TOPLEFT", self.window.body, "TOPLEFT", 50, -50)
-    self.zeroCharacters:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", -50, 50)
-    self.zeroCharacters:SetJustifyH("CENTER")
-    self.zeroCharacters:SetJustifyV("MIDDLE")
-    self.zeroCharacters:SetFontObject("GameFontHighlight_NoShadow")
-    self.zeroCharacters:SetText("|cffffffffHi there :-)|r\n\nYou need to enable a max level character for this addon to show you some goodies!")
-    self.zeroCharacters:SetVertexColor(1.0, 0.82, 0.0, 1)
-    self.zeroCharacters:Hide()
+  if not self.window.zeroCharacters then
+    self.window.zeroCharacters = self.window:CreateFontString("$parentNoCharacterText", "ARTWORK")
+    self.window.zeroCharacters:SetPoint("TOPLEFT", self.window, "TOPLEFT", 50, -50)
+    self.window.zeroCharacters:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT", -50, 50)
+    self.window.zeroCharacters:SetJustifyH("CENTER")
+    self.window.zeroCharacters:SetJustifyV("MIDDLE")
+    self.window.zeroCharacters:SetFontObject("GameFontHighlight_NoShadow")
+    self.window.zeroCharacters:SetVertexColor(1.0, 0.82, 0.0, 1)
+    self.window.zeroCharacters:Hide()
   end
 
   if not self.window.body.scrollparent then
@@ -835,14 +834,22 @@ function Module:Render()
     self.window.body.scrollbar:Hide()
   end
 
+  local zeroCharactersText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
   if Utils:TableCount(characters) <= 0 then
-    self.zeroCharacters:Show()
+    if not Data.db.global.showZeroRatedCharacters and Utils:TableCount(Data:GetCharacters(true)) > 0 then
+      zeroCharactersText = zeroCharactersText .. "\n\n|cff00ee00New Season?|r\nYou are currently hiding characters with zero rating. If this is not your intention then enable the setting |cffffffffShow characters with zero rating|r"
+    end
+    self.window.zeroCharacters:Show()
     self.window.sidebar:Hide()
     self.window.body:Hide()
   else
-    self.zeroCharacters:Hide()
+    self.window.zeroCharacters:Hide()
     self.window.sidebar:Show()
     self.window.body:Show()
+  end
+
+  if self.window.zeroCharacters then
+    self.window.zeroCharacters:SetText(zeroCharactersText)
   end
 
   if Utils:TableCount(characters) == 1 then
