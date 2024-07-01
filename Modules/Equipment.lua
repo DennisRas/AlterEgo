@@ -69,7 +69,7 @@ function Module:Render()
         align = "CENTER"
       },
       {
-        width = 120
+        width = 150
       },
     },
     rows = {
