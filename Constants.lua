@@ -1,4 +1,9 @@
-local addonName, AlterEgo = ...
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+---@class AE_Constants
 local Constants = {
   prefix = format("<%s> ", addonName),
   media = {
@@ -41,4 +46,4 @@ local Constants = {
     {value = "class.desc",  text = "Class (Z-A)"},
   }
 }
-AlterEgo.Constants = Constants
+addon.Constants = Constants

@@ -1,10 +1,14 @@
-local addonName, AlterEgo = ...
-local Utils = AlterEgo.Utils
-local Table = AlterEgo.Table
-local Window = AlterEgo.Window
-local Core = AlterEgo.Core
-local Data = AlterEgo.Data
-local Constants = AlterEgo.Constants
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+local Utils = addon.Utils
+local Table = addon.Table
+local Window = addon.Window
+local Core = addon.Core
+local Data = addon.Data
+local Constants = addon.Constants
 local Module = Core:NewModule("RunHistory")
 
 function Module:OnEnable()
@@ -21,7 +25,7 @@ end
 
 function Module:Render()
   if not self.window then
-    self.window = Window:CreateWindow({
+    self.window = Window:New({
       name = "RunHistory",
       title = "Run History",
       sidebar = true,

@@ -1,9 +1,14 @@
-local addonName, AlterEgo = ...
-local Utils = {}
-AlterEgo.Utils = Utils
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
 
---- Set the background color for a parent frame
----@param parent table
+---@class AE_Utils
+local Utils = {}
+addon.Utils = Utils
+
+---Set the background color for a parent frame
+---@param parent Frame
 ---@param r number
 ---@param g number
 ---@param b number
@@ -18,10 +23,11 @@ function Utils:SetBackgroundColor(parent, r, g, b, a)
   parent.Background:SetVertexColor(r, g, b, a)
 end
 
---- Find a table item by callback
----@param tbl table
----@param callback function
----@return table|nil, number|nil
+---Find a table item by callback
+---@generic T
+---@param tbl T[]
+---@param callback fun(value: T, index: number): boolean
+---@return T|nil, number|nil
 function Utils:TableFind(tbl, callback)
   for i, v in ipairs(tbl) do
     if callback(v, i) then
@@ -31,7 +37,7 @@ function Utils:TableFind(tbl, callback)
   return nil, nil
 end
 
---- Find a table item by key and value
+---Find a table item by key and value
 ---@param tbl table
 ---@param key string
 ---@param val any
@@ -42,10 +48,11 @@ function Utils:TableGet(tbl, key, val)
   end)
 end
 
---- Create a new table containing all elements that pass truth test
----@param tbl table
----@param callback function
----@return table
+---Create a new table containing all elements that pass truth test
+---@generic T
+---@param tbl T[]
+---@param callback fun(value: T, index: number): boolean
+---@return T[]
 function Utils:TableFilter(tbl, callback)
   local t = {}
   for i, v in ipairs(tbl) do
@@ -56,7 +63,7 @@ function Utils:TableFilter(tbl, callback)
   return t
 end
 
---- Count table items
+---Count table items
 ---@param tbl table
 ---@return number
 function Utils:TableCount(tbl)
@@ -67,7 +74,7 @@ function Utils:TableCount(tbl)
   return n
 end
 
---- Deep copy a table
+---Deep copy a table
 ---@param from table
 ---@param to table|nil
 ---@param recursion_check table|nil
@@ -90,9 +97,10 @@ function Utils:TableCopy(from, to, recursion_check)
   return table
 end
 
---- Map each item in a table
----@param tbl table
----@param callback function
+---Map each item in a table
+---@generic T
+---@param tbl T[]
+---@param callback fun(value: T, index: number)
 ---@return table
 function Utils:TableMap(tbl, callback)
   local t = {}
@@ -103,9 +111,10 @@ function Utils:TableMap(tbl, callback)
   return t
 end
 
---- Run a callback on each table item
----@param tbl table
----@param callback function
+---Run a callback on each table item
+---@generic T
+---@param tbl T[]
+---@param callback fun(value: T, index: number)
 ---@return table
 function Utils:TableForEach(tbl, callback)
   for ik, iv in pairs(tbl) do
@@ -114,7 +123,7 @@ function Utils:TableForEach(tbl, callback)
   return tbl
 end
 
---- Get character activity progress
+---Get character activity progress
 ---@param character table
 ---@return table|nil, table|nil
 function Utils:GetActivitiesProgress(character)
@@ -140,6 +149,11 @@ function Utils:GetActivitiesProgress(character)
   return activities[lastCompletedIndex], nextInfo;
 end
 
+---Get the lowest keystone level completed from highest <numRuns> runs.
+---Example: 4, 2, 2, 5, with numRuns = 2 would return 4
+---@param character any
+---@param numRuns number
+---@return number|nil, number
 function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
   local lowestLevel;
   local lowestCount   = 0;
@@ -180,7 +194,7 @@ function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
   return lowestLevel, lowestCount;
 end
 
---- Get the group type
+---Get the group type
 ---@return string|nil
 function Utils:GetGroupChannel()
   if IsInRaid() then
@@ -192,7 +206,7 @@ function Utils:GetGroupChannel()
   return nil
 end
 
---- Get a rating color
+---Get a rating color
 ---@param rating number
 ---@param useRIOScoreColor boolean
 ---@param isPreviousSeason boolean

@@ -1,9 +1,16 @@
-local addonName, AlterEgo = ...
-local Utils = AlterEgo.Utils
-local Core = AlterEgo.Core
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+local Utils = addon.Utils
+
 local dbVersion = 17
+
+---@class AE_Data
 local Data = {}
-AlterEgo.Data = Data
+addon.Data = Data
+
 Data.defaultCharacter = {
   GUID = "",
   lastUpdate = 0,
@@ -176,7 +183,7 @@ Data.defaultCharacter = {
 Data.tooltipScan = CreateFrame("GameTooltip", "AE_Tooltip_Scan", nil, "GameTooltipTemplate") --[[@as GameTooltip]]
 Data.tooltipScan:SetOwner(UIParent, "ANCHOR_NONE")
 
----@type Inventory[]
+---@type AE_Inventory[]
 Data.inventory = {
   {id = INVSLOT_HEAD,     name = "HEADSLOT"},
   {id = INVSLOT_NECK,     name = "NECKSLOT"},
@@ -209,7 +216,7 @@ local AFFIX_ENTANGLING = 134
 local AFFIX_AFFLICTED = 135
 local AFFIX_INCORPOREAL = 136
 
----@type Affix[]
+---@type AE_Affix[]
 Data.affixes = {
   {id = AFFIX_VOLCANIC,    base = 0, name = "", description = "", fileDataID = nil},
   {id = AFFIX_RAGING,      base = 0, name = "", description = "", fileDataID = nil},
@@ -226,7 +233,7 @@ Data.affixes = {
 }
 
 -- Rotation: https://mythicpl.us
----@type AffixRotation[]
+---@type AE_AffixRotation[]
 Data.affixRotations = {
   {
     seasonID = 11,
@@ -264,13 +271,13 @@ Data.affixRotations = {
   }
 }
 
----@type Keystone[]
+---@type AE_Keystone[]
 Data.keystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
   {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
 }
 
----@type Dungeon[]
+---@type AE_Dungeon[]
 Data.dungeons = {
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078, time = 0, abbr = "NL",   name = "Neltharion's Lair"},
   {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071, time = 0, abbr = "FH",   name = "Freehold"},
@@ -298,7 +305,7 @@ Data.dungeons = {
   {seasonID = 12, seasonDisplayID = 4, challengeModeID = 406, mapId = 2527, spellID = 393283, time = 0, abbr = "HOI",  name = "Halls of Infusion"},
 }
 
----@type Raid[]
+---@type AE_Raid[]
 Data.raids = {
   {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
   {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
@@ -308,7 +315,7 @@ Data.raids = {
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
 }
 
----@type RaidDifficulty[]
+---@type AE_RaidDifficulty[]
 Data.raidDifficulties = {
   {id = 14, color = RARE_BLUE_COLOR,        order = 2, abbr = "N",   name = "Normal"},
   {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "HC",  name = "Heroic"},
@@ -316,7 +323,7 @@ Data.raidDifficulties = {
   {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
 }
 
----@type Currency[]
+---@type AE_Currency[]
 Data.currencies = {
   {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},                    -- Aspect
   {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},                    -- Wyrm
@@ -396,7 +403,7 @@ function Data:UpdateModules()
   -- end)
 end
 
---- Get the current Season IDs
+---Get the current Season IDs
 ---@return number, number
 function Data:GetCurrentSeason()
   if not self.cache.seasonID then
@@ -405,12 +412,11 @@ function Data:GetCurrentSeason()
   if not self.cache.seasonDisplayID then
     self.cache.seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
-  -- return 12, 4
   return self.cache.seasonID or 0, self.cache.seasonDisplayID or 0
 end
 
---- Get the currencies of the current season
----@return Currency[]
+---Get the currencies of the current season
+---@return AE_Currency[]
 function Data:GetCurrencies()
   local seasonID = self:GetCurrentSeason()
   return Utils:TableFilter(self.currencies, function(dataCurrency)
@@ -418,7 +424,7 @@ function Data:GetCurrencies()
   end)
 end
 
---- Get stored character by GUID
+---Get stored character by GUID
 ---@param playerGUID string?
 ---@return table|nil
 function Data:GetCharacter(playerGUID)
@@ -441,7 +447,7 @@ end
 
 ---Get all of the raids in the current season
 ---@param unfiltered boolean?
----@return RaidDifficulty[]
+---@return AE_RaidDifficulty[]
 function Data:GetRaidDifficulties(unfiltered)
   local result = {}
   for _, difficulty in pairs(self.raidDifficulties) do
@@ -466,7 +472,7 @@ function Data:GetRaidDifficulties(unfiltered)
   return filtered
 end
 
---- Get the current affixes of the season
+---Get the current affixes of the week
 ---@return MythicPlusKeystoneAffix[]
 function Data:GetCurrentAffixes()
   if Utils:TableCount(self.cache.currentAffixes) == 0 then
@@ -478,23 +484,23 @@ function Data:GetCurrentAffixes()
   return self.cache.currentAffixes
 end
 
---- Get either all affixes or just the base seasonal affixes
+---Get either all affixes or just the base seasonal affixes
 ---@param baseOnly boolean?
----@return Affix[]
+---@return AE_Affix[]
 function Data:GetAffixes(baseOnly)
   return Utils:TableFilter(self.affixes, function(dataAffix)
     return not baseOnly or dataAffix.base == 1
   end)
 end
 
---- Get affix rotation of the season
----@return AffixRotation|nil
+---Get affix rotation of the season
+---@return AE_AffixRotation|nil
 function Data:GetAffixRotation()
   local seasonID = self:GetCurrentSeason()
   return Utils:TableGet(self.affixRotations, "seasonID", seasonID)
 end
 
---- Get the index of the active affix week
+---Get the index of the active affix week
 ---@param currentAffixes MythicPlusKeystoneAffix|nil
 ---@return number
 function Data:GetActiveAffixRotation(currentAffixes)
@@ -510,8 +516,8 @@ function Data:GetActiveAffixRotation(currentAffixes)
   return index
 end
 
---- Get the Keystone ItemID of the current season
----@return Keystone|nil
+---Get the Keystone ItemID of the current season
+---@return AE_Keystone|nil
 function Data:GetKeystoneItemID()
   local seasonID = self:GetCurrentSeason()
   local keystone = Utils:TableGet(self.keystones, "seasonID", seasonID)
@@ -523,8 +529,8 @@ function Data:GetKeystoneItemID()
   return nil
 end
 
---- Get all of the M+ dungeons in the current season
----@return Dungeon[]
+---Get all of the M+ dungeons in the current season
+---@return AE_Dungeon[]
 function Data:GetDungeons()
   local seasonID = self:GetCurrentSeason()
   local dungeons = Utils:TableFilter(self.dungeons, function(dataDungeon)
@@ -538,9 +544,9 @@ function Data:GetDungeons()
   return dungeons
 end
 
---- Get all of the raids in the current season
+---Get all of the raids in the current season
 ---@param unfiltered boolean?
----@return Raid[]
+---@return AE_Raid[]
 function Data:GetRaids(unfiltered)
   local seasonID = self:GetCurrentSeason()
   local raids = Utils:TableFilter(self.raids, function(dataRaid)
@@ -564,7 +570,7 @@ function Data:GetRaids(unfiltered)
   return raids
 end
 
---- Get user characters
+---Get user characters
 ---@param unfiltered boolean?
 ---@return table
 function Data:GetCharacters(unfiltered)

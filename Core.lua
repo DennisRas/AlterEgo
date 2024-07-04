@@ -1,16 +1,26 @@
-local addonName, AlterEgo = ...
-local Utils = AlterEgo.Utils
-local Data = AlterEgo.Data
-local Constants = AlterEgo.Constants
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+---@type AE_Utils
+local Utils = addon.Utils
+---@type AE_Data
+local Data = addon.Data
+---@type AE_Constants
+local Constants = addon.Constants
+---@type AE_Window
+local Window = addon.Window
+
 local LibDataBroker = LibStub("LibDataBroker-1.1")
 local LibDBIcon = LibStub("LibDBIcon-1.0")
 
 --@debug@
-_G.AlterEgo = AlterEgo;
+_G.AlterEgo = addon;
 --@end-debug@
 
 local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
-AlterEgo.Core = Core
+addon.Core = Core
 
 function Core:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
@@ -45,9 +55,9 @@ function Core:OnInitialize()
 end
 
 function Core:ToggleWindow()
-  local module = self:GetModule("Main")
-  if module then
-    module:ToggleWindow()
+  local window = Window:GetWindow("Main")
+  if window then
+    window:Toggle()
   end
 end
 

@@ -1,7 +1,13 @@
-local addonName, AlterEgo = ...
-local Utils = AlterEgo.Utils
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+local Utils = addon.Utils
+
+---@class AE_Table
 local Table = {}
-AlterEgo.Table = Table
+addon.Table = Table
 
 function Table:New(config)
   local instance = {

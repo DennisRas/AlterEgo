@@ -1,44 +1,48 @@
-local addonName, AlterEgo = ...
-local Utils = AlterEgo.Utils
-local Constants = AlterEgo.Constants
-local Window = {}
-AlterEgo.Window = Window
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
 
+local Utils = addon.Utils
+local Constants = addon.Constants
+
+---@type Frame[]
+local WindowCollection = {}
 local TITLEBAR_HEIGHT = 30
 local FOOTER_HEIGHT = 16
 local SIDEBAR_WIDTH = 150
 
-local windows = {}
+---@class AE_Window
+local Window = {}
+addon.Window = Window
+
+---Get a window by name
+---@param name string
+---@return Frame
 function Window:GetWindow(name)
-  return windows[name]
+  return WindowCollection[name]
 end
 
+---Scale each window
+---@param scale number
 function Window:SetWindowScale(scale)
-  Utils:TableForEach(windows, function(window)
+  Utils:TableForEach(WindowCollection, function(window)
     window:SetScale(scale)
   end)
 end
 
+---Set background color to each window
+---@param color ColorMixin
 function Window:SetWindowBackgroundColor(color)
-  Utils:TableForEach(windows, function(window)
+  Utils:TableForEach(WindowCollection, function(window)
     Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
   end)
 end
 
-function Window:SetHeight(name, height)
-  if name == nil then name = "Main" end
-  local window = self:GetWindow(name)
-  if not window then return end
-end
-
-function Window:SetTitle(name, title)
-  if name == nil then name = "Main" end
-  local window = self:GetWindow(name)
-  if not window then return end
-  window.titlebar.title:SetText(title)
-end
-
-function Window:CreateWindow(params)
+---Create a window frame
+---@param params table?
+---@return Frame
+function Window:New(params)
   local options = {
     name = "",
     title = "",
@@ -58,7 +62,7 @@ function Window:CreateWindow(params)
 
   local frame = CreateFrame("Frame", "AlterEgo" .. options.name, options.parent)
   frame:SetFrameStrata("HIGH")
-  frame:SetFrameLevel(1000 + 100 * (Utils:TableCount(windows) + 1))
+  frame:SetFrameLevel(1000 + 100 * (Utils:TableCount(WindowCollection) + 1))
   frame:SetClampedToScreen(true)
   frame:SetMovable(true)
   frame:SetUserPlaced(true)
@@ -66,28 +70,35 @@ function Window:CreateWindow(params)
   frame:SetSize(300, 300)
   Utils:SetBackgroundColor(frame, options.windowColor.r, options.windowColor.g, options.windowColor.b, options.windowColor.a)
 
+  ---Show or hide the window
   function frame:Toggle()
-    if frame:IsVisible() then
-      frame:Hide()
-    else
-      frame:Show()
-    end
+    frame:SetShown(not frame:IsVisible())
+  end
+
+  ---Set the title of the window
+  ---@param title string
+  function frame:SetTitle(title)
+    if not options.titlebar then return end
+    frame.titlebar.title:SetText(title)
   end
 
   function frame:SetBodyHeight(h)
 
   end
 
-  function frame:SetBodySize(w, h)
-    local width = w
-    local height = h
+  ---Set body size and adjust window size
+  ---@param width number
+  ---@param height number
+  function frame:SetBodySize(width, height)
+    local w = width
+    local h = height
     if options.sidebar then
-      width = width + SIDEBAR_WIDTH
+      w = w + SIDEBAR_WIDTH
     end
     if options.titlebar then
-      height = height + TITLEBAR_HEIGHT
+      h = h + TITLEBAR_HEIGHT
     end
-    frame:SetSize(width, height)
+    frame:SetSize(w, h)
   end
 
   -- Border
@@ -165,20 +176,19 @@ function Window:CreateWindow(params)
   Utils:SetBackgroundColor(frame.body, 0, 0, 0, 0)
 
   -- Sidebar
-
   if options.sidebar then
     frame.sidebar = CreateFrame("Frame", "$parentSidebar", frame)
     frame.sidebar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, topOffset)
     frame.sidebar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
     frame.sidebar:SetWidth(SIDEBAR_WIDTH)
     Utils:SetBackgroundColor(frame.sidebar, 0, 0, 0, 0.3)
-    frame.sidebar:Show()
   end
 
-  frame:Show()
+  frame.options = options;
+  frame:Hide()
   table.insert(UISpecialFrames, options.name)
-  windows[options.name] = frame
-  return windows[options.name]
+  WindowCollection[options.name] = frame
+  return WindowCollection[options.name]
 end
 
 function Window:GetMaxWindowWidth()

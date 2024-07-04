@@ -1,23 +1,23 @@
----@class Affix
+---@class AE_Affix
 ---@field id number
 ---@field base 0 | 1
 ---@field name string
 ---@field description string
 ---@field fileDataID number|nil
 
----@class AffixRotation
+---@class AE_AffixRotation
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field activation number[]
 ---@field affixes table<number, number[]>
 
----@class Currency
+---@class AE_Currency
 ---@field id number
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field currencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar"
 
----@class Dungeon
+---@class AE_Dungeon
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field challengeModeID number
@@ -28,16 +28,16 @@
 ---@field name string
 ---@field short string?
 
----@class Inventory
+---@class AE_Inventory
 ---@field id number
 ---@field name string
 
----@class Keystone
+---@class AE_Keystone
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field itemID number
 
----@class Raid
+---@class AE_Raid
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field journalInstanceID number
@@ -50,7 +50,7 @@
 ---@field name string
 ---@field short string?
 
----@class RaidDifficulty
+---@class AE_RaidDifficulty
 ---@field id number
 ---@field color table
 ---@field order number

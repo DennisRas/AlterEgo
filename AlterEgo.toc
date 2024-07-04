@@ -31,6 +31,7 @@ Table.lua
 Window.lua
 Data.lua
 Core.lua
+Settings.lua
 Modules/Main.lua
 Modules/WeeklyAffixes.lua
 Modules/Equipment.lua

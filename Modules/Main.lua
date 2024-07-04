@@ -1,9 +1,13 @@
-local addonName, AlterEgo = ...
-local Constants = AlterEgo.Constants
-local Utils = AlterEgo.Utils
-local Window = AlterEgo.Window
-local Core = AlterEgo.Core
-local Data = AlterEgo.Data
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+local Constants = addon.Constants
+local Utils = addon.Utils
+local Window = addon.Window
+local Core = addon.Core
+local Data = addon.Data
 local Module = Core:NewModule("Main", "AceEvent-3.0")
 
 -- local SIDEBAR_WIDTH = 150
@@ -106,7 +110,7 @@ function Module:Render()
   local affixes = Data:GetAffixes(true)
 
   if not self.window then
-    self.window = Window:CreateWindow({
+    self.window = Window:New({
       name = "Main",
       title = addonName,
       sidebar = true
