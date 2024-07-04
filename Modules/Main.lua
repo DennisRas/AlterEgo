@@ -758,7 +758,7 @@ function Module:Render()
                     end)
                     if savedInstance ~= nil then
                       local savedEncounter = Utils:TableFind(savedInstance.encounters, function(enc)
-                        return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
+                        return enc.instanceEncounterID == encounter.instanceEncounterID and enc.isKilled == true
                       end)
                       if savedEncounter ~= nil then
                         color = GREEN_FONT_COLOR
@@ -798,7 +798,7 @@ function Module:Render()
                   end)
                   if savedInstance then
                     local savedEncounter = Utils:TableFind(savedInstance.encounters, function(savedEncounter)
-                      return savedEncounter.instanceEncounterID == encounter.instanceEncounterID and savedEncounter.killed == true
+                      return savedEncounter.instanceEncounterID == encounter.instanceEncounterID and savedEncounter.isKilled == true
                     end)
                     if savedEncounter then
                       color = UNCOMMON_GREEN_COLOR
@@ -1693,13 +1693,13 @@ function Module:GetCharacterInfo(unfiltered)
       label = "Vault",
       enabled = true,
       value = function(character)
-        if character.vault.hasAvailableRewards == true then
+        if character.vault.hasAvailableRewards ~= nil and character.vault.hasAvailableRewards == true then
           return GREEN_FONT_COLOR:WrapTextInColorCode("Rewards")
         end
         return ""
       end,
       OnEnter = function(character)
-        if character.vault.hasAvailableRewards == true then
+        if character.vault.hasAvailableRewards ~= nil and character.vault.hasAvailableRewards == true then
           GameTooltip:AddLine("It's payday!", WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
           GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
         end

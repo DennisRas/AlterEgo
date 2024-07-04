@@ -3,13 +3,9 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@type AE_Utils
 local Utils = addon.Utils
----@type AE_Data
 local Data = addon.Data
----@type AE_Constants
 local Constants = addon.Constants
----@type AE_Window
 local Window = addon.Window
 
 local LibDataBroker = LibStub("LibDataBroker-1.1")
@@ -145,8 +141,8 @@ function Core:OnChatMessageSystem(_, msg)
 end
 
 function Core:AnnounceKeystones(chatType)
-  local characters = self:GetCharacters()
-  local dungeons = self:GetDungeons()
+  local characters = Data:GetCharacters()
+  local dungeons = Data:GetDungeons()
   local multiline = Data.db.global.announceKeystones.multiline
   local multilineNames = Data.db.global.announceKeystones.multilineNames
   local keystones = {}

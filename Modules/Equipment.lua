@@ -104,7 +104,7 @@ function Module:Render()
     local upgradeLevel = ""
     if item.itemUpgradeTrack and item.itemUpgradeTrack ~= "" then
       upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
-      if item.itemUpgradeLevel == item.itemUpgradeMax then
+      if item.itemUpgradeLevel == item.itemUpgradeMax and type(item.itemUpgradeMax) == "number" and item.itemUpgradeMax > 0 then
         upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
       end
     end

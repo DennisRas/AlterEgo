@@ -38,10 +38,11 @@ function Utils:TableFind(tbl, callback)
 end
 
 ---Find a table item by key and value
----@param tbl table
+---@generic T
+---@param tbl T[]
 ---@param key string
 ---@param val any
----@return table|nil
+---@return T|nil
 function Utils:TableGet(tbl, key, val)
   return Utils:TableFind(tbl, function(elm)
     return elm[key] and elm[key] == val

@@ -11,6 +11,7 @@ local dbVersion = 17
 local Data = {}
 addon.Data = Data
 
+---@type AE_Character
 Data.defaultCharacter = {
   GUID = "",
   lastUpdate = 0,
@@ -42,58 +43,9 @@ Data.defaultCharacter = {
     },
   },
   equipment = {},
-  currencies = {
-    -- [1] = {
-    --     name = string
-    --     description = string
-    --     isHeader = boolean
-    --     isHeaderExpanded = boolean
-    --     isTypeUnused = boolean
-    --     isShowInBackpack = boolean
-    --     quantity = number
-    --     trackedQuantity = number
-    --     iconFileID = number
-    --     maxQuantity = number
-    --     canEarnPerWeek = boolean
-    --     quantityEarnedThisWeek = number
-    --     isTradeable = boolean
-    --     quality = Enum
-    --     maxWeeklyQuantity = number
-    --     totalEarned = number
-    --     discovered = boolean
-    --     useTotalEarnedForMaxQty = boolean
-    -- }
-  },
+  currencies = {},
   raids = {
-    savedInstances = {
-      -- [1] = {
-      --     ["id"] = 0,
-      --     ["name"] = "",
-      --     ["lockoutId"] = 0,
-      --     ["reset"] = 0,
-      --     ["difficultyID"] = 0,
-      --     ["locked"] = false,
-      --     ["extended"] = false,
-      --     ["instanceIDMostSig"] = 0,
-      --     ["isRaid"] = true,
-      --     ["maxPlayers"] = 0,
-      --     ["difficultyName"] = "",
-      --     ["numEncounters"] = 0,
-      --     ["encounterProgress"] = 0,
-      --     ["extendDisabled"] = false,
-      --     ["instanceID"] = 0,
-      --     ["link"] = "",
-      --     ["expires"] = 0,
-      --     ["encounters"] = {
-      --         [1] = {
-      --             ["instanceEncounterID"] = 0,
-      --             ["bossName"] = "",
-      --             ["fileDataID"] = 0,
-      --             ["killed"] = false
-      --         }
-      --     }
-      -- }
-    },
+    savedInstances = {},
   },
   mythicplus = { -- Mythic Plus
     numCompletedDungeonRuns = {
@@ -162,7 +114,6 @@ Data.defaultCharacter = {
   },
   pvp = {},
   vault = {
-    hasAvailableRewards = false,
     slots = {
       -- [1] = {
       --     ["threshold"] = 0,
@@ -426,7 +377,7 @@ end
 
 ---Get stored character by GUID
 ---@param playerGUID string?
----@return table|nil
+---@return AE_Character|nil
 function Data:GetCharacter(playerGUID)
   if playerGUID == nil then
     playerGUID = UnitGUID("player")
@@ -517,7 +468,7 @@ function Data:GetActiveAffixRotation(currentAffixes)
 end
 
 ---Get the Keystone ItemID of the current season
----@return AE_Keystone|nil
+---@return number|nil
 function Data:GetKeystoneItemID()
   local seasonID = self:GetCurrentSeason()
   local keystone = Utils:TableGet(self.keystones, "seasonID", seasonID)
@@ -563,7 +514,7 @@ function Data:GetRaids(unfiltered)
 
   if self.db.global.raids.modifiedInstanceOnly and seasonID == 12 then
     raids = Utils:TableFilter(raids, function(raid)
-      return raid.modifiedInstanceInfo
+      return raid.modifiedInstanceInfo ~= nil
     end)
   end
 
@@ -572,7 +523,7 @@ end
 
 ---Get user characters
 ---@param unfiltered boolean?
----@return table
+---@return AE_Character[]
 function Data:GetCharacters(unfiltered)
   local characters = {}
   for _, character in pairs(self.db.global.characters) do
@@ -752,6 +703,7 @@ function Data:loadGameData()
     wipe(raid.encounters or {})
     for encounterIndex = 1, raid.numEncounters do
       local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+      ---@type AE_Encounter
       local encounter = {
         index = encounterIndex,
         name = name,
@@ -795,6 +747,7 @@ function Data:UpdateRaidInstances()
     for savedInstanceIndex = 1, numSavedInstances do
       local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
       local raid = Utils:TableGet(raids, "instanceID", instanceID)
+      ---@type AE_SavedInstance
       local savedInstance = {
         index = savedInstanceIndex,
         id = lockoutId,
@@ -820,7 +773,7 @@ function Data:UpdateRaidInstances()
         savedInstance.expires = reset + time()
       end
       for encounterIndex = 1, numEncounters do
-        local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
+        local bossName, fileDataID, isKilled = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
         local instanceEncounterID = 0
         if raid then
           Utils:TableForEach(raid.encounters, function(encounter)
@@ -829,14 +782,15 @@ function Data:UpdateRaidInstances()
             end
           end)
         end
-        local encounter = {
+        ---@type AE_SavedInstanceEncounter
+        local savedInstanceEncounter = {
           index = encounterIndex,
           instanceEncounterID = instanceEncounterID,
           bossName = bossName,
           fileDataID = fileDataID or 0,
-          killed = killed
+          isKilled = isKilled
         }
-        savedInstance.encounters[encounterIndex] = encounter
+        savedInstance.encounters[encounterIndex] = savedInstanceEncounter
       end
       character.raids.savedInstances[savedInstanceIndex] = savedInstance
     end
@@ -892,10 +846,10 @@ function Data:UpdateCharacterInfo()
   for _, slot in ipairs(self.inventory) do
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if inventoryItemLink then
-      local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
+      local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", 0, 0
       local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
-      expacID, setID, isCraftingReagent = GetItemInfo(inventoryItemLink)
+      expansionID, setID, isCraftingReagent = GetItemInfo(inventoryItemLink)
 
       self.tooltipScan:ClearLines()
       self.tooltipScan:SetHyperlink(inventoryItemLink)
@@ -914,7 +868,8 @@ function Data:UpdateCharacterInfo()
       end)
 
       if itemName ~= nil then
-        table.insert(character.equipment, {
+        ---@type AE_Equipment
+        local equipment = {
           itemName = itemName,
           itemLink = itemLink,
           itemQuality = itemQuality,
@@ -929,7 +884,7 @@ function Data:UpdateCharacterInfo()
           classID = classID,
           subclassID = subclassID,
           bindType = bindType,
-          expacID = expacID,
+          expansionID = expansionID,
           setID = setID,
           isCraftingReagent = isCraftingReagent,
           itemUpgradeTrack = itemUpgradeTrack,
@@ -937,7 +892,8 @@ function Data:UpdateCharacterInfo()
           itemUpgradeMax = itemUpgradeMax,
           itemSlotID = slot.id,
           itemSlotName = slot.name
-        })
+        }
+        table.insert(character.equipment, equipment)
       end
     end
   end
