@@ -76,9 +76,10 @@ function Utils:TableCount(tbl)
 end
 
 ---Deep copy a table
----@param tbl table
+---@generic T
+---@param tbl T[]
 ---@param cache table?
----@return table
+---@return T[]
 function Utils:TableCopy(tbl, cache)
   local t = {}
   cache = cache or {}
@@ -97,7 +98,7 @@ end
 ---@generic T
 ---@param tbl T[]
 ---@param callback fun(value: T, index: number)
----@return table
+---@return T[]
 function Utils:TableMap(tbl, callback)
   local t = {}
   self:TableForEach(tbl, function(v, k)
@@ -111,7 +112,7 @@ end
 ---@generic T
 ---@param tbl T[]
 ---@param callback fun(value: T, index: number)
----@return table
+---@return T[]
 function Utils:TableForEach(tbl, callback)
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
