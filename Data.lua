@@ -131,6 +131,49 @@ Data.defaultCharacter = {
   },
 }
 
+Data.defaultDatabase = {
+  ---@type AE_Global
+  global = {
+    weeklyReset = 0,
+    characters = {},
+    minimap = {
+      minimapPos = 195,
+      hide = false,
+      lock = false
+    },
+    sorting = "lastUpdate",
+    showTiers = true,
+    showAffixColors = true,
+    showAffixHeader = true,
+    showZeroRatedCharacters = true,
+    showRealms = true,
+    announceKeystones = {
+      autoParty = true,
+      autoGuild = false,
+      multiline = false,
+      multilineNames = false,
+    },
+    announceResets = true,
+    pvp = {
+      enabled = false,
+    },
+    raids = {
+      enabled = true,
+      colors = true,
+      currentTierOnly = true,
+      hiddenDifficulties = {},
+      boxes = false,
+      modifiedInstanceOnly = true,
+    },
+    interface = {
+      -- fontSize = 12,
+      windowScale = 100,
+      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+    },
+    useRIOScoreColor = false,
+  }
+}
+
 Data.tooltipScan = CreateFrame("GameTooltip", "AE_Tooltip_Scan", nil, "GameTooltipTemplate") --[[@as GameTooltip]]
 Data.tooltipScan:SetOwner(UIParent, "ANCHOR_NONE")
 
@@ -299,49 +342,11 @@ Data.cache = {
 }
 
 function Data:Initialize()
+  ---@class AceDBObject-3.0
+  ---@field global AE_Global
   self.db = LibStub("AceDB-3.0"):New(
     "AlterEgoDB",
-    {
-      global = {
-        weeklyReset = 0,
-        characters = {},
-        minimap = {
-          minimapPos = 195,
-          hide = false,
-          lock = false
-        },
-        sorting = "lastUpdate",
-        showTiers = true,
-        showAffixColors = true,
-        showAffixHeader = true,
-        showZeroRatedCharacters = true,
-        showRealms = true,
-        announceKeystones = {
-          autoParty = true,
-          autoGuild = false,
-          multiline = false,
-          multilineNames = false,
-        },
-        announceResets = true,
-        pvp = {
-          enabled = false,
-        },
-        raids = {
-          enabled = true,
-          colors = true,
-          currentTierOnly = true,
-          hiddenDifficulties = {},
-          boxes = false,
-          modifiedInstanceOnly = true,
-        },
-        interface = {
-          -- fontSize = 12,
-          windowScale = 100,
-          windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-        },
-        useRIOScoreColor = false,
-      }
-    },
+    self.defaultDatabase,
     true
   )
 end
