@@ -76,26 +76,21 @@ function Utils:TableCount(tbl)
 end
 
 ---Deep copy a table
----@param from table
----@param to table|nil
----@param recursion_check table|nil
----@return table|nil|string
-function Utils:TableCopy(from, to, recursion_check)
-  local table = to
-  if to == nil then
-    table = {}
-  end
-  if not recursion_check then
-    recursion_check = {}
-  end
-  if recursion_check[from] then
-    return "<recursion>"
-  end
-  recursion_check[from] = true
-  for k, v in pairs(from) do
-    table[k] = type(v) == "table" and Utils:TableCopy(v, nil, recursion_check) or v
-  end
-  return table
+---@param tbl table
+---@param cache table?
+---@return table
+function Utils:TableCopy(tbl, cache)
+  local t = {}
+  cache = cache or {}
+  cache[tbl] = t
+  self:TableForEach(tbl, function(v, k)
+    if type(v) == "table" then
+      t[k] = cache[v] or self:TableCopy(v, cache)
+    else
+      t[k] = v
+    end
+  end)
+  return t
 end
 
 ---Map each item in a table
@@ -105,10 +100,10 @@ end
 ---@return table
 function Utils:TableMap(tbl, callback)
   local t = {}
-  for ik, iv in pairs(tbl) do
-    local fv, fk = callback(iv, ik)
-    t[fk and fk or ik] = fv
-  end
+  self:TableForEach(tbl, function(v, k)
+    local newv, newk = callback(v, k)
+    t[newk and newk or k] = newv
+  end)
   return t
 end
 
