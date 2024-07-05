@@ -50,6 +50,7 @@ function Core:OnInitialize()
   end)
 end
 
+---TODO: Revert back to module toggle
 function Core:ToggleWindow()
   local window = Window:GetWindow("Main")
   if window then

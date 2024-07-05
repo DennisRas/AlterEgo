@@ -16,50 +16,24 @@ local SIDEBAR_WIDTH = 150
 local Window = {}
 addon.Window = Window
 
----Get a window by name
----@param name string
----@return Frame
-function Window:GetWindow(name)
-  return WindowCollection[name]
-end
-
----Scale each window
----@param scale number
-function Window:SetWindowScale(scale)
-  Utils:TableForEach(WindowCollection, function(window)
-    window:SetScale(scale)
-  end)
-end
-
----Set background color to each window
----@param color ColorMixin
-function Window:SetWindowBackgroundColor(color)
-  Utils:TableForEach(WindowCollection, function(window)
-    Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
-  end)
-end
+local defaultWindowOptions = {
+  name = "",
+  title = "",
+  parent = UIParent,
+  border = Constants.sizes.border,
+  sidebar = false,
+  titlebar = true,
+  windowScale = 100,
+  windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+}
 
 ---Create a window frame
----@param params table?
+---@param options table?
 ---@return Frame
-function Window:New(params)
-  local options = {
-    name = "",
-    title = "",
-    parent = UIParent,
-    border = Constants.sizes.border,
-    sidebar = false,
-    titlebar = true,
-    windowScale = 100,
-    windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-  }
-  Mixin(options, params or {})
+function Window:New(options)
+  options = Mixin(defaultWindowOptions, options or {})
 
-  local window = self:GetWindow(options.name)
-  if window then
-    return window
-  end
-
+  ---@class AE_Window : Frame
   local frame = CreateFrame("Frame", "AlterEgo" .. options.name, options.parent)
   frame:SetFrameStrata("HIGH")
   frame:SetFrameLevel(1000 + 100 * (Utils:TableCount(WindowCollection) + 1))
@@ -80,10 +54,6 @@ function Window:New(params)
   function frame:SetTitle(title)
     if not options.titlebar then return end
     frame.titlebar.title:SetText(title)
-  end
-
-  function frame:SetBodyHeight(h)
-
   end
 
   ---Set body size and adjust window size
@@ -189,6 +159,29 @@ function Window:New(params)
   table.insert(UISpecialFrames, options.name)
   WindowCollection[options.name] = frame
   return WindowCollection[options.name]
+end
+
+---Get a window by name
+---@param name string
+---@return Frame
+function Window:GetWindow(name)
+  return WindowCollection[name]
+end
+
+---Scale each window
+---@param scale number
+function Window:SetWindowScale(scale)
+  Utils:TableForEach(WindowCollection, function(window)
+    window:SetScale(scale)
+  end)
+end
+
+---Set background color to each window
+---@param color ColorMixin
+function Window:SetWindowBackgroundColor(color)
+  Utils:TableForEach(WindowCollection, function(window)
+    Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
+  end)
 end
 
 function Window:GetMaxWindowWidth()
