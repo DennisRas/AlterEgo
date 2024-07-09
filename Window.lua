@@ -16,22 +16,24 @@ local SIDEBAR_WIDTH = 150
 local Window = {}
 addon.Window = Window
 
-local defaultWindowOptions = {
-  name = "",
-  title = "",
-  parent = UIParent,
-  border = Constants.sizes.border,
-  sidebar = false,
-  titlebar = true,
-  windowScale = 100,
-  windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
-}
 
 ---Create a window frame
 ---@param options table?
 ---@return Frame
 function Window:New(options)
-  options = Mixin(defaultWindowOptions, options or {})
+  options = Mixin(
+    {
+      name = "",
+      title = "",
+      parent = UIParent,
+      border = Constants.sizes.border,
+      sidebar = false,
+      titlebar = true,
+      windowScale = 100,
+      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+    },
+    options or {}
+  )
 
   ---@class AE_Window : Frame
   local frame = CreateFrame("Frame", "AlterEgo" .. options.name, options.parent)
@@ -99,7 +101,7 @@ function Window:New(options)
     frame.titlebar.title = frame.titlebar:CreateFontString("$parentText", "OVERLAY")
     frame.titlebar.title:SetPoint("LEFT", frame.titlebar, "LEFT", 20 + Constants.sizes.padding, 0)
     frame.titlebar.title:SetFontObject("SystemFont_Med3")
-    frame.titlebar.title:SetText(options.title)
+    frame.titlebar.title:SetText(options.title or options.name)
     frame.titlebar.CloseButton = CreateFrame("Button", "$parentCloseButton", frame.titlebar)
     frame.titlebar.CloseButton:SetPoint("RIGHT", frame.titlebar, "RIGHT", 0, 0)
     frame.titlebar.CloseButton:SetSize(TITLEBAR_HEIGHT, TITLEBAR_HEIGHT)
@@ -158,7 +160,7 @@ function Window:New(options)
   frame:Hide()
   table.insert(UISpecialFrames, options.name)
   WindowCollection[options.name] = frame
-  return WindowCollection[options.name]
+  return frame
 end
 
 ---Get a window by name
@@ -180,7 +182,7 @@ end
 ---@param color ColorMixin
 function Window:SetWindowBackgroundColor(color)
   Utils:TableForEach(WindowCollection, function(window)
-    Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
+    -- Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
   end)
 end
 

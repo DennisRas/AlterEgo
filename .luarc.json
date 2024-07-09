@@ -150,6 +150,7 @@
         "PVPUtil",
         "hooksecurefunc",
         "SendChatMessage",
-        "strcmputf8i"
+        "strcmputf8i",
+        "LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE"
     ]
 }
