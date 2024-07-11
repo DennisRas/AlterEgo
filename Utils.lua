@@ -8,7 +8,7 @@ local Utils = {}
 addon.Utils = Utils
 
 ---Set the background color for a parent frame
----@param parent Frame
+---@param parent any
 ---@param r number
 ---@param g number
 ---@param b number

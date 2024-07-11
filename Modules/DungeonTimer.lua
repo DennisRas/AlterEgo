@@ -351,7 +351,7 @@ function Module:Render()
   Utils:SetBackgroundColor(self.window, 0, 0, 0, 0)
 
   self:UpdateRun()
-  DevTools_Dump(Data.db.global.dungeonTimer)
+  -- DevTools_Dump(Data.db.global.dungeonTimer)
   if Data.db.global.dungeonTimer and Data.db.global.dungeonTimer.currentRun then
     local currentRun = Data.db.global.dungeonTimer.currentRun
     local dungeons = Data:GetDungeons()
@@ -363,4 +363,5 @@ function Module:Render()
   else
     self.window:Hide()
   end
+  self.window:Hide()
 end

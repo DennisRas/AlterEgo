@@ -6,6 +6,9 @@ local addon = select(2, ...)
 ---@class AE_Constants
 local Constants = {
   prefix = format("<%s> ", addonName),
+  colors = {
+    primary = CreateColor(0.596, 0.796, 0.847)
+  },
   media = {
     WhiteSquare = "Interface/BUTTONS/WHITE8X8",
     Logo = format("Interface/AddOns/%s/Media/Logo.blp", addonName),
