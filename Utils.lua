@@ -15,7 +15,7 @@ addon.Utils = Utils
 ---@param a number
 function Utils:SetBackgroundColor(parent, r, g, b, a)
   if not parent.Background then
-    parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
+    parent.Background = parent:CreateTexture("Background", "BACKGROUND")
     parent.Background:SetTexture("Interface/BUTTONS/WHITE8X8")
     parent.Background:SetAllPoints()
   end

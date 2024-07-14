@@ -86,6 +86,9 @@ function Module:OnEnable()
       self:Render()
     end
   )
+  Core:RegisterMessage("AE_SETTINGS_UPDATED", function()
+    self:Render()
+  end)
   self:Render()
 end
 
