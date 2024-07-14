@@ -18,6 +18,7 @@ local Constants = {
     IconSorting = format("Interface/AddOns/%s/Media/Icon_Sorting.blp", addonName),
     IconCharacters = format("Interface/AddOns/%s/Media/Icon_Characters.blp", addonName),
     IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addonName),
+    IconCheckmark = format("Interface/AddOns/%s/Media/Icon_Checkmark.blp", addonName),
   },
   sizes = {
     padding = 8,

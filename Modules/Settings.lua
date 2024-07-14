@@ -36,28 +36,38 @@ function Module:SetTab(index)
   self:Render()
 end
 
-local function CreateCheckbox(options)
+local function CreateWidgetCheckbox(options)
   local defaultOptions = {
     layout = "RIGHT",
-    text = "",
     checked = false,
-    onChange = false
+    onChange = false,
+    text = "",
+    fontObject = "SystemFont_Med1"
   }
-  options = Mixin(defaultOptions, options)
+  options = Mixin(defaultOptions, options or {})
 
-  local widget = CreateFrame("Button", options.parent and "$parentCheckbox" or nil, options.parent or UIParent, "InsecureActionButtonTemplate")
+  local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
   widget:RegisterForClicks("AnyUp")
   widget:EnableMouse(true)
   widget.options = options
+
   widget.text = widget:CreateFontString()
-  widget.text:SetFontObject("SystemFont_Med1")
+  widget.text:SetFontObject(options.fontObject)
   widget.text:SetJustifyV("TOP")
   widget.text:SetJustifyH("LEFT")
   widget.text:SetSpacing(6)
   widget.text:SetTextColor(0.8, 0.8, 0.8)
   widget.text:SetText(options.text)
+
   widget.input = CreateFrame("Frame", "Input", widget)
-  widget.input:SetSize(20, 20)
+  widget.input:SetSize(16, 16)
+
+  widget.input.icon = widget.input:CreateTexture("$parentIcon", "ARTWORK")
+  widget.input.icon:SetPoint("CENTER", widget.input, "CENTER")
+  widget.input.icon:SetSize(11, 11)
+  widget.input.icon:SetTexture(Constants.media.IconCheckmark)
+  widget.input.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
+  widget.input.icon:Hide()
 
   widget.input.border = CreateFrame("Frame", "Border", widget)
   widget.input.border:SetFrameStrata("LOW")
@@ -72,11 +82,13 @@ local function CreateCheckbox(options)
   widget:SetScript("OnEnter", function()
     Utils:SetBackgroundColor(widget.input.border, 1, 1, 1, 0.3)
     if widget.options.checked then return end
+    widget.input.icon:Show()
     -- Utils:SetBackgroundColor(widget.input, 0.15, 0.15, 0.15, 1)
   end)
   widget:SetScript("OnLeave", function()
     Utils:SetBackgroundColor(widget.input.border, 1, 1, 1, 0.2)
     if widget.options.checked then return end
+    widget.input.icon:Hide()
     -- Utils:SetBackgroundColor(widget.input, 0.1, 0.1, 0.1, 1)
   end)
   widget:SetScript("OnClick", function()
@@ -88,27 +100,133 @@ local function CreateCheckbox(options)
   end)
 
   if options.layout == "RIGHT" then
-    widget.input:SetPoint("TOPRIGHT", widget, "TOPRIGHT", -5, 0)
+    widget.input:SetPoint("TOPRIGHT", widget, "TOPRIGHT", -5, 1)
     widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT", 0, 0)
     widget.text:SetPoint("TOPRIGHT", widget.input, "TOPLEFT", -25, 0)
   else
-    widget.input:SetPoint("TOPLEFT", widget, "TOPLEFT", 5, 0)
+    widget.input:SetPoint("TOPLEFT", widget, "TOPLEFT", 5, 1)
     widget.text:SetPoint("TOPLEFT", widget.input, "TOPRIGHT", 15, 0)
     widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT", 0, 0)
   end
 
   function widget:Refresh()
     if widget.options.checked then
-      Utils:SetBackgroundColor(widget.input, 0, 0.3, 0, 1)
+      widget.input.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
+      widget.input.icon:Show()
+      -- Utils:SetBackgroundColor(widget.input, 0, 0.3, 0, 1)
     else
-      Utils:SetBackgroundColor(widget.input, 0.1, 0.1, 0.1, 1)
-      -- Utils:SetBackgroundColor(widget.input, 0.15, 0.15, 0.15, 1)
+      widget.input.icon:SetVertexColor(1, 1, 1, 0.2)
+      widget.input.icon:Hide()
+      -- Utils:SetBackgroundColor(widget.input, 0.1, 0.1, 0.1, 1)
     end
   end
 
   widget:SetHeight(60)
   widget:Refresh()
   return widget
+end
+
+local function CreateWidgetTitle(options)
+  local defaultOptions = {
+    text = "",
+    fontObject = "SystemFont_Huge1",
+    underline = false
+  }
+  options = Mixin(defaultOptions, options or {})
+
+  local widget = CreateFrame("Frame", "Title")
+  widget.options = options
+
+  widget.text = widget:CreateFontString()
+  widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT")
+  widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT")
+  widget.text:SetFontObject(options.fontObject)
+  widget.text:SetFontObject(options.fontObject)
+  widget.text:SetText(widget.options.text)
+  widget.text:SetJustifyV("TOP")
+  widget.text:SetJustifyH("LEFT")
+
+  if options.underline then
+    widget.line = CreateFrame("Frame", nil, widget)
+    widget.line:SetPoint("BOTTOMLEFT", widget, "BOTTOMLEFT")
+    widget.line:SetPoint("BOTTOMRIGHT", widget, "BOTTOMRIGHT")
+    widget.line:SetHeight(1)
+    Utils:SetBackgroundColor(widget.line, 1, 1, 1, 0.3)
+  end
+
+  widget:SetHeight(widget.text:GetHeight())
+  return widget
+end
+
+local function CreateWidgetParagraph(options)
+  local defaultOptions = {
+    text = "",
+    fontObject = "SystemFont_Med1"
+  }
+  options = Mixin(defaultOptions, options or {})
+
+  local widget = CreateFrame("Frame", "Paragraph")
+  widget.options = options
+
+  widget.text = widget:CreateFontString()
+  widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT")
+  widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT")
+  widget.text:SetFontObject(options.fontObject)
+  widget.text:SetText(options.text)
+  widget.text:SetJustifyV("TOP")
+  widget.text:SetJustifyH("LEFT")
+  widget.text:SetSpacing(6)
+  widget.text:SetTextColor(0.8, 0.8, 0.8)
+
+  widget:SetHeight(200)
+  return widget
+end
+
+local function CreateWidgetLine(options)
+  local defaultOptions = {
+    height = 15
+  }
+  options = Mixin(defaultOptions, options or {})
+
+  local widget = CreateFrame("Frame", "Line")
+  widget.options = options
+
+  widget.line = CreateFrame("Frame", nil, widget)
+  widget.line:SetPoint("LEFT", widget, "LEFT")
+  widget.line:SetPoint("RIGHT", widget, "RIGHT")
+  widget.line:SetHeight(1)
+  Utils:SetBackgroundColor(widget.line, 1, 1, 1, 0.3)
+
+  widget:SetHeight(options.height)
+  return widget
+end
+
+local function CreateWidgetLayout(options)
+  local defaultOptions = {
+    widgets = {},
+  }
+  options = Mixin(defaultOptions, options or {})
+
+  local container = CreateFrame("Frame", "WidgetContainer")
+  container.options = options
+
+  function container:Refresh()
+    local height = 0
+    Utils:TableForEach(options.widgets, function(widget, i)
+      widget:SetParent(container)
+      widget:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -height)
+      widget:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, -height)
+      -- Utils:SetBackgroundColor(widget, math.random(1, 255) / 255, math.random(1, 255) / 255, math.random(1, 255) / 255, 0.2)
+      if widget.text then
+        widget:SetHeight(math.max(widget.text:GetHeight(), 20))
+      end
+      height = height + widget:GetHeight() + 15
+    end)
+    container:SetHeight(height)
+  end
+
+  container:Refresh()
+  return container
 end
 
 function Module:Render()
@@ -124,106 +242,61 @@ function Module:Render()
     self.tabSelected = 1
 
     do
-      local frameGeneral = Window:CreateScrollFrame("$parentTabGeneral", self.window.body)
-      frameGeneral.content:SetSize(bodyWidth, 530)
-      local title = frameGeneral.content:CreateFontString()
-      title:SetPoint("TOPLEFT", frameGeneral.content, "TOPLEFT", 15, -15)
-      title:SetPoint("TOPRIGHT", frameGeneral.content, "TOPRIGHT", -15, -15)
-      title:SetFontObject("SystemFont_Huge1")
-      title:SetText("General")
-      title:SetJustifyV("TOP")
-      title:SetJustifyH("LEFT")
-      local introduction = frameGeneral.content:CreateFontString()
-      introduction:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -15)
-      introduction:SetPoint("TOPRIGHT", title, "BOTTOMRIGHT", 0, -15)
-      introduction:SetFontObject("SystemFont_Med1")
-      introduction:SetText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed facilisis id eros ac lacinia. Morbi non consequat magna. Nam consequat placerat orci nec vestibulum.")
-      introduction:SetJustifyV("TOP")
-      introduction:SetJustifyH("LEFT")
-      introduction:SetSpacing(6)
-      introduction:SetTextColor(0.8, 0.8, 0.8)
-      local line = CreateFrame("Frame", nil, frameGeneral.content)
-      line:SetPoint("TOPLEFT", introduction, "BOTTOMLEFT", 0, -30)
-      line:SetPoint("TOPRIGHT", introduction, "BOTTOMRIGHT", 0, -30)
-      line:SetHeight(1)
-      Utils:SetBackgroundColor(line, 1, 1, 1, 0.3)
-      local weeklyAffixesTitle = frameGeneral.content:CreateFontString()
-      weeklyAffixesTitle:SetPoint("TOPLEFT", line, "BOTTOMLEFT", 0, -30)
-      weeklyAffixesTitle:SetPoint("TOPRIGHT", line, "BOTTOMRIGHT", 0, -30)
-      weeklyAffixesTitle:SetFontObject("SystemFont_Med2")
-      weeklyAffixesTitle:SetText("Show Weekly AFfixes")
-      weeklyAffixesTitle:SetJustifyV("TOP")
-      weeklyAffixesTitle:SetJustifyH("LEFT")
-      weeklyAffixesTitle:SetSpacing(6)
-      -- local weeklyAffixesDescription = frameGeneral.content:CreateFontString()
-      -- weeklyAffixesDescription:SetPoint("TOPLEFT", weeklyAffixesTitle, "BOTTOMLEFT", 0, -15)
-      -- weeklyAffixesDescription:SetPoint("TOPRIGHT", weeklyAffixesTitle, "BOTTOMRIGHT", 0, -15)
-      -- weeklyAffixesDescription:SetFontObject("SystemFont_Med1")
-      -- weeklyAffixesDescription:SetText("The weekly affixes will be shown at the top of the main window. Sed facilisis id eros ac lacinia. Morbi non consequat magna. Nam consequat placerat orci nec vestibulum.")
-      -- weeklyAffixesDescription:SetJustifyV("TOP")
-      -- weeklyAffixesDescription:SetJustifyH("LEFT")
-      -- weeklyAffixesDescription:SetSpacing(6)
-      -- weeklyAffixesDescription:SetTextColor(0.8, 0.8, 0.8)
-      -- local weeklyAffixesCheckbox = CreateFrame("CheckButton", nil, frameGeneral.content, "ChatConfigCheckButtonTemplate")
-      -- weeklyAffixesCheckbox:SetPoint("TOPRIGHT", weeklyAffixesTitle, "TOPRIGHT", 0, 0)
-      -- weeklyAffixesCheckbox.Text:SetText("CheckBox Name")
-      -- weeklyAffixesCheckbox.tooltip = "This is where you place MouseOver Text."
-      local weeklyAffixesOption = CreateCheckbox({
-        parent = frameGeneral.content,
+      local widgets = {}
+      local scrollFrame = Window:CreateScrollFrame("$parentTabGeneral", self.window.body)
+      scrollFrame.content:SetSize(bodyWidth, 530)
+      table.insert(widgets, CreateWidgetTitle({
+        text = "General",
+      }))
+      -- table.insert(widgets, CreateWidgetParagraph({
+      --   text = "Take a look around. Maybe you'll find a feature or customization you would like to have :-)"
+      -- }))
+      table.insert(widgets, CreateWidgetTitle({
+        fontObject = "SystemFont_Med2",
+        text = "Show Weekly AFfixes",
+      }))
+      table.insert(widgets, CreateWidgetCheckbox({
         checked = Data.db.global.showAffixHeader,
         onChange = function(checked)
           Data.db.global.showAffixHeader = checked
           Module:SendMessage("AE_SETTINGS_UPDATED")
         end,
-        text = "The weekly affixes will be shown at the top of the main window. Sed facilisis id eros ac lacinia. Morbi non consequat magna. Nam consequat placerat orci nec vestibulum."
-      })
-      weeklyAffixesOption:SetPoint("TOPLEFT", weeklyAffixesTitle, "BOTTOMLEFT", 0, -15)
-      weeklyAffixesOption:SetPoint("TOPRIGHT", weeklyAffixesTitle, "BOTTOMRIGHT", 0, -15)
-      local showCharacters = CreateCheckbox({
-        parent = frameGeneral.content,
+        text = "The weekly affixes will be shown at the top of the main window."
+      }))
+      table.insert(widgets, CreateWidgetCheckbox({
         checked = false,
         onChange = function(checked)
           Module:SendMessage("AE_SETTINGS_UPDATED")
         end,
-        text = "Phasellus tincidunt felis quam, vitae elementum odio porttitor vel. Etiam ut nisl mi. Proin dignissim rutrum nunc, at lobortis enim. Sed mi lectus, pharetra ac scelerisque at, faucibus non neque."
-      })
-      showCharacters:SetPoint("TOPLEFT", weeklyAffixesOption, "BOTTOMLEFT", 0, -15)
-      showCharacters:SetPoint("TOPRIGHT", weeklyAffixesOption, "BOTTOMRIGHT", 0, -15)
+        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec"
+      }))
+      table.insert(widgets, CreateWidgetCheckbox({
+        checked = false,
+        onChange = function(checked)
+          Module:SendMessage("AE_SETTINGS_UPDATED")
+        end,
+        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec"
+      }))
+      table.insert(widgets, CreateWidgetLine())
+      table.insert(widgets, CreateWidgetParagraph({
+        text = "Maecenas non scelerisque felis. In quam diam, pretium molestie tristique sed, molestie at ex. Maecenas tempus, enim eu finibus tincidunt, ex purus varius nulla, a ornare risus enim in augue. Maecenas blandit, odio vitae tempus gravida, nunc enim venenatis lacus, non luctus lorem turpis blandit diam. Aliquam erat volutpat. Sed porta sodales luctus. Suspendisse hendrerit pharetra urna nec convallis."
+      }))
+      table.insert(widgets, CreateWidgetParagraph({
+        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec, facilisis ut tortor. Morbi eget hendrerit lorem, non luctus tellus. Nullam dictum auctor ultricies. Sed sit amet augue dapibus, eleifend massa ac, aliquet tellus. Nullam et volutpat purus, in pellentesque urna. Cras at nibh fringilla, efficitur lacus ut, finibus nunc. Maecenas facilisis volutpat ligula ut vestibulum. Fusce eu urna gravida, elementum neque at, luctus diam. Maecenas et pulvinar ipsum. Sed vitae velit elit. Nulla rutrum condimentum est. Duis vitae purus eget elit suscipit posuere. Curabitur quis urna diam. Proin dapibus sapien ipsum, vitae rutrum ligula bibendum sit amet."
+      }))
 
-      local anotherTitle = frameGeneral.content:CreateFontString()
-      anotherTitle:SetPoint("TOPLEFT", showCharacters, "BOTTOMLEFT", 0, -15)
-      anotherTitle:SetPoint("TOPRIGHT", showCharacters, "BOTTOMRIGHT", 0, -15)
-      anotherTitle:SetFontObject("SystemFont_Med2")
-      anotherTitle:SetText("Another feature here")
-      anotherTitle:SetJustifyV("TOP")
-      anotherTitle:SetJustifyH("LEFT")
-      anotherTitle:SetSpacing(6)
-      local second = CreateCheckbox({
-        parent = frameGeneral.content,
-        checked = false,
-        layout = "LEFT",
-        onChange = function(checked)
-          Module:SendMessage("AE_SETTINGS_UPDATED")
-        end,
-        text = "Phasellus tincidunt felis quam, vitae elementum odio porttitor vel. Etiam ut nisl mi. Proin dignissim rutrum nunc, at lobortis enim. Sed mi lectus, pharetra ac scelerisque at, faucibus non neque."
-      })
-      second:SetPoint("TOPLEFT", anotherTitle, "BOTTOMLEFT", 0, -15)
-      second:SetPoint("TOPRIGHT", anotherTitle, "BOTTOMRIGHT", 0, -15)
-      local third = CreateCheckbox({
-        parent = frameGeneral.content,
-        checked = false,
-        layout = "LEFT",
-        onChange = function(checked)
-          Module:SendMessage("AE_SETTINGS_UPDATED")
-        end,
-        text = "Mauris condimentum gravida odio, quis fermentum nulla facilisis quis. Integer in sem eget mauris maximus euismod. Aenean sed ante et dolor maximus."
-      })
-      third:SetPoint("TOPLEFT", second, "BOTTOMLEFT", 0, -15)
-      third:SetPoint("TOPRIGHT", second, "BOTTOMRIGHT", 0, -15)
+      local widgetLayout = CreateWidgetLayout({widgets = widgets})
+      widgetLayout:SetParent(scrollFrame.content)
+      widgetLayout:SetPoint("TOPLEFT", scrollFrame.content, "TOPLEFT", 15, -15)
+      widgetLayout:SetPoint("TOPRIGHT", scrollFrame.content, "TOPRIGHT", -15, -15)
+      C_Timer.After(0, function()
+        widgetLayout:Refresh()
+        scrollFrame.content:SetHeight(widgetLayout:GetHeight() + 15)
+      end)
 
       table.insert(self.tabs, {
         text = "General",
-        frame = frameGeneral
+        frame = scrollFrame
       })
     end
 
