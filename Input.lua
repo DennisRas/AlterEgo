@@ -13,57 +13,23 @@ local DROPDOWN_ITEM_HEIGHT = 20
 local Input = {}
 addon.Input = Input
 
-local BaseInputMixin = {}
-
-function BaseInputMixin:Init()
-  self.hover = false
-  self:EnableMouse(true)
-  self:SetScript("OnEnter", self.onEnterHandler)
-  self:SetScript("OnLeave", self.onLeaveHandler)
-  self:SetScript("OnClick", self.onClickHandler)
-  self:SetScript("OnDisable", self.Update)
-  self:SetScript("OnEnable", self.Update)
-  Utils:SetBackgroundColor(self, 0.1, 0.1, 0.1, 1)
-end
-
-function BaseInputMixin:onEnterHandler()
-  self.hover = true
-  if self.border then
-    Utils:SetBackgroundColor(self.border, 1, 1, 1, 0.3)
-  end
-  if self.config.onEnter then
-    self.config.onEnter(self)
-  end
-  self:Update()
-end
-
-function BaseInputMixin:onLeaveHandler()
-  self.hover = false
-  if self.border then
-    Utils:SetBackgroundColor(self.border, 1, 1, 1, 0.2)
-  end
-  if self.config.onLeave then
-    self.config.onLeave(self)
-  end
-  self:Update()
-end
-
 function Input:CreateCheckbox(options)
-  local defaultOptions = {
-    checked = false,
-    onEnter = false,
-    onLeave = false,
-    onClick = false,
-    onChange = false,
-    size = 16,
-    sizeIcon = 11,
-  }
-
-  local input = CreateFromMixins(CreateFrame("Button", "Input"), BaseInputMixin)
-  input:Init()
-  input.config = CreateFromMixins(defaultOptions, options or {})
+  local input = CreateFrame("Button", "Input")
+  input.config = CreateFromMixins(
+    {
+      checked = false,
+      onEnter = false,
+      onLeave = false,
+      onClick = false,
+      onChange = false,
+      size = 16,
+      sizeIcon = 11,
+    }, options or {}
+  )
+  input.hover = false
   input.checked = input.config.checked and true or false
   input:SetSize(input.config.size, input.config.size)
+  input:EnableMouse(true)
 
   input.icon = input:CreateTexture("$parentIcon", "ARTWORK")
   input.icon:SetPoint("CENTER", input, "CENTER")
@@ -92,18 +58,44 @@ function Input:CreateCheckbox(options)
   end
 
   function input:onClickHandler()
-    self.checked = not self:GetChecked()
+    input.checked = not input:GetChecked()
     if input.config.onClick then
       input.config.onClick(input)
     end
     input:Update()
   end
 
+  function input:onEnterHandler()
+    input.hover = true
+    if input.config.onEnter then
+      input.config.onEnter(input)
+    end
+    input:Update()
+  end
+
+  function input:onLeaveHandler()
+    input.hover = false
+    if input.config.onLeave then
+      input.config.onLeave(input)
+    end
+    input:Update()
+  end
+
   function input:Update()
+    Utils:SetBackgroundColor(input, 0.1, 0.1, 0.1, 1)
+
     if input:GetChecked() then
       input.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
     else
       input.icon:SetVertexColor(1, 1, 1, 0.2)
+    end
+
+    if input.border then
+      if input.hover then
+        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.3)
+      else
+        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.2)
+      end
     end
 
     if input:GetChecked() or (input.hover and input:IsEnabled()) then
@@ -119,46 +111,60 @@ function Input:CreateCheckbox(options)
     end
   end
 
+  input:SetScript("OnClick", input.onClickHandler)
+  input:SetScript("OnEnter", input.onEnterHandler)
+  input:SetScript("OnLeave", input.onLeaveHandler)
+  input:SetScript("OnDisable", input.Update)
+  input:SetScript("OnEnable", input.Update)
   input:Update()
   return input
 end
 
 function Input:CreateDropdown(options)
-  local defaultOptions = {
-    checked = false,
-    onEnter = false,
-    onLeave = false,
-    onClick = false,
-    onChange = false,
-    size = 200,
-    sizeIcon = 11,
-    items = {
-      -- {value = "", text = "", icon = ""}
-    },
-    value = "",
-    maxHeight = 100,
-    placeholder = "Select option"
-  }
-
-  local input = CreateFromMixins(CreateFrame("Button", "Input"), BaseInputMixin)
-  input:Init()
-  input.config = CreateFromMixins(defaultOptions, options or {})
+  local input = CreateFrame("Frame", "Input")
+  input.config = CreateFromMixins(
+    {
+      checked = false,
+      onEnter = false,
+      onLeave = false,
+      onClick = false,
+      onChange = false,
+      size = 200,
+      sizeIcon = 11,
+      items = {
+        -- {value = "", text = "", icon = ""}
+      },
+      value = "",
+      maxHeight = 200,
+      placeholder = "Select option"
+    }, options or {}
+  )
+  input.hover = false
   input.items = {}
   input.value = input.config.value
   input.expanded = false
-  input:SetSize(input.config.size, 16)
+  input:SetSize(input.config.size, 30)
+  input:RegisterEvent("GLOBAL_MOUSE_DOWN")
+  input:SetScript("OnEvent", function()
+    if not MouseIsOver(input) and not MouseIsOver(input.list) then
+      input:SetExpanded(false)
+    end
+  end)
 
-  input.text = input:CreateFontString("$parentText")
-  input.text:SetFontObject("SystemFont_Med1")
-  input.text:JustifyH("LEFT")
-  input.text:SetPoint("LEFT", input, "LEFT", 5, 0)
-  input.text:SetPoint("RIGHT", input, "RIGHT", -16, 0)
+  input.button = CreateFrame("Button", "Button", input)
+  input.button:SetPoint("TOPLEFT", input, "TOPLEFT")
 
-  input.icon = input:CreateTexture("$parentIcon", "ARTWORK")
-  input.icon:SetPoint("RIGHT", input, "RIGHT", -5, 0)
-  input.icon:SetSize(11, 11)
-  input.icon:SetTexture(Constants.media.IconCheckmark)
-  input.icon:SetVertexColor(1, 1, 1, 0.2)
+  input.button.text = input.button:CreateFontString()
+  input.button.text:SetFontObject("SystemFont_Med1")
+  input.button.text:SetJustifyH("LEFT")
+  input.button.text:SetPoint("LEFT", input.button, "LEFT", 10, 0)
+  input.button.text:SetPoint("RIGHT", input.button, "RIGHT", -21, 0)
+
+  input.button.icon = input.button:CreateTexture("$parentIcon", "ARTWORK")
+  input.button.icon:SetPoint("RIGHT", input.button, "RIGHT", -10, 0)
+  input.button.icon:SetSize(11, 11)
+  input.button.icon:SetTexture(Constants.media.IconCaretDown)
+  input.button.icon:SetVertexColor(1, 1, 1, 0.8)
 
   input.border = CreateFrame("Frame", "Border", input)
   input.border:SetFrameStrata("LOW")
@@ -167,17 +173,25 @@ function Input:CreateDropdown(options)
   input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 1, -1)
   input.border:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", -1, -1)
 
-  input.list = Window:CreateScrollFrame("$parentList", input)
-
-  -- input.list = CreateFrame("Frame", "List", input)
-  input.list:SetPoint("TOPLEFT", input, "BOTTOMLEFT")
-  input.list:SetPoint("TOPRIGHT", input, "BOTTOMRIGHT")
-  input.list:SetSize(input:GetSize())
+  input.list = Window:CreateScrollFrame(input:GetName() .. "List", UIParent)
+  input.list:SetFrameStrata("FULLSCREEN_DIALOG")
+  input.list:SetFrameLevel(200)
+  input.list:ClearAllPoints()
+  input.list:SetPoint("TOPLEFT", input.button, "BOTTOMLEFT")
+  input.list:SetPoint("TOPRIGHT", input.button, "BOTTOMRIGHT")
   input.list:Hide()
+
+  input.list.border = CreateFrame("Frame", "Border", input.list)
+  input.list.border:SetFrameLevel(199)
+  input.list.border:SetPoint("TOPLEFT", input.list, "TOPLEFT", -1, 1)
+  input.list.border:SetPoint("TOPRIGHT", input.list, "TOPRIGHT", 1, 1)
+  input.list.border:SetPoint("BOTTOMRIGHT", input.list, "BOTTOMRIGHT", 1, -1)
+  input.list.border:SetPoint("BOTTOMLEFT", input.list, "BOTTOMLEFT", -1, -1)
 
   function input:ClearItems()
     wipe(input.items or {})
-    input.value = 0
+    input.value = ""
+    input:Update()
   end
 
   function input:SetItems(items)
@@ -198,14 +212,6 @@ function Input:CreateDropdown(options)
     input:Update()
   end
 
-  function input:onClickHandler()
-    input.expanded = not input.expanded
-    if input.config.onClick then
-      input.config.onClick(input)
-    end
-    input:Update()
-  end
-
   function input:SetExpanded(state)
     input.expanded = state and true or false
     input:Update()
@@ -223,70 +229,124 @@ function Input:CreateDropdown(options)
     return input.value
   end
 
+  function input:GetValueText()
+    if not input.value then return "" end
+    local item = Utils:TableGet(input.items, "value", input.value)
+    return item and item.text or ""
+  end
+
+  function input:onClickHandler()
+    input.expanded = not input.expanded
+    if input.config.onClick then
+      input.config.onClick(input)
+    end
+    input:Update()
+  end
+
+  function input:onEnterHandler()
+    input.hover = true
+    if input.config.onEnter then
+      input.config.onEnter(input)
+    end
+    input:Update()
+  end
+
+  function input:onLeaveHandler()
+    input.hover = false
+    if input.config.onLeave then
+      input.config.onLeave(input)
+    end
+    input:Update()
+  end
+
   function input:Update()
+    Utils:SetBackgroundColor(input, 0.1, 0.1, 0.1, 1)
+    Utils:SetBackgroundColor(input.list, 0.1, 0.1, 0.1, 1)
+    Utils:SetBackgroundColor(input.list.border, 1, 1, 1, 0.3)
+    input.button:SetSize(input:GetWidth(), 30)
+
     local value = input:GetValue()
+    local valueText = input:GetValueText()
 
     if input.expanded then
-      input.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
+      input.button.icon:SetVertexColor(1, 1, 1, 0.9)
       input.list:Show()
     else
-      input.icon:SetVertexColor(1, 1, 1, 0.2)
+      if input.hover then
+        input.button.icon:SetVertexColor(1, 1, 1, 0.7)
+      else
+        input.button.icon:SetVertexColor(1, 1, 1, 0.5)
+      end
       input.list:Hide()
     end
 
-    if input:IsEnabled() then
+    if input.border then
+      if input.hover or input.expanded then
+        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.3)
+      else
+        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.2)
+      end
+    end
+
+    if input.button:IsEnabled() then
       input:SetAlpha(1)
     else
       input:SetAlpha(0.3)
     end
 
-    if not input.list.items then
-      input.list.items = {}
-    end
-
     if value == "" then
-      input.text:SetText(input.config.placeholder)
+      input.button.text:SetText(input.config.placeholder)
     else
-      input.text:SetText(tostring(value))
+      input.button.text:SetText(tostring(valueText))
     end
 
-    local height = 0
-    Utils:TableForEach(input.list.items, function(itemButton) itemButton:Hide() end)
+    local height = 5
+    if not input.list.content.items then input.list.content.items = {} end
+    Utils:TableForEach(input.list.content.items, function(itemButton) itemButton:Hide() end)
     Utils:TableForEach(input.items, function(item, index)
-      local itemButton = input.list.items[index]
+      local itemButton = input.list.content.items[index]
       if not itemButton then
-        itemButton = CreateFrame("Button")
-        itemButton:SetPoint("TOPLEFT", input.list.content, "TOPLEFT", -height, 0)
-        itemButton:SetPoint("TOPRIGHT", input.list.content, "TOPRIGHT", -height, 0)
-        itemButton:SetSize(input:GetWidth(), height)
-        itemButton:SetScript("OnEnter", function() Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0.1) end)
-        itemButton:SetScript("OnLeave", function() Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0) end)
+        itemButton = CreateFrame("Button", "ListItem", input.list.content)
         itemButton.text = itemButton:CreateFontString()
-        itemButton.text:SetFontObject("SystemFont_Med1")
-        itemButton.text:JustifyH("LEFT")
+        itemButton.text:SetFontObject("SystemFont_Small2")
+        itemButton.text:SetJustifyH("LEFT")
         itemButton.icon = itemButton:CreateTexture()
         itemButton.icon:SetPoint("LEFT", itemButton, "LEFT", 5, 0)
         itemButton.icon:SetSize(11, 11)
-        itemButton.icon:SetTexture()
-        itemButton.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
-        itemButton.icon:Hide()
+        -- itemButton.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
+        -- itemButton.icon:Hide()
         itemButton.iconCheck = itemButton:CreateTexture()
-        itemButton.iconCheck:SetPoint("RIGHT", itemButton, "RIGHT", 5, 0)
+        itemButton.iconCheck:SetPoint("RIGHT", itemButton, "RIGHT", -5, 0)
         itemButton.iconCheck:SetSize(11, 11)
         itemButton.iconCheck:SetTexture(Constants.media.IconCheckmark)
         itemButton.iconCheck:SetVertexColor(0.3, 0.7, 0.3, 1)
         itemButton.iconCheck:Hide()
-        input.list.items[index] = itemButton
+        input.list.content.items[index] = itemButton
       end
       itemButton.data = item
-      itemButton.text:SetText(item.text)
-      itemButton.text:SetPoint("LEFT", itemButton, "LEFT", item.icon and 16 or 5, 0)
-      itemButton.text:SetPoint("RIGHT", itemButton, "RIGHT", -16, 0)
+      itemButton:SetSize(input.list:GetWidth(), DROPDOWN_ITEM_HEIGHT)
+      itemButton:SetPoint("TOPLEFT", input.list.content, "TOPLEFT", 5, -height)
+      itemButton:SetPoint("TOPRIGHT", input.list.content, "TOPRIGHT", -5, -height)
       itemButton:Show()
+      itemButton.icon:SetTexture(item.icon)
+      itemButton.text:SetText(item.text)
+      itemButton.text:SetPoint("LEFT", itemButton, "LEFT", item.icon and 21 or 5, 0)
+      itemButton.text:SetPoint("RIGHT", itemButton, "RIGHT", -21, 0)
+
+      itemButton:SetScript("OnEnter", function()
+        if item.value == value then return end
+        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0.05)
+      end)
+      itemButton:SetScript("OnLeave", function()
+        if item.value == value then return end
+        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0)
+      end)
 
       if item.value == value then
+        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0.1)
         itemButton.iconCheck:Show()
       else
+        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0)
         itemButton.iconCheck:Hide()
       end
 
@@ -297,29 +357,33 @@ function Input:CreateDropdown(options)
 
       height = height + DROPDOWN_ITEM_HEIGHT
     end)
-
+    height = height + 5
     input.list:SetSize(input:GetWidth(), math.min(height, input.config.maxHeight))
     input.list.content:SetSize(input:GetWidth(), height)
   end
 
+  input.button:SetScript("OnClick", input.onClickHandler)
+  input.button:SetScript("OnEnter", input.onEnterHandler)
+  input.button:SetScript("OnLeave", input.onLeaveHandler)
+  input.button:SetScript("OnDisable", input.Update)
+  input.button:SetScript("OnEnable", input.Update)
   input:SetItems(input.config.items)
   input:Update()
   return input
 end
 
 function Input:CreateColorPicker(options)
-  local defaultOptions = {
-    onEnter = false,
-    onLeave = false,
-    onClick = false,
-    onChange = false,
-    size = 16,
-    value = BLUE_FONT_COLOR
-  }
-
-  local input = CreateFromMixins(CreateFrame("Button", "Input"), BaseInputMixin)
-  input:Init()
-  input.config = CreateFromMixins(defaultOptions, options or {})
+  local input = CreateFrame("Button", "Input")
+  input.config = CreateFromMixins(
+    {
+      onEnter = false,
+      onLeave = false,
+      onClick = false,
+      onChange = false,
+      size = 16,
+      value = Constants.colors.primary
+    }, options or {}
+  )
   input.value = input.config.value
   input:SetSize(input.config.size, input.config.size)
 
@@ -343,16 +407,16 @@ function Input:CreateColorPicker(options)
   end
 
   function input:onClickHandler()
-    local prevR, prevG, prevB, prevA = self.value:GetRGBA()
+    local prevR, prevG, prevB, prevA = input.value:GetRGBA()
     ColorPickerFrame:SetupColorPickerAndShow({
-      swatchFun = function()
+      swatchFunc = function()
         local r, g, b = ColorPickerFrame:GetColorRGB()
-        local a = 1 - OpacitySliderFrame:GetValue()
+        local a = ColorPickerFrame:GetColorAlpha()
         input:SetValue(CreateColor(r, g, b, a))
       end,
       opacityFunc = function()
         local r, g, b = ColorPickerFrame:GetColorRGB()
-        local a = 1 - OpacitySliderFrame:GetValue()
+        local a = ColorPickerFrame:GetColorAlpha()
         input:SetValue(CreateColor(r, g, b, a))
       end,
       cancelFunc = function()
@@ -365,25 +429,54 @@ function Input:CreateColorPicker(options)
       g = prevG,
       b = prevB
     })
-    if self.config.onClick then
-      self.config.onClick(self)
+    if input.config.onClick then
+      input.config.onClick(input)
     end
-    self:Update()
+    input:Update()
+  end
+
+  function input:onEnterHandler()
+    input.hover = true
+    if input.config.onEnter then
+      input.config.onEnter(input)
+    end
+    input:Update()
+  end
+
+  function input:onLeaveHandler()
+    input.hover = false
+    if input.config.onLeave then
+      input.config.onLeave(input)
+    end
+    input:Update()
   end
 
   function input:Update()
-    local value = self:GetValue()
+    local value = input:GetValue()
     if value then
-      Utils:SetBackgroundColor(self, value.r, value.g, value.b, value.a)
+      Utils:SetBackgroundColor(input, value.r, value.g, value.b, value.a)
     end
 
-    if self:IsEnabled() then
-      self:SetAlpha(1)
+    if input.border then
+      if input.hover then
+        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.3)
+      else
+        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.2)
+      end
+    end
+
+    if input:IsEnabled() then
+      input:SetAlpha(1)
     else
-      self:SetAlpha(0.3)
+      input:SetAlpha(0.3)
     end
   end
 
+  input:SetScript("OnClick", input.onClickHandler)
+  input:SetScript("OnEnter", input.onEnterHandler)
+  input:SetScript("OnLeave", input.onLeaveHandler)
+  input:SetScript("OnDisable", input.Update)
+  input:SetScript("OnEnable", input.Update)
   input:Update()
   return input
 end

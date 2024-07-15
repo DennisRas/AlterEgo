@@ -8,6 +8,7 @@ local Window = addon.Window
 local Utils = addon.Utils
 local Constants = addon.Constants
 local Data = addon.Data
+local Input = addon.Input
 
 local Module = Core:NewModule("Settings", "AceEvent-3.0")
 
@@ -37,69 +38,49 @@ function Module:SetTab(index)
 end
 
 local function CreateWidgetCheckbox(options)
-  local defaultOptions = {
-    layout = "RIGHT",
-    checked = false,
-    onChange = false,
-    text = "",
-    fontObject = "SystemFont_Med1"
-  }
-  options = Mixin(defaultOptions, options or {})
-
   local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
-  widget:RegisterForClicks("AnyUp")
+  widget.config = Mixin(
+    {
+      layout = "RIGHT",
+      checked = false,
+      onChange = false,
+      text = "",
+      fontObject = "SystemFont_Med1",
+      height = 20
+    },
+    options or {}
+  )
   widget:EnableMouse(true)
-  widget.options = options
+  widget:SetHeight(widget.config.height)
 
   widget.text = widget:CreateFontString()
-  widget.text:SetFontObject(options.fontObject)
+  widget.text:SetFontObject(widget.config.fontObject)
   widget.text:SetJustifyV("TOP")
   widget.text:SetJustifyH("LEFT")
   widget.text:SetSpacing(6)
   widget.text:SetTextColor(0.8, 0.8, 0.8)
-  widget.text:SetText(options.text)
+  widget.text:SetText(widget.config.text)
 
-  widget.input = CreateFrame("Frame", "Input", widget)
-  widget.input:SetSize(16, 16)
-
-  widget.input.icon = widget.input:CreateTexture("$parentIcon", "ARTWORK")
-  widget.input.icon:SetPoint("CENTER", widget.input, "CENTER")
-  widget.input.icon:SetSize(11, 11)
-  widget.input.icon:SetTexture(Constants.media.IconCheckmark)
-  widget.input.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
-  widget.input.icon:Hide()
-
-  widget.input.border = CreateFrame("Frame", "Border", widget)
-  widget.input.border:SetFrameStrata("LOW")
-  widget.input.border:SetPoint("TOPLEFT", widget.input, "TOPLEFT", -1, 1)
-  widget.input.border:SetPoint("TOPRIGHT", widget.input, "TOPRIGHT", 1, 1)
-  widget.input.border:SetPoint("BOTTOMRIGHT", widget.input, "BOTTOMRIGHT", 1, -1)
-  widget.input.border:SetPoint("BOTTOMLEFT", widget.input, "BOTTOMLEFT", -1, -1)
-
-  Utils:SetBackgroundColor(widget.input, 0.1, 0.1, 0.1, 1)
-  Utils:SetBackgroundColor(widget.input.border, 1, 1, 1, 0.2)
+  widget.input = Input:CreateCheckbox({
+    onChange = function(value)
+      if widget.config.onChange then
+        widget.config.onChange(value)
+      end
+    end
+  })
+  widget.input:SetParent(widget)
 
   widget:SetScript("OnEnter", function()
-    Utils:SetBackgroundColor(widget.input.border, 1, 1, 1, 0.3)
-    if widget.options.checked then return end
-    widget.input.icon:Show()
-    -- Utils:SetBackgroundColor(widget.input, 0.15, 0.15, 0.15, 1)
+    widget.input:onEnterHandler()
   end)
   widget:SetScript("OnLeave", function()
-    Utils:SetBackgroundColor(widget.input.border, 1, 1, 1, 0.2)
-    if widget.options.checked then return end
-    widget.input.icon:Hide()
-    -- Utils:SetBackgroundColor(widget.input, 0.1, 0.1, 0.1, 1)
+    widget.input:onLeaveHandler()
   end)
   widget:SetScript("OnClick", function()
-    widget.options.checked = not widget.options.checked
-    if widget.options.onChange then
-      widget.options.onChange(widget.options.checked)
-    end
-    widget:Refresh()
+    widget.input:onClickHandler()
   end)
 
-  if options.layout == "RIGHT" then
+  if widget.config.layout == "RIGHT" then
     widget.input:SetPoint("TOPRIGHT", widget, "TOPRIGHT", -5, 1)
     widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT", 0, 0)
     widget.text:SetPoint("TOPRIGHT", widget.input, "TOPLEFT", -25, 0)
@@ -109,44 +90,142 @@ local function CreateWidgetCheckbox(options)
     widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT", 0, 0)
   end
 
-  function widget:Refresh()
-    if widget.options.checked then
-      widget.input.icon:SetVertexColor(0.3, 0.7, 0.3, 1)
-      widget.input.icon:Show()
-      -- Utils:SetBackgroundColor(widget.input, 0, 0.3, 0, 1)
-    else
-      widget.input.icon:SetVertexColor(1, 1, 1, 0.2)
-      widget.input.icon:Hide()
-      -- Utils:SetBackgroundColor(widget.input, 0.1, 0.1, 0.1, 1)
+  -- widget:Refresh()
+  return widget
+end
+
+local function CreateWidgetColorPicker(options)
+  local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
+  widget.config = Mixin(
+    {
+      layout = "RIGHT",
+      checked = false,
+      onChange = false,
+      text = "",
+      fontObject = "SystemFont_Med1",
+      height = 20
+    },
+    options or {}
+  )
+  widget:EnableMouse(true)
+  widget:SetHeight(widget.config.height)
+
+  widget.text = widget:CreateFontString()
+  widget.text:SetFontObject(widget.config.fontObject)
+  widget.text:SetJustifyV("TOP")
+  widget.text:SetJustifyH("LEFT")
+  widget.text:SetSpacing(6)
+  widget.text:SetTextColor(0.8, 0.8, 0.8)
+  widget.text:SetText(widget.config.text)
+
+  widget.input = Input:CreateColorPicker({
+    onChange = function(value)
+      if widget.config.onChange then
+        widget.config.onChange(value)
+      end
     end
+  })
+  widget.input:SetParent(widget)
+
+  widget:SetScript("OnEnter", function()
+    widget.input:onEnterHandler()
+  end)
+  widget:SetScript("OnLeave", function()
+    widget.input:onLeaveHandler()
+  end)
+  widget:SetScript("OnClick", function()
+    widget.input:onClickHandler()
+  end)
+
+  if widget.config.layout == "RIGHT" then
+    widget.input:SetPoint("TOPRIGHT", widget, "TOPRIGHT", -5, 1)
+    widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT", 0, 0)
+    widget.text:SetPoint("TOPRIGHT", widget.input, "TOPLEFT", -25, 0)
+  else
+    widget.input:SetPoint("TOPLEFT", widget, "TOPLEFT", 5, 1)
+    widget.text:SetPoint("TOPLEFT", widget.input, "TOPRIGHT", 15, 0)
+    widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT", 0, 0)
   end
 
-  widget:SetHeight(60)
-  widget:Refresh()
+  -- widget:Refresh()
+  return widget
+end
+
+local function CreateWidgetDropdown(options)
+  local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
+  widget.config = Mixin(
+    {
+      items = {},
+      value = "",
+      onChange = false,
+      text = "",
+      fontObject = "SystemFont_Med1",
+      height = 50
+    },
+    options or {}
+  )
+  widget:EnableMouse(true)
+  widget:SetHeight(widget.config.height)
+
+  widget.text = widget:CreateFontString()
+  widget.text:SetFontObject(widget.config.fontObject)
+  widget.text:SetJustifyV("TOP")
+  widget.text:SetJustifyH("LEFT")
+  widget.text:SetSpacing(6)
+  widget.text:SetTextColor(0.8, 0.8, 0.8)
+  widget.text:SetText(widget.config.text)
+  widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT", 0, 0)
+  widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT", 0, 0)
+
+  widget.input = Input:CreateDropdown({
+    placeholder = "You know what...",
+    value = widget.config.value,
+    items = widget.config.items,
+    onChange = function(value)
+      if widget.config.onChange then
+        widget.config.onChange(value)
+      end
+    end
+  })
+  widget.input:SetParent(widget)
+  widget.input:SetPoint("TOPLEFT", widget.text, "BOTTOMLEFT", 5, -10)
+  widget.input:SetPoint("TOPRIGHT", widget.text, "BOTTOMRIGHT", -5, -10)
+
+  -- widget:SetScript("OnEnter", function()
+  --   widget.input:onEnterHandler()
+  -- end)
+  -- widget:SetScript("OnLeave", function()
+  --   widget.input:onLeaveHandler()
+  -- end)
+  -- widget:SetScript("OnClick", function()
+  --   widget.input:onClickHandler()
+  -- end)
+
   return widget
 end
 
 local function CreateWidgetTitle(options)
-  local defaultOptions = {
-    text = "",
-    fontObject = "SystemFont_Huge1",
-    underline = false
-  }
-  options = Mixin(defaultOptions, options or {})
-
   local widget = CreateFrame("Frame", "Title")
-  widget.options = options
+  widget.config = Mixin(
+    {
+      text = "",
+      fontObject = "SystemFont_Huge1",
+      underline = false,
+      height = 20
+    }, options or {}
+  )
+  widget:SetHeight(widget.config.height)
 
   widget.text = widget:CreateFontString()
   widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT")
   widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT")
-  widget.text:SetFontObject(options.fontObject)
-  widget.text:SetFontObject(options.fontObject)
-  widget.text:SetText(widget.options.text)
+  widget.text:SetFontObject(widget.config.fontObject)
+  widget.text:SetFontObject(widget.config.fontObject)
+  widget.text:SetText(widget.config.text)
   widget.text:SetJustifyV("TOP")
   widget.text:SetJustifyH("LEFT")
 
-  if options.underline then
+  if widget.config.underline then
     widget.line = CreateFrame("Frame", nil, widget)
     widget.line:SetPoint("BOTTOMLEFT", widget, "BOTTOMLEFT")
     widget.line:SetPoint("BOTTOMRIGHT", widget, "BOTTOMRIGHT")
@@ -154,42 +233,41 @@ local function CreateWidgetTitle(options)
     Utils:SetBackgroundColor(widget.line, 1, 1, 1, 0.3)
   end
 
-  widget:SetHeight(widget.text:GetHeight())
   return widget
 end
 
 local function CreateWidgetParagraph(options)
-  local defaultOptions = {
-    text = "",
-    fontObject = "SystemFont_Med1"
-  }
-  options = Mixin(defaultOptions, options or {})
-
   local widget = CreateFrame("Frame", "Paragraph")
-  widget.options = options
+  widget.config = Mixin(
+    {
+      text = "",
+      fontObject = "SystemFont_Med1",
+      height = 20
+    }, options or {}
+  )
+  widget:SetHeight(widget.config.height)
 
   widget.text = widget:CreateFontString()
   widget.text:SetPoint("TOPLEFT", widget, "TOPLEFT")
   widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT")
-  widget.text:SetFontObject(options.fontObject)
-  widget.text:SetText(options.text)
+  widget.text:SetFontObject(widget.config.fontObject)
+  widget.text:SetText(widget.config.text)
   widget.text:SetJustifyV("TOP")
   widget.text:SetJustifyH("LEFT")
   widget.text:SetSpacing(6)
   widget.text:SetTextColor(0.8, 0.8, 0.8)
 
-  widget:SetHeight(200)
   return widget
 end
 
 local function CreateWidgetLine(options)
-  local defaultOptions = {
-    height = 15
-  }
-  options = Mixin(defaultOptions, options or {})
-
   local widget = CreateFrame("Frame", "Line")
-  widget.options = options
+  widget.config = Mixin(
+    {
+      height = 15
+    }, options or {}
+  )
+  widget:SetHeight(widget.config.height)
 
   widget.line = CreateFrame("Frame", nil, widget)
   widget.line:SetPoint("LEFT", widget, "LEFT")
@@ -197,29 +275,27 @@ local function CreateWidgetLine(options)
   widget.line:SetHeight(1)
   Utils:SetBackgroundColor(widget.line, 1, 1, 1, 0.3)
 
-  widget:SetHeight(options.height)
   return widget
 end
 
 local function CreateWidgetLayout(options)
-  local defaultOptions = {
-    widgets = {},
-  }
-  options = Mixin(defaultOptions, options or {})
-
   local container = CreateFrame("Frame", "WidgetContainer")
-  container.options = options
+  container.config = Mixin(
+    {
+      widgets = {},
+    }, options or {}
+  )
 
   function container:Refresh()
     local height = 0
-    Utils:TableForEach(options.widgets, function(widget, i)
+    Utils:TableForEach(container.config.widgets, function(widget, i)
       widget:SetParent(container)
       widget:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -height)
       widget:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, -height)
       -- Utils:SetBackgroundColor(widget, math.random(1, 255) / 255, math.random(1, 255) / 255, math.random(1, 255) / 255, 0.2)
-      if widget.text then
-        widget:SetHeight(math.max(widget.text:GetHeight(), 20))
-      end
+      -- if widget.text then
+      --   widget:SetHeight(math.max(widget.text:GetHeight(), 20))
+      -- end
       height = height + widget:GetHeight() + 15
     end)
     container:SetHeight(height)
@@ -252,6 +328,7 @@ function Module:Render()
       --   text = "Take a look around. Maybe you'll find a feature or customization you would like to have :-)"
       -- }))
       table.insert(widgets, CreateWidgetTitle({
+        height = 15,
         fontObject = "SystemFont_Med2",
         text = "Show Weekly AFfixes",
       }))
@@ -263,25 +340,41 @@ function Module:Render()
         end,
         text = "The weekly affixes will be shown at the top of the main window."
       }))
-      table.insert(widgets, CreateWidgetCheckbox({
-        checked = false,
+      table.insert(widgets, CreateWidgetColorPicker({
+        height = 35,
         onChange = function(checked)
           Module:SendMessage("AE_SETTINGS_UPDATED")
         end,
         text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec"
       }))
       table.insert(widgets, CreateWidgetCheckbox({
+        height = 35,
         checked = false,
         onChange = function(checked)
           Module:SendMessage("AE_SETTINGS_UPDATED")
         end,
         text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec"
+      }))
+      local options = {}
+      for i = 1, 20 do
+        table.insert(options, {
+          value = i,
+          text = "Option " .. i,
+          icon = i > 2 and i < 10 and 626000 + (i - 5) or nil
+        })
+      end
+      table.insert(widgets, CreateWidgetDropdown({
+        text = "Hello there!",
+        value = 2,
+        items = options
       }))
       table.insert(widgets, CreateWidgetLine())
       table.insert(widgets, CreateWidgetParagraph({
+        height = 115,
         text = "Maecenas non scelerisque felis. In quam diam, pretium molestie tristique sed, molestie at ex. Maecenas tempus, enim eu finibus tincidunt, ex purus varius nulla, a ornare risus enim in augue. Maecenas blandit, odio vitae tempus gravida, nunc enim venenatis lacus, non luctus lorem turpis blandit diam. Aliquam erat volutpat. Sed porta sodales luctus. Suspendisse hendrerit pharetra urna nec convallis."
       }))
       table.insert(widgets, CreateWidgetParagraph({
+        height = 150,
         text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec, facilisis ut tortor. Morbi eget hendrerit lorem, non luctus tellus. Nullam dictum auctor ultricies. Sed sit amet augue dapibus, eleifend massa ac, aliquet tellus. Nullam et volutpat purus, in pellentesque urna. Cras at nibh fringilla, efficitur lacus ut, finibus nunc. Maecenas facilisis volutpat ligula ut vestibulum. Fusce eu urna gravida, elementum neque at, luctus diam. Maecenas et pulvinar ipsum. Sed vitae velit elit. Nulla rutrum condimentum est. Duis vitae purus eget elit suscipit posuere. Curabitur quis urna diam. Proin dapibus sapien ipsum, vitae rutrum ligula bibendum sit amet."
       }))
 

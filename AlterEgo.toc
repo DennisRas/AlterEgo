@@ -27,8 +27,9 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 
 Constants.lua
 Utils.lua
-Table.lua
 Window.lua
+Input.lua
+Table.lua
 Data.lua
 Core.lua
 Modules/Settings.lua
