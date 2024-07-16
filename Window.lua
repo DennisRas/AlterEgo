@@ -12,16 +12,18 @@ local TITLEBAR_HEIGHT = 30
 local FOOTER_HEIGHT = 16
 local SIDEBAR_WIDTH = 150
 
----@class AE_Window
+---@class AE_WindowManager
 local Window = {}
 addon.Window = Window
 
 
 ---Create a window frame
 ---@param options table?
----@return Frame
+---@return AE_Window
 function Window:New(options)
-  options = Mixin(
+  ---@class AE_Window : Frame
+  local window = CreateFrame("Frame", "AlterEgo" .. (options and options.name or ""))
+  window.config = CreateFromMixins(
     {
       name = "",
       title = "",
@@ -34,96 +36,96 @@ function Window:New(options)
     },
     options or {}
   )
-
-  ---@class AE_Window : Frame
-  local frame = CreateFrame("Frame", "AlterEgo" .. options.name, options.parent)
-  frame:SetFrameStrata("HIGH")
-  frame:SetFrameLevel(1000 + 100 * (Utils:TableCount(WindowCollection) + 1))
-  frame:SetClampedToScreen(true)
-  frame:SetMovable(true)
-  frame:SetUserPlaced(true)
-  frame:SetPoint("CENTER")
-  frame:SetSize(300, 300)
-  Utils:SetBackgroundColor(frame, options.windowColor.r, options.windowColor.g, options.windowColor.b, options.windowColor.a)
+  window:SetFrameStrata("HIGH")
+  -- frame:SetFrameLevel(1000 + 100 * (Utils:TableCount(WindowCollection) + 1))
+  window:SetTopLevel(true)
+  window:SetClampedToScreen(true)
+  window:SetMovable(true)
+  -- window:SetUserPlaced(true)
+  window:SetPoint("CENTER")
+  window:SetSize(300, 300)
+  window:EnableMouse(true) -- Disable click-throughs
+  window:SetParent(window.config.parent)
+  Utils:SetBackgroundColor(window, window.config.windowColor.r, window.config.windowColor.g, window.config.windowColor.b, window.config.windowColor.a)
 
   ---Show or hide the window
-  function frame:Toggle()
-    frame:SetShown(not frame:IsVisible())
+  function window:Toggle()
+    window:SetShown(not window:IsVisible())
   end
 
   ---Set the title of the window
   ---@param title string
-  function frame:SetTitle(title)
-    if not options.titlebar then return end
-    frame.titlebar.title:SetText(title)
+  function window:SetTitle(title)
+    if not window.config.titlebar then return end
+    window.titlebar.title:SetText(title)
   end
 
   ---Set body size and adjust window size
   ---@param width number
   ---@param height number
-  function frame:SetBodySize(width, height)
+  function window:SetBodySize(width, height)
     local w = width
     local h = height
-    if options.sidebar then
+    if window.config.sidebar then
       w = w + SIDEBAR_WIDTH
     end
-    if options.titlebar then
+    if window.config.titlebar then
       h = h + TITLEBAR_HEIGHT
     end
-    frame:SetSize(w, h)
+    window:SetSize(w, h)
   end
 
   -- Border
-  if options.border > 0 then
-    frame.border = CreateFrame("Frame", "$parentBorder", frame, "BackdropTemplate")
-    frame.border:SetPoint("TOPLEFT", frame, "TOPLEFT", -3, 3)
-    frame.border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 3, -3)
-    frame.border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = options.border, right = options.border, top = options.border, bottom = options.border}})
-    frame.border:SetBackdropBorderColor(0, 0, 0, .5)
-    frame.border:Show()
+  if window.config.border > 0 then
+    window.border = CreateFrame("Frame", "$parentBorder", window, "BackdropTemplate")
+    window.border:SetPoint("TOPLEFT", window, "TOPLEFT", -3, 3)
+    window.border:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 3, -3)
+    window.border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = window.config.border, right = window.config.border, top = window.config.border, bottom = window.config.border}})
+    window.border:SetBackdropBorderColor(0, 0, 0, .5)
+    window.border:Show()
   end
 
   -- Titlebar
-  if options.titlebar then
-    frame.titlebar = CreateFrame("Frame", "$parentTitleBar", frame)
-    frame.titlebar:EnableMouse(true)
-    frame.titlebar:RegisterForDrag("LeftButton")
-    frame.titlebar:SetScript("OnDragStart", function() frame:StartMoving() end)
-    frame.titlebar:SetScript("OnDragStop", function() frame:StopMovingOrSizing() end)
-    frame.titlebar:SetPoint("TOPLEFT", frame, "TOPLEFT")
-    frame.titlebar:SetPoint("TOPRIGHT", frame, "TOPRIGHT")
-    frame.titlebar:SetHeight(TITLEBAR_HEIGHT)
-    Utils:SetBackgroundColor(frame.titlebar, 0, 0, 0, 0.5)
-    frame.titlebar.icon = frame.titlebar:CreateTexture("$parentIcon", "ARTWORK")
-    frame.titlebar.icon:SetPoint("LEFT", frame.titlebar, "LEFT", 6, 0)
-    frame.titlebar.icon:SetSize(20, 20)
-    frame.titlebar.icon:SetTexture(Constants.media.LogoTransparent)
-    frame.titlebar.title = frame.titlebar:CreateFontString("$parentText", "OVERLAY")
-    frame.titlebar.title:SetPoint("LEFT", frame.titlebar, "LEFT", 20 + Constants.sizes.padding, 0)
-    frame.titlebar.title:SetFontObject("SystemFont_Med3")
-    frame.titlebar.title:SetText(options.title or options.name)
-    frame.titlebar.CloseButton = CreateFrame("Button", "$parentCloseButton", frame.titlebar)
-    frame.titlebar.CloseButton:SetPoint("RIGHT", frame.titlebar, "RIGHT", 0, 0)
-    frame.titlebar.CloseButton:SetSize(TITLEBAR_HEIGHT, TITLEBAR_HEIGHT)
-    frame.titlebar.CloseButton:RegisterForClicks("AnyUp")
-    frame.titlebar.CloseButton:SetScript("OnClick", function() frame:Hide() end)
-    frame.titlebar.CloseButton.Icon = frame.titlebar:CreateTexture("$parentIcon", "ARTWORK")
-    frame.titlebar.CloseButton.Icon:SetPoint("CENTER", frame.titlebar.CloseButton, "CENTER")
-    frame.titlebar.CloseButton.Icon:SetSize(10, 10)
-    frame.titlebar.CloseButton.Icon:SetTexture(Constants.media.IconClose)
-    frame.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    frame.titlebar.CloseButton:SetScript("OnEnter", function()
-      frame.titlebar.CloseButton.Icon:SetVertexColor(1, 1, 1, 1)
-      Utils:SetBackgroundColor(frame.titlebar.CloseButton, 1, 0, 0, 0.2)
+  if window.config.titlebar then
+    window.titlebar = CreateFrame("Frame", "$parentTitleBar", window)
+    window.titlebar:EnableMouse(true)
+    window.titlebar:RegisterForDrag("LeftButton")
+    window.titlebar:SetScript("OnDragStart", function() window:StartMoving() end)
+    window.titlebar:SetScript("OnDragStop", function() window:StopMovingOrSizing() end)
+    window.titlebar:SetPoint("TOPLEFT", window, "TOPLEFT")
+    window.titlebar:SetPoint("TOPRIGHT", window, "TOPRIGHT")
+    window.titlebar:SetHeight(TITLEBAR_HEIGHT)
+    Utils:SetBackgroundColor(window.titlebar, 0, 0, 0, 0.5)
+    window.titlebar.icon = window.titlebar:CreateTexture("$parentIcon", "ARTWORK")
+    window.titlebar.icon:SetPoint("LEFT", window.titlebar, "LEFT", 6, 0)
+    window.titlebar.icon:SetSize(20, 20)
+    window.titlebar.icon:SetTexture(Constants.media.LogoTransparent)
+    window.titlebar.title = window.titlebar:CreateFontString("$parentText", "OVERLAY")
+    window.titlebar.title:SetPoint("LEFT", window.titlebar, "LEFT", 20 + Constants.sizes.padding, 0)
+    window.titlebar.title:SetFontObject("SystemFont_Med3")
+    window.titlebar.title:SetText(window.config.title or window.config.name)
+    window.titlebar.CloseButton = CreateFrame("Button", "$parentCloseButton", window.titlebar)
+    window.titlebar.CloseButton:SetPoint("RIGHT", window.titlebar, "RIGHT", 0, 0)
+    window.titlebar.CloseButton:SetSize(TITLEBAR_HEIGHT, TITLEBAR_HEIGHT)
+    window.titlebar.CloseButton:RegisterForClicks("AnyUp")
+    window.titlebar.CloseButton:SetScript("OnClick", function() window:Hide() end)
+    window.titlebar.CloseButton.Icon = window.titlebar:CreateTexture("$parentIcon", "ARTWORK")
+    window.titlebar.CloseButton.Icon:SetPoint("CENTER", window.titlebar.CloseButton, "CENTER")
+    window.titlebar.CloseButton.Icon:SetSize(10, 10)
+    window.titlebar.CloseButton.Icon:SetTexture(Constants.media.IconClose)
+    window.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    window.titlebar.CloseButton:SetScript("OnEnter", function()
+      window.titlebar.CloseButton.Icon:SetVertexColor(1, 1, 1, 1)
+      Utils:SetBackgroundColor(window.titlebar.CloseButton, 1, 0, 0, 0.2)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
-      GameTooltip:SetOwner(frame.titlebar.CloseButton, "ANCHOR_TOP")
+      GameTooltip:SetOwner(window.titlebar.CloseButton, "ANCHOR_TOP")
       GameTooltip:SetText("Close the window", 1, 1, 1, 1, true);
       GameTooltip:Show()
     end)
-    frame.titlebar.CloseButton:SetScript("OnLeave", function()
-      frame.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      Utils:SetBackgroundColor(frame.titlebar.CloseButton, 1, 1, 1, 0)
+    window.titlebar.CloseButton:SetScript("OnLeave", function()
+      window.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+      Utils:SetBackgroundColor(window.titlebar.CloseButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
   end
@@ -131,36 +133,35 @@ function Window:New(options)
   local topOffset = 0
   local leftOffset = 0
 
-  if options.titlebar then
+  if window.config.titlebar then
     topOffset = -TITLEBAR_HEIGHT
   end
 
-  if options.sidebar then
+  if window.config.sidebar then
     leftOffset = SIDEBAR_WIDTH
   end
 
   -- Body
-  frame.body = CreateFrame("Frame", "$parentBody", frame)
-  frame.body:SetPoint("TOPLEFT", frame, "TOPLEFT", leftOffset, topOffset)
-  frame.body:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, topOffset)
-  frame.body:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", leftOffset, 0)
-  frame.body:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-  Utils:SetBackgroundColor(frame.body, 0, 0, 0, 0)
+  window.body = CreateFrame("Frame", "$parentBody", window)
+  window.body:SetPoint("TOPLEFT", window, "TOPLEFT", leftOffset, topOffset)
+  window.body:SetPoint("TOPRIGHT", window, "TOPRIGHT", 0, topOffset)
+  window.body:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT", leftOffset, 0)
+  window.body:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 0, 0)
+  Utils:SetBackgroundColor(window.body, 0, 0, 0, 0)
 
   -- Sidebar
-  if options.sidebar then
-    frame.sidebar = CreateFrame("Frame", "$parentSidebar", frame)
-    frame.sidebar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, topOffset)
-    frame.sidebar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
-    frame.sidebar:SetWidth(SIDEBAR_WIDTH)
-    Utils:SetBackgroundColor(frame.sidebar, 0, 0, 0, 0.3)
+  if window.config.sidebar then
+    window.sidebar = CreateFrame("Frame", "$parentSidebar", window)
+    window.sidebar:SetPoint("TOPLEFT", window, "TOPLEFT", 0, topOffset)
+    window.sidebar:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT")
+    window.sidebar:SetWidth(SIDEBAR_WIDTH)
+    Utils:SetBackgroundColor(window.sidebar, 0, 0, 0, 0.3)
   end
 
-  frame.options = options;
-  frame:Hide()
-  table.insert(UISpecialFrames, options.name)
-  WindowCollection[options.name] = frame
-  return frame
+  window:Hide()
+  table.insert(UISpecialFrames, window.config.name)
+  WindowCollection[window.config.name] = window
+  return window
 end
 
 ---Get a window by name
