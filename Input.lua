@@ -387,6 +387,21 @@ function Input:CreateColorPicker(options)
   input.value = input.config.value
   input:SetSize(input.config.size, input.config.size)
 
+  input.checkers = input:CreateTexture("$parentBackground")
+  input.checkers:SetAllPoints()
+  input.checkers:SetTexture(188523)
+  input.checkers:SetTexCoord(.25, 0, 0.5, .25)
+  input.checkers:SetDesaturated(true)
+
+  input.color = input:CreateTexture("$parentColor", "OVERLAY")
+  input.color:SetAllPoints()
+  input.color:SetTexture("Interface/BUTTONS/WHITE8X8")
+  input.color:SetVertexColor(input.value.r, input.value.g, input.value.b, input.value.a)
+  -- input.color:SetPoint("TOPLEFT", input, "TOPLEFT", 1, -1)
+  -- input.color:SetPoint("TOPRIGHT", input, "TOPRIGHT", -1, -1)
+  -- input.color:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", -1, 1)
+  -- input.color:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", 1, 1)
+
   input.border = CreateFrame("Frame", "Border", input)
   input.border:SetFrameStrata("LOW")
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
@@ -452,9 +467,11 @@ function Input:CreateColorPicker(options)
   end
 
   function input:Update()
+    Utils:SetBackgroundColor(input, 1, 1, 1, 1)
+
     local value = input:GetValue()
     if value then
-      Utils:SetBackgroundColor(input, value.r, value.g, value.b, value.a)
+      input.color:SetVertexColor(value.r, value.g, value.b, value.a)
     end
 
     if input.border then
