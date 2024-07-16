@@ -319,7 +319,7 @@ function Module:Render()
 
     do
       local widgets = {}
-      local scrollFrame = Window:CreateScrollFrame("$parentTabGeneral", self.window.body)
+      local scrollFrame = Utils:CreateScrollFrame("$parentTabGeneral", self.window.body)
       scrollFrame.content:SetSize(bodyWidth, 530)
       table.insert(widgets, CreateWidgetTitle({
         text = "General",

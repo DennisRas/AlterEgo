@@ -49,8 +49,8 @@ function Module:Render()
       title = "Equipment"
     })
     self.table = Table:New({rowHeight = 28})
-    self.table.frame:SetParent(self.window.body)
-    self.table.frame:SetAllPoints()
+    self.table:SetParent(self.window.body)
+    self.table:SetAllPoints()
   end
 
   if not self.character or not self.character.equipment then
@@ -78,7 +78,7 @@ function Module:Render()
     },
     rows = {
       {
-        cols = {
+        columns = {
           {
             text = "Slot",
             backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}

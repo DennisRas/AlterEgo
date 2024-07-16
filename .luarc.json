@@ -151,6 +151,7 @@
         "hooksecurefunc",
         "SendChatMessage",
         "strcmputf8i",
-        "LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE"
+        "LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE",
+        "MouseIsOver"
     ]
 }

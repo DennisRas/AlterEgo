@@ -173,7 +173,7 @@ function Input:CreateDropdown(options)
   input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 1, -1)
   input.border:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", -1, -1)
 
-  input.list = Window:CreateScrollFrame(input:GetName() .. "List", UIParent)
+  input.list = Utils:CreateScrollFrame(input:GetName() .. "List", UIParent)
   input.list:SetFrameStrata("FULLSCREEN_DIALOG")
   input.list:SetFrameLevel(200)
   input.list:ClearAllPoints()
