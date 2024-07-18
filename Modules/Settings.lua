@@ -19,6 +19,8 @@ function Module:OnEnable()
   self:Render()
 end
 
+---Set the active tab
+---@param index number
 function Module:SetTab(index)
   self.tabSelected = index
   Utils:TableForEach(self.tabs, function(tab, i)
@@ -37,13 +39,16 @@ function Module:SetTab(index)
   self:Render()
 end
 
+---Create a Checkbox Widget
+---@param options AE_WidgetOptionsCheckbox?
+---@return Frame
 local function CreateWidgetCheckbox(options)
-  local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
+  local widget = CreateFrame("Frame", "WidgetCheckbox")
   widget.config = Mixin(
     {
-      layout = "RIGHT",
       checked = false,
       onChange = false,
+      layout = "RIGHT",
       text = "",
       fontObject = "SystemFont_Med1",
       height = 20
@@ -62,23 +67,24 @@ local function CreateWidgetCheckbox(options)
   widget.text:SetText(widget.config.text)
 
   widget.input = Input:CreateCheckbox({
+    parent = widget,
     onChange = function(value)
       if widget.config.onChange then
         widget.config.onChange(value)
       end
     end
   })
-  widget.input:SetParent(widget)
+  -- widget.input:SetParent(widget)
 
-  widget:SetScript("OnEnter", function()
-    widget.input:onEnterHandler()
-  end)
-  widget:SetScript("OnLeave", function()
-    widget.input:onLeaveHandler()
-  end)
-  widget:SetScript("OnClick", function()
-    widget.input:onClickHandler()
-  end)
+  -- widget:SetScript("OnEnter", function()
+  --   widget.input:onEnterHandler()
+  -- end)
+  -- widget:SetScript("OnLeave", function()
+  --   widget.input:onLeaveHandler()
+  -- end)
+  -- widget:SetScript("OnClick", function()
+  --   widget.input:onClickHandler()
+  -- end)
 
   if widget.config.layout == "RIGHT" then
     widget.input:SetPoint("TOPRIGHT", widget, "TOPRIGHT", -5, 1)
@@ -94,16 +100,20 @@ local function CreateWidgetCheckbox(options)
   return widget
 end
 
+---Create a ColorPicker widget
+---@param options AE_WidgetOptionsColorPicker?
+---@diagnostic disable-next-line: undefined-doc-name
+---@return Button|InsecureActionButtonTemplate
 local function CreateWidgetColorPicker(options)
   local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
   widget.config = Mixin(
     {
+      value = CreateColor(0, 0, 0, 0),
+      onChange = function(value) end,
       layout = "RIGHT",
-      checked = false,
-      onChange = false,
       text = "",
       fontObject = "SystemFont_Med1",
-      height = 20
+      height = 20,
     },
     options or {}
   )
@@ -119,13 +129,14 @@ local function CreateWidgetColorPicker(options)
   widget.text:SetText(widget.config.text)
 
   widget.input = Input:CreateColorPicker({
+    parent = widget,
+    value = widget.config.value,
     onChange = function(value)
       if widget.config.onChange then
         widget.config.onChange(value)
       end
     end
   })
-  widget.input:SetParent(widget)
 
   widget:SetScript("OnEnter", function()
     widget.input:onEnterHandler()
@@ -151,6 +162,10 @@ local function CreateWidgetColorPicker(options)
   return widget
 end
 
+---Create a Dropdown widget
+---@param options AE_WidgetOptionsDropdown?
+---@diagnostic disable-next-line: undefined-doc-name
+---@return Button|InsecureActionButtonTemplate
 local function CreateWidgetDropdown(options)
   local widget = CreateFrame("Button", "Button", nil, "InsecureActionButtonTemplate")
   widget.config = Mixin(
@@ -178,6 +193,7 @@ local function CreateWidgetDropdown(options)
   widget.text:SetPoint("TOPRIGHT", widget, "TOPRIGHT", 0, 0)
 
   widget.input = Input:CreateDropdown({
+    parent = widget,
     placeholder = "You know what...",
     value = widget.config.value,
     items = widget.config.items,
@@ -187,7 +203,6 @@ local function CreateWidgetDropdown(options)
       end
     end
   })
-  widget.input:SetParent(widget)
   widget.input:SetPoint("TOPLEFT", widget.text, "BOTTOMLEFT", 5, -10)
   widget.input:SetPoint("TOPRIGHT", widget.text, "BOTTOMRIGHT", -5, -10)
 
@@ -204,6 +219,9 @@ local function CreateWidgetDropdown(options)
   return widget
 end
 
+---Create a title widget
+---@param options AE_WidgetOptionsTitle?
+---@return Frame
 local function CreateWidgetTitle(options)
   local widget = CreateFrame("Frame", "Title")
   widget.config = Mixin(
@@ -236,6 +254,9 @@ local function CreateWidgetTitle(options)
   return widget
 end
 
+---Create a Paragraph widget
+---@param options AE_WidgetOptionsParagraph?
+---@return Frame
 local function CreateWidgetParagraph(options)
   local widget = CreateFrame("Frame", "Paragraph")
   widget.config = Mixin(
@@ -260,19 +281,23 @@ local function CreateWidgetParagraph(options)
   return widget
 end
 
+---Create a Line widget
+---@param options AE_WidgetOptionsLine?
+---@return Frame
 local function CreateWidgetLine(options)
   local widget = CreateFrame("Frame", "Line")
   widget.config = Mixin(
     {
-      height = 15
+      height = 1,
+      padding = 10,
     }, options or {}
   )
-  widget:SetHeight(widget.config.height)
+  widget:SetHeight(widget.config.padding * 2)
 
   widget.line = CreateFrame("Frame", nil, widget)
   widget.line:SetPoint("LEFT", widget, "LEFT")
   widget.line:SetPoint("RIGHT", widget, "RIGHT")
-  widget.line:SetHeight(1)
+  widget.line:SetHeight(widget.config.height)
   Utils:SetBackgroundColor(widget.line, 1, 1, 1, 0.3)
 
   return widget
@@ -281,14 +306,13 @@ end
 local function CreateWidgetLayout(options)
   local container = CreateFrame("Frame", "WidgetContainer")
   container.config = Mixin(
-    {
-      widgets = {},
-    }, options or {}
+    {}, options or {}
   )
+  container.widgets = {}
 
-  function container:Refresh()
+  function container:Update()
     local height = 0
-    Utils:TableForEach(container.config.widgets, function(widget, i)
+    Utils:TableForEach(container.widgets, function(widget, i)
       widget:SetParent(container)
       widget:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -height)
       widget:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, -height)
@@ -301,7 +325,16 @@ local function CreateWidgetLayout(options)
     container:SetHeight(height)
   end
 
-  container:Refresh()
+  -- C_Timer.After(0, function()
+  --   widgetLayout:Update()
+  --   scrollFrame.content:SetHeight(widgetLayout:GetHeight() + 15)
+  -- end)
+
+  function container:AddWidget(widget)
+    table.insert(container.widgets, widget)
+    container:Update()
+  end
+
   return container
 end
 
@@ -318,75 +351,63 @@ function Module:Render()
     self.tabSelected = 1
 
     do
-      local widgets = {}
       local scrollFrame = Utils:CreateScrollFrame("$parentTabGeneral", self.window.body)
-      scrollFrame.content:SetSize(bodyWidth, 530)
-      table.insert(widgets, CreateWidgetTitle({
+      scrollFrame.content:SetSize(scrollFrame:GetSize())
+      scrollFrame.content.widgetLayout = CreateWidgetLayout()
+      scrollFrame.content.widgetLayout:SetParent(scrollFrame.content)
+      scrollFrame.content.widgetLayout:SetPoint("TOPLEFT", scrollFrame.content, "TOPLEFT", 15, -15)
+      scrollFrame.content.widgetLayout:SetPoint("TOPRIGHT", scrollFrame.content, "TOPRIGHT", -15, -15)
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetTitle({
         text = "General",
       }))
-      -- table.insert(widgets, CreateWidgetParagraph({
-      --   text = "Take a look around. Maybe you'll find a feature or customization you would like to have :-)"
-      -- }))
-      table.insert(widgets, CreateWidgetTitle({
-        height = 15,
-        fontObject = "SystemFont_Med2",
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetTitle({
         text = "Show Weekly AFfixes",
+        fontObject = "SystemFont_Med2",
+        height = 15,
       }))
-      table.insert(widgets, CreateWidgetCheckbox({
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetCheckbox({
+        text = "The weekly affixes will be shown at the top of the main window.",
         checked = Data.db.global.showAffixHeader,
         onChange = function(checked)
           Data.db.global.showAffixHeader = checked
           Module:SendMessage("AE_SETTINGS_UPDATED")
         end,
-        text = "The weekly affixes will be shown at the top of the main window."
       }))
-      table.insert(widgets, CreateWidgetColorPicker({
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetColorPicker({
+        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec",
         height = 35,
         onChange = function(checked)
           Module:SendMessage("AE_SETTINGS_UPDATED")
         end,
-        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec"
       }))
-      table.insert(widgets, CreateWidgetCheckbox({
-        height = 35,
-        checked = false,
-        onChange = function(checked)
-          Module:SendMessage("AE_SETTINGS_UPDATED")
-        end,
-        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec"
-      }))
-      local options = {}
+      local items = {}
       for i = 1, 20 do
-        table.insert(options, {
+        table.insert(items, {
           value = i,
           text = "Option " .. i,
           icon = i > 2 and i < 10 and 626000 + (i - 5) or nil
         })
       end
-      table.insert(widgets, CreateWidgetDropdown({
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetDropdown({
         text = "Hello there!",
-        value = 2,
-        items = options
+        items = items,
+        onChange = function(value)
+          Module:SendMessage("AE_SETTINGS_UPDATED")
+        end
       }))
-      table.insert(widgets, CreateWidgetLine())
-      table.insert(widgets, CreateWidgetParagraph({
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetLine())
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetParagraph({
+        text = "Maecenas non scelerisque felis. In quam diam, pretium molestie tristique sed, molestie at ex. Maecenas tempus, enim eu finibus tincidunt, ex purus varius nulla, a ornare risus enim in augue. Maecenas blandit, odio vitae tempus gravida, nunc enim venenatis lacus, non luctus lorem turpis blandit diam. Aliquam erat volutpat. Sed porta sodales luctus. Suspendisse hendrerit pharetra urna nec convallis.",
         height = 115,
-        text = "Maecenas non scelerisque felis. In quam diam, pretium molestie tristique sed, molestie at ex. Maecenas tempus, enim eu finibus tincidunt, ex purus varius nulla, a ornare risus enim in augue. Maecenas blandit, odio vitae tempus gravida, nunc enim venenatis lacus, non luctus lorem turpis blandit diam. Aliquam erat volutpat. Sed porta sodales luctus. Suspendisse hendrerit pharetra urna nec convallis."
       }))
-      table.insert(widgets, CreateWidgetParagraph({
+      scrollFrame.content.widgetLayout:AddWidget(CreateWidgetParagraph({
+        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec, facilisis ut tortor. Morbi eget hendrerit lorem, non luctus tellus. Nullam dictum auctor ultricies. Sed sit amet augue dapibus, eleifend massa ac, aliquet tellus. Nullam et volutpat purus, in pellentesque urna. Cras at nibh fringilla, efficitur lacus ut, finibus nunc. Maecenas facilisis volutpat ligula ut vestibulum. Fusce eu urna gravida, elementum neque at, luctus diam. Maecenas et pulvinar ipsum. Sed vitae velit elit. Nulla rutrum condimentum est. Duis vitae purus eget elit suscipit posuere. Curabitur quis urna diam. Proin dapibus sapien ipsum, vitae rutrum ligula bibendum sit amet.",
         height = 150,
-        text = "Sed cursus justo sit amet ante pulvinar volutpat. Nullam mauris purus, varius ut facilisis nec, facilisis ut tortor. Morbi eget hendrerit lorem, non luctus tellus. Nullam dictum auctor ultricies. Sed sit amet augue dapibus, eleifend massa ac, aliquet tellus. Nullam et volutpat purus, in pellentesque urna. Cras at nibh fringilla, efficitur lacus ut, finibus nunc. Maecenas facilisis volutpat ligula ut vestibulum. Fusce eu urna gravida, elementum neque at, luctus diam. Maecenas et pulvinar ipsum. Sed vitae velit elit. Nulla rutrum condimentum est. Duis vitae purus eget elit suscipit posuere. Curabitur quis urna diam. Proin dapibus sapien ipsum, vitae rutrum ligula bibendum sit amet."
       }))
 
-      local widgetLayout = CreateWidgetLayout({widgets = widgets})
-      widgetLayout:SetParent(scrollFrame.content)
-      widgetLayout:SetPoint("TOPLEFT", scrollFrame.content, "TOPLEFT", 15, -15)
-      widgetLayout:SetPoint("TOPRIGHT", scrollFrame.content, "TOPRIGHT", -15, -15)
-      C_Timer.After(0, function()
-        widgetLayout:Refresh()
-        scrollFrame.content:SetHeight(widgetLayout:GetHeight() + 15)
+      scrollFrame.content.widgetLayout:SetScript("OnSizeChanged", function()
+        scrollFrame.content:SetHeight(scrollFrame.content.widgetLayout:GetHeight() + 15)
       end)
-
       table.insert(self.tabs, {
         text = "General",
         frame = scrollFrame

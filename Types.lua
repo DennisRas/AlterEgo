@@ -157,3 +157,79 @@
 ---@field bossName string
 ---@field fileDataID number|nil
 ---@field isKilled boolean
+
+---@class AE_WidgetOptionsParagraph
+---@field text string?
+---@field fontObject string?
+---@field height number?
+
+---@class AE_WidgetOptionsLine
+---@field height number?
+---@field padding number?
+
+---@class AE_WidgetOptionsTitle
+---@field text string?
+---@field fontObject string?
+---@field height number?
+---@field underline boolean?
+
+---@class AE_WidgetOptionsDropdown
+---@field items table
+---@field value string?
+---@field onChange function?
+---@field text string?
+---@field fontObject string?
+---@field height number?
+
+---@class AE_WidgetOptionsColorPicker
+---@field value ColorMixin?
+---@field onChange function?
+---@field layout string?
+---@field text string?
+---@field fontObject string?
+---@field height number?
+
+---@class AE_WidgetOptionsCheckbox
+---@field checked boolean?
+---@field onChange function?
+---@field layout string?
+---@field text string?
+---@field fontObject string?
+---@field height number?
+
+---@class AE_InputOptionsCheckbox
+---@field parent any?
+---@field checked boolean?
+---@field onEnter function?
+---@field onLeave function?
+---@field onClick function?
+---@field onChange function?
+---@field size number?
+---@field sizeIcon number?
+
+---@class AE_InputOptionsDropdownItem
+---@field value string
+---@field text string?
+---@field icon string|number?
+
+---@class AE_InputOptionsDropdown
+---@field parent any?
+---@field onEnter function?
+---@field onLeave function?
+---@field onClick function?
+---@field onChange function?
+---@field items AE_InputOptionsDropdownItem[]
+---@field value string?
+---@field placeholder string?
+---@field maxHeight number?
+---@field size number?
+---@field sizeIcon number?
+
+---@class AE_InputOptionsColorPicker
+---@field parent any?
+---@field onEnter function?
+---@field onLeave function?
+---@field onClick function?
+---@field onChange function?
+---@field value ColorMixin?
+---@field size number?

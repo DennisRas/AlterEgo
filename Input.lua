@@ -13,10 +13,14 @@ local DROPDOWN_ITEM_HEIGHT = 20
 local Input = {}
 addon.Input = Input
 
+---Create a checkbox
+---@param options AE_InputOptionsCheckbox
+---@return Button
 function Input:CreateCheckbox(options)
-  local input = CreateFrame("Button", "Input")
+  local input = CreateFrame("Button", options.parent and "$parentInput" or "Input", options.parent or UIParent)
   input.config = CreateFromMixins(
     {
+      pareent = UIParent,
       checked = false,
       onEnter = false,
       onLeave = false,
@@ -120,25 +124,21 @@ function Input:CreateCheckbox(options)
   return input
 end
 
+---Create a Dropdown
+---@param options AE_InputOptionsDropdown
+---@return Frame
 function Input:CreateDropdown(options)
-  local input = CreateFrame("Frame", "Input")
+  local input = CreateFrame("Frame", options.parent and "$parentInputDropdown" or "InputDropdown", options.parent or UIParent)
   input.config = CreateFromMixins(
     {
-      checked = false,
-      onEnter = false,
-      onLeave = false,
-      onClick = false,
-      onChange = false,
-      size = 200,
-      sizeIcon = 11,
-      items = {
-        -- {value = "", text = "", icon = ""}
-      },
+      parent = UIParent,
+      items = {}, -- {value = "", text = "", icon = ""}
       value = "",
       maxHeight = 200,
+      size = 200,
+      sizeIcon = 11,
       placeholder = "Select option"
-    }, options or {}
-  )
+    }, options or {})
   input.hover = false
   input.items = {}
   input.value = input.config.value
@@ -372,16 +372,16 @@ function Input:CreateDropdown(options)
   return input
 end
 
+---Create a Color Picker
+---@param options AE_InputOptionsColorPicker
+---@return Button
 function Input:CreateColorPicker(options)
-  local input = CreateFrame("Button", "Input")
+  local input = CreateFrame("Button", options.parent and "$parentInputColorPicker" or "InputColorPicker", options.parent or UIParent)
   input.config = CreateFromMixins(
     {
-      onEnter = false,
-      onLeave = false,
-      onClick = false,
-      onChange = false,
+      parent = UIParent,
+      value = Constants.colors.primary,
       size = 16,
-      value = Constants.colors.primary
     }, options or {}
   )
   input.value = input.config.value
