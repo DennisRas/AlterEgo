@@ -44,6 +44,7 @@ function Module:Render()
     self.table.frame:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
   end
 
+  ---@type AE_TableData
   local data = {columns = {}, rows = {}}
   local firstRow = {cols = {}}
 
@@ -54,24 +55,32 @@ function Module:Render()
     end)
     table.insert(data.rows, firstRow)
     Utils:TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
-      local row = {cols = {}}
+      ---@type AE_TableDataRow
+      local row = {columns = {}}
       local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
       Utils:TableForEach(affixValues, function(affixValue)
         if type(affixValue) == "number" then
           local affix = Utils:TableGet(affixes, "id", affixValue)
           if affix then
             local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
-            table.insert(row.cols, {
+            table.insert(row.columns, {
               text = "|T" .. affix.fileDataID .. ":0|t " .. name,
               backgroundColor = backgroundColor or nil,
-              OnEnter = function()
-                GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true);
-                GameTooltip:AddLine(affix.description, nil, nil, nil, true);
+              onEnter = function(columnFrame)
+                GameTooltip:ClearAllPoints()
+                GameTooltip:ClearLines()
+                GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+                GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)
+                GameTooltip:AddLine(affix.description, nil, nil, nil, true)
+                GameTooltip:Show()
+              end,
+              onLeave = function()
+                GameTooltip:Hide()
               end,
             })
           end
         else
-          table.insert(row.cols, {
+          table.insert(row.columns, {
             text = affixValue,
             backgroundColor = backgroundColor or nil,
           })
@@ -81,7 +90,7 @@ function Module:Render()
     end)
   else
     table.insert(data.columns, {width = 500})
-    table.insert(data.rows, {cols = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
+    table.insert(data.rows, {columns = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
   end
 
   self.table:SetData(data)

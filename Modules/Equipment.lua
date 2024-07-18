@@ -60,6 +60,7 @@ function Module:Render()
   end
 
   local nameColor = WHITE_FONT_COLOR
+  ---@type AE_TableData
   local data = {
     columns = {
       {
@@ -108,19 +109,27 @@ function Module:Render()
         upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
       end
     end
+    ---@type AE_TableDataRow
     local row = {
-      cols = {
+      columns = {
         {
           text = _G[item.itemSlotName]
         },
         {
           text = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
-          OnEnter = function()
+          onEnter = function(columnFrame)
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
             GameTooltip:SetHyperlink(item.itemLink)
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine("<Shift Click to link to chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
           end,
-          OnClick = function()
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+          onClick = function()
             if IsModifiedClick("CHATLINK") then
               if not ChatEdit_InsertLink(item.itemLink) then
                 ChatFrame_OpenChat(item.itemLink);

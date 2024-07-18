@@ -207,11 +207,6 @@
 ---@field size number?
 ---@field sizeIcon number?
 
----@class AE_InputOptionsDropdownItem
----@field value string
----@field text string?
----@field icon string|number?
-
 ---@class AE_InputOptionsDropdown
 ---@field parent any?
 ---@field onEnter function?
@@ -225,6 +220,11 @@
 ---@field size number?
 ---@field sizeIcon number?
 
+---@class AE_InputOptionsDropdownItem
+---@field value string
+---@field text string?
+---@field icon string|number?
+
 ---@class AE_InputOptionsColorPicker
 ---@field parent any?
 ---@field onEnter function?
@@ -233,3 +233,21 @@
 ---@field onChange function?
 ---@field value ColorMixin?
 ---@field size number?
+
+---@class AE_TableData
+---@field columns AE_TableDataColumn[]?
+---@field rows AE_TableDataRow[]
+
+---@class AE_TableDataColumn
+---@field width number
+---@field align string?
+
+---@class AE_TableDataRow
+---@field columns AE_TableDataRowColumn[]
+
+---@class AE_TableDataRowColumn
+---@field text string?
+---@field backgroundColor table?
+---@field onEnter function?
+---@field onLeave function?
+---@field onClick function?

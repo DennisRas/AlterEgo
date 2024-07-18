@@ -49,23 +49,7 @@ function Table:New(config)
       --   rowHeight = 22,
       --   cellPadding = 8,
       -- },
-      data = {
-        -- columns = {
-        --   -- {
-        --   --   width = number,
-        --   --   align = string,
-        --   -- }
-        -- },
-        -- rows = {
-        --   -- {
-        --   --   cols = {
-        --   --     {
-        --   --       text = string
-        --   --     }
-        --   --   }
-        --   -- }
-        -- },
-      },
+      data = {},
     },
     config or {}
   )
@@ -74,6 +58,8 @@ function Table:New(config)
   frame.rows = {}
   frame.data = frame.config.data
 
+  ---Set the table data
+  ---@param data AE_TableData
   function frame:SetData(data)
     frame.data = data
     frame:Update()
@@ -94,12 +80,11 @@ function Table:New(config)
   -- end
 
   function frame:Update()
-    frame:SetSize(frame.config.width, frame.config.height)
-
-    local rows = frame.data.rows
-    -- local rowFrames = frame.rowFrames
     local offsetY = 0
     local offsetX = 0
+
+    frame:SetSize(frame.config.width, frame.config.height)
+
     Utils:TableForeach(frame.rows, function(rowFrame) rowFrame:Hide() end)
     Utils:TableForEach(frame.data.rows, function(row, rowIndex)
       -- for rowIndex = 1, #rows do
@@ -123,14 +108,14 @@ function Table:New(config)
         Utils:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
       end
 
-      function rowFrame:OnEnterHandler(...)
+      function rowFrame:onEnterHandler(...)
         Utils:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
         if row.OnEnter then
           row:OnEnter(...)
         end
       end
 
-      function rowFrame:OnLeaveHandler(...)
+      function rowFrame:onLeaveHandler(...)
         -- TODO: Fix stripe
         Utils:SetBackgroundColor(rowFrame, 1, 1, 1, 0)
         if row.OnLeave then
@@ -138,7 +123,7 @@ function Table:New(config)
         end
       end
 
-      function rowFrame:OnClickHandler(...)
+      function rowFrame:onClickHandler(...)
         if row.OnClick then
           row:OnClick(...)
         end
@@ -194,33 +179,28 @@ function Table:New(config)
         -- else
         -- end
 
-        function columnFrame:OnEnterHandler(...)
-          rowFrame:OnEnterHandler(...)
-          if column.OnEnter then
-            -- TODO: move tooltip stuff to the callback source
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
-            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
-            column.OnEnter(...)
-            GameTooltip:Show()
+        function columnFrame:onEnterHandler(...)
+          rowFrame:onEnterHandler(...)
+          if column.onEnter then
+            column.onEnter(...)
           end
         end
 
-        function columnFrame:OnLeaveHandler(...)
-          rowFrame:OnLeaveHandler(...)
-          if column.OnLeave then
-            column.OnLeave(...)
+        function columnFrame:onLeaveHandler(...)
+          rowFrame:onLeaveHandler(...)
+          if column.onLeave then
+            column.onLeave(...)
           end
           -- TODO: move tooltip stuff to the callback source
-          if column.OnEnter then
+          if column.onEnter then
             GameTooltip:Hide()
           end
         end
 
-        function columnFrame:OnClickHandler(...)
-          rowFrame:OnClick(...)
-          if column.OnClick then
-            column:OnClick(...)
+        function columnFrame:onClickHandler(...)
+          rowFrame:onClickHandler(...)
+          if column.onClick then
+            column:onClick(...)
           end
         end
 
@@ -265,9 +245,9 @@ function Table:New(config)
         -- columnFrame:SetSize(self.data.columns[columnIndex].width, self.config.rowHeight)
         -- end
 
-        columnFrame:SetScript("OnEnter", columnFrame.OnEnterHandler)
-        columnFrame:SetScript("OnLeave", columnFrame.OnLeaveHandler)
-        columnFrame:SetScript("OnClick", columnFrame.OnClickHandler)
+        columnFrame:SetScript("OnEnter", columnFrame.onEnterHandler)
+        columnFrame:SetScript("OnLeave", columnFrame.onLeaveHandler)
+        columnFrame:SetScript("OnClick", columnFrame.onClickHandler)
         offsetX = offsetX + columnWidth
       end)
 
@@ -279,9 +259,9 @@ function Table:New(config)
       -- end
       -- end
 
-      rowFrame:SetScript("OnEnter", rowFrame.OnEnterHandler)
-      rowFrame:SetScript("OnLeave", rowFrame.OnLeaveHandler)
-      rowFrame:SetScript("OnClick", rowFrame.OnClickHandler)
+      rowFrame:SetScript("OnEnter", rowFrame.onEnterHandler)
+      rowFrame:SetScript("OnLeave", rowFrame.onLeaveHandler)
+      rowFrame:SetScript("OnClick", rowFrame.onClickHandler)
       offsetY = offsetY + frame.config.rows.height
     end)
 
