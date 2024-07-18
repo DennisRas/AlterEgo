@@ -49,8 +49,11 @@ function Window:New(options)
   Utils:SetBackgroundColor(window, window.config.windowColor.r, window.config.windowColor.g, window.config.windowColor.b, window.config.windowColor.a)
 
   ---Show or hide the window
-  function window:Toggle()
-    window:SetShown(not window:IsVisible())
+  function window:Toggle(state)
+    if state == nil then
+      state = not window:IsVisible()
+    end
+    window:SetShown(state)
   end
 
   ---Set the title of the window
