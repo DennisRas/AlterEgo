@@ -251,3 +251,13 @@
 ---@field onEnter function?
 ---@field onLeave function?
 ---@field onClick function?
+
+---@class AE_WindowOptions
+---@field parent any?
+---@field name string?
+---@field title string?
+---@field sidebar boolean?
+---@field titlebar boolean?
+---@field border number?
+---@field windowScale number?
+---@field windowColor table?

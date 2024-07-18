@@ -18,16 +18,16 @@ addon.Window = Window
 
 
 ---Create a window frame
----@param options table?
+---@param options AE_WindowOptions
 ---@return AE_Window
 function Window:New(options)
   ---@class AE_Window : Frame
-  local window = CreateFrame("Frame", "AlterEgo" .. (options and options.name or ""))
+  local window = CreateFrame("Frame", addonName .. "Window" .. (options and options.name or ""), options.parent or UIParent)
   window.config = CreateFromMixins(
     {
+      parent = UIParent,
       name = "",
       title = "",
-      parent = UIParent,
       border = Constants.sizes.border,
       sidebar = false,
       titlebar = true,
@@ -49,6 +49,7 @@ function Window:New(options)
   Utils:SetBackgroundColor(window, window.config.windowColor.r, window.config.windowColor.g, window.config.windowColor.b, window.config.windowColor.a)
 
   ---Show or hide the window
+  ---@param state boolean?
   function window:Toggle(state)
     if state == nil then
       state = not window:IsVisible()

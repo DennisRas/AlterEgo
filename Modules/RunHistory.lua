@@ -19,10 +19,6 @@ function Module:OnDisable()
   self:Render()
 end
 
-function Module:Open()
-  self.winddow:Show()
-end
-
 function Module:Render()
   if not self.window then
     self.window = Window:New({
