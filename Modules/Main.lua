@@ -299,6 +299,7 @@ function Module:Render()
           dungeonFrame:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
+            ---@diagnostic disable-next-line: param-type-mismatch
             GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText(dungeon.name, 1, 1, 1);
             if dungeon.spellID then
