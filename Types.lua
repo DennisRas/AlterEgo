@@ -1,5 +1,5 @@
 ---@class AE_Character
----@field GUID string
+---@field GUID WOWGUID
 ---@field lastUpdate number
 ---@field raids { savedInstances: AE_SavedInstance[] }
 ---@field equipment AE_Equipment[]
@@ -23,7 +23,39 @@
 ---@field pvp { enabled: boolean }
 ---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table, boxes: boolean, modifiedInstanceOnly: boolean }
 ---@field interface { windowScale: number, windowColor: {r: number, g: number, b: number, a: number} }
----@field useRIOScoreColor boolean,
+---@field useRIOScoreColor boolean
+---@field runHistory AE_GlobalRunHistory
+
+---@class AE_GlobalRunHistory
+---@field enabled boolean
+---@field runs AE_GlobalRunHistoryRun[]
+
+---@class AE_GlobalRunHistoryRun
+---@field callengeModeID number
+---@field startTimestamp number
+---@field affixes number[]
+---@field members AE_GlobalRunHistoryRunMember[]
+---@field challengeModeTime number
+---@field onTime boolean
+---@field practiceRun boolean
+---@field oldOverallDungeonScore number?
+---@field newOverallDungeonScore number
+---@field IsMapRecord boolean
+---@field IsAffixRecord boolean
+---@field PrimaryAffix number
+---@field isEligibleForScore boolean
+---@field numDeaths number
+---@field timeLost number
+
+---@class AE_GlobalRunHistoryRunMember
+---@field GUID WOWGUID
+---@field role "TANK" | "HEAL" | "DAMAGE"
+---@field name string
+---@field server string
+---@field class string
+---@field spec string
+---@field score string
+---@field ilvl number
 
 ---@class AE_Equipment
 ---@field itemName string

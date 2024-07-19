@@ -97,7 +97,7 @@ end
 ---Map each item in a table
 ---@generic T
 ---@param tbl T[]
----@param callback fun(value: T, index: number)
+---@param callback fun(value: T, index: number): any
 ---@return T[]
 function Utils:TableMap(tbl, callback)
   local t = {}

@@ -29,7 +29,7 @@ function Table:New(config)
       columns = {
         width = 100,
         highlight = false,
-        striped = true
+        striped = false
       },
       cells = {
         padding = 8,
@@ -54,7 +54,7 @@ function Table:New(config)
     config or {}
   )
   -- frame.body = Utils:CreateScrollFrame("$parentBody", frame)
-  frame:SetAllPoints()
+  -- frame:SetAllPoints()
   frame.rows = {}
   frame.data = frame.config.data
 

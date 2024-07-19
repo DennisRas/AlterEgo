@@ -5,7 +5,7 @@ local addon = select(2, ...)
 
 local Utils = addon.Utils
 
-local dbVersion = 17
+local dbVersion = 18
 
 ---@class AE_Data
 local Data = {}
@@ -169,6 +169,17 @@ Data.defaultDatabase = {
       -- fontSize = 12,
       windowScale = 100,
       windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+    },
+    runHistory = {
+      enabled = true,
+      runs = {},
+    },
+    dungeonTimer = {
+      enabled = true,
+      currentRun = nil
+    },
+    keyManager = {
+      enabled = true,
     },
     useRIOScoreColor = false,
   }
