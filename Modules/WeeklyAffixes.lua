@@ -40,8 +40,8 @@ function Module:Render()
       title = "Weekly Affixes"
     })
     self.table = Table:New({rowHeight = 28})
-    self.table.frame:SetParent(self.window.body)
-    self.table.frame:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
+    self.table:SetParent(self.window.body)
+    self.table:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
   end
 
   ---@type AE_TableData
