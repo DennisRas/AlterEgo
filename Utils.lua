@@ -114,6 +114,9 @@ end
 ---@param callback fun(value: T, index: number)
 ---@return T[]
 function Utils:TableForEach(tbl, callback)
+  if not tbl then
+    DevTools_Dump(type(tbl))
+  end
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
   end

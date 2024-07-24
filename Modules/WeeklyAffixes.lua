@@ -46,24 +46,32 @@ function Module:Render()
 
   ---@type AE_TableData
   local data = {columns = {}, rows = {}}
-  local firstRow = {cols = {}}
+  ---@type AE_TableDataRow
+  local firstRow = {columns = {}}
 
   if affixRotation then
     Utils:TableForEach(affixRotation.activation, function(activationLevel)
-      table.insert(data.columns, {width = 140})
-      table.insert(firstRow.cols, {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}})
+      ---@type AE_TableDataColumn
+      local column = {width = 140}
+      ---@type AE_TableDataRowColumn
+      local columnData = {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}}
+
+      table.insert(data.columns, column)
+      table.insert(firstRow.columns, columnData)
     end)
     table.insert(data.rows, firstRow)
     Utils:TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
       ---@type AE_TableDataRow
       local row = {columns = {}}
       local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
+
       Utils:TableForEach(affixValues, function(affixValue)
         if type(affixValue) == "number" then
           local affix = Utils:TableGet(affixes, "id", affixValue)
           if affix then
             local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
-            table.insert(row.columns, {
+            ---@type AE_TableDataRowColumn
+            local columnData = {
               text = "|T" .. affix.fileDataID .. ":0|t " .. name,
               backgroundColor = backgroundColor or nil,
               onEnter = function(columnFrame)
@@ -77,20 +85,28 @@ function Module:Render()
               onLeave = function()
                 GameTooltip:Hide()
               end,
-            })
+            }
+            table.insert(row.columns, columnData)
           end
         else
-          table.insert(row.columns, {
+          ---@type AE_TableDataRowColumn
+          local columnData = {
             text = affixValue,
             backgroundColor = backgroundColor or nil,
-          })
+          }
+          table.insert(row.columns, columnData)
         end
       end)
       table.insert(data.rows, row)
     end)
   else
-    table.insert(data.columns, {width = 500})
-    table.insert(data.rows, {columns = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
+    ---@type AE_TableDataColumn
+    local column = {width = 500}
+    ---@type AE_TableDataRow
+    local row = {columns = {{text = "The weekly schedule is not updated. Check back next addon update!"}}}
+
+    table.insert(data.columns, column)
+    table.insert(data.rows, row)
   end
 
   self.table:SetData(data)

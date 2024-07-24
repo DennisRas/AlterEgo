@@ -83,15 +83,16 @@ function Table:New(config)
     local offsetY = 0
     local offsetX = 0
 
+
     frame:SetSize(frame.config.width, frame.config.height)
 
-    Utils:TableForeach(frame.rows, function(rowFrame) rowFrame:Hide() end)
+    Utils:TableForEach(frame.rows, function(rowFrame) rowFrame:Hide() end)
     Utils:TableForEach(frame.data.rows, function(row, rowIndex)
       -- for rowIndex = 1, #rows do
       -- local row = rows[rowIndex]
       -- local columns = rowData.cols
       local rowFrame = frame.rows[rowIndex]
-      local rowAnchor = frame.config.headers.sticky and rowIndex == 1 and frame or frame.content
+      local rowAnchor = frame.config.header.sticky and rowIndex == 1 and frame or frame.content
 
       if not rowFrame then
         rowFrame = CreateFrame("Button", "$parentRow" .. rowIndex, frame)
@@ -147,7 +148,7 @@ function Table:New(config)
       -- end
 
       offsetX = 0
-      Utils:TableForeach(rowFrame.columns, function(columnFrame) columnFrame:Hide() end)
+      Utils:TableForEach(rowFrame.columns, function(columnFrame) columnFrame:Hide() end)
       Utils:TableForEach(row.columns, function(column, columnIndex)
         -- for colIndex = 1, #columns do
         -- local dataColumn = columns[columnIndex]
@@ -161,7 +162,7 @@ function Table:New(config)
           columnFrame.text = columnFrame:CreateFontString("$parentText", "OVERLAY")
           columnFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           -- colFrame.Text:SetAllPoints()
-          rowFrame.colFrames[columnIndex] = columnFrame
+          rowFrame.columns[columnIndex] = columnFrame
         end
 
         columnFrame.data = column
