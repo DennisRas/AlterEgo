@@ -43,12 +43,16 @@ function Module:Open(character)
 end
 
 function Module:Render()
+  local tableWidth = 610
+  local tableHeight = 0
+  local rowHeight = 26
+
   if not self.window then
     self.window = Window:New({
       name = "Equipment",
       title = "Equipment"
     })
-    self.table = Table:New({rowHeight = 28})
+    self.table = Table:New({rows = {height = rowHeight}})
     self.table:SetParent(self.window.body)
     self.table:SetAllPoints()
   end
@@ -59,47 +63,42 @@ function Module:Render()
     return
   end
 
-  local nameColor = WHITE_FONT_COLOR
   ---@type AE_TableData
   local data = {
     columns = {
-      {
-        width = 100
-      },
-      {
-        width = 280
-      },
-      {
-        width = 80,
-        align = "CENTER"
-      },
-      {
-        width = 150
-      },
+      {width = 100},
+      {width = 280},
+      {width = 80, align = "CENTER"},
+      {width = 150},
     },
-    rows = {
-      {
-        columns = {
-          {
-            text = "Slot",
-            backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
-          },
-          {
-            text = "Item",
-            backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
-          },
-          {
-            text = "iLevel",
-            backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
-          },
-          {
-            text = "Upgrade Level",
-            backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
-          },
-        }
+    rows = {}
+  }
+
+  do -- Header row
+    ---@type AE_TableDataRow
+    local row = {
+      columns = {
+        {
+          text = "Slot",
+          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
+        },
+        {
+          text = "Item",
+          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
+        },
+        {
+          text = "iLevel",
+          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
+        },
+        {
+          text = "Upgrade Level",
+          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}
+        },
       }
     }
-  }
+    table.insert(data.rows, row)
+    tableHeight = tableHeight + rowHeight
+  end
 
   Utils:TableForEach(self.character.equipment, function(item)
     local upgradeLevel = ""
@@ -146,12 +145,14 @@ function Module:Render()
       }
     }
     table.insert(data.rows, row)
+    tableHeight = tableHeight + rowHeight
   end)
   self.table:SetData(data)
 
-  local w, h = self.table:GetSize()
-  self.window:SetSize(w, h + Constants.sizes.titlebar.height)
+  -- local w, h = self.table:GetSize()
+  -- self.window:SetSize(w, h + Constants.sizes.titlebar.height)
 
+  local nameColor = WHITE_FONT_COLOR
   if self.character.info.class.file ~= nil then
     local classColor = C_ClassColor.GetClassColor(self.character.info.class.file)
     if classColor ~= nil then
@@ -160,5 +161,6 @@ function Module:Render()
   end
 
   self.window:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(self.character.info.name), self.character.info.realm))
+  self.window:SetBodySize(tableWidth, tableHeight)
   self.window:Show()
 end

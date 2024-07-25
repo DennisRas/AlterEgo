@@ -34,32 +34,42 @@ function Module:Render()
   local currentAffixes = Data:GetCurrentAffixes()
   local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
 
+  local tableWidth = 0
+  local tableHeight = 0
+  local columnWidth = 140
+  local rowHeight = 28
+
   if not self.window then
     self.window = Window:New({
       name = "Affixes",
       title = "Weekly Affixes"
     })
-    self.table = Table:New({rowHeight = 28})
+    self.table = Table:New({rows = {height = rowHeight}})
     self.table:SetParent(self.window.body)
-    self.table:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
+    self.table:SetAllPoints()
   end
 
   ---@type AE_TableData
   local data = {columns = {}, rows = {}}
-  ---@type AE_TableDataRow
-  local firstRow = {columns = {}}
 
   if affixRotation then
-    Utils:TableForEach(affixRotation.activation, function(activationLevel)
-      ---@type AE_TableDataColumn
-      local column = {width = 140}
-      ---@type AE_TableDataRowColumn
-      local columnData = {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}}
+    do -- First row with activation levels
+      ---@type AE_TableDataRow
+      local row = {columns = {}}
+      Utils:TableForEach(affixRotation.activation, function(activationLevel)
+        ---@type AE_TableDataColumn
+        local column = {width = columnWidth}
+        ---@type AE_TableDataRowColumn
+        local columnData = {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}}
 
-      table.insert(data.columns, column)
-      table.insert(firstRow.columns, columnData)
-    end)
-    table.insert(data.rows, firstRow)
+        table.insert(data.columns, column)
+        table.insert(row.columns, columnData)
+        tableWidth = tableWidth + columnWidth
+      end)
+      table.insert(data.rows, row)
+      tableHeight = tableHeight + rowHeight
+    end
+
     Utils:TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
       ---@type AE_TableDataRow
       local row = {columns = {}}
@@ -98,6 +108,7 @@ function Module:Render()
         end
       end)
       table.insert(data.rows, row)
+      tableHeight = tableHeight + rowHeight
     end)
   else
     ---@type AE_TableDataColumn
@@ -107,9 +118,10 @@ function Module:Render()
 
     table.insert(data.columns, column)
     table.insert(data.rows, row)
+    tableWidth = tableWidth + 500
+    tableHeight = tableHeight + rowHeight
   end
 
   self.table:SetData(data)
-  local w, h = self.table:GetSize()
-  self.window:SetSize(w, h + Constants.sizes.titlebar.height)
+  self.window:SetBodySize(tableWidth, tableHeight)
 end

@@ -114,9 +114,7 @@ end
 ---@param callback fun(value: T, index: number)
 ---@return T[]
 function Utils:TableForEach(tbl, callback)
-  if not tbl then
-    DevTools_Dump(type(tbl))
-  end
+  assert(tbl, "Must be a table!")
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
   end
@@ -228,7 +226,6 @@ function Utils:CreateScrollFrame(name, parent)
   frame.scrollbarH = CreateFrame("Slider", "$parentScrollbarH", frame, "UISliderTemplate")
   frame.scrollbarV = CreateFrame("Slider", "$parentScrollbarV", frame, "UISliderTemplate")
 
-  frame:SetAllPoints()
   frame:SetScript("OnMouseWheel", function(_, delta)
     if IsModifierKeyDown() or not frame.scrollbarV:IsVisible() then
       frame.scrollbarH:SetValue(frame.scrollbarH:GetValue() - delta * ((frame.content:GetWidth() - frame:GetWidth()) * 0.1))
@@ -236,9 +233,9 @@ function Utils:CreateScrollFrame(name, parent)
       frame.scrollbarV:SetValue(frame.scrollbarV:GetValue() - delta * ((frame.content:GetHeight() - frame:GetHeight()) * 0.1))
     end
   end)
-  frame:SetScript("OnSizeChanged", function() frame:Refresh() end)
+  frame:SetScript("OnSizeChanged", function() frame:Render() end)
   frame:SetScrollChild(frame.content)
-  frame.content:SetScript("OnSizeChanged", function() frame:Refresh() end)
+  frame.content:SetScript("OnSizeChanged", function() frame:Render() end)
 
   frame.scrollbarH:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
   frame.scrollbarH:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
@@ -275,7 +272,7 @@ function Utils:CreateScrollFrame(name, parent)
   if frame.scrollbarH.NineSlice then frame.scrollbarH.NineSlice:Hide() end
   if frame.scrollbarV.NineSlice then frame.scrollbarV.NineSlice:Hide() end
 
-  function frame:Refresh()
+  function frame:Render()
     if math.floor(frame.content:GetWidth()) > math.floor(frame:GetWidth()) then
       frame.scrollbarH:SetMinMaxValues(0, frame.content:GetWidth() - frame:GetWidth())
       frame.scrollbarH.thumb:SetWidth(frame.scrollbarH:GetWidth() / 10)
@@ -296,6 +293,6 @@ function Utils:CreateScrollFrame(name, parent)
     end
   end
 
-  frame:Refresh()
+  frame:Render()
   return frame
 end

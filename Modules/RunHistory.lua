@@ -26,9 +26,9 @@ function Module:Render()
       title = "Run History",
       sidebar = true,
     })
-    self.window.body.table = Table:New()
-    self.window.body.table:SetParent(self.window.body)
-    self.window.body.table:SetAllPoints()
+    -- self.window.body.table = Table:New()
+    -- self.window.body.table:SetParent(self.window.body)
+    -- self.window.body.table:SetAllPoints()
   end
 
   ---@type AE_TableData
@@ -74,5 +74,5 @@ function Module:Render()
     table.insert(tableData.rows, row)
   end)
 
-  self.window.body.table:SetData(tableData)
+  -- self.window.body.table:SetData(tableData)
 end

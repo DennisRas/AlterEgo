@@ -875,9 +875,15 @@ function Data:UpdateCharacterInfo()
           if text then
             local match, _, uTrack, uLevel, uMax = text:find(upgradePattern)
             if match then
-              itemUpgradeTrack = uTrack
-              itemUpgradeLevel = uLevel
-              itemUpgradeMax = uMax
+              if uTrack then
+                itemUpgradeTrack = uTrack
+              end
+              if uLevel then
+                itemUpgradeLevel = tonumber(uLevel) or itemUpgradeLevel
+              end
+              if uMax then
+                itemUpgradeMax = tonumber(uMax) or itemUpgradeMax
+              end
             end
           end
         end
