@@ -84,10 +84,9 @@ function Table:New(config)
         frame.rows[rowIndex] = rowFrame
       end
 
-      local rowAnchor = frame.config.header.sticky and rowIndex == 1 and frame or frame.content
       rowFrame.data = row
-      rowFrame:SetPoint("TOPLEFT", rowAnchor, "TOPLEFT", 0, -offsetY)
-      rowFrame:SetPoint("TOPRIGHT", rowAnchor, "TOPRIGHT", 0, -offsetY)
+      rowFrame:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -offsetY)
+      rowFrame:SetPoint("TOPRIGHT", frame.content, "TOPRIGHT", 0, -offsetY)
       rowFrame:SetHeight(frame.config.rows.height)
       rowFrame:SetScript("OnEnter", function() rowFrame:onEnterHandler(rowFrame) end)
       rowFrame:SetScript("OnLeave", function() rowFrame:onLeaveHandler(rowFrame) end)
@@ -121,6 +120,19 @@ function Table:New(config)
       function rowFrame:onClickHandler(...)
         if row.OnClick then
           row:OnClick(...)
+        end
+      end
+
+      -- Sticky header
+      if frame.config.header.sticky and rowIndex == 1 then
+        if frame then
+          rowFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -offsetY)
+          rowFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -offsetY)
+          -- rowFrame:SetToplevel(true)
+          rowFrame:SetFrameStrata("HIGH")
+        end
+        if not row.backgroundColor then
+          Utils:SetBackgroundColor(rowFrame, 0.1, 0.1, 0.1, 1)
         end
       end
 
@@ -192,7 +204,7 @@ function Table:New(config)
   end
 
   frame:HookScript("OnSizeChanged", function() frame:RenderTable() end)
-  frame:RenderScrollFrame()
+  frame:RenderTable()
   table.insert(TableCollection, frame)
   return frame;
 end

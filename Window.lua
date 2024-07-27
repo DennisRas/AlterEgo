@@ -36,7 +36,7 @@ function Window:New(options)
     },
     options or {}
   )
-  window:SetFrameStrata("HIGH")
+  window:SetFrameStrata("MEDIUM")
   window:SetFrameLevel(3000)
   window:SetToplevel(true)
   window:SetClampedToScreen(true)
