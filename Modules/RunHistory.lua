@@ -24,7 +24,7 @@ function Module:Render()
     self.window = Window:New({
       name = "RunHistory",
       title = "Run History",
-      sidebar = true,
+      sidebar = 150,
     })
     -- self.window.body.table = Table:New()
     -- self.window.body.table:SetParent(self.window.body)

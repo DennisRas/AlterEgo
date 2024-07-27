@@ -49,7 +49,7 @@ function Module:Render()
     self.window = Window:New({
       name = "LootTable",
       title = "Loot Table",
-      sidebar = true,
+      sidebar = 200,
     })
     self.window.body.table = Table:New({header = {sticky = true}})
     self.window.body.table:SetParent(self.window.body)

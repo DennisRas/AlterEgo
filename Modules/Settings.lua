@@ -343,7 +343,7 @@ function Module:Render()
     self.window = Window:New({
       name = "Settings",
       title = "Settings",
-      sidebar = true
+      sidebar = 150,
     })
 
     self.tabs = {}

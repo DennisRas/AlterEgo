@@ -10,7 +10,7 @@ local Constants = addon.Constants
 local WindowCollection = {}
 local TITLEBAR_HEIGHT = 30
 local FOOTER_HEIGHT = 16
-local SIDEBAR_WIDTH = 150
+-- local SIDEBAR_WIDTH = 150
 
 ---@class AE_WindowManager
 local Window = {}
@@ -29,7 +29,7 @@ function Window:New(options)
       name = "",
       title = "",
       border = Constants.sizes.border,
-      sidebar = false,
+      -- sidebar = ,
       titlebar = true,
       windowScale = 100,
       windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
@@ -71,7 +71,7 @@ function Window:New(options)
     local w = width
     local h = height
     if window.config.sidebar then
-      w = w + SIDEBAR_WIDTH
+      w = w + window.config.sidebar
     end
     if window.config.titlebar then
       h = h + TITLEBAR_HEIGHT
@@ -142,7 +142,7 @@ function Window:New(options)
   end
 
   if window.config.sidebar then
-    leftOffset = SIDEBAR_WIDTH
+    leftOffset = window.config.sidebar
   end
 
   -- Body
@@ -158,7 +158,7 @@ function Window:New(options)
     window.sidebar = CreateFrame("Frame", "$parentSidebar", window)
     window.sidebar:SetPoint("TOPLEFT", window, "TOPLEFT", 0, topOffset)
     window.sidebar:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT")
-    window.sidebar:SetWidth(SIDEBAR_WIDTH)
+    window.sidebar:SetWidth(window.config.sidebar)
     Utils:SetBackgroundColor(window.sidebar, 0, 0, 0, 0.3)
   end
 

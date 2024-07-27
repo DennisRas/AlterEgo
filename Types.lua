@@ -290,7 +290,7 @@
 ---@field parent any?
 ---@field name string?
 ---@field title string?
----@field sidebar boolean?
+---@field sidebar number?
 ---@field titlebar boolean?
 ---@field border number?
 ---@field windowScale number?

@@ -116,7 +116,7 @@ function Module:Render()
     self.window = Window:New({
       name = "Main",
       title = addonName,
-      sidebar = true
+      sidebar = 150,
     })
     self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window.titlebar)
     self.window.affixes.buttons = {}
