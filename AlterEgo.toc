@@ -37,3 +37,4 @@ Modules/Main.lua
 Modules/WeeklyAffixes.lua
 Modules/Equipment.lua
 Modules/DungeonTimer.lua
+Modules/LootTable.lua
