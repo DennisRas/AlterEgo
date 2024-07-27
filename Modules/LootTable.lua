@@ -9,6 +9,7 @@ local Window = addon.Window
 local Core = addon.Core
 local Data = addon.Data
 local Constants = addon.Constants
+local Input = addon.Input
 local Module = Core:NewModule("LootTable")
 
 function Module:OnEnable()
@@ -54,7 +55,77 @@ function Module:Render()
     self.window.body.table = Table:New({header = {sticky = true}})
     self.window.body.table:SetParent(self.window.body)
     self.window.body.table:SetAllPoints()
+
+    self.window.sidebar.inputSearch = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {},
+    })
+    self.window.sidebar.inputSearch:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 10, -10)
+    self.window.sidebar.inputSearch:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", -10, -10)
+
+
+    self.window.sidebar.inputInstances = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {},
+      -- onChange = function()
+      --   Module:Render()
+      -- end
+    })
+    self.window.sidebar.inputInstances:SetPoint("TOPLEFT", self.window.sidebar.inputSearch, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputInstances:SetPoint("TOPRIGHT", self.window.sidebar.inputSearch, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.inputSlots = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {}
+    })
+    self.window.sidebar.inputSlots:SetPoint("TOPLEFT", self.window.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputSlots:SetPoint("TOPRIGHT", self.window.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.inputEncounters = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {}
+    })
+    self.window.sidebar.inputEncounters:SetPoint("TOPLEFT", self.window.sidebar.inputSlots, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputEncounters:SetPoint("TOPRIGHT", self.window.sidebar.inputSlots, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.inputArmorTypes = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {}
+    })
+    self.window.sidebar.inputArmorTypes:SetPoint("TOPLEFT", self.window.sidebar.inputEncounters, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputArmorTypes:SetPoint("TOPRIGHT", self.window.sidebar.inputEncounters, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.inputClasses = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {}
+    })
+    self.window.sidebar.inputClasses:SetPoint("TOPLEFT", self.window.sidebar.inputArmorTypes, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputClasses:SetPoint("TOPRIGHT", self.window.sidebar.inputArmorTypes, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.inputSpecs = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {}
+    })
+    self.window.sidebar.inputSpecs:SetPoint("TOPLEFT", self.window.sidebar.inputClasses, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputSpecs:SetPoint("TOPRIGHT", self.window.sidebar.inputClasses, "BOTTOMRIGHT", 0, -10)
   end
+
+  local searchOptions = {{value = "", text = "Search (TEMP BOX)"}}
+  local instanceOptions = {{value = "", text = "All instances"}}
+  local encounterOptions = {{value = "", text = "All encounters"}}
+  local slotOptions = {{value = "", text = "All slots"}}
+  local armorTypeOptions = {{value = "", text = "All armor types"}}
+  local classOptions = {{value = "", text = "All classes"}}
+  local specOptions = {{value = "", text = "All specs."}}
+
+  -- local selectedInstanceOption = self.window.sidebar.inputInstances:GetValueText()
 
   ---@type AE_TableData
   local tableData = {
@@ -65,7 +136,7 @@ function Module:Render()
       -- {width = 80},  -- Classes
       -- {width = 80},  -- Specs
       {width = 140}, -- Slot
-      {width = 100}, -- Type
+      {width = 140}, -- Type
     },
     rows = {
       -- Header
@@ -77,7 +148,7 @@ function Module:Render()
           -- {text = "Classes"},
           -- {text = "Specs"},
           {text = "Slot"},
-          {text = "Type"},
+          {text = "Armor type"},
         }
       }
     }
@@ -89,6 +160,12 @@ function Module:Render()
       local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
       expansionID, setID, isCraftingReagent = GetItemInfo(item.link)
+
+      -- if selectedInstanceOption ~= "" then
+      --   if selectedInstanceOption ~= (dungeon.short or dungeon.name) then
+      --     return
+      --   end
+      -- end
 
       ---@type AE_TableDataRow
       local row = {
@@ -125,6 +202,10 @@ function Module:Render()
       }
       table.insert(tableData.rows, row)
     end)
+    table.insert(instanceOptions, {
+      value = dungeon.short or dungeon.name,
+      text = dungeon.short or dungeon.name,
+    })
   end)
 
   local raids = Data:GetRaids()
@@ -133,6 +214,12 @@ function Module:Render()
       local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
       expansionID, setID, isCraftingReagent = GetItemInfo(item.link)
+
+      -- if selectedInstanceOption ~= "" then
+      --   if selectedInstanceOption ~= raid.name then
+      --     return
+      --   end
+      -- end
 
       ---@type AE_TableDataRow
       local row = {
@@ -169,7 +256,19 @@ function Module:Render()
       }
       table.insert(tableData.rows, row)
     end)
+    table.insert(instanceOptions, {
+      value = raid.name,
+      text = raid.name,
+    })
   end)
+
+  self.window.sidebar.inputSearch:SetItems(searchOptions)
+  self.window.sidebar.inputInstances:SetItems(instanceOptions)
+  self.window.sidebar.inputEncounters:SetItems(encounterOptions)
+  self.window.sidebar.inputSlots:SetItems(slotOptions)
+  self.window.sidebar.inputArmorTypes:SetItems(armorTypeOptions)
+  self.window.sidebar.inputClasses:SetItems(classOptions)
+  self.window.sidebar.inputSpecs:SetItems(specOptions)
 
   -- for i = 1, 100 do
   --   ---@type AE_TableDataRow
