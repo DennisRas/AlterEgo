@@ -103,7 +103,7 @@ function Table:New(config)
       end
 
       function rowFrame:onEnterHandler(arg1, arg2, arg3)
-        Utils:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
+        Utils:SetHighlightColor(rowFrame, 1, 1, 1, .03)
         if row.OnEnter then
           row:OnEnter(arg1, arg2, arg3)
         end
@@ -112,7 +112,7 @@ function Table:New(config)
       function rowFrame:onLeaveHandler(...)
         -- TODO: Fix stripe or original background color
         -- Let's make use of a new SetHightlightColor instead
-        Utils:SetBackgroundColor(rowFrame, 1, 1, 1, 0)
+        Utils:SetHighlightColor(rowFrame, 1, 1, 1, 0)
         if row.OnLeave then
           row:OnLeave(...)
         end

@@ -23,6 +23,30 @@ function Utils:SetBackgroundColor(parent, r, g, b, a)
   parent.Background:SetVertexColor(r, g, b, a)
 end
 
+---Set the highlight color for a parent frame
+---@param parent any
+---@param r number?
+---@param g number?
+---@param b number?
+---@param a number?
+function Utils:SetHighlightColor(parent, r, g, b, a)
+  if not parent.Highlight then
+    parent.Highlight = parent:CreateTexture("Highlight", "OVERLAY")
+    parent.Highlight:SetTexture("Interface/BUTTONS/WHITE8X8")
+    parent.Highlight:SetAllPoints()
+  end
+
+  if type(r) == "table" then
+    r, g, b, a = r.a, r.g, r.b, r.a
+  end
+
+  if type(r) == nil then
+    r, g, b, a = 1, 1, 1, 0.1
+  end
+
+  parent.Highlight:SetVertexColor(r, g, b, a)
+end
+
 ---Find a table item by callback
 ---@generic T
 ---@param tbl T[]
