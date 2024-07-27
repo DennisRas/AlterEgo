@@ -7,7 +7,9 @@ local addon = select(2, ...)
 local Constants = {
   prefix = format("<%s> ", addonName),
   colors = {
-    primary = CreateColor(0.596, 0.796, 0.847)
+    primary = CreateColor(0.596, 0.796, 0.847),
+    titlebar = CreateColor(0.0549, 0.0706, 0.0824),
+    sidebar = CreateColor(0.0784, 0.0980, 0.1137),
   },
   media = {
     WhiteSquare = "Interface/BUTTONS/WHITE8X8",

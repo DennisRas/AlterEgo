@@ -4,6 +4,7 @@ local addonName = select(1, ...)
 local addon = select(2, ...)
 
 local Utils = addon.Utils
+local Constants = addon.Constants
 
 ---@class AE_Table
 local Table = {}
@@ -132,7 +133,7 @@ function Table:New(config)
           rowFrame:SetFrameStrata("HIGH")
         end
         if not row.backgroundColor then
-          Utils:SetBackgroundColor(rowFrame, 0.1, 0.1, 0.1, 1)
+          Utils:SetBackgroundColor(rowFrame, Constants.colors.sidebar.r, Constants.colors.sidebar.g, Constants.colors.sidebar.b, 1)
         end
       end
 

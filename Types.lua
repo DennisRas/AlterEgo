@@ -120,6 +120,7 @@
 ---@field abbr string
 ---@field name string
 ---@field short string?
+---@field loot table
 
 ---@class AE_Inventory
 ---@field id number
@@ -142,6 +143,7 @@
 ---@field abbr string
 ---@field name string
 ---@field short string?
+---@field loot table
 
 ---@class AE_RaidDifficulty
 ---@field id number
