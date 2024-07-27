@@ -7,7 +7,7 @@ local Utils = addon.Utils
 local Constants = addon.Constants
 local Window = addon.Window
 
-local DROPDOWN_ITEM_HEIGHT = 20
+local DROPDOWN_ITEM_HEIGHT = 26
 
 ---@class AE_Input
 local Input = {}
@@ -133,7 +133,7 @@ function Input:CreateDropdown(options)
     {
       parent = UIParent,
       items = {}, -- {value = "", text = "", icon = ""}
-      value = "",
+      value = nil,
       maxHeight = 200,
       size = 200,
       sizeIcon = 11,
@@ -157,6 +157,7 @@ function Input:CreateDropdown(options)
   input.button.text = input.button:CreateFontString()
   input.button.text:SetFontObject("SystemFont_Med1")
   input.button.text:SetJustifyH("LEFT")
+  input.button.text:SetWordWrap(false)
   input.button.text:SetPoint("LEFT", input.button, "LEFT", 10, 0)
   input.button.text:SetPoint("RIGHT", input.button, "RIGHT", -21, 0)
 
@@ -260,9 +261,9 @@ function Input:CreateDropdown(options)
   end
 
   function input:Update()
-    Utils:SetBackgroundColor(input, 0.1, 0.1, 0.1, 1)
-    Utils:SetBackgroundColor(input.list, 0.1, 0.1, 0.1, 1)
-    Utils:SetBackgroundColor(input.list.border, 1, 1, 1, 0.3)
+    Utils:SetBackgroundColor(input, Constants.colors.titlebar.r, Constants.colors.titlebar.g, Constants.colors.titlebar.b, 1)
+    Utils:SetBackgroundColor(input.list, Constants.colors.titlebar.r, Constants.colors.titlebar.g, Constants.colors.titlebar.b, 1)
+    Utils:SetBackgroundColor(input.list.border, 0, 0, 0, 0.3)
     input.button:SetSize(input:GetWidth(), 30)
 
     local value = input:GetValue()
@@ -270,8 +271,10 @@ function Input:CreateDropdown(options)
 
     if input.expanded then
       input.button.icon:SetVertexColor(1, 1, 1, 0.9)
+      input.button.icon:SetRotation(math.pi)
       input.list:Show()
     else
+      input.button.icon:SetRotation(0)
       if input.hover then
         input.button.icon:SetVertexColor(1, 1, 1, 0.7)
       else
@@ -294,7 +297,7 @@ function Input:CreateDropdown(options)
       input:SetAlpha(0.3)
     end
 
-    if value == "" then
+    if value == nil then
       input.button.text:SetText(input.config.placeholder)
     else
       input.button.text:SetText(tostring(valueText))
@@ -310,6 +313,7 @@ function Input:CreateDropdown(options)
         itemButton.text = itemButton:CreateFontString()
         itemButton.text:SetFontObject("SystemFont_Small2")
         itemButton.text:SetJustifyH("LEFT")
+        itemButton.text:SetWordWrap(false)
         itemButton.icon = itemButton:CreateTexture()
         itemButton.icon:SetPoint("LEFT", itemButton, "LEFT", 5, 0)
         itemButton.icon:SetSize(11, 11)
@@ -324,9 +328,9 @@ function Input:CreateDropdown(options)
         input.list.content.items[index] = itemButton
       end
       itemButton.data = item
-      itemButton:SetSize(input.list:GetWidth(), DROPDOWN_ITEM_HEIGHT)
-      itemButton:SetPoint("TOPLEFT", input.list.content, "TOPLEFT", 5, -height)
-      itemButton:SetPoint("TOPRIGHT", input.list.content, "TOPRIGHT", -5, -height)
+      itemButton:SetHeight(DROPDOWN_ITEM_HEIGHT)
+      itemButton:SetPoint("TOPLEFT", input.list.content, "TOPLEFT", 6, -height)
+      itemButton:SetPoint("TOPRIGHT", input.list.content, "TOPRIGHT", -6, -height)
       itemButton:Show()
       itemButton.icon:SetTexture(item.icon)
       itemButton.text:SetText(item.text)
@@ -335,15 +339,15 @@ function Input:CreateDropdown(options)
 
       itemButton:SetScript("OnEnter", function()
         if item.value == value then return end
-        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0.05)
+        Utils:SetHighlightColor(itemButton, 1, 1, 1, 0.05)
       end)
       itemButton:SetScript("OnLeave", function()
         if item.value == value then return end
-        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0)
+        Utils:SetHighlightColor(itemButton, 1, 1, 1, 0)
       end)
 
       if item.value == value then
-        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0.1)
+        Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0.08)
         itemButton.iconCheck:Show()
       else
         Utils:SetBackgroundColor(itemButton, 1, 1, 1, 0)
