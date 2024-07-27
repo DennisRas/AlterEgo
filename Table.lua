@@ -62,7 +62,7 @@ function Table:New(config)
   ---@param data AE_TableData
   function frame:SetData(data)
     frame.data = data
-    frame:Render()
+    frame:RenderTable()
   end
 
   function frame:SetRowHeight(height)
@@ -70,7 +70,7 @@ function Table:New(config)
     self:Update()
   end
 
-  function frame:Render()
+  function frame:RenderTable()
     local offsetY = 0
     local offsetX = 0
 
@@ -191,8 +191,8 @@ function Table:New(config)
     frame.content:SetSize(offsetX, offsetY)
   end
 
-  frame:SetScript("OnSizeChanged", function() frame:Render() end)
-  frame:Render()
+  frame:HookScript("OnSizeChanged", function() frame:RenderTable() end)
+  frame:RenderScrollFrame()
   table.insert(TableCollection, frame)
   return frame;
 end

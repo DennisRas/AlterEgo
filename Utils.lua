@@ -233,9 +233,9 @@ function Utils:CreateScrollFrame(name, parent)
       frame.scrollbarV:SetValue(frame.scrollbarV:GetValue() - delta * ((frame.content:GetHeight() - frame:GetHeight()) * 0.1))
     end
   end)
-  frame:SetScript("OnSizeChanged", function() frame:Render() end)
+  frame:SetScript("OnSizeChanged", function() frame:RenderScrollFrame() end)
   frame:SetScrollChild(frame.content)
-  frame.content:SetScript("OnSizeChanged", function() frame:Render() end)
+  frame.content:SetScript("OnSizeChanged", function() frame:RenderScrollFrame() end)
 
   frame.scrollbarH:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
   frame.scrollbarH:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
@@ -272,7 +272,7 @@ function Utils:CreateScrollFrame(name, parent)
   if frame.scrollbarH.NineSlice then frame.scrollbarH.NineSlice:Hide() end
   if frame.scrollbarV.NineSlice then frame.scrollbarV.NineSlice:Hide() end
 
-  function frame:Render()
+  function frame:RenderScrollFrame()
     if math.floor(frame.content:GetWidth()) > math.floor(frame:GetWidth()) then
       frame.scrollbarH:SetMinMaxValues(0, frame.content:GetWidth() - frame:GetWidth())
       frame.scrollbarH.thumb:SetWidth(frame.scrollbarH:GetWidth() / 10)
@@ -293,6 +293,6 @@ function Utils:CreateScrollFrame(name, parent)
     end
   end
 
-  frame:Render()
+  frame:RenderScrollFrame()
   return frame
 end
