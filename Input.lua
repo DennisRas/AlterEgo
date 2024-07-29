@@ -13,6 +13,9 @@ local DROPDOWN_ITEM_HEIGHT = 26
 local Input = {}
 addon.Input = Input
 
+---Create a textbox
+---@param options AE_InputOptionsTextbox
+---@return EditBox
 function Input:Textbox(options)
   local input = CreateFrame("EditBox", options.parent and "$parentTextbox" or "Textbox", options.parent or UIParent)
   input.config = CreateFromMixins(
@@ -22,6 +25,7 @@ function Input:Textbox(options)
       onLeave = false,
       onChange = false,
       width = 200,
+      height = 30,
     }, options or {}
   )
   input.hover = false
@@ -30,20 +34,17 @@ function Input:Textbox(options)
   input:SetFontObject("SystemFont_Med1")
   input:SetTextInsets(10, 10, 10, 10)
   -- input:SetMultiLine(false)
-  input:SetSize(input.config.width, 30)
+  input:SetSize(input.config.width, input.config.height)
   input:SetScript("OnEnter", function() input:onEnterHandler() end)
   input:SetScript("OnLeave", function() input:onLeaveHandler() end)
   input:SetScript("OnDisable", function() input:Update() end)
   input:SetScript("OnEnable", function() input:Update() end)
   input:SetScript("OnEditFocusGained", function() input:Update() end)
   input:SetScript("OnEditFocusLost", function() input:Update() end)
-  input:SetScript("OnEscapePressed", function()
-    input:ClearFocus(); input:Update()
-  end)
+  input:SetScript("OnEscapePressed", function() input:ClearFocus() end)
   input:SetScript("OnTextChanged", function() input:OnChange() end)
 
   input.border = CreateFrame("Frame", "Border", input)
-  -- input.border:SetFrameStrata("BACKGROUND")
   input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
@@ -144,7 +145,6 @@ function Input:CreateCheckbox(options)
   input.icon:Hide()
 
   input.border = CreateFrame("Frame", "Border", input)
-  -- input.border:SetFrameStrata("LOW")
   input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
@@ -270,7 +270,6 @@ function Input:CreateDropdown(options)
   input.button.icon:SetVertexColor(1, 1, 1, 0.8)
 
   input.border = CreateFrame("Frame", "Border", input)
-  -- input.border:SetFrameStrata("LOW")
   input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
@@ -510,7 +509,6 @@ function Input:CreateColorPicker(options)
   -- input.color:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", 1, 1)
 
   input.border = CreateFrame("Frame", "Border", input)
-  -- input.border:SetFrameStrata("LOW")
   input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)

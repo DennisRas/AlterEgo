@@ -232,6 +232,15 @@
 ---@field fontObject string?
 ---@field height number?
 
+---@class AE_InputOptionsTextbox
+---@field parent any?
+---@field onEnter function?
+---@field onLeave function?
+---@field onClick function?
+---@field onChange function?
+---@field width number?
+---@field height number?
+
 ---@class AE_InputOptionsCheckbox
 ---@field parent any?
 ---@field checked boolean?
