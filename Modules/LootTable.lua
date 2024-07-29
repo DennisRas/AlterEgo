@@ -211,6 +211,10 @@ function Module:Render()
     self.window.sidebar.inputSpecs = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputSpecs:SetPoint("TOPLEFT", self.window.sidebar.inputClasses, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputSpecs:SetPoint("TOPRIGHT", self.window.sidebar.inputClasses, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.buttonReset = Input:Button({parent = self.window.sidebar, text = "Reset Filters"})
+    self.window.sidebar.buttonReset:SetPoint("TOPLEFT", self.window.sidebar.inputSpecs, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.buttonReset:SetPoint("TOPRIGHT", self.window.sidebar.inputSpecs, "BOTTOMRIGHT", 0, -10)
   end
 
   local instanceOptions = {{value = "", text = "All Instances"}}
