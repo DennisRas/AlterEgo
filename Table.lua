@@ -19,6 +19,7 @@ function Table:New(config)
       header = {
         enabled = true,
         sticky = false,
+        height = 30,
       },
       rows = {
         height = 22,
@@ -78,6 +79,7 @@ function Table:New(config)
     Utils:TableForEach(frame.rows, function(rowFrame) rowFrame:Hide() end)
     Utils:TableForEach(frame.data.rows, function(row, rowIndex)
       local rowFrame = frame.rows[rowIndex]
+      local rowHeight = rowIndex == 1 and 30 or frame.config.rows.height
 
       if not rowFrame then
         rowFrame = CreateFrame("Button", "$parentRow" .. rowIndex, frame.content)
@@ -88,7 +90,7 @@ function Table:New(config)
       rowFrame.data = row
       rowFrame:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -offsetY)
       rowFrame:SetPoint("TOPRIGHT", frame.content, "TOPRIGHT", 0, -offsetY)
-      rowFrame:SetHeight(frame.config.rows.height)
+      rowFrame:SetHeight(rowHeight)
       rowFrame:SetScript("OnEnter", function() rowFrame:onEnterHandler(rowFrame) end)
       rowFrame:SetScript("OnLeave", function() rowFrame:onLeaveHandler(rowFrame) end)
       rowFrame:SetScript("OnClick", function() rowFrame:onClickHandler(rowFrame) end)
@@ -103,16 +105,18 @@ function Table:New(config)
       end
 
       function rowFrame:onEnterHandler(arg1, arg2, arg3)
-        Utils:SetHighlightColor(rowFrame, 1, 1, 1, .03)
+        if rowIndex > 1 then
+          Utils:SetHighlightColor(rowFrame, 1, 1, 1, .03)
+        end
         if row.OnEnter then
           row:OnEnter(arg1, arg2, arg3)
         end
       end
 
       function rowFrame:onLeaveHandler(...)
-        -- TODO: Fix stripe or original background color
-        -- Let's make use of a new SetHightlightColor instead
-        Utils:SetHighlightColor(rowFrame, 1, 1, 1, 0)
+        if rowIndex > 1 then
+          Utils:SetHighlightColor(rowFrame, 1, 1, 1, 0)
+        end
         if row.OnLeave then
           row:OnLeave(...)
         end
@@ -198,7 +202,7 @@ function Table:New(config)
         offsetX = offsetX + columnWidth
       end)
 
-      offsetY = offsetY + frame.config.rows.height
+      offsetY = offsetY + rowHeight
     end)
 
     frame.content:SetSize(offsetX, offsetY)
