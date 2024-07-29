@@ -13,6 +13,107 @@ local DROPDOWN_ITEM_HEIGHT = 26
 local Input = {}
 addon.Input = Input
 
+function Input:Textbox(options)
+  local input = CreateFrame("EditBox", options.parent and "$parentTextbox" or "Textbox", options.parent or UIParent)
+  input.config = CreateFromMixins(
+    {
+      pareent = UIParent,
+      onEnter = false,
+      onLeave = false,
+      onChange = false,
+      width = 200,
+    }, options or {}
+  )
+  input.hover = false
+  input:EnableMouse(true)
+  input:SetAutoFocus(false)
+  input:SetFontObject("SystemFont_Med1")
+  input:SetTextInsets(10, 10, 10, 10)
+  -- input:SetMultiLine(false)
+  input:SetSize(input.config.width, 30)
+  input:SetScript("OnEnter", function() input:onEnterHandler() end)
+  input:SetScript("OnLeave", function() input:onLeaveHandler() end)
+  input:SetScript("OnDisable", function() input:Update() end)
+  input:SetScript("OnEnable", function() input:Update() end)
+  input:SetScript("OnEditFocusGained", function() input:Update() end)
+  input:SetScript("OnEditFocusLost", function() input:Update() end)
+  input:SetScript("OnEscapePressed", function()
+    input:ClearFocus(); input:Update()
+  end)
+  input:SetScript("OnTextChanged", function() input:OnChange() end)
+
+  input.border = CreateFrame("Frame", "Border", input)
+  -- input.border:SetFrameStrata("BACKGROUND")
+  input.border:SetFrameLevel(input:GetFrameLevel() - 1)
+  input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
+  input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
+  input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 1, -1)
+  input.border:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", -1, -1)
+
+  input.text = input:CreateFontString()
+  input.text:SetFontObject("SystemFont_Med1")
+  input.text:SetJustifyH("LEFT")
+  input.text:SetWordWrap(false)
+  input.text:SetVertexColor(1, 1, 1, 0.5)
+  input.text:SetPoint("LEFT", input, "LEFT", 10, 0)
+  input.text:SetPoint("RIGHT", input, "RIGHT", -10, 0)
+
+  function input:OnChange()
+    if input.config.onChange then
+      input.config.onChange(input)
+    end
+    input:Update()
+  end
+
+  function input:onEnterHandler()
+    input.hover = true
+    if input.config.onEnter then
+      input.config.onEnter(input)
+    end
+    input:Update()
+  end
+
+  function input:onLeaveHandler()
+    input.hover = false
+    if input.config.onLeave then
+      input.config.onLeave(input)
+    end
+    input:Update()
+  end
+
+  function input:Update()
+    Utils:SetBackgroundColor(input, Constants.colors.titlebar.r, Constants.colors.titlebar.g, Constants.colors.titlebar.b, 1)
+
+    if input.border then
+      if input.hover or input:HasFocus() then
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.3)
+      else
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.1)
+      end
+    end
+
+    if input.config.placeholder then
+      input.text:SetText(input.config.placeholder)
+      if input:GetText() == "" then
+        if input:HasFocus() then
+          input.text:Hide()
+        else
+          input.text:Show()
+        end
+      end
+    end
+
+    if input:IsEnabled() then
+      input:SetAlpha(1)
+    else
+      input:SetAlpha(0.3)
+    end
+  end
+
+  input:Update()
+  return input
+end
+
 ---Create a checkbox
 ---@param options AE_InputOptionsCheckbox
 ---@return Button
@@ -43,7 +144,8 @@ function Input:CreateCheckbox(options)
   input.icon:Hide()
 
   input.border = CreateFrame("Frame", "Border", input)
-  input.border:SetFrameStrata("LOW")
+  -- input.border:SetFrameStrata("LOW")
+  input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
   input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 1, -1)
@@ -96,9 +198,9 @@ function Input:CreateCheckbox(options)
 
     if input.border then
       if input.hover then
-        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.3)
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.3)
       else
-        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.2)
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.1)
       end
     end
 
@@ -168,7 +270,8 @@ function Input:CreateDropdown(options)
   input.button.icon:SetVertexColor(1, 1, 1, 0.8)
 
   input.border = CreateFrame("Frame", "Border", input)
-  input.border:SetFrameStrata("LOW")
+  -- input.border:SetFrameStrata("LOW")
+  input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
   input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 1, -1)
@@ -178,8 +281,8 @@ function Input:CreateDropdown(options)
   input.list:SetFrameStrata("FULLSCREEN_DIALOG")
   input.list:SetFrameLevel(200)
   input.list:ClearAllPoints()
-  input.list:SetPoint("TOPLEFT", input.button, "BOTTOMLEFT")
-  input.list:SetPoint("TOPRIGHT", input.button, "BOTTOMRIGHT")
+  input.list:SetPoint("TOPLEFT", input.button, "BOTTOMLEFT", 0, -1)
+  input.list:SetPoint("TOPRIGHT", input.button, "BOTTOMRIGHT", 0, -1)
   input.list:Hide()
 
   input.list.border = CreateFrame("Frame", "Border", input.list)
@@ -263,7 +366,7 @@ function Input:CreateDropdown(options)
   function input:Update()
     Utils:SetBackgroundColor(input, Constants.colors.titlebar.r, Constants.colors.titlebar.g, Constants.colors.titlebar.b, 1)
     Utils:SetBackgroundColor(input.list, Constants.colors.titlebar.r, Constants.colors.titlebar.g, Constants.colors.titlebar.b, 1)
-    Utils:SetBackgroundColor(input.list.border, 0, 0, 0, 0.3)
+    Utils:SetBackgroundColor(input.list.border, 0.5, 0.5, 0.5, 0.3)
     input.button:SetSize(input:GetWidth(), 30)
 
     local value = input:GetValue()
@@ -285,9 +388,9 @@ function Input:CreateDropdown(options)
 
     if input.border then
       if input.hover or input.expanded then
-        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.3)
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.3)
       else
-        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.2)
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.1)
       end
     end
 
@@ -407,7 +510,8 @@ function Input:CreateColorPicker(options)
   -- input.color:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", 1, 1)
 
   input.border = CreateFrame("Frame", "Border", input)
-  input.border:SetFrameStrata("LOW")
+  -- input.border:SetFrameStrata("LOW")
+  input.border:SetFrameLevel(input:GetFrameLevel() - 1)
   input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -1, 1)
   input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 1, 1)
   input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 1, -1)
@@ -480,9 +584,9 @@ function Input:CreateColorPicker(options)
 
     if input.border then
       if input.hover then
-        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.3)
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.3)
       else
-        Utils:SetBackgroundColor(input.border, 1, 1, 1, 0.2)
+        Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.1)
       end
     end
 

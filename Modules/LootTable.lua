@@ -184,68 +184,35 @@ function Module:Render()
     self.window.body.table:SetParent(self.window.body)
     self.window.body.table:SetAllPoints()
 
-    self.window.sidebar.inputSearch = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {},
-    })
+    self.window.sidebar.inputSearch = Input:Textbox({parent = self.window.sidebar, value = "", placeholder = "Search..."})
     self.window.sidebar.inputSearch:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 10, -10)
     self.window.sidebar.inputSearch:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", -10, -10)
 
-
-    self.window.sidebar.inputInstances = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {},
-      -- onChange = function()
-      --   Module:Render()
-      -- end
-    })
+    self.window.sidebar.inputInstances = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {},})
     self.window.sidebar.inputInstances:SetPoint("TOPLEFT", self.window.sidebar.inputSearch, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputInstances:SetPoint("TOPRIGHT", self.window.sidebar.inputSearch, "BOTTOMRIGHT", 0, -10)
 
-    self.window.sidebar.inputEncounters = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {}
-    })
+    self.window.sidebar.inputEncounters = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputEncounters:SetPoint("TOPLEFT", self.window.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputEncounters:SetPoint("TOPRIGHT", self.window.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
 
-    self.window.sidebar.inputSlots = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {}
-    })
+    self.window.sidebar.inputSlots = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputSlots:SetPoint("TOPLEFT", self.window.sidebar.inputEncounters, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputSlots:SetPoint("TOPRIGHT", self.window.sidebar.inputEncounters, "BOTTOMRIGHT", 0, -10)
 
-    self.window.sidebar.inputArmorTypes = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {}
-    })
+    self.window.sidebar.inputArmorTypes = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputArmorTypes:SetPoint("TOPLEFT", self.window.sidebar.inputSlots, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputArmorTypes:SetPoint("TOPRIGHT", self.window.sidebar.inputSlots, "BOTTOMRIGHT", 0, -10)
 
-    self.window.sidebar.inputClasses = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {}
-    })
+    self.window.sidebar.inputClasses = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputClasses:SetPoint("TOPLEFT", self.window.sidebar.inputArmorTypes, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputClasses:SetPoint("TOPRIGHT", self.window.sidebar.inputArmorTypes, "BOTTOMRIGHT", 0, -10)
 
-    self.window.sidebar.inputSpecs = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {}
-    })
+    self.window.sidebar.inputSpecs = Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputSpecs:SetPoint("TOPLEFT", self.window.sidebar.inputClasses, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputSpecs:SetPoint("TOPRIGHT", self.window.sidebar.inputClasses, "BOTTOMRIGHT", 0, -10)
   end
 
-  local searchOptions = {{value = "", text = "Search (TEMP BOX)"}}
   local instanceOptions = {{value = "", text = "All Instances"}}
   local encounterOptions = {{value = "", text = "All Encounters"}}
   local slotOptions = {{value = "", text = ALL_INVENTORY_SLOTS}}
@@ -477,7 +444,6 @@ function Module:Render()
     })
   end)
 
-  self.window.sidebar.inputSearch:SetItems(searchOptions)
   self.window.sidebar.inputInstances:SetItems(instanceOptions)
   self.window.sidebar.inputEncounters:SetItems(encounterOptions)
   self.window.sidebar.inputSlots:SetItems(slotOptions)
