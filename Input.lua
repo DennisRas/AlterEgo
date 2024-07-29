@@ -13,6 +13,81 @@ local DROPDOWN_ITEM_HEIGHT = 26
 local Input = {}
 addon.Input = Input
 
+---Create a button
+---@param options AE_InputOptionsButton
+---@return Button
+function Input:Button(options)
+  local input = CreateFrame("Button", options.parent and "$parentButton" or "Button", options.parent or UIParent)
+  input.config = CreateFromMixins(
+    {
+      parent = UIParent,
+      onEnter = false,
+      onLeave = false,
+      onClick = false,
+      text = "",
+      width = 200,
+      height = 26,
+    }, options or {}
+  )
+  input.hover = false
+  input:EnableMouse(true)
+  input:SetSize(input.config.width, input.config.height)
+  input:SetScript("OnClick", function() input:onClickHandler() end)
+  input:SetScript("OnEnter", function() input:onEnterHandler() end)
+  input:SetScript("OnLeave", function() input:onLeaveHandler() end)
+  input:SetScript("OnDisable", function() input:Update() end)
+  input:SetScript("OnEnable", function() input:Update() end)
+
+  input.text = input:CreateFontString()
+  input.text:SetFontObject("SystemFont_Med1")
+  input.text:SetJustifyH("CENTER")
+  input.text:SetWordWrap(false)
+  input.text:SetVertexColor(1, 1, 1, 1)
+  input.text:SetPoint("LEFT", input, "LEFT", 10, 0)
+  input.text:SetPoint("RIGHT", input, "RIGHT", -10, 0)
+  input.text:SetText(input.config.text)
+
+  function input:onClickHandler()
+    if input.config.onClick then
+      input.config.onClick(input)
+    end
+    input:Update()
+  end
+
+  function input:onEnterHandler()
+    input.hover = true
+    if input.config.onEnter then
+      input.config.onEnter(input)
+    end
+    input:Update()
+  end
+
+  function input:onLeaveHandler()
+    input.hover = false
+    if input.config.onLeave then
+      input.config.onLeave(input)
+    end
+    input:Update()
+  end
+
+  function input:Update()
+    if input.hover then
+      Utils:SetBackgroundColor(input, Constants.colors.primary.r, Constants.colors.primary.g, Constants.colors.primary.b, 0.2)
+    else
+      Utils:SetBackgroundColor(input, Constants.colors.primary.r, Constants.colors.primary.g, Constants.colors.primary.b, 0.1)
+    end
+
+    if input:IsEnabled() then
+      input:SetAlpha(1)
+    else
+      input:SetAlpha(0.3)
+    end
+  end
+
+  input:Update()
+  return input
+end
+
 ---Create a textbox
 ---@param options AE_InputOptionsTextbox
 ---@return EditBox
@@ -20,7 +95,7 @@ function Input:Textbox(options)
   local input = CreateFrame("EditBox", options.parent and "$parentTextbox" or "Textbox", options.parent or UIParent)
   input.config = CreateFromMixins(
     {
-      pareent = UIParent,
+      parent = UIParent,
       onEnter = false,
       onLeave = false,
       onChange = false,
@@ -122,7 +197,7 @@ function Input:CreateCheckbox(options)
   local input = CreateFrame("Button", options.parent and "$parentInput" or "Input", options.parent or UIParent)
   input.config = CreateFromMixins(
     {
-      pareent = UIParent,
+      parent = UIParent,
       checked = false,
       onEnter = false,
       onLeave = false,
