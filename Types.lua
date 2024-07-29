@@ -117,6 +117,7 @@
 ---@field mapId number
 ---@field spellID number
 ---@field time number
+---@field encounters AE_Encounter[]
 ---@field abbr string
 ---@field name string
 ---@field short string?
@@ -137,7 +138,7 @@
 ---@field journalInstanceID number
 ---@field instanceID number
 ---@field order number
----@field numEncounters number
+-- ---@field numEncounters number
 ---@field encounters AE_Encounter[]
 ---@field modifiedInstanceInfo table|nil
 ---@field abbr string

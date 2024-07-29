@@ -792,9 +792,9 @@ function Module:Render()
                 local color = {r = 1, g = 1, b = 1}
                 local alpha = 0.1
                 local size = CHARACTER_WIDTH
-                size = size - Constants.sizes.padding      -- left/right cell padding
-                size = size - (raid.numEncounters - 1) * 4 -- gaps
-                size = size / raid.numEncounters           -- box sizes
+                size = size - Constants.sizes.padding                     -- left/right cell padding
+                size = size - (Utils:TableCount(raid.encounters) - 1) * 4 -- gaps
+                size = size / Utils:TableCount(raid.encounters)           -- box sizes
 
                 if character.raids.savedInstances then
                   local savedInstance = Utils:TableFind(character.raids.savedInstances, function(savedInstance)

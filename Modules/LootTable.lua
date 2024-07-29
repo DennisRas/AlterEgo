@@ -12,6 +12,9 @@ local Constants = addon.Constants
 local Input = addon.Input
 local Module = Core:NewModule("LootTable")
 
+local classCache = {}
+local specCache = {}
+
 function Module:OnEnable()
   self:Render()
 end
@@ -45,6 +48,131 @@ end
 --   return self.data
 -- end
 
+function Module:GetClasses()
+  if Utils:TableCount(classCache) > 0 then
+    return classCache
+  end
+
+  for classID = 1, GetNumClasses() do
+    local className, classFile = GetClassInfo(classID)
+    if className then
+      table.insert(classCache, {
+        ID = classID,
+        name = className,
+        file = classFile,
+        numSpecs = GetNumSpecializationsForClassID(classID)
+      })
+    end
+  end
+
+  return classCache
+end
+
+function Module:GetSpecs()
+  if Utils:TableCount(specCache) > 0 then
+    return specCache
+  end
+
+  local classes = Module:GetClasses()
+  Utils:TableForEach(classes, function(cls)
+    for specIndex = 1, GetNumSpecializationsForClassID(cls.ID) do
+      local specID, name, description, icon, role, isRecommended, isAllowed = GetSpecializationInfoForClassID(cls.ID, specIndex)
+      if specID then
+        table.insert(specCache, {
+          ID = specID,
+          name = name,
+          description = description,
+          icon = icon,
+          role = role,
+          isRecommended = isRecommended,
+          isAllowed = isAllowed,
+          classID = cls.ID,
+          className = cls.name,
+          classFile = cls.file
+        })
+      end
+    end
+  end)
+
+  return specCache
+end
+
+function Module:GetData()
+  ---@class AE_LootTableItem
+  ---@field itemName string
+  ---@field itemLink string
+  ---@field itemTexture number
+  ---@field itemSlot string
+  ---@field itemArmorType string
+  ---@field journalInstanceID number
+  ---@field journalInstanceType "dungeon" | "raid"
+  ---@field journalInstanceName string
+  ---@field encounterID number
+  ---@field encounterName string
+  ---@field classes number[]
+  ---@field specs number[]
+  local data = {}
+  local dungeons = Data:GetDungeons()
+  local raids = Data:GetRaids()
+
+  Utils:TableForEach(dungeons, function(instance)
+    Utils:TableForEach(instance.loot, function(loot)
+      -- TODO: Move this to the loadgamedata() function
+      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
+      itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
+      expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(loot.link)
+
+      local encounter = Utils:TableGet(instance.encounters, "journalEncounterID", loot.encounterID)
+
+      ---@type AE_LootTableItem
+      local item = {
+        itemName = itemName,
+        itemLink = itemLink,
+        itemTexture = itemTexture,
+        itemSlot = loot.slot,
+        itemArmorType = loot.armorType,
+        journalInstanceID = instance.journalInstanceID,
+        journalInstanceType = "dungeon",
+        journalInstanceName = instance.short or instance.name,
+        encounterID = loot.encounterID,
+        encounterName = encounter and encounter.name or "",
+        classes = {},
+        specs = {}
+      }
+      table.insert(data, item)
+    end)
+  end)
+
+  Utils:TableForEach(raids, function(instance)
+    Utils:TableForEach(instance.loot, function(loot)
+      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
+      itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
+      expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(loot.link)
+
+      local encounter = Utils:TableGet(instance.encounters, "journalEncounterID", loot.encounterID)
+
+      ---@type AE_LootTableItem
+      local item = {
+        itemName = itemName,
+        itemLink = itemLink,
+        itemTexture = itemTexture,
+        itemSlot = loot.slot,
+        itemArmorType = loot.armorType,
+        journalInstanceID = instance.instanceID,
+        journalInstanceType = "raid",
+        journalInstanceName = instance.name,
+        encounterID = loot.encounterID,
+        encounterName = encounter and encounter.name or "",
+        classes = {},
+        specs = {}
+      }
+      table.insert(data, item)
+    end)
+  end)
+
+  return data
+end
+
 function Module:Render()
   if not self.window then
     self.window = Window:New({
@@ -76,29 +204,29 @@ function Module:Render()
     self.window.sidebar.inputInstances:SetPoint("TOPLEFT", self.window.sidebar.inputSearch, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputInstances:SetPoint("TOPRIGHT", self.window.sidebar.inputSearch, "BOTTOMRIGHT", 0, -10)
 
-    self.window.sidebar.inputSlots = Input:CreateDropdown({
-      parent = self.window.sidebar,
-      value = "",
-      items = {}
-    })
-    self.window.sidebar.inputSlots:SetPoint("TOPLEFT", self.window.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
-    self.window.sidebar.inputSlots:SetPoint("TOPRIGHT", self.window.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
-
     self.window.sidebar.inputEncounters = Input:CreateDropdown({
       parent = self.window.sidebar,
       value = "",
       items = {}
     })
-    self.window.sidebar.inputEncounters:SetPoint("TOPLEFT", self.window.sidebar.inputSlots, "BOTTOMLEFT", 0, -10)
-    self.window.sidebar.inputEncounters:SetPoint("TOPRIGHT", self.window.sidebar.inputSlots, "BOTTOMRIGHT", 0, -10)
+    self.window.sidebar.inputEncounters:SetPoint("TOPLEFT", self.window.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputEncounters:SetPoint("TOPRIGHT", self.window.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
+
+    self.window.sidebar.inputSlots = Input:CreateDropdown({
+      parent = self.window.sidebar,
+      value = "",
+      items = {}
+    })
+    self.window.sidebar.inputSlots:SetPoint("TOPLEFT", self.window.sidebar.inputEncounters, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputSlots:SetPoint("TOPRIGHT", self.window.sidebar.inputEncounters, "BOTTOMRIGHT", 0, -10)
 
     self.window.sidebar.inputArmorTypes = Input:CreateDropdown({
       parent = self.window.sidebar,
       value = "",
       items = {}
     })
-    self.window.sidebar.inputArmorTypes:SetPoint("TOPLEFT", self.window.sidebar.inputEncounters, "BOTTOMLEFT", 0, -10)
-    self.window.sidebar.inputArmorTypes:SetPoint("TOPRIGHT", self.window.sidebar.inputEncounters, "BOTTOMRIGHT", 0, -10)
+    self.window.sidebar.inputArmorTypes:SetPoint("TOPLEFT", self.window.sidebar.inputSlots, "BOTTOMLEFT", 0, -10)
+    self.window.sidebar.inputArmorTypes:SetPoint("TOPRIGHT", self.window.sidebar.inputSlots, "BOTTOMRIGHT", 0, -10)
 
     self.window.sidebar.inputClasses = Input:CreateDropdown({
       parent = self.window.sidebar,
@@ -118,12 +246,13 @@ function Module:Render()
   end
 
   local searchOptions = {{value = "", text = "Search (TEMP BOX)"}}
-  local instanceOptions = {{value = "", text = "All instances"}}
-  local encounterOptions = {{value = "", text = "All encounters"}}
-  local slotOptions = {{value = "", text = "All slots"}}
-  local armorTypeOptions = {{value = "", text = "All armor types"}}
-  local classOptions = {{value = "", text = "All classes"}}
-  local specOptions = {{value = "", text = "All specs."}}
+  local instanceOptions = {{value = "", text = "All Instances"}}
+  local encounterOptions = {{value = "", text = "All Encounters"}}
+  local slotOptions = {{value = "", text = ALL_INVENTORY_SLOTS}}
+  local armorTypeOptions = {{value = "", text = "All Armor Types"}}
+  local classOptions = {{value = "", text = ALL_CLASSES}}
+  local specOptions = {{value = "", text = ALL_SPECS}}
+  local data = Module:GetData()
 
   -- local selectedInstanceOption = self.window.sidebar.inputInstances:GetValueText()
 
@@ -154,111 +283,197 @@ function Module:Render()
     }
   }
 
-  local dungeons = Data:GetDungeons()
-  Utils:TableForEach(dungeons, function(dungeon)
-    Utils:TableForEach(dungeon.loot, function(item)
-      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
-      itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
-      expansionID, setID, isCraftingReagent = GetItemInfo(item.link)
+  local instanceValues = {}
+  local encounterValues = {}
+  local slotValues = {}
+  local armorValues = {}
 
-      -- if selectedInstanceOption ~= "" then
-      --   if selectedInstanceOption ~= (dungeon.short or dungeon.name) then
-      --     return
-      --   end
-      -- end
-
-      ---@type AE_TableDataRow
-      local row = {
-        columns = {
-          {
-            text = "|T" .. itemTexture .. ":0|t " .. item.link,
-            onEnter = function(columnFrame)
-              GameTooltip:ClearAllPoints()
-              GameTooltip:ClearLines()
-              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetHyperlink(item.link)
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine("<Shift Click to link to chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-              GameTooltip:Show()
-            end,
-            onLeave = function()
-              GameTooltip:Hide()
-            end,
-            onClick = function()
-              if IsModifiedClick("CHATLINK") then
-                if not ChatEdit_InsertLink(item.link) then
-                  ChatFrame_OpenChat(item.link);
-                end
+  Utils:TableForEach(data, function(d)
+    ---@type AE_TableDataRow
+    local row = {
+      columns = {
+        {
+          text = "|T" .. d.itemTexture .. ":0|t " .. d.itemLink,
+          onEnter = function(columnFrame)
+            GameTooltip:ClearAllPoints()
+            GameTooltip:ClearLines()
+            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(d.itemLink)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Shift Click to link to chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
+          end,
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+          onClick = function()
+            if IsModifiedClick("CHATLINK") then
+              if not ChatEdit_InsertLink(d.itemLink) then
+                ChatFrame_OpenChat(d.itemLink);
               end
             end
-          },
-          {text = dungeon.short or dungeon.name},
-          {text = item.encounterID},
-          -- {text = "-"},
-          -- {text = "_"},
-          {text = item.slot or "-"},
-          {text = item.armorType or "-"},
-        }
+          end
+        },
+        {text = d.journalInstanceName},
+        {text = d.encounterName},
+        -- {text = "-"},
+        -- {text = "_"},
+        {text = d.itemSlot or "-"},
+        {text = d.itemArmorType or "-"},
       }
-      table.insert(tableData.rows, row)
-    end)
-    table.insert(instanceOptions, {
-      value = dungeon.short or dungeon.name,
-      text = dungeon.short or dungeon.name,
+    }
+    table.insert(tableData.rows, row)
+    if not instanceValues[d.journalInstanceID] then
+      table.insert(instanceOptions, {
+        value = d.journalInstanceID,
+        text = d.journalInstanceName
+      })
+    end
+    instanceValues[d.journalInstanceID] = true
+    if not slotValues[d.itemSlot] then
+      table.insert(slotOptions, {
+        value = d.itemSlot,
+        text = d.itemSlot
+      })
+    end
+    slotValues[d.itemSlot] = true
+    if not encounterValues[d.encounterName] then
+      table.insert(encounterOptions, {
+        value = d.encounterName,
+        text = d.encounterName
+      })
+    end
+    encounterValues[d.encounterName] = true
+    if not armorValues[d.itemArmorType] then
+      table.insert(armorTypeOptions, {
+        value = d.itemArmorType,
+        text = d.itemArmorType
+      })
+    end
+    armorValues[d.itemArmorType] = true
+  end)
+
+  -- local dungeons = Data:GetDungeons()
+  -- Utils:TableForEach(dungeons, function(dungeon)
+  --   Utils:TableForEach(dungeon.loot, function(item)
+  --     local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
+  --     itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
+  --     expansionID, setID, isCraftingReagent = GetItemInfo(item.link)
+
+  --     -- if selectedInstanceOption ~= "" then
+  --     --   if selectedInstanceOption ~= (dungeon.short or dungeon.name) then
+  --     --     return
+  --     --   end
+  --     -- end
+
+  --     ---@type AE_TableDataRow
+  --     local row = {
+  --       columns = {
+  --         {
+  --           text = "|T" .. itemTexture .. ":0|t " .. item.link,
+  --           onEnter = function(columnFrame)
+  --             GameTooltip:ClearAllPoints()
+  --             GameTooltip:ClearLines()
+  --             GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+  --             GameTooltip:SetHyperlink(item.link)
+  --             GameTooltip:AddLine(" ")
+  --             GameTooltip:AddLine("<Shift Click to link to chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+  --             GameTooltip:Show()
+  --           end,
+  --           onLeave = function()
+  --             GameTooltip:Hide()
+  --           end,
+  --           onClick = function()
+  --             if IsModifiedClick("CHATLINK") then
+  --               if not ChatEdit_InsertLink(item.link) then
+  --                 ChatFrame_OpenChat(item.link);
+  --               end
+  --             end
+  --           end
+  --         },
+  --         {text = dungeon.short or dungeon.name},
+  --         {text = item.encounterID},
+  --         -- {text = "-"},
+  --         -- {text = "_"},
+  --         {text = item.slot or "-"},
+  --         {text = item.armorType or "-"},
+  --       }
+  --     }
+  --     table.insert(tableData.rows, row)
+  --   end)
+  --   table.insert(instanceOptions, {
+  --     value = dungeon.short or dungeon.name,
+  --     text = dungeon.short or dungeon.name,
+  --   })
+  -- end)
+
+  -- local raids = Data:GetRaids()
+  -- Utils:TableForEach(raids, function(raid)
+  --   Utils:TableForEach(raid.loot, function(item)
+  --     local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
+  --     itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
+  --     expansionID, setID, isCraftingReagent = GetItemInfo(item.link)
+
+  --     -- if selectedInstanceOption ~= "" then
+  --     --   if selectedInstanceOption ~= raid.name then
+  --     --     return
+  --     --   end
+  --     -- end
+
+  --     ---@type AE_TableDataRow
+  --     local row = {
+  --       columns = {
+  --         {
+  --           text = "|T" .. itemTexture .. ":0|t " .. item.link,
+  --           onEnter = function(columnFrame)
+  --             GameTooltip:ClearAllPoints()
+  --             GameTooltip:ClearLines()
+  --             GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+  --             GameTooltip:SetHyperlink(item.link)
+  --             GameTooltip:AddLine(" ")
+  --             GameTooltip:AddLine("<Shift Click to link to chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+  --             GameTooltip:Show()
+  --           end,
+  --           onLeave = function()
+  --             GameTooltip:Hide()
+  --           end,
+  --           onClick = function()
+  --             if IsModifiedClick("CHATLINK") then
+  --               if not ChatEdit_InsertLink(item.link) then
+  --                 ChatFrame_OpenChat(item.link);
+  --               end
+  --             end
+  --           end
+  --         },
+  --         {text = raid.name},
+  --         {text = item.encounterID},
+  --         -- {text = "-"},
+  --         -- {text = "_"},
+  --         {text = item.slot or "-"},
+  --         {text = item.armorType or "-"},
+  --       }
+  --     }
+  --     table.insert(tableData.rows, row)
+  --   end)
+  --   table.insert(instanceOptions, {
+  --     value = raid.name,
+  --     text = raid.name,
+  --   })
+  -- end)
+
+  local classes = Module:GetClasses()
+  Utils:TableForEach(classes, function(c)
+    table.insert(classOptions, {
+      value = c.ID,
+      text = "|A:" .. GetClassAtlas(strlower(c.file)) .. ":12:12|a " .. GetClassColorObj(c.file):WrapTextInColorCode(c.name)
     })
   end)
 
-  local raids = Data:GetRaids()
-  Utils:TableForEach(raids, function(raid)
-    Utils:TableForEach(raid.loot, function(item)
-      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
-      itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
-      expansionID, setID, isCraftingReagent = GetItemInfo(item.link)
-
-      -- if selectedInstanceOption ~= "" then
-      --   if selectedInstanceOption ~= raid.name then
-      --     return
-      --   end
-      -- end
-
-      ---@type AE_TableDataRow
-      local row = {
-        columns = {
-          {
-            text = "|T" .. itemTexture .. ":0|t " .. item.link,
-            onEnter = function(columnFrame)
-              GameTooltip:ClearAllPoints()
-              GameTooltip:ClearLines()
-              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetHyperlink(item.link)
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine("<Shift Click to link to chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-              GameTooltip:Show()
-            end,
-            onLeave = function()
-              GameTooltip:Hide()
-            end,
-            onClick = function()
-              if IsModifiedClick("CHATLINK") then
-                if not ChatEdit_InsertLink(item.link) then
-                  ChatFrame_OpenChat(item.link);
-                end
-              end
-            end
-          },
-          {text = raid.name},
-          {text = item.encounterID},
-          -- {text = "-"},
-          -- {text = "_"},
-          {text = item.slot or "-"},
-          {text = item.armorType or "-"},
-        }
-      }
-      table.insert(tableData.rows, row)
-    end)
-    table.insert(instanceOptions, {
-      value = raid.name,
-      text = raid.name,
+  local specs = Module:GetSpecs()
+  Utils:TableForEach(specs, function(s)
+    table.insert(specOptions, {
+      value = s.ID,
+      text = "|T" .. s.icon .. ":0|t " .. GetClassColorObj(s.classFile):WrapTextInColorCode(s.name)
     })
   end)
 

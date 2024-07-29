@@ -152,6 +152,10 @@
         "SendChatMessage",
         "strcmputf8i",
         "LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE",
-        "MouseIsOver"
+        "MouseIsOver",
+        "ALL_SPECS",
+        "ALL_CLASSES",
+        "GetClassAtlas",
+        "ALL_INVENTORY_SLOTS"
     ]
 }
