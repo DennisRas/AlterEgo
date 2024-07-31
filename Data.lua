@@ -5,7 +5,7 @@ local addon = select(2, ...)
 
 local Utils = addon.Utils
 
-local dbVersion = 18
+local dbVersion = 19
 
 ---@class AE_Data
 local Data = {}
@@ -172,6 +172,8 @@ Data.defaultDatabase = {
     },
     runHistory = {
       enabled = true,
+      activeEncounterID = nil,
+      activeRun = nil,
       runs = {},
     },
     dungeonTimer = {
@@ -349,7 +351,9 @@ Data.cache = {
   seasonID = nil,
   seasonDisplayID = nil,
   ---@type MythicPlusKeystoneAffix[]
-  currentAffixes = {}
+  currentAffixes = {},
+  classes = {},
+  specs = {},
 }
 
 function Data:Initialize()
@@ -1184,3 +1188,183 @@ end
 --   end
 -- self:UpdateModules()
 -- end
+
+
+function Data:GetClasses()
+  if Utils:TableCount(Data.cache.classes) > 0 then
+    return Data.cache.classes
+  end
+
+  for classID = 1, GetNumClasses() do
+    local className, classFile = GetClassInfo(classID)
+    if className then
+      table.insert(Data.cache.classes, {
+        ID = classID,
+        name = className,
+        file = classFile,
+        numSpecs = GetNumSpecializationsForClassID(classID)
+      })
+    end
+  end
+
+  return Data.cache.classes
+end
+
+function Data:GetSpecs()
+  if Utils:TableCount(Data.cache.specs) > 0 then
+    return Data.cache.specs
+  end
+
+  local classes = Data:GetClasses()
+  Utils:TableForEach(classes, function(cls)
+    for specIndex = 1, GetNumSpecializationsForClassID(cls.ID) do
+      local specID, name, description, icon, role, isRecommended, isAllowed = GetSpecializationInfoForClassID(cls.ID, specIndex)
+      if specID then
+        table.insert(Data.cache.specs, {
+          ID = specID,
+          name = name,
+          description = description,
+          icon = icon,
+          role = role,
+          isRecommended = isRecommended,
+          isAllowed = isAllowed,
+          classID = cls.ID,
+          className = cls.name,
+          classFile = cls.file
+        })
+      end
+    end
+  end)
+
+  return Data.cache.specs
+end
+
+---@param stopTimer? boolean
+---@param stopTimerID? number
+---@return number? timerID, number? elapsedTime, boolean? isActive
+local function GetKeystoneTimer(stopTimer, stopTimerID)
+  local timerIDs = {GetWorldElapsedTimers()} ---@type number[]
+  for _, timerID in ipairs(timerIDs) do
+    local _, elapsedTime, timerType = GetWorldElapsedTime(timerID)
+    if timerType == LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE and elapsedTime then
+      return timerID, elapsedTime, not stopTimer or stopTimerID ~= timerID
+    end
+  end
+end
+
+function Data:GetChallengeData()
+  local data = {}
+
+  -- TODO: Get Party Members data
+
+  data.isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
+
+  local instanceName, instanceType, instanceDifficultyID, instanceDifficultyName, instanceMaxPlayers, instanceDynamicDifficulty, instanceIsDynamic, instanceID, instanceGroupSize, instanceLFGDungeonID = GetInstanceInfo()
+  data.instanceName = instanceName
+  data.instanceType = instanceType
+  data.instanceDifficultyID = instanceDifficultyID
+  data.instanceDifficultyName = instanceDifficultyName
+  data.instanceMaxPlayers = instanceMaxPlayers
+  data.instanceDynamicDifficulty = instanceDynamicDifficulty
+  data.instanceIsDynamic = instanceIsDynamic
+  data.instanceID = instanceID
+  data.instanceGroupSize = instanceGroupSize
+  data.instanceLFGDungeonID = instanceLFGDungeonID
+
+  local activeKeystoneLevel, activeKeystoneAffixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
+  data.activeKeystoneLevel = activeKeystoneLevel
+  data.activeKeystoneAffixIDs = activeKeystoneAffixIDs
+
+  local activeChallengeModeID = C_ChallengeMode.GetActiveChallengeMapID() -- Note: Not MapChallengeMode.MapID, but MapChallengeMode.ID
+  data.activeChallengeModeID = activeChallengeModeID
+
+  if activeChallengeModeID then
+    local mapName, mapID, mapTimeLimit = C_ChallengeMode.GetMapUIInfo(activeChallengeModeID)
+    if mapName then
+      data.mapName = mapName
+      data.mapID = mapID
+      data.mapTimeLimit = mapTimeLimit
+    end
+  end
+
+  local _, _, stepCount = C_Scenario.GetStepInfo()
+  data.stepCount = stepCount
+
+  local deathCount, deathTimeLost = C_ChallengeMode.GetDeathCount()
+  data.deathCount = deathCount
+  data.deathTimeLost = deathTimeLost
+
+  local keystoneTimerID, keystoneTimerElapsedTime = GetKeystoneTimer()
+  data.keystoneTimerID = keystoneTimerID
+  data.keystoneTimerElapsedTime = keystoneTimerElapsedTime
+
+  local challengeModeID, challengeModeLevel, challengeModeTime, challengeModeOnTime, challengeModeKeystoneUpgradeLevels, challengeModePracticeRun, challengeModeOldOverallDungeonScore, challengeModeNewOverallDungeonScore, challengeModeIsMapRecord, challengeModeIsAffixRecord, challengeModePrimaryAffix, challengeModeisEligibleForScore, challengeModeUpgradeMembers = C_ChallengeMode.GetCompletionInfo()
+  data.challengeModeID = challengeModeID
+  data.challengeModeLevel = challengeModeLevel
+  data.challengeModeTime = challengeModeTime
+  data.challengeModeOnTime = challengeModeOnTime
+  data.challengeModeKeystoneUpgradeLevels = challengeModeKeystoneUpgradeLevels
+  data.challengeModePracticeRun = challengeModePracticeRun
+  data.challengeModeOldOverallDungeonScore = challengeModeOldOverallDungeonScore
+  data.challengeModeNewOverallDungeonScore = challengeModeNewOverallDungeonScore
+  data.challengeModeIsMapRecord = challengeModeIsMapRecord
+  data.challengeModeIsAffixRecord = challengeModeIsAffixRecord
+  data.challengeModePrimaryAffix = challengeModePrimaryAffix
+  data.challengeModeisEligibleForScore = challengeModeisEligibleForScore
+  data.challengeModeUpgradeMembers = challengeModeUpgradeMembers
+
+  data.bosses = {}
+  data.trashCount = 0
+  if stepCount and stepCount > 1 then
+    for stepIndex = 1, stepCount do
+      local criteriaString, criteriaType, criteriaCompleted, criteriaQuantity, criteriaTotalQuantity, criteriaFlags, criteriaAssetID, criteriaQuantityString, criteriaID, criteriaDuration, criteriaElapsed, criteriaFailed, criteriaIsWeightedProgress = C_Scenario.GetCriteriaInfo(stepIndex)
+      if criteriaString then
+        -- DevTools_Dump({criteriaString, criteriaType, completed, quantity, totalQuantity, flags, assetID, quantityString, criteriaID, duration, elapsed, criteriaFailed, isWeightedProgress})
+        if stepIndex == stepCount then -- Last step: Trash
+          local trashCount = criteriaQuantityString and tonumber(strsub(criteriaQuantityString, 1, strlen(criteriaQuantityString) - 1)) or 0
+          if trashCount > 0 then
+            data.trashCount = trashCount
+          end
+        else
+          local boss = data.bosses[stepIndex]
+          if not boss then
+            boss = {
+              index = stepIndex,
+              isInCombat = false,
+              numPulls = 0,
+              isCompleted = false,
+              encounterID = criteriaAssetID,
+              combatStartTime = 0,
+              combatEndTime = 0,
+              completedStartTime = 0,
+              completedEndTime = 0
+            }
+          end
+          -- TODO: Check criteriaDuration/elapsed for accurate numbers and potential time offsets
+          if not boss.isCompleted then
+            if not criteriaCompleted then
+              if not boss.isInCombat and activeEncounter then
+                boss.isInCombat = true
+                boss.combatStartTime = challengeModeTime
+                boss.numPulls = boss.numPulls + 1
+              elseif boss.isInCombat and not activeEncounter then
+                boss.isInCombat = false
+                boss.combatEndTime = challengeModeTime
+              end
+            else
+              boss.isInCombat = false
+              boss.numPulls = max(1, boss.numPulls)
+              boss.isCompleted = true
+              boss.completedStartTime = boss.combatStartTime or challengeModeTime
+              boss.completedEndTime = boss.combatEndTime or challengeModeTime
+            end
+          end
+
+          data.bosses[stepIndex] = boss
+        end
+      end
+    end
+  end
+
+  return data
+end

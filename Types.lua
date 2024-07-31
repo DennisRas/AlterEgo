@@ -24,7 +24,7 @@
 ---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table, boxes: boolean, modifiedInstanceOnly: boolean }
 ---@field interface { windowScale: number, windowColor: {r: number, g: number, b: number, a: number} }
 ---@field useRIOScoreColor boolean
----@field runHistory AE_GlobalRunHistory
+---@field runHistory AE_RH
 
 ---@class AE_GlobalRunHistory
 ---@field enabled boolean
@@ -314,3 +314,69 @@
 ---@field border number?
 ---@field windowScale number?
 ---@field windowColor table?
+
+---@class AE_LootTableItem
+---@field itemName string
+---@field itemLink string
+---@field itemTexture number
+---@field itemSlot string
+---@field itemArmorType string
+---@field journalInstanceID number
+---@field journalInstanceType "DUNGEON" | "RAID"
+---@field journalInstanceName string
+---@field encounterID number
+---@field encounterName string
+---@field classes number[]
+---@field specs number[]
+
+---@class AE_RH
+---@field enabled boolean
+---@field activeRun AE_RH_Run?
+---@field activeEncounterID number?
+---@field runs AE_RH_Run[]
+
+---@class AE_RH_Run
+---@field seasonID integer
+---@field startTimestamp number
+---@field endTimestamp number
+---@field state "RUNNING" | "ABANDONED" | "TIMED" | "OVERTIME"
+---@field challengeModeID number
+---@field challengeModeLevel number KeyStone level
+---@field challengeModeTimetable table<number, number, number> +1, +2, +3
+---@field numDeaths number
+---@field timeLost number
+---@field affixes integer[]
+---@field members AE_RH_RunMember[]
+---@field events AE_RH_RunEventDeath[] | AE_RH_RunEventEncounter[]
+---@field items AE_RH_RunItem[]
+
+---@class AE_RH_RunItem
+---@field memberName string
+---@field memberServer string
+---@field itemName string
+---@field itemLink string
+
+---@class AE_RH_RunMember
+---@field name string
+---@field server string
+---@field role "TANK" | "HEALER" | "DAMAGER" | "NONE"
+---@field classID integer
+---@field specID integer?
+---@field rating number?
+---@field ilvl number?
+---@field equipment table?
+---@field talents table?
+
+---@class AE_RH_RunEvent
+---@field timestamp number
+---@field encounterID number
+
+---@class AE_RH_RunEventDeath : AE_RH_RunEvent
+---@field type "DEATH"
+---@field name string
+---@field classID integer
+---@field reason string?
+---@field timeAdded integer
+
+---@class AE_RH_RunEventEncounter : AE_RH_RunEvent
+---@field type "START" | "KILL" | "WIPE"
