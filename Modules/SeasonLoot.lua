@@ -10,7 +10,7 @@ local Core = addon.Core
 local Data = addon.Data
 local Constants = addon.Constants
 local Input = addon.Input
-local Module = Core:NewModule("LootTable")
+local Module = Core:NewModule("SeasonLoot")
 
 local classCache = {}
 local specCache = {}
@@ -176,8 +176,8 @@ end
 function Module:Render()
   if not self.window then
     self.window = Window:New({
-      name = "LootTable",
-      title = "Loot Table",
+      name = "SeasonLoot",
+      title = "Season Loot",
       sidebar = 200,
     })
     self.window.body.table = Table:New({header = {sticky = true}})
