@@ -9,6 +9,7 @@ local Window = addon.Window
 local Core = addon.Core
 local Data = addon.Data
 local Constants = addon.Constants
+local Input = addon.Input
 local Module = Core:NewModule("DungeonTimer", "AceEvent-3.0", "AceTimer-3.0")
 
 function Module:OnInitialize()
@@ -24,7 +25,7 @@ function Module:OnDisable()
   self:WindowRender()
 end
 
-local padding = 6
+local padding = 10
 local fontObject = "SystemFont_Med1"
 local fontSpacing = 3
 
@@ -52,10 +53,34 @@ function Module:WindowRender()
     self.window.trashCount:SetFontObject(fontObject)
     self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window)
     self.window.progress = CreateFrame("Frame", "$parentProgress", self.window)
-    self.window.bosslist = CreateFrame("Frame", "$parentbosslist", self.window)
-    self.window.bosslist.bosses = {}
+    -- self.window.bosslist = CreateFrame("Frame", "$parentbosslist", self.window)
+    self.window.bosses = {}
     self.window.status = CreateFrame("Frame", "$parentStatusbar", self.window)
+    self.window.buttons = CreateFrame("Frame", "$parentButtons", self.window)
+    self.window.buttons.readycheck = Input:Button({
+      parent = self.window.buttons,
+      text = "/readycheck",
+      onClick = function()
+        DoReadyCheck()
+      end,
+      width = 200
+    })
+    self.window.buttons.countdown = Input:Button({
+      parent = self.window.buttons,
+      text = "/countdown 10",
+      onClick = function()
+        C_PartyInfo.DoCountdown(10)
+      end,
+      width = 200
+    })
     self.window.checklist = CreateFrame("Frame", "$parentChecklist", self.window)
+    self.window.checklist.header = CreateFrame("Frame", "$parentHeader", self.window.checklist)
+    self.window.checklist.header.text = self.window.checklist.header:CreateFontString("$parentText", "OVERLAY")
+    self.window.checklist.header.text:SetFontObject("SystemFont_Med2")
+    self.window.checklist.header.text:SetPoint("TOPLEFT", self.window.checklist.header, "TOPLEFT", padding, -padding)
+    self.window.checklist.header.text:SetPoint("BOTTOMRIGHT", self.window.checklist.header, "BOTTOMRIGHT", -padding, padding)
+    self.window.checklist.header.text:SetText("Checklist")
+    self.window.checklist.header.text:SetJustifyH("LEFT")
     self.window.checklist.text = self.window.checklist:CreateFontString("$parentText", "OVERLAY")
     self.window.checklist.text:SetFontObject(fontObject)
     self.window.checklist.text:SetPoint("TOPLEFT", self.window.checklist, "TOPLEFT", padding, -padding - 3)
@@ -77,10 +102,12 @@ function Module:WindowRender()
     windowShown = false,
     windowWidth = 300,
     windowHeight = 0,
+    buttonsShown = false,
     dungeonName = "??",
     dungeonLevel = "",
     timer = "",
     deathCount = 2,
+    deathCountShown = false,
     bosses = {
       {name = "Boss 1", killed = true,  time = 57 * 4,                                     split = 46},
       {name = "Boss 2", killed = true,  time = 57 * 4 + 45 * 5,                            split = 5},
@@ -113,39 +140,46 @@ function Module:WindowRender()
     dataDungeon = Utils:TableGet(Data.dungeons, "mapId", instanceID)
   end
 
-  local dungeonName = dataDungeon and (dataDungeon.abbr or dataDungeon.name) or "??"
-
   -- Active run
   if IsChallengeModeActive then
-    state.dungeonName = format("%s +%d", dungeonName, activeKeystoneLevel)
-    state.windowShown = true
+    if dataDungeon then
+      state.bosses = {}
+      local lastTime = math.random(100, 180)
+      Utils:TableForEach(dataDungeon.encounters, function(encounter, encounterIndex)
+        lastTime = lastTime + math.random(120, 300)
+        table.insert(state.bosses, {
+          name = encounter.name,
+          killed = encounterIndex <= 2,
+          time = lastTime,
+          split = math.random(-180, 180),
+        })
+      end)
+      state.dungeonName = format("%s +%d", dataDungeon.name, activeKeystoneLevel)
+    else
+      -- TODO: Show objective tracker data instead
+    end
+    state.deathCountShown = true
     -- "Dungeon Lobby"
   elseif dataDungeon then
     state.bosses = {}
-    local lastTime = math.random(100, 180)
-    Utils:TableForEach(dataDungeon.encounters, function(encounter, encounterIndex)
-      lastTime = lastTime + math.random(120, 300)
-      table.insert(state.bosses, {
-        name = encounter.name,
-        killed = encounterIndex <= 2,
-        time = lastTime,
-        split = math.random(-180, 180),
-      })
-    end)
     state.dungeonName = dataDungeon.name
+    state.buttonsShown = true
     state.windowShown = true
     -- Preview mode
   elseif previewEnabled then
     state.dungeonName = "+10 PreviewMode"
+    state.deathCountShown = true
     state.windowShown = true
   end
 
+  local windowOffsetY = 0
+
   -- Header
   local headerHeight = 30
-  self.window.header:SetPoint("TOPLEFT", self.window, "TOPLEFT")
-  self.window.header:SetPoint("TOPRIGHT", self.window, "TOPRIGHT")
+  self.window.header:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -windowOffsetY)
+  self.window.header:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -windowOffsetY)
   self.window.header:SetHeight(headerHeight)
-  state.windowHeight = state.windowHeight + headerHeight
+  windowOffsetY = windowOffsetY + headerHeight
   Utils:SetBackgroundColor(self.window.header, 0, 0, 0, 0.5)
 
   -- DungeonName
@@ -159,81 +193,106 @@ function Module:WindowRender()
   self.window.deathCount:SetPoint("TOPRIGHT", self.window.header, "TOPRIGHT", 0, -padding)
   self.window.deathCount:SetPoint("BOTTOMRIGHT", self.window.header, "BOTTOMRIGHT", 0, padding)
   self.window.deathCount:SetText(tostring(state.deathCount) .. CreateAtlasMarkup("Warfront-NeutralHero", 32, 32, -5))
-
-  -- Checklist
-  local checklistHeight = #state.checklist * (15 + fontSpacing)
-  self.window.checklist:SetPoint("BOTTOMLEFT", self.window, "BOTTOMLEFT")
-  self.window.checklist:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT")
-  self.window.checklist:SetHeight(checklistHeight)
-  self.window.checklist.text:SetText(table.concat(state.checklist, "\n"))
-  state.windowHeight = state.windowHeight + checklistHeight
-  Utils:SetBackgroundColor(self.window.checklist, 0, 0, 0, 0.5)
+  self.window.deathCount:SetShown(state.deathCountShown)
 
   -- Bosses
-  local bossHeight = 20
-  local bossOffsetY = padding
-  Utils:TableForEach(self.window.bosslist.bosses, function(bossFrame) bossFrame:Hide() end)
-  Utils:TableForEach(state.bosses, function(boss, bossIndex)
-    local bossFrame = self.window.bosslist.bosses[bossIndex]
-    if not bossFrame then
-      bossFrame = CreateFrame("Frame", "$parentBoss" .. bossIndex, self.window.bosslist)
-      bossFrame:SetHeight(bossHeight)
-      bossFrame:SetPoint("TOPLEFT", self.window.bosslist, "TOPLEFT", 0, -bossOffsetY)
-      bossFrame:SetPoint("TOPRIGHT", self.window.bosslist, "TOPRIGHT", 0, -bossOffsetY)
-      bossFrame.textName = bossFrame:CreateFontString("$parentName", "OVERLAY")
-      bossFrame.textName:SetFontObject("SystemFont_Shadow_Med2_Outline")
-      bossFrame.textName:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", padding * 1.2, -padding)
-      bossFrame.textName:SetPoint("BOTTOMLEFT", bossFrame, "BOTTOMLEFT", padding * 1.2, padding)
-      bossFrame.textName:SetJustifyH("LEFT")
-      bossFrame.textTime = bossFrame:CreateFontString("$parentTime", "OVERLAY")
-      bossFrame.textTime:SetFontObject("SystemFont_Shadow_Med2_Outline")
-      bossFrame.textTime:SetPoint("TOPRIGHT", bossFrame, "TOPRIGHT", -padding * 1.2, -padding)
-      bossFrame.textTime:SetPoint("BOTTOMRIGHT", bossFrame, "BOTTOMRIGHT", -padding * 1.2, padding)
-      bossFrame.textTime:SetJustifyH("RIGHT")
-      bossFrame.textSplit = bossFrame:CreateFontString("$parentSplit", "OVERLAY")
-      bossFrame.textSplit:SetFontObject("SystemFont_Shadow_Med1_Outline")
-      bossFrame.textSplit:SetPoint("TOPRIGHT", bossFrame.textTime, "TOPLEFT", -padding * 1.2, 0)
-      bossFrame.textSplit:SetPoint("BOTTOMRIGHT", bossFrame.textTime, "BOTTOMLEFT", -padding * 1.2, 0)
-      bossFrame.textSplit:SetJustifyH("RIGHT")
-      self.window.bosslist.bosses[bossIndex] = bossFrame
-    end
-    local bossColor = WHITE_FONT_COLOR
-    local splitColor = RED_FONT_COLOR
-    local splitPrefix = ""
-    local timeColor = WHITE_FONT_COLOR
-    if boss.killed then
-      bossColor = GREEN_FONT_COLOR
-      if boss.split < 0 then
-        timeColor = GREEN_FONT_COLOR
-      else
-        timeColor = RED_FONT_COLOR
+  local bossHeight = 22
+  -- local bossOffsetY = padding
+  Utils:TableForEach(self.window.bosses, function(bossFrame) bossFrame:Hide() end)
+  if Utils:TableCount(state.bosses) > 0 then
+    windowOffsetY = windowOffsetY + padding
+    Utils:TableForEach(state.bosses, function(boss, bossIndex)
+      local bossFrame = self.window.bosses[bossIndex]
+      if not bossFrame then
+        bossFrame = CreateFrame("Frame", "$parentBoss" .. bossIndex, self.window)
+        bossFrame:SetHeight(bossHeight)
+        bossFrame:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -windowOffsetY)
+        bossFrame:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -windowOffsetY)
+        bossFrame.textName = bossFrame:CreateFontString("$parentName", "OVERLAY")
+        bossFrame.textName:SetFontObject("SystemFont_Shadow_Med2_Outline")
+        bossFrame.textName:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", padding, -padding)
+        bossFrame.textName:SetPoint("BOTTOMLEFT", bossFrame, "BOTTOMLEFT", padding, padding)
+        bossFrame.textName:SetPoint("TOPRIGHT", bossFrame, "TOPRIGHT", -60 * 2 - padding * 4, -padding)
+        bossFrame.textName:SetPoint("BOTTOMRIGHT", bossFrame, "BOTTOMRIGHT", -60 * 2 - padding * 4, padding)
+        bossFrame.textName:SetJustifyH("LEFT")
+        bossFrame.textSplit = bossFrame:CreateFontString("$parentSplit", "OVERLAY")
+        bossFrame.textSplit:SetFontObject("SystemFont_Shadow_Med1_Outline")
+        bossFrame.textSplit:SetPoint("TOPRIGHT", bossFrame, "TOPRIGHT", -60 - padding * 3, 0)
+        bossFrame.textSplit:SetPoint("BOTTOMRIGHT", bossFrame, "BOTTOMRIGHT", -60 - padding * 3, 0)
+        bossFrame.textSplit:SetJustifyH("RIGHT")
+        bossFrame.textTime = bossFrame:CreateFontString("$parentTime", "OVERLAY")
+        bossFrame.textTime:SetFontObject("SystemFont_Shadow_Med2_Outline")
+        bossFrame.textTime:SetPoint("TOPRIGHT", bossFrame, "TOPRIGHT", -padding, -padding)
+        bossFrame.textTime:SetPoint("BOTTOMRIGHT", bossFrame, "BOTTOMRIGHT", -padding, padding)
+        bossFrame.textTime:SetJustifyH("RIGHT")
+        self.window.bosses[bossIndex] = bossFrame
       end
-    end
-    if boss.split < 0 then
-      splitPrefix = "-"
-      splitColor = DIM_GREEN_FONT_COLOR
-    else
-      splitPrefix = "+"
-      splitColor = DIM_RED_FONT_COLOR
-    end
-    bossFrame.textName:SetWidth((bossFrame:GetWidth() / 3) * 2)
-    bossFrame.textName:SetText(bossColor:WrapTextInColorCode(boss.name))
-    bossFrame.textTime:SetWidth((bossFrame:GetWidth() / 3) / 2)
-    bossFrame.textTime:SetText(timeColor:WrapTextInColorCode(SecondsToClock(boss.time)))
-    bossFrame.textTime:SetWidth((bossFrame:GetWidth() / 3) / 2)
-    bossFrame.textSplit:SetText(splitColor:WrapTextInColorCode(splitPrefix .. SecondsToClock(math.abs(boss.split))))
-    bossFrame.textSplit:SetShown(boss.killed)
-    bossFrame:Show()
-    bossOffsetY = bossOffsetY + bossHeight
-  end)
-  self.window.bosslist:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -headerHeight)
-  self.window.bosslist:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -headerHeight)
-  self.window.bosslist:SetHeight(bossOffsetY)
-  self.window.bosslist:Show()
-  state.windowHeight = state.windowHeight + bossOffsetY + padding
+      local bossColor = WHITE_FONT_COLOR
+      local splitColor = RED_FONT_COLOR
+      local splitPrefix = ""
+      local timeColor = WHITE_FONT_COLOR
+      if boss.killed then
+        bossColor = GREEN_FONT_COLOR
+        if boss.split < 0 then
+          timeColor = GREEN_FONT_COLOR
+        else
+          timeColor = RED_FONT_COLOR
+        end
+      end
+      if boss.split < 0 then
+        splitPrefix = "-"
+        splitColor = DIM_GREEN_FONT_COLOR
+      else
+        splitPrefix = "+"
+        splitColor = DIM_RED_FONT_COLOR
+      end
+      -- bossFrame.textName:SetWidth((bossFrame:GetWidth() / 3) * 2)
+      bossFrame.textName:SetText(bossColor:WrapTextInColorCode(boss.name))
+      bossFrame.textSplit:SetWidth(60)
+      bossFrame.textSplit:SetText(splitColor:WrapTextInColorCode(splitPrefix .. SecondsToClock(math.abs(boss.split))))
+      bossFrame.textSplit:SetShown(boss.killed)
+      bossFrame.textTime:SetWidth(60)
+      bossFrame.textTime:SetText(timeColor:WrapTextInColorCode(SecondsToClock(boss.time)))
+      bossFrame:Show()
+      windowOffsetY = windowOffsetY + bossHeight
+    end)
+    windowOffsetY = windowOffsetY + padding
+    -- self.window.bosslist:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -headerHeight)
+    -- self.window.bosslist:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -headerHeight)
+    -- self.window.bosslist:SetHeight(bossHeight)
+    -- self.window.bosslist:Show()
+    -- windowOffsetY = windowOffsetY + bossOffsetY + padding
+  end
+
+  -- Buttons
+  local buttonsHeight = 100
+  self.window.buttons:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -windowOffsetY)
+  self.window.buttons:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -windowOffsetY)
+  self.window.buttons:SetHeight(buttonsHeight)
+  self.window.buttons:SetShown(state.buttonsShown)
+  self.window.buttons.readycheck:SetPoint("CENTER", self.window.buttons, "CENTER", 0, 15)
+  self.window.buttons.countdown:SetPoint("CENTER", self.window.buttons, "CENTER", 0, -15)
+  if state.buttonsShown then
+    windowOffsetY = windowOffsetY + buttonsHeight
+  end
+
+  -- Checklist Header
+  self.window.checklist.header:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -windowOffsetY)
+  self.window.checklist.header:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -windowOffsetY)
+  self.window.checklist.header:SetHeight(headerHeight)
+  windowOffsetY = windowOffsetY + headerHeight
+  Utils:SetBackgroundColor(self.window.checklist.header, 0, 0, 0, 0.5)
+
+  -- Checklist
+  local checklistHeight = #state.checklist * (16 + fontSpacing)
+  self.window.checklist:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -windowOffsetY)
+  self.window.checklist:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -windowOffsetY)
+  self.window.checklist:SetHeight(checklistHeight)
+  self.window.checklist.text:SetText(table.concat(state.checklist, "\n"))
+  windowOffsetY = windowOffsetY + checklistHeight
 
   -- Window
-  self.window:SetSize(state.windowWidth, state.windowHeight)
+  self.window:SetSize(state.windowWidth, windowOffsetY)
   self.window:SetShown(state.windowShown)
   Utils:SetBackgroundColor(self.window, 0, 0, 0, 0.7)
 end
