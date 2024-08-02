@@ -12,9 +12,6 @@ local Constants = addon.Constants
 local Input = addon.Input
 local Module = Core:NewModule("SeasonLoot")
 
-local classCache = {}
-local specCache = {}
-
 function Module:OnInitialize()
   self:WindowRender()
 end
@@ -52,55 +49,8 @@ end
 --   return self.data
 -- end
 
-function Module:GetClasses()
-  if Utils:TableCount(classCache) > 0 then
-    return classCache
-  end
-
-  for classID = 1, GetNumClasses() do
-    local className, classFile = GetClassInfo(classID)
-    if className then
-      table.insert(classCache, {
-        ID = classID,
-        name = className,
-        file = classFile,
-        numSpecs = GetNumSpecializationsForClassID(classID)
-      })
-    end
-  end
-
-  return classCache
-end
-
-function Module:GetSpecs()
-  if Utils:TableCount(specCache) > 0 then
-    return specCache
-  end
-
-  local classes = Module:GetClasses()
-  Utils:TableForEach(classes, function(cls)
-    for specIndex = 1, GetNumSpecializationsForClassID(cls.ID) do
-      local specID, name, description, icon, role, isRecommended, isAllowed = GetSpecializationInfoForClassID(cls.ID, specIndex)
-      if specID then
-        table.insert(specCache, {
-          ID = specID,
-          name = name,
-          description = description,
-          icon = icon,
-          role = role,
-          isRecommended = isRecommended,
-          isAllowed = isAllowed,
-          classID = cls.ID,
-          className = cls.name,
-          classFile = cls.file
-        })
-      end
-    end
-  end)
-
-  return specCache
-end
-
+---Get loot from dungeons and raids
+---@return AE_LootTableItem[]
 function Module:GetData()
   ---@type AE_SL_Item[]
   local data = {}
@@ -109,7 +59,7 @@ function Module:GetData()
 
   Utils:TableForEach(dungeons, function(instance)
     Utils:TableForEach(instance.loot, function(loot)
-      -- TODO: Move this to the loadgamedata() function
+      -- TODO: CACHE the GetItemInfo results: https://warcraft.wiki.gg/wiki/Memoizing_table
       local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
       expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(loot.link)
@@ -124,7 +74,7 @@ function Module:GetData()
         itemSlot = loot.slot,
         itemArmorType = loot.armorType,
         journalInstanceID = instance.journalInstanceID,
-        journalInstanceType = "dungeon",
+        journalInstanceType = "DUNGEON",
         journalInstanceName = instance.short or instance.name,
         encounterID = loot.encounterID,
         encounterName = encounter and encounter.name or "",
@@ -151,7 +101,7 @@ function Module:GetData()
         itemSlot = loot.slot,
         itemArmorType = loot.armorType,
         journalInstanceID = instance.instanceID,
-        journalInstanceType = "raid",
+        journalInstanceType = "RAID",
         journalInstanceName = instance.name,
         encounterID = loot.encounterID,
         encounterName = encounter and encounter.name or "",
@@ -424,7 +374,7 @@ function Module:WindowRender()
   --   })
   -- end)
 
-  local classes = Module:GetClasses()
+  local classes = Data:GetClasses()
   Utils:TableForEach(classes, function(c)
     table.insert(classOptions, {
       value = c.ID,
@@ -432,7 +382,7 @@ function Module:WindowRender()
     })
   end)
 
-  local specs = Module:GetSpecs()
+  local specs = Data:GetSpecs()
   Utils:TableForEach(specs, function(s)
     table.insert(specOptions, {
       value = s.ID,
