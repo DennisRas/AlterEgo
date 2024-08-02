@@ -50,7 +50,7 @@ end
 -- end
 
 ---Get loot from dungeons and raids
----@return AE_LootTableItem[]
+---@return AE_SL_Item[]
 function Module:GetData()
   ---@type AE_SL_Item[]
   local data = {}
