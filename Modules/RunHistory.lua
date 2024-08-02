@@ -11,6 +11,10 @@ local Data = addon.Data
 local Constants = addon.Constants
 local Module = Core:NewModule("RunHistory")
 
+function Module:OnInitialize()
+  self:Render()
+end
+
 function Module:OnEnable()
   self:Render()
 end

@@ -49,6 +49,10 @@ function Module:GetBodySize()
   return width, height
 end
 
+function Module:OnInitialize()
+  self:WindowRender()
+end
+
 function Module:OnEnable()
   Core:RegisterBucketEvent(
     {
@@ -83,24 +87,22 @@ function Module:OnEnable()
     },
     1,
     function()
-      self:Render()
+      self:WindowRender()
     end
   )
   Core:RegisterMessage("AE_SETTINGS_UPDATED", function()
-    self:Render()
+    self:WindowRender()
   end)
-  self:Render()
+  self:WindowRender()
 end
 
 function Module:ToggleWindow()
-  self:Render()
-  if not self.window then
-    return
-  end
+  if not self.window then return end
+  self:WindowRender()
   self.window:Toggle()
 end
 
-function Module:Render()
+function Module:WindowRender()
   local currentAffixes = Data:GetCurrentAffixes()
   local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
   local seasonID = Data:GetCurrentSeason()
@@ -907,7 +909,7 @@ function Module:SetupButtons()
               keepShownOnClick = true,
               func = function(button, arg1, arg2, checked)
                 Data.db.global.raids.hiddenDifficulties[button.value] = not checked
-                self:Render()
+                self:WindowRender()
               end
             },
             level
@@ -923,7 +925,7 @@ function Module:SetupButtons()
               keepShownOnClick = false,
               func = function(button)
                 Data.db.global.interface.windowScale = button.value
-                self:Render()
+                self:WindowRender()
               end
             },
             level
@@ -941,7 +943,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.showAffixHeader = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({
@@ -954,7 +956,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.showZeroRatedCharacters = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({
@@ -967,7 +969,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.showRealms = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({
@@ -981,7 +983,7 @@ function Module:SetupButtons()
           disabled = type(_G.RaiderIO) == "nil",
           func = function(button, arg1, arg2, checked)
             Data.db.global.useRIOScoreColor = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
@@ -995,7 +997,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.announceResets = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({
@@ -1008,7 +1010,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.announceKeystones.autoParty = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({
@@ -1021,7 +1023,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.announceKeystones.autoGuild = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
@@ -1035,7 +1037,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.raids.enabled = checked
-            self:Render()
+            self:WindowRender()
           end,
           hasArrow = true,
           menuList = "raiddifficulties"
@@ -1051,7 +1053,7 @@ function Module:SetupButtons()
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
               Data.db.global.raids.modifiedInstanceOnly = checked
-              self:Render()
+              self:WindowRender()
             end
           })
         end
@@ -1065,7 +1067,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.raids.colors = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
@@ -1079,7 +1081,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.showTiers = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({
@@ -1092,7 +1094,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.showAffixColors = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({text = "PvP", isTitle = true, notCheckable = true})
@@ -1106,7 +1108,7 @@ function Module:SetupButtons()
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
             Data.db.global.pvp.enabled = checked
-            self:Render()
+            self:WindowRender()
           end
         })
         UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
@@ -1212,7 +1214,7 @@ function Module:SetupButtons()
           arg1 = option.value,
           func = function(button, arg1, arg2, checked)
             Data.db.global.sorting = arg1
-            self:Render()
+            self:WindowRender()
           end
         })
       end
@@ -1272,7 +1274,7 @@ function Module:SetupButtons()
           arg1 = character.GUID,
           func = function(button, arg1, arg2, checked)
             Data.db.global.characters[arg1].enabled = checked
-            self:Render()
+            self:WindowRender()
           end
         })
       end

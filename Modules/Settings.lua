@@ -15,8 +15,8 @@ local Module = Core:NewModule("Settings", "AceEvent-3.0")
 local buttonHeight = 35
 local bodyWidth = 500
 
-function Module:OnEnable()
-  self:Render()
+function Module:OnInitialize()
+  self:WindowRender()
 end
 
 ---Set the active tab
@@ -36,7 +36,7 @@ function Module:SetTab(index)
       Utils:SetBackgroundColor(tab.button, 1, 1, 1, 0.06)
     end
   end)
-  self:Render()
+  self:WindowRender()
 end
 
 ---Create a Checkbox Widget
@@ -338,7 +338,7 @@ local function CreateWidgetLayout(options)
   return container
 end
 
-function Module:Render()
+function Module:WindowRender()
   if not self.window then
     self.window = Window:New({
       name = "Settings",

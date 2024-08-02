@@ -15,8 +15,12 @@ local Module = Core:NewModule("SeasonLoot")
 local classCache = {}
 local specCache = {}
 
+function Module:OnInitialize()
+  self:WindowRender()
+end
+
 function Module:OnEnable()
-  self:Render()
+  self:WindowRender()
 end
 
 -- function Module:GetData()
@@ -161,7 +165,7 @@ function Module:GetData()
   return data
 end
 
-function Module:Render()
+function Module:WindowRender()
   if not self.window then
     self.window = Window:New({
       name = "SeasonLoot",

@@ -11,24 +11,27 @@ local Data = addon.Data
 local Constants = addon.Constants
 local Module = Core:NewModule("WeeklyAffixes")
 
+function Module:OnInitialize()
+  self:WindowRender()
+end
+
 function Module:OnEnable()
-  Core:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
-    self:Render()
-  end)
-  self:Render()
+  Core:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "WindowRender")
+  self:WindowRender()
 end
 
 function Module:OnDisable()
+  self:UnregisterAllEvents()
   self.window:Hide()
 end
 
 ---Show the window
 function Module:Open()
-  self:Render()
+  self:WindowRender()
   self.window:Show()
 end
 
-function Module:Render()
+function Module:WindowRender()
   local affixes = Data:GetAffixes()
   local affixRotation = Data:GetAffixRotation()
   local currentAffixes = Data:GetCurrentAffixes()

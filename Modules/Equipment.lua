@@ -11,20 +11,25 @@ local Data = addon.Data
 local Constants = addon.Constants
 local Module = Core:NewModule("Equipment")
 
+function Module:OnInitialize()
+  self.character = nil
+  self:WindowRender()
+end
+
 function Module:OnEnable()
   self.character = nil
-  self:Render()
+  self:WindowRender()
 end
 
 function Module:OnDisable()
   self.character = nil
-  self:Render()
+  self:WindowRender()
 end
 
 function Module:ToggleWindow(show)
   if self.window then
     self.window:Toggle(show)
-    self:Render()
+    self:WindowRender()
   end
 end
 
@@ -39,10 +44,10 @@ function Module:Open(character)
     self.character = character
   end
 
-  self:Render()
+  self:WindowRender()
 end
 
-function Module:Render()
+function Module:WindowRender()
   local tableWidth = 610
   local tableHeight = 0
   local rowHeight = 26
