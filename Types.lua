@@ -314,3 +314,17 @@
 ---@field border number?
 ---@field windowScale number?
 ---@field windowColor table?
+
+---@class AE_SL_Item
+---@field itemName string
+---@field itemLink string
+---@field itemTexture number
+---@field itemSlot string
+---@field itemArmorType string
+---@field journalInstanceID number
+---@field journalInstanceType "dungeon" | "raid"
+---@field journalInstanceName string
+---@field encounterID number
+---@field encounterName string
+---@field classes number[]
+---@field specs number[]

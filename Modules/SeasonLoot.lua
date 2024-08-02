@@ -98,19 +98,7 @@ function Module:GetSpecs()
 end
 
 function Module:GetData()
-  ---@class AE_LootTableItem
-  ---@field itemName string
-  ---@field itemLink string
-  ---@field itemTexture number
-  ---@field itemSlot string
-  ---@field itemArmorType string
-  ---@field journalInstanceID number
-  ---@field journalInstanceType "dungeon" | "raid"
-  ---@field journalInstanceName string
-  ---@field encounterID number
-  ---@field encounterName string
-  ---@field classes number[]
-  ---@field specs number[]
+  ---@type AE_SL_Item[]
   local data = {}
   local dungeons = Data:GetDungeons()
   local raids = Data:GetRaids()
@@ -124,7 +112,7 @@ function Module:GetData()
 
       local encounter = Utils:TableGet(instance.encounters, "journalEncounterID", loot.encounterID)
 
-      ---@type AE_LootTableItem
+      ---@type AE_SL_Item
       local item = {
         itemName = itemName,
         itemLink = itemLink,
@@ -151,7 +139,7 @@ function Module:GetData()
 
       local encounter = Utils:TableGet(instance.encounters, "journalEncounterID", loot.encounterID)
 
-      ---@type AE_LootTableItem
+      ---@type AE_SL_Item
       local item = {
         itemName = itemName,
         itemLink = itemLink,
