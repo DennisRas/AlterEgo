@@ -250,7 +250,7 @@ function Module:Render()
       columns = {
         {text = tostring(run.startTimestamp)},
         {text = dungeon and dungeon.abbr or "??"},
-        {text = run.challengeModeLevel},
+        {text = tostring(run.challengeModeLevel)},
         {text = tostring(run.challengeModeTime)}, -- Format seconds to time
         {text = table.concat(Utils:TableMap(affixes, function(affix) return affix.name or "??" end), ", ")},
         {text = table.concat(Utils:TableMap(tanks, function(member) return member.name or "??" end), ", ")},

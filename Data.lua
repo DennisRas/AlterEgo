@@ -1343,11 +1343,11 @@ function Data:GetChallengeData()
           -- TODO: Check criteriaDuration/elapsed for accurate numbers and potential time offsets
           if not boss.isCompleted then
             if not criteriaCompleted then
-              if not boss.isInCombat and activeEncounter then
+              if not boss.isInCombat and self.db.global.runHistory.activeEncounter then
                 boss.isInCombat = true
                 boss.combatStartTime = challengeModeTime
                 boss.numPulls = boss.numPulls + 1
-              elseif boss.isInCombat and not activeEncounter then
+              elseif boss.isInCombat and not self.db.global.runHistory.activeEncounter then
                 boss.isInCombat = false
                 boss.combatEndTime = challengeModeTime
               end
