@@ -11,199 +11,393 @@ local Data = addon.Data
 local Constants = addon.Constants
 local Module = Core:NewModule("DungeonTimer", "AceEvent-3.0", "AceTimer-3.0")
 
--- SecondsToClock(): https://github.com/tomrus88/BlizzardInterfaceCode/blob/master/Interface/AddOns/Blizzard_SharedXML/TimeUtil.lua#L256
-local activeEncounter = false
+function Module:OnInitialize()
+  self:WindowRender()
+end
 
 function Module:OnEnable()
-  if not Data.db.global.dungeonTimer then Data.db.global.dungeonTimer = {} end -- TODO: Add this to the defaultCharacrer object/type
-
-  -- self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- MDT: Current Pull
-  -- self:RegisterEvent("PLAYER_DEAD") -- MDT: Current Pull
-  -- self:RegisterEvent("PLAYER_REGEN_ENABLED") -- MDT: Current Pull
-  -- self:RegisterEvent("SCENARIO_POI_UPDATE")
-  -- self:RegisterEvent("CRITERIA_COMPLETE")
-  -- self:RegisterEvent("UNIT_THREAT_LIST_UPDATE") -- MDT: Current Pull
-
-  -- TODO
-  -- self:RegisterEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
-  -- self:RegisterEvent("CHALLENGE_MODE_LEADERS_UPDATE")
-  -- self:RegisterEvent("CHALLENGE_MODE_MEMBER_INFO_UPDATED")
-  -- self:RegisterEvent("CHALLENGE_MODE_MAPS_UPDATE")
-  -- self:RegisterEvent("CHALLENGE_MODE_RESET")
-  -- self:RegisterEvent("MYTHIC_PLUS_NEW_WEEKLY_RECORD")
-  -- self:RegisterEvent("SCENARIO_CRITERIA_UPDATE")
-  -- self:RegisterEvent("WORLD_STATE_TIMER_START")
-  -- self:RegisterEvent("WORLD_STATE_TIMER_STOP")
-
-  self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-  self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
-  self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_SLOTTED")
-  self:RegisterEvent("CHALLENGE_MODE_START")
-  self:RegisterEvent("ENCOUNTER_END")
-  self:RegisterEvent("ENCOUNTER_START")
-  self:RegisterEvent("PLAYER_ENTERING_WORLD")
-
-  self.renderTimer = self:ScheduleRepeatingTimer("Render", 1)
+  self:RegisterEvent("PLAYER_ENTERING_WORLD", "WindowRender")
+  self:WindowRender()
 end
 
-function Module:StartCurrentRun()
-  local data = self:GetData()
-  if data.isChallengeModeActive then
-    data.startTimestamp = data.startTimestamp - data.time
-    self:SetCurrentRun(data)
-  end
+function Module:OnDisable()
+  self:WindowRender()
 end
 
-function Module:GetCurrentRun()
-  return Data.db.global.dungeonTimer.currentRun
-end
+local padding = 6
+local fontObject = "SystemFont_Med1"
+local fontSpacing = 3
 
-function Module:SetCurrentRun(data)
-  Data.db.global.dungeonTimer.currentRun = data
-end
-
-function Module:EndCurrentRun()
-  local currentRun = self:GetCurrentRun()
-  if not currentRun then
-    return
-  end
-  currentRun.endTimestamp = GetServerTime()
-  if Data.db.global.runHistory.enabled then
-    table.insert(Data.db.global.runHistory, currentRun)
-  end
-end
-
-function Module:ClearCurrentRun()
-  self:SetCurrentRun(nil)
-end
-
-function Module:UpdateCurrentRun()
-  local data = self:GetData()
-  local currentRun = self:GetCurrentRun()
-  if not currentRun then
-    if data.isChallengeModeActive then
-      self:StartCurrentRun()
-      return
-    end
-  end
-
-
-  local runData = self:GetData()
-  if not Data.db.global.dungeonTimer.currentRun then
-    if runData.isChallengeModeActive then
-      return self:StartCurrentRun()
-    end
-  end
-end
-
-function Module:CHALLENGE_MODE_START(...)
-  local currentRun = self:GetCurrentRun()
-  if currentRun then
-    self:ClearCurrentRun()
-  end
-  self:StartCurrentRun()
-end
-
-function Module:CHALLENGE_MODE_COMPLETED(...)
-  local currentRun = self:GetCurrentRun()
-  if not currentRun then
-    return
-  end
-  currentRun.completedTimestamp = GetServerTime()
-
-  self:EndCurrentRun()
-end
-
-function Module:PLAYER_ENTERING_WORLD()
-  self:UpdateCurrentRun()
-end
-
-function Module:ENCOUNTER_START(...)
-  local _, encounterID = ...
-  activeEncounter = encounterID
-  self:UpdateCurrentRun()
-end
-
-function Module:ENCOUNTER_END(...)
-  activeEncounter = false
-  self:UpdateCurrentRun()
-end
-
--- TODO: Move these to the main module?
--- These two events are still relevant even if the DungeonTimer module isn't enabled
-function Module:CHALLENGE_MODE_KEYSTONE_SLOTTED(...)
-  if true then return end --TODO: Add setting to enable/disable this
-  -- TODO: Close all bags
-end
-
-function Module:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(...)
-  -- if true then return end --TODO: Add setting to enable/disable this
-
-  local keystoneItemID = Data:GetKeystoneItemID()
-  for bagID = 0, NUM_BAG_SLOTS do
-    for invID = 1, C_Container.GetContainerNumSlots(bagID) do
-      local itemID = C_Container.GetContainerItemID(bagID, invID)
-      if itemID and itemID == keystoneItemID then
-        local item = ItemLocation:CreateFromBagAndSlot(bagID, invID)
-        if item:IsValid() then
-          local canuse = C_ChallengeMode.CanUseKeystoneInCurrentMap(item)
-          if canuse then
-            C_Container.PickupContainerItem(bagID, invID)
-            C_Timer.After(0.1, function()
-              if CursorHasItem() then
-                C_ChallengeMode.SlotKeystone()
-              end
-            end)
-            break
-          end
-        end
-      end
-    end
-  end
-end
-
-function Module:Render()
+function Module:WindowRender()
   if not self.window then
-    self.window = Window:New({
-      name = "DungeonTimer",
-      title = "DungeonTimer",
-      titlebar = true
-    })
+    self.window = CreateFrame("Frame", "AlterEgoDungeonTimer", UIParent)
+    self.window:SetMovable(true)
+    self.window:SetUserPlaced(true)
+    self.window:EnableMouse(true)
+    self.window:SetFrameStrata("HIGH")
+    self.window:SetFrameLevel(4000)
+    self.window:SetToplevel(true)
+    self.window:SetClampedToScreen(true)
+    self.window:SetPoint("CENTER")
+    self.window:SetScript("OnDragStart", function() self.window:StartMoving() end)
+    self.window:SetScript("OnDragStop", function() self.window:StopMovingOrSizing() end)
+    self.window.header = CreateFrame("Frame", "$parentHeader", self.window)
+    self.window.dungeonName = self.window:CreateFontString("$parentDungeonName", "OVERLAY")
+    self.window.dungeonName:SetFontObject("SystemFont_Med2")
+    self.window.timer = self.window:CreateFontString("$parentTimer", "OVERLAY")
+    self.window.timer:SetFontObject(fontObject)
+    self.window.deathCount = self.window:CreateFontString("$parentdeathCount", "OVERLAY")
+    self.window.deathCount:SetFontObject(fontObject)
+    self.window.trashCount = self.window:CreateFontString("$parenttrashCount", "OVERLAY")
+    self.window.trashCount:SetFontObject(fontObject)
+    self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window)
+    self.window.progress = CreateFrame("Frame", "$parentProgress", self.window)
+    self.window.bosslist = CreateFrame("Frame", "$parentbosslist", self.window)
+    self.window.bosslist.bosses = {}
+    self.window.status = CreateFrame("Frame", "$parentStatusbar", self.window)
+    self.window.checklist = CreateFrame("Frame", "$parentChecklist", self.window)
+    self.window.checklist.text = self.window.checklist:CreateFontString("$parentText", "OVERLAY")
+    self.window.checklist.text:SetFontObject(fontObject)
+    self.window.checklist.text:SetPoint("TOPLEFT", self.window.checklist, "TOPLEFT", padding, -padding - 3)
+    self.window.checklist.text:SetPoint("BOTTOMRIGHT", self.window.checklist, "BOTTOMRIGHT", -padding, padding)
+    self.window.checklist.text:SetJustifyH("LEFT")
+    self.window.checklist.text:SetJustifyV("TOP")
+    self.window.checklist.text:SetSpacing(fontSpacing)
   end
-  Utils:SetBackgroundColor(self.window, 0, 0, 0, 0)
 
   if not Data.db.global.dungeonTimer.enabled then
     self.window:Hide()
     return
   end
 
-  local currentRun = self:GetCurrentRun()
+  -- local previewEnabled = Data.db.global.dungeonTimer.preview
+  local previewEnabled = true
+
+  local state = {
+    windowShown = false,
+    windowWidth = 300,
+    windowHeight = 0,
+    dungeonName = "??",
+    dungeonLevel = "",
+    timer = "",
+    deathCount = 2,
+    bosses = {
+      {name = "Boss 1", killed = true,  time = 57 * 4,                                     split = 46},
+      {name = "Boss 2", killed = true,  time = 57 * 4 + 45 * 5,                            split = 5},
+      {name = "Boss 3", killed = true,  time = 57 * 4 + 45 * 5 + 32 * 6,                   split = -32},
+      {name = "Boss 4", killed = false, time = 57 * 4 + 45 * 5 + 32 * 6 + 36 * 5,          split = -130},
+      {name = "Boss 5", killed = false, time = 57 * 4 + 45 * 5 + 32 * 6 + 36 * 5 + 52 * 4, split = -221},
+    },
+    checklist = {
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Ready", 14, 14, 0, -2) .. DIM_GREEN_FONT_COLOR:WrapTextInColorCode(" |cffc69b6dLiquidora|r has a |cffa335ee+4 Keystone|r"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Ready", 14, 14, 0, -2) .. DIM_GREEN_FONT_COLOR:WrapTextInColorCode(" |cffff7c0aShikimi|r has a |cffa335ee+8 Keystone|r"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Ready", 14, 14, 0, -2) .. DIM_GREEN_FONT_COLOR:WrapTextInColorCode(" Everyone is flasked"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Ready", 14, 14, 0, -2) .. DIM_GREEN_FONT_COLOR:WrapTextInColorCode(" Everyone is buffed"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Ready", 14, 14, 0, -2) .. DIM_GREEN_FONT_COLOR:WrapTextInColorCode(" All affixes are covered with talents"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Decline", 14, 14, 0, -2) .. DIM_RED_FONT_COLOR:WrapTextInColorCode(" |cffc69b6dLiquidora|r does not have an invis potion"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Decline", 14, 14, 0, -2) .. DIM_RED_FONT_COLOR:WrapTextInColorCode(" |cffc69b6dLiquidora|r needs to repair (23%)"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Decline", 14, 14, 0, -2) .. DIM_RED_FONT_COLOR:WrapTextInColorCode(" |cffff7c0aShikimi|r is AFK!!!"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Decline", 14, 14, 0, -2) .. DIM_RED_FONT_COLOR:WrapTextInColorCode(" |cffff7c0aShikimi|r is missing a trinket"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Decline", 14, 14, 0, -2) .. DIM_RED_FONT_COLOR:WrapTextInColorCode(" |cff33937fInvictoker|r is not in the instance"),
+      CreateAtlasMarkup("UI-LFG-RoleIcon-Decline", 14, 14, 0, -2) .. DIM_RED_FONT_COLOR:WrapTextInColorCode(" There has been no ReadyCheck yet"),
+    },
+  }
+
+  local IsChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
+  local activeKeystoneLevel, activeKeystoneAffixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
+
+  -- local currentRun = self:GetCurrentRun()
   local _, _, _, _, _, _, _, instanceID = GetInstanceInfo()
-  local dungeon
+  local dataDungeon
   if instanceID then
-    dungeon = Utils:TableGet(Data.dungeons, "mapID", instanceID)
+    dataDungeon = Utils:TableGet(Data.dungeons, "mapId", instanceID)
   end
 
-  if currentRun then
-    self.window:SetTitle(format("%s +%d", dungeon and dungeon.abbr or "??", currentRun.activeKeystoneLevel))
-    self.window:Show()
-  elseif dungeon then
-    self.window:SetTitle(dungeon and dungeon.abbr or "??")
-    self.window:Show()
-  elseif Data.db.global.dungeonTimer.preview then
-    self.window:SetTitle("Preview")
-    self.window:Show()
+  local dungeonName = dataDungeon and (dataDungeon.abbr or dataDungeon.name) or "??"
+
+  -- Active run
+  if IsChallengeModeActive then
+    state.dungeonName = format("%s +%d", dungeonName, activeKeystoneLevel)
+    state.windowShown = true
+    -- "Dungeon Lobby"
+  elseif dataDungeon then
+    state.bosses = {}
+    local lastTime = math.random(100, 180)
+    Utils:TableForEach(dataDungeon.encounters, function(encounter, encounterIndex)
+      lastTime = lastTime + math.random(120, 300)
+      table.insert(state.bosses, {
+        name = encounter.name,
+        killed = encounterIndex <= 2,
+        time = lastTime,
+        split = math.random(-180, 180),
+      })
+    end)
+    state.dungeonName = dataDungeon.name
+    state.windowShown = true
+    -- Preview mode
+  elseif previewEnabled then
+    state.dungeonName = "+10 PreviewMode"
+    state.windowShown = true
   end
+
+  -- Header
+  local headerHeight = 30
+  self.window.header:SetPoint("TOPLEFT", self.window, "TOPLEFT")
+  self.window.header:SetPoint("TOPRIGHT", self.window, "TOPRIGHT")
+  self.window.header:SetHeight(headerHeight)
+  state.windowHeight = state.windowHeight + headerHeight
+  Utils:SetBackgroundColor(self.window.header, 0, 0, 0, 0.5)
+
+  -- DungeonName
+  self.window.dungeonName:SetParent(self.window.header)
+  self.window.dungeonName:SetPoint("TOPLEFT", self.window.header, "TOPLEFT", padding, -padding)
+  self.window.dungeonName:SetPoint("BOTTOMLEFT", self.window.header, "BOTTOMLEFT", padding, padding)
+  self.window.dungeonName:SetText(state.dungeonName)
+
+  -- DeathCount
+  self.window.deathCount:SetParent(self.window.header)
+  self.window.deathCount:SetPoint("TOPRIGHT", self.window.header, "TOPRIGHT", 0, -padding)
+  self.window.deathCount:SetPoint("BOTTOMRIGHT", self.window.header, "BOTTOMRIGHT", 0, padding)
+  self.window.deathCount:SetText(tostring(state.deathCount) .. CreateAtlasMarkup("Warfront-NeutralHero", 32, 32, -5))
+
+  -- Checklist
+  local checklistHeight = #state.checklist * (15 + fontSpacing)
+  self.window.checklist:SetPoint("BOTTOMLEFT", self.window, "BOTTOMLEFT")
+  self.window.checklist:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT")
+  self.window.checklist:SetHeight(checklistHeight)
+  self.window.checklist.text:SetText(table.concat(state.checklist, "\n"))
+  state.windowHeight = state.windowHeight + checklistHeight
+  Utils:SetBackgroundColor(self.window.checklist, 0, 0, 0, 0.5)
+
+  -- Bosses
+  local bossHeight = 20
+  local bossOffsetY = padding
+  Utils:TableForEach(self.window.bosslist.bosses, function(bossFrame) bossFrame:Hide() end)
+  Utils:TableForEach(state.bosses, function(boss, bossIndex)
+    local bossFrame = self.window.bosslist.bosses[bossIndex]
+    if not bossFrame then
+      bossFrame = CreateFrame("Frame", "$parentBoss" .. bossIndex, self.window.bosslist)
+      bossFrame:SetHeight(bossHeight)
+      bossFrame:SetPoint("TOPLEFT", self.window.bosslist, "TOPLEFT", 0, -bossOffsetY)
+      bossFrame:SetPoint("TOPRIGHT", self.window.bosslist, "TOPRIGHT", 0, -bossOffsetY)
+      bossFrame.textName = bossFrame:CreateFontString("$parentName", "OVERLAY")
+      bossFrame.textName:SetFontObject("SystemFont_Shadow_Med2_Outline")
+      bossFrame.textName:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", padding * 1.2, -padding)
+      bossFrame.textName:SetPoint("BOTTOMLEFT", bossFrame, "BOTTOMLEFT", padding * 1.2, padding)
+      bossFrame.textName:SetJustifyH("LEFT")
+      bossFrame.textTime = bossFrame:CreateFontString("$parentTime", "OVERLAY")
+      bossFrame.textTime:SetFontObject("SystemFont_Shadow_Med2_Outline")
+      bossFrame.textTime:SetPoint("TOPRIGHT", bossFrame, "TOPRIGHT", -padding * 1.2, -padding)
+      bossFrame.textTime:SetPoint("BOTTOMRIGHT", bossFrame, "BOTTOMRIGHT", -padding * 1.2, padding)
+      bossFrame.textTime:SetJustifyH("RIGHT")
+      bossFrame.textSplit = bossFrame:CreateFontString("$parentSplit", "OVERLAY")
+      bossFrame.textSplit:SetFontObject("SystemFont_Shadow_Med1_Outline")
+      bossFrame.textSplit:SetPoint("TOPRIGHT", bossFrame.textTime, "TOPLEFT", -padding * 1.2, 0)
+      bossFrame.textSplit:SetPoint("BOTTOMRIGHT", bossFrame.textTime, "BOTTOMLEFT", -padding * 1.2, 0)
+      bossFrame.textSplit:SetJustifyH("RIGHT")
+      self.window.bosslist.bosses[bossIndex] = bossFrame
+    end
+    local bossColor = WHITE_FONT_COLOR
+    local splitColor = RED_FONT_COLOR
+    local splitPrefix = ""
+    local timeColor = WHITE_FONT_COLOR
+    if boss.killed then
+      bossColor = GREEN_FONT_COLOR
+      if boss.split < 0 then
+        timeColor = GREEN_FONT_COLOR
+      else
+        timeColor = RED_FONT_COLOR
+      end
+    end
+    if boss.split < 0 then
+      splitPrefix = "-"
+      splitColor = DIM_GREEN_FONT_COLOR
+    else
+      splitPrefix = "+"
+      splitColor = DIM_RED_FONT_COLOR
+    end
+    bossFrame.textName:SetWidth((bossFrame:GetWidth() / 3) * 2)
+    bossFrame.textName:SetText(bossColor:WrapTextInColorCode(boss.name))
+    bossFrame.textTime:SetWidth((bossFrame:GetWidth() / 3) / 2)
+    bossFrame.textTime:SetText(timeColor:WrapTextInColorCode(SecondsToClock(boss.time)))
+    bossFrame.textTime:SetWidth((bossFrame:GetWidth() / 3) / 2)
+    bossFrame.textSplit:SetText(splitColor:WrapTextInColorCode(splitPrefix .. SecondsToClock(math.abs(boss.split))))
+    bossFrame.textSplit:SetShown(boss.killed)
+    bossFrame:Show()
+    bossOffsetY = bossOffsetY + bossHeight
+  end)
+  self.window.bosslist:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -headerHeight)
+  self.window.bosslist:SetPoint("TOPRIGHT", self.window, "TOPRIGHT", 0, -headerHeight)
+  self.window.bosslist:SetHeight(bossOffsetY)
+  self.window.bosslist:Show()
+  state.windowHeight = state.windowHeight + bossOffsetY + padding
+
+  -- Window
+  self.window:SetSize(state.windowWidth, state.windowHeight)
+  self.window:SetShown(state.windowShown)
+  Utils:SetBackgroundColor(self.window, 0, 0, 0, 0.7)
 end
+
+-- SecondsToClock(): https://github.com/tomrus88/BlizzardInterfaceCode/blob/master/Interface/AddOns/Blizzard_SharedXML/TimeUtil.lua#L256
+-- local activeEncounter = false
+
+-- if not Data.db.global.dungeonTimer then Data.db.global.dungeonTimer = {} end -- TODO: Add this to the defaultCharacrer object/type
+
+-- self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- MDT: Current Pull
+-- self:RegisterEvent("PLAYER_DEAD") -- MDT: Current Pull
+-- self:RegisterEvent("PLAYER_REGEN_ENABLED") -- MDT: Current Pull
+-- self:RegisterEvent("SCENARIO_POI_UPDATE")
+-- self:RegisterEvent("CRITERIA_COMPLETE")
+-- self:RegisterEvent("UNIT_THREAT_LIST_UPDATE") -- MDT: Current Pull
+
+-- TODO
+-- self:RegisterEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
+-- self:RegisterEvent("CHALLENGE_MODE_LEADERS_UPDATE")
+-- self:RegisterEvent("CHALLENGE_MODE_MEMBER_INFO_UPDATED")
+-- self:RegisterEvent("CHALLENGE_MODE_MAPS_UPDATE")
+-- self:RegisterEvent("CHALLENGE_MODE_RESET")
+-- self:RegisterEvent("MYTHIC_PLUS_NEW_WEEKLY_RECORD")
+-- self:RegisterEvent("SCENARIO_CRITERIA_UPDATE")
+-- self:RegisterEvent("WORLD_STATE_TIMER_START")
+-- self:RegisterEvent("WORLD_STATE_TIMER_STOP")
+
+-- self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+-- self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
+-- self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_SLOTTED")
+-- self:RegisterEvent("CHALLENGE_MODE_START")
+-- self:RegisterEvent("ENCOUNTER_END")
+-- self:RegisterEvent("ENCOUNTER_START")
+-- self:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+-- self.renderTimer = self:ScheduleRepeatingTimer("Render", 1)
+
+-- function Module:StartCurrentRun()
+--   local data = self:GetData()
+--   if data.isChallengeModeActive then
+--     data.startTimestamp = data.startTimestamp - data.time
+--     self:SetCurrentRun(data)
+--   end
+-- end
+
+-- function Module:GetCurrentRun()
+--   return Data.db.global.dungeonTimer.currentRun
+-- end
+
+-- function Module:SetCurrentRun(data)
+--   Data.db.global.dungeonTimer.currentRun = data
+-- end
+
+-- function Module:EndCurrentRun()
+--   local currentRun = self:GetCurrentRun()
+--   if not currentRun then
+--     return
+--   end
+--   currentRun.endTimestamp = GetServerTime()
+--   if Data.db.global.runHistory.enabled then
+--     table.insert(Data.db.global.runHistory, currentRun)
+--   end
+-- end
+
+-- function Module:ClearCurrentRun()
+--   self:SetCurrentRun(nil)
+-- end
+
+-- function Module:UpdateCurrentRun()
+--   local data = self:GetData()
+--   local currentRun = self:GetCurrentRun()
+--   if not currentRun then
+--     if data.isChallengeModeActive then
+--       self:StartCurrentRun()
+--       return
+--     end
+--   end
+
+
+--   local runData = self:GetData()
+--   if not Data.db.global.dungeonTimer.currentRun then
+--     if runData.isChallengeModeActive then
+--       return self:StartCurrentRun()
+--     end
+--   end
+-- end
+
+-- function Module:CHALLENGE_MODE_START(...)
+--   local currentRun = self:GetCurrentRun()
+--   if currentRun then
+--     self:ClearCurrentRun()
+--   end
+--   self:StartCurrentRun()
+-- end
+
+-- function Module:CHALLENGE_MODE_COMPLETED(...)
+--   local currentRun = self:GetCurrentRun()
+--   if not currentRun then
+--     return
+--   end
+--   currentRun.completedTimestamp = GetServerTime()
+
+--   self:EndCurrentRun()
+-- end
+
+-- function Module:PLAYER_ENTERING_WORLD()
+--   -- self:UpdateCurrentRun()
+--   self:WindowRender()
+-- end
+
+-- function Module:ENCOUNTER_START(...)
+--   local _, encounterID = ...
+--   activeEncounter = encounterID
+--   -- self:UpdateCurrentRun()
+--   self:WindowRender()
+-- end
+
+-- function Module:ENCOUNTER_END(...)
+--   activeEncounter = false
+--   -- self:UpdateCurrentRun()
+--   self:WindowRender()
+-- end
+
+-- -- TODO: Move these to the main module?
+-- -- These two events are still relevant even if the DungeonTimer module isn't enabled
+-- function Module:CHALLENGE_MODE_KEYSTONE_SLOTTED(...)
+--   if true then return end --TODO: Add setting to enable/disable this
+--   -- TODO: Close all bags
+-- end
+
+-- function Module:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(...)
+--   -- if true then return end --TODO: Add setting to enable/disable this
+
+--   local keystoneItemID = Data:GetKeystoneItemID()
+--   for bagID = 0, NUM_BAG_SLOTS do
+--     for invID = 1, C_Container.GetContainerNumSlots(bagID) do
+--       local itemID = C_Container.GetContainerItemID(bagID, invID)
+--       if itemID and itemID == keystoneItemID then
+--         local item = ItemLocation:CreateFromBagAndSlot(bagID, invID)
+--         if item:IsValid() then
+--           local canuse = C_ChallengeMode.CanUseKeystoneInCurrentMap(item)
+--           if canuse then
+--             C_Container.PickupContainerItem(bagID, invID)
+--             C_Timer.After(0.1, function()
+--               if CursorHasItem() then
+--                 C_ChallengeMode.SlotKeystone()
+--               end
+--             end)
+--             break
+--           end
+--         end
+--       end
+--     end
+--   end
+-- end
 
 -- TODO: Toggle visibilty of the objective tracker frame
-local function ToggleDefaultTracker()
-end
+-- local function ToggleDefaultTracker()
+-- end
 
-local function printEvent(...)
-  DevTools_Dump({...})
-  Module:Render()
-end
+-- local function printEvent(...)
+--   DevTools_Dump({...})
+--   Module:WindowRender()
+-- end
 
 
 -- ---@param timerID number

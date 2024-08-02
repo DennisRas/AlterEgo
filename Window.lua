@@ -163,8 +163,8 @@ function Window:New(options)
   end
 
   window:Hide()
-  table.insert(UISpecialFrames, window.config.name)
-  WindowCollection[window.config.name] = window
+  table.insert(UISpecialFrames, window:GetName())
+  WindowCollection[window:GetName()] = window
   return window
 end
 

@@ -420,5 +420,5 @@ function Module:WindowRender()
 
   self.window.body.table:SetData(tableData)
   self.window:SetBodySize(width, 500)
-  self.window:Show()
+  -- self.window:Show()
 end

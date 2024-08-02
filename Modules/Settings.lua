@@ -578,5 +578,5 @@ function Module:WindowRender()
   end
 
   self.window:SetBodySize(bodyWidth, buttonHeight * Utils:TableCount(self.tabs))
-  self.window:Show()
+  -- self.window:Show()
 end

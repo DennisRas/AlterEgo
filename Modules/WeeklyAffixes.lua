@@ -9,14 +9,14 @@ local Window = addon.Window
 local Core = addon.Core
 local Data = addon.Data
 local Constants = addon.Constants
-local Module = Core:NewModule("WeeklyAffixes")
+local Module = Core:NewModule("WeeklyAffixes", "AceEvent-3.0")
 
 function Module:OnInitialize()
   self:WindowRender()
 end
 
 function Module:OnEnable()
-  Core:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "WindowRender")
+  self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "WindowRender")
   self:WindowRender()
 end
 
@@ -85,7 +85,7 @@ function Module:WindowRender()
             local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
             ---@type AE_TableDataRowColumn
             local columnData = {
-              text = "|T" .. affix.fileDataID .. ":0|t " .. name,
+              text = affix.fileDataID and "|T" .. affix.fileDataID .. ":0|t " .. name or name,
               backgroundColor = backgroundColor or nil,
               onEnter = function(columnFrame)
                 GameTooltip:ClearAllPoints()
