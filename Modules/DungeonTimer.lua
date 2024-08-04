@@ -88,6 +88,39 @@ function Module:WindowRender()
     self.window.checklist.text:SetJustifyH("LEFT")
     self.window.checklist.text:SetJustifyV("TOP")
     self.window.checklist.text:SetSpacing(fontSpacing)
+
+    -- local pb = CreateFrame("Cooldown", "Test", UIParent)
+    -- Utils:SetBackgroundColor(pb, 0, 0, 0, 0.2)
+    -- pb:SetPoint("CENTER", UIParent, "CENTER", 400, 0)
+    -- pb:SetReverse(true)
+    -- pb:SetHideCountdownNumbers(true)
+    -- pb:SetRotation(0)
+    -- pb:SetSize(200, 200)
+    -- pb:SetSwipeColor(1, 1, 1, 1)
+
+    -- pb.text = pb:CreateFontString()
+    -- pb.text:SetPoint("CENTER", pb, "CENTER")
+    -- pb.text:SetFontObject("SystemFont_Shadow_Large2")
+    -- local font, size, style = pb.text:GetFont()
+    -- if font then
+    --   pb.text:SetFont(font, size * 2.5, style)
+    -- end
+
+    -- local currentValue = 0
+    -- local maxValue = 180
+
+    -- pb:SetSwipeTexture(Constants.media.ProgressBarCircle);
+    -- CooldownFrame_SetDisplayAsPercentage(pb, 0);
+    -- C_Timer.NewTicker(0.02, function()
+    --   if currentValue > maxValue then
+    --     currentValue = 1
+    --   else
+    --     currentValue = currentValue + 1
+    --   end
+    --   pb:SetSwipeColor(currentValue / maxValue, 1 - (currentValue / maxValue), 0, 1)
+    --   CooldownFrame_SetDisplayAsPercentage(pb, currentValue / maxValue);
+    --   pb.text:SetText(SecondsToClock(maxValue - currentValue))
+    -- end)
   end
 
   if not Data.db.global.dungeonTimer.enabled then
@@ -96,7 +129,7 @@ function Module:WindowRender()
   end
 
   -- local previewEnabled = Data.db.global.dungeonTimer.preview
-  local previewEnabled = true
+  local previewEnabled = false
 
   local state = {
     windowShown = false,

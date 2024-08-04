@@ -22,6 +22,7 @@ local Constants = {
     IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addonName),
     IconCheckmark = format("Interface/AddOns/%s/Media/Icon_Checkmark.blp", addonName),
     IconCaretDown = format("Interface/AddOns/%s/Media/Icon_CaretDown.blp", addonName),
+    ProgressBarCircle = format("Interface/AddOns/%s/Media/ProgressBarCircle.blp", addonName),
   },
   sizes = {
     padding = 8,
