@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.11 - 2024-08-14
+
+### Updated
+
+- Updated the TOC version to 11.0.2
+
 ## v1.1.10 - 2024-07-25
 
 ### Updated
