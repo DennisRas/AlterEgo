@@ -552,7 +552,7 @@ end
 function AlterEgo:GetCharacters(unfiltered)
   local characters = {}
   for _, character in pairs(self.db.global.characters) do
-    if character.info.level ~= nil and character.info.level == 70 then
+    if character.info.level ~= nil and character.info.level == 80 then
       table.insert(characters, character)
     end
   end
