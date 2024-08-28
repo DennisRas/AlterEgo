@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.12 - 2024-08-28
+
+### Updated
+
+- Added TWW Season 1 data, currencies and dungeons
+
+### Fixed
+
+- Temp. fix characters not showing at the new max level (80)
+
 ## v1.1.11 - 2024-08-14
 
 ### Updated

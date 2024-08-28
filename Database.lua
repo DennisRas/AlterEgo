@@ -307,34 +307,43 @@ local dataAffixRotations = {
 local dataKeystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
   {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
+  {seasonID = 13, seasonDisplayID = 1, itemID = 151086},
 }
 
 ---@type Dungeon[]
 local dataDungeons = {
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078, time = 0, abbr = "NL",   name = "Neltharion's Lair"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071, time = 0, abbr = "FH",   name = "Freehold"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 251, mapId = 1841, spellID = 410074, time = 0, abbr = "UNDR", name = "The Underrot"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 403, mapId = 2451, spellID = 393222, time = 0, abbr = "ULD",  name = "Uldaman: Legacy of Tyr"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 404, mapId = 2519, spellID = 393276, time = 0, abbr = "NELT", name = "Neltharus"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 405, mapId = 2520, spellID = 393267, time = 0, abbr = "BH",   name = "Brackenhide Hollow"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 406, mapId = 2527, spellID = 393283, time = 0, abbr = "HOI",  name = "Halls of Infusion"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 438, mapId = 657,  spellID = 410080, time = 0, abbr = "VP",   name = "The Vortex Pinnacle"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 168, mapId = 1279, spellID = 159901, time = 0, abbr = "EB",   name = "The Everbloom"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 198, mapId = 1466, spellID = 424163, time = 0, abbr = "DHT",  name = "Darkheart Thicket"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 199, mapId = 1501, spellID = 424153, time = 0, abbr = "BRH",  name = "Black Rook Hold"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 244, mapId = 1763, spellID = 424187, time = 0, abbr = "AD",   name = "Atal'Dazar"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 248, mapId = 1862, spellID = 424167, time = 0, abbr = "WM",   name = "Waycrest Manor"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 456, mapId = 643,  spellID = 424142, time = 0, abbr = "TOTT", name = "Throne of the Tides"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 463, mapId = 2579, spellID = 424197, time = 0, abbr = "FALL", name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 464, mapId = 2579, spellID = 424197, time = 0, abbr = "RISE", name = "Dawn of the Infinite: Murozond's Rise",  short = "DOTI: Murozond's Rise"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 399, mapId = 2521, spellID = 393256, time = 0, abbr = "RLP",  name = "Ruby Life Pools"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 400, mapId = 2516, spellID = 393262, time = 0, abbr = "NO",   name = "The Nokhud Offensive"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 401, mapId = 2515, spellID = 393279, time = 0, abbr = "AV",   name = "The Azure Vault"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 402, mapId = 2526, spellID = 393273, time = 0, abbr = "AA",   name = "Algeth'ar Academy"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 403, mapId = 2451, spellID = 393222, time = 0, abbr = "ULD",  name = "Uldaman: Legacy of Tyr"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 404, mapId = 2519, spellID = 393276, time = 0, abbr = "NELT", name = "Neltharus"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 405, mapId = 2520, spellID = 393267, time = 0, abbr = "BH",   name = "Brackenhide Hollow"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 406, mapId = 2527, spellID = 393283, time = 0, abbr = "HOI",  name = "Halls of Infusion"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, spellID = 410078,                                                        time = 0, abbr = "NL",    name = "Neltharion's Lair"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, spellID = 410071,                                                        time = 0, abbr = "FH",    name = "Freehold"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 251, mapId = 1841, spellID = 410074,                                                        time = 0, abbr = "UNDR",  name = "The Underrot"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 403, mapId = 2451, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 404, mapId = 2519, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 405, mapId = 2520, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 406, mapId = 2527, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
+  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 438, mapId = 657,  spellID = 410080,                                                        time = 0, abbr = "VP",    name = "The Vortex Pinnacle"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 168, mapId = 1279, spellID = 159901,                                                        time = 0, abbr = "EB",    name = "The Everbloom"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 198, mapId = 1466, spellID = 424163,                                                        time = 0, abbr = "DHT",   name = "Darkheart Thicket"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 199, mapId = 1501, spellID = 424153,                                                        time = 0, abbr = "BRH",   name = "Black Rook Hold"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 244, mapId = 1763, spellID = 424187,                                                        time = 0, abbr = "AD",    name = "Atal'Dazar"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 248, mapId = 1862, spellID = 424167,                                                        time = 0, abbr = "WM",    name = "Waycrest Manor"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 456, mapId = 643,  spellID = 424142,                                                        time = 0, abbr = "TOTT",  name = "Throne of the Tides"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 463, mapId = 2579, spellID = 424197,                                                        time = 0, abbr = "FALL",  name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
+  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 464, mapId = 2579, spellID = 424197,                                                        time = 0, abbr = "RISE",  name = "Dawn of the Infinite: Murozond's Rise",  short = "DOTI: Murozond's Rise"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 399, mapId = 2521, spellID = 393256,                                                        time = 0, abbr = "RLP",   name = "Ruby Life Pools"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 400, mapId = 2516, spellID = 393262,                                                        time = 0, abbr = "NO",    name = "The Nokhud Offensive"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 401, mapId = 2515, spellID = 393279,                                                        time = 0, abbr = "AV",    name = "The Azure Vault"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 402, mapId = 2526, spellID = 393273,                                                        time = 0, abbr = "AA",    name = "Algeth'ar Academy"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 403, mapId = 2451, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 404, mapId = 2519, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 405, mapId = 2520, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
+  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 406, mapId = 2527, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 503, mapId = 2660, spellID = 445417,                                                        time = 0, abbr = "ARAK",  name = "Ara-Kara, City of Echoes"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 502, mapId = 2669, spellID = 445416,                                                        time = 0, abbr = "COT",   name = "City of Threads"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 507, mapId = 670,  spellID = 445424,                                                        time = 0, abbr = "GB",    name = "Grim Batol"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 375, mapId = 2290, spellID = 354464,                                                        time = 0, abbr = "MISTS", name = "Mists of Tirna Scithe"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 353, mapId = 1822, spellID = UnitFactionGroup("player") == "Alliance" and 445418 or 464256, time = 0, abbr = "SIEGE", name = "Siege of Boralus"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 505, mapId = 2662, spellID = 445414,                                                        time = 0, abbr = "DAWN",  name = "The Dawnbreaker"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 376, mapId = 2286, spellID = 354462,                                                        time = 0, abbr = "NW",    name = "The Necrotic Wake"},
+  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 501, mapId = 2652, spellID = 445269,                                                        time = 0, abbr = "SV",    name = "The Stonevault"},
 }
 
 ---@type Raid[]
@@ -345,6 +354,7 @@ local dataRaids = {
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1273, instanceID = 2657, order = 1, numEncounters = 8, encounters = {}, modifiedInstanceInfo = nil, abbr = "NAP",  name = "Nerub-ar Palace"},
 }
 
 ---@type RaidDifficulty[]
@@ -370,6 +380,12 @@ local dataCurrencies = {
   {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},                  -- Flightstones
   {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"},                 -- Catalyst
   {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar",   itemID = 213089}, -- Dinar
+  {seasonID = 13, seasonDisplayID = 1, id = 2914, currencyType = "crest"},                    -- Weathered
+  {seasonID = 13, seasonDisplayID = 1, id = 2915, currencyType = "crest"},                    -- Carved
+  {seasonID = 13, seasonDisplayID = 1, id = 2916, currencyType = "crest"},                    -- Runed
+  {seasonID = 13, seasonDisplayID = 1, id = 2917, currencyType = "crest"},                    -- Gilded
+  {seasonID = 13, seasonDisplayID = 1, id = 3008, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 13, seasonDisplayID = 1, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
 }
 
 --- Initiate AceDB
@@ -387,8 +403,8 @@ function AlterEgo:GetCurrentSeason()
   if not cacheSeasonDisplayID then
     cacheSeasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
-  -- return 12, 4
-  return cacheSeasonID or 0, cacheSeasonDisplayID or 0
+  return 13, 1
+  -- return cacheSeasonID or 0, cacheSeasonDisplayID or 0
 end
 
 --- Get the currencies of the current season
@@ -512,7 +528,6 @@ function AlterEgo:GetDungeons()
   local dungeons = AE_table_filter(dataDungeons, function(dataDungeon)
     return dataDungeon.seasonID == seasonID
   end)
-
   table.sort(dungeons, function(a, b)
     return strcmputf8i(a.name, b.name) < 0
   end)
@@ -552,7 +567,7 @@ end
 function AlterEgo:GetCharacters(unfiltered)
   local characters = {}
   for _, character in pairs(self.db.global.characters) do
-    if character.info.level ~= nil and character.info.level == 80 then
+    if character.info.level ~= nil and character.info.level >= 70 then -- Todo later: GetMaxLevelForPlayerExpansion()
       table.insert(characters, character)
     end
   end
@@ -746,8 +761,8 @@ function AlterEgo:loadGameData()
 
   for _, dungeon in pairs(dataDungeons) do
     local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
-    dungeon.name = dungeonName
-    dungeon.time = dungeonTimeLimit
+    dungeon.name = dungeonName or dungeon.name
+    dungeon.time = dungeonTimeLimit or 0
     dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
   end
 
@@ -871,7 +886,7 @@ function AlterEgo:UpdateCharacterInfo()
       local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
       local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
       itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
-      expacID, setID, isCraftingReagent = GetItemInfo(inventoryItemLink)
+      expacID, setID, isCraftingReagent = C_Item.GetItemInfo(inventoryItemLink)
 
       tooltipScan:ClearLines()
       tooltipScan:SetHyperlink(inventoryItemLink)
