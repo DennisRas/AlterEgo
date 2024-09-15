@@ -1,4 +1,4 @@
-local dbVersion = 17
+local dbVersion = 18
 local defaultDB = {
   global = {
     weeklyReset = 0,
@@ -21,8 +21,8 @@ local defaultDB = {
       multilineNames = false,
     },
     announceResets = true,
-    pvp = {
-      enabled = false,
+    world = {
+      enabled = true,
     },
     raids = {
       enabled = true,
@@ -189,7 +189,7 @@ local defaultCharacter = {
       -- }
     },
   },
-  pvp = {},
+  -- pvp = {},
   vault = {
     hasAvailableRewards = false,
     slots = {
@@ -359,10 +359,10 @@ local dataRaids = {
 
 ---@type RaidDifficulty[]
 local dataRaidDifficulties = {
-  {id = 14, color = RARE_BLUE_COLOR,        order = 2, abbr = "N",   name = "Normal"},
-  {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "HC",  name = "Heroic"},
-  {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M",   name = "Mythic"},
-  {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "LFR", name = "Looking For Raid", short = "LFR"},
+  {id = 14, color = RARE_BLUE_COLOR,        order = 2, abbr = "N", name = "Normal"},
+  {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "H", name = "Heroic"},
+  {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic"},
+  {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "L", name = "Looking For Raid", short = "LFR"},
 }
 
 ---@type Currency[]
@@ -1012,19 +1012,17 @@ function AlterEgo:UpdateVault()
     return
   end
   wipe(character.vault.slots or {})
-  for i = 1, 3 do
-    local slots = C_WeeklyRewards.GetActivities(i)
-    AE_table_foreach(slots, function(slot)
-      slot.exampleRewardLink = ""
-      slot.exampleRewardUpgradeLink = ""
-      if slot.progress >= slot.threshold then
-        local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(slot.id)
-        slot.exampleRewardLink = itemLink
-        slot.exampleRewardUpgradeLink = upgradeItemLink
-      end
-      table.insert(character.vault.slots, slot)
-    end)
-  end
+  local activities = C_WeeklyRewards.GetActivities()
+  AE_table_foreach(activities, function(activity)
+    activity.exampleRewardLink = ""
+    activity.exampleRewardUpgradeLink = ""
+    if activity.progress >= activity.threshold then
+      local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(activity.id)
+      activity.exampleRewardLink = itemLink
+      activity.exampleRewardUpgradeLink = upgradeItemLink
+    end
+    table.insert(character.vault.slots, activity)
+  end)
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
   self:UpdateUI()

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.13 - 2024-09-15
+
+### Added
+
+- Added Great Vault row: World Activities
+
+### Updated
+
+- Updated a couple of vault tooltips with progress details
+
 ## v1.1.12 - 2024-08-28
 
 ### Updated
