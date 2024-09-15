@@ -172,6 +172,9 @@
         "hooksecurefunc",
         "UnitIsGroupLeader",
         "C_CurrencyInfo",
-        "C_Item"
+        "C_Item",
+        "GREAT_VAULT_REWARDS_WORLD_COMPLETED_SECOND",
+        "GREAT_VAULT_REWARDS_WORLD_COMPLETED_FIRST",
+        "GREAT_VAULT_REWARDS_WORLD_INCOMPLETE"
     ]
 }
