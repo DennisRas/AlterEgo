@@ -4,15 +4,17 @@
 
 ### Added
 
-- Introduced a new setting to display dungeon rating alongside the key level
+- Introduced a new setting to display dungeon rating next to the key level
+- Added the TWW Season 1 Catalyst currency
 
 ### Updated
 
 - Removed the Tyrannical/Fortified columns
+- Redesigned the column layout for dungeon levels and scores
 
 ### Fixed
 
-- Corrected the number of affix buttons displayed at the top of the window
+- Corrected the number of affix buttons shown at the top of the window
 
 ## v1.1.13 - 2024-09-15
 
