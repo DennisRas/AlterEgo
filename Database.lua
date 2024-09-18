@@ -1,4 +1,4 @@
-local dbVersion = 18
+local dbVersion = 19
 local defaultDB = {
   global = {
     weeklyReset = 0,
@@ -10,6 +10,7 @@ local defaultDB = {
     },
     sorting = "lastUpdate",
     showTiers = true,
+    showScores = true,
     showAffixColors = true,
     showAffixHeader = true,
     showZeroRatedCharacters = true,

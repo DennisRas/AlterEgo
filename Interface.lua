@@ -740,40 +740,13 @@ function AlterEgo:CreateCharacterColumn(parent, index)
     end
   end
 
-  -- Affix header
-  CharacterColumn.AffixHeader = CreateFrame("Frame", "$parentAffixes", CharacterColumn)
-  CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-  CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-  CharacterColumn.AffixHeader:SetHeight(self.constants.sizes.row)
-  self:SetBackgroundColor(CharacterColumn.AffixHeader, 0, 0, 0, 0.3)
-  anchorFrame = CharacterColumn.AffixHeader
-
-  -- Affix header icons
-  for affixIndex, affix in ipairs(affixes) do
-    local AffixFrame = CreateFrame("Frame", CharacterColumn.AffixHeader:GetName() .. affixIndex, CharacterColumn)
-    if affixIndex == 1 then
-      AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOPLEFT")
-      AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOM")
-    else
-      AffixFrame:SetPoint("TOPLEFT", CharacterColumn.AffixHeader:GetName(), "TOP")
-      AffixFrame:SetPoint("BOTTOMRIGHT", CharacterColumn.AffixHeader:GetName(), "BOTTOMRIGHT")
-    end
-    AffixFrame.Icon = AffixFrame:CreateTexture(AffixFrame:GetName() .. "Icon", "ARTWORK")
-    AffixFrame.Icon:SetTexture(affix.fileDataID)
-    AffixFrame.Icon:SetSize(16, 16)
-    AffixFrame.Icon:SetPoint("CENTER", AffixFrame, "CENTER", 0, 0)
-    AffixFrame:SetScript("OnEnter", function()
-      GameTooltip:ClearAllPoints()
-      GameTooltip:ClearLines()
-      GameTooltip:SetOwner(AffixFrame, "ANCHOR_RIGHT")
-      GameTooltip:SetText(affix.name, 1, 1, 1, 1, true);
-      GameTooltip:AddLine(affix.description, nil, nil, nil, true);
-      GameTooltip:Show()
-    end)
-    AffixFrame:SetScript("OnLeave", function()
-      GameTooltip:Hide()
-    end)
-  end
+  -- Dungeon Header
+  CharacterColumn.DungeonHeader = CreateFrame("Frame", "$parentAffixes", CharacterColumn)
+  CharacterColumn.DungeonHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+  CharacterColumn.DungeonHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+  CharacterColumn.DungeonHeader:SetHeight(self.constants.sizes.row)
+  self:SetBackgroundColor(CharacterColumn.DungeonHeader, 0, 0, 0, 0.3)
+  anchorFrame = CharacterColumn.DungeonHeader
 
   -- Dungeon rows
   for dungeonIndex in ipairs(dungeons) do
@@ -782,30 +755,18 @@ function AlterEgo:CreateCharacterColumn(parent, index)
     DungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     DungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
     self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-    anchorFrame = DungeonFrame
 
-    -- Affix values
-    for affixIndex, affix in ipairs(affixes) do
-      local AffixFrame = CreateFrame("Frame", "$parentAffix" .. affixIndex, DungeonFrame)
-      if affixIndex == 1 then
-        AffixFrame:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
-        AffixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOM")
-      else
-        AffixFrame:SetPoint("TOPLEFT", anchorFrame, "TOP")
-        AffixFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT")
-      end
+    DungeonFrame.Text = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Text", "OVERLAY")
+    DungeonFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
+    DungeonFrame.Tier = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Tier", "OVERLAY")
+    DungeonFrame.Tier:SetPoint("LEFT", DungeonFrame.Text, "RIGHT", 3, 1)
+    DungeonFrame.Tier:SetJustifyH("LEFT")
+    DungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
+    DungeonFrame.Score = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Score", "OVERLAY")
+    DungeonFrame.Score:SetPoint("RIGHT", DungeonFrame, "RIGHT", -self.constants.sizes.padding * 2, 1)
+    DungeonFrame.Score:SetJustifyH("RIGHT")
+    DungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
 
-      AffixFrame.Text = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Text", "OVERLAY")
-      AffixFrame.Text:SetPoint("TOPLEFT", AffixFrame, "TOPLEFT", 1, -1)
-      AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-      AffixFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
-      AffixFrame.Text:SetJustifyH("RIGHT")
-      AffixFrame.Tier = AffixFrame:CreateFontString(AffixFrame:GetName() .. "Tier", "OVERLAY")
-      AffixFrame.Tier:SetPoint("TOPLEFT", AffixFrame, "TOP", 1, -1)
-      AffixFrame.Tier:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-      AffixFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
-      AffixFrame.Tier:SetJustifyH("LEFT")
-    end
     anchorFrame = DungeonFrame
   end
 
@@ -1200,11 +1161,11 @@ function AlterEgo:CreateUI()
           })
           UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
-            text = "Show timed icons",
+            text = "Show icons",
             checked = self.db.global.showTiers,
             keepShownOnClick = true,
             isNotRadio = true,
-            tooltipTitle = "Show timed icons",
+            tooltipTitle = "Show icons",
             tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
@@ -1213,11 +1174,24 @@ function AlterEgo:CreateUI()
             end
           })
           UIDropDownMenu_AddButton({
-            text = "Show score colors",
+            text = "Show rating",
+            checked = self.db.global.showScores,
+            keepShownOnClick = true,
+            isNotRadio = true,
+            tooltipTitle = "Show rating",
+            tooltipText = "Show some values!",
+            tooltipOnButton = true,
+            func = function(button, arg1, arg2, checked)
+              self.db.global.showScores = checked
+              self:UpdateUI()
+            end
+          })
+          UIDropDownMenu_AddButton({
+            text = "Use rating colors",
             checked = self.db.global.showAffixColors,
             keepShownOnClick = true,
             isNotRadio = true,
-            tooltipTitle = "Show score colors",
+            tooltipTitle = "Use rating colors",
             tooltipText = "Show some colors!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
@@ -1769,13 +1743,17 @@ function AlterEgo:UpdateUI()
 
   do -- TitleBar
     anchorFrame = winMain.TitleBar
-    if numCharacters == 1 then
+    if numCharacters < 3 then
       winMain.TitleBar.Text:Hide()
     else
       winMain.TitleBar.Text:Show()
     end
     if currentAffixes and AE_table_count(currentAffixes) > 0 and self.db.global.showAffixHeader then
-      winMain.TitleBar.Affixes:Show()
+      if numCharacters < 2 then
+        winMain.TitleBar.Affixes:Hide()
+      else
+        winMain.TitleBar.Affixes:Show()
+      end
     else
       winMain.TitleBar.Affixes:Hide()
     end
@@ -1786,10 +1764,10 @@ function AlterEgo:UpdateUI()
         if affixButton ~= nil then
           if i == 1 then
             affixButton:ClearAllPoints()
-            if numCharacters == 1 then
+            if numCharacters < 3 then
               affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
             else
-              affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
+              affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -((AE_table_count(currentAffixes) * 20) / 2), 0)
             end
           else
             affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
@@ -1967,77 +1945,130 @@ function AlterEgo:UpdateUI()
         end
       end
 
-      do -- Affix header
-        if CharacterColumn.AffixHeader then
-          CharacterColumn.AffixHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-          CharacterColumn.AffixHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-          anchorFrame = CharacterColumn.AffixHeader
-        end
-      end
-
-      do -- Affix header icons
-        if currentAffixes and AE_table_count(currentAffixes) > 0 then
-          for affixIndex, affix in ipairs(affixes) do
-            local active = false
-            local AffixFrame = _G[CharacterColumn.AffixHeader:GetName() .. affixIndex]
-            if AffixFrame then
-              AE_table_foreach(currentAffixes, function(currentAffix)
-                if currentAffix.id == affix.id then
-                  active = true
-                end
-              end)
-            end
-            if active then
-              AffixFrame:SetAlpha(1)
-            else
-              AffixFrame:SetAlpha(0.2)
-            end
-          end
+      do -- Dungeon Header
+        if CharacterColumn.DungeonHeader then
+          CharacterColumn.DungeonHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+          CharacterColumn.DungeonHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
+          anchorFrame = CharacterColumn.DungeonHeader
         end
       end
 
       do -- Dungeon rows
-        -- Todo: Look into C_ChallengeMode.GetKeystoneLevelRarityColor(level)
         for dungeonIndex, dungeon in ipairs(dungeons) do
           local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
           local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
-          local overallScoreColor = HIGHLIGHT_FONT_COLOR
-          if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
-            if (characterDungeon.rating) then
-              local color = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(characterDungeon.rating);
-              if color ~= nil then
-                overallScoreColor = color
+          local affixScores
+          local overallScore
+          local inTimeInfo
+          local overTimeInfo
+          local fastestAffixScore
+          local level = "-"
+          local color = HIGHLIGHT_FONT_COLOR
+          local tier = ""
+
+          if characterDungeon then
+            affixScores = characterDungeon.affixScores
+            overallScore = characterDungeon.bestOverAllScore
+            inTimeInfo = characterDungeon.bestTimedRun
+            overTimeInfo = characterDungeon.bestNotTimedRun
+
+            if overallScore and self.db.global.showAffixColors then
+              local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore);
+              if rarityColor ~= nil then
+                color = rarityColor
+              end
+            end
+
+            if affixScores then
+              fastestAffixScore = TableUtil.FindMin(affixScores, function(affixScore)
+                return affixScore.durationSec
+              end)
+
+              if fastestAffixScore then
+                level = fastestAffixScore.level
+
+                if fastestAffixScore.durationSec <= dungeon.time * 0.6 then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
+                elseif fastestAffixScore.durationSec <= dungeon.time * 0.8 then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
+                elseif fastestAffixScore.durationSec <= dungeon.time then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                end
               end
             end
           end
+
+          if tier == "" then
+            color = LIGHTGRAY_FONT_COLOR
+          end
+
+          if level ~= "-" and self.db.global.showTiers then
+            level = format("%s %s", level, tier)
+          end
+
+          DungeonFrame.Text:ClearAllPoints()
+          DungeonFrame.Text:SetText(color:WrapTextInColorCode(level))
+          DungeonFrame.Text:SetPoint("LEFT", DungeonFrame, "LEFT")
+          DungeonFrame.Text:SetPoint("RIGHT", DungeonFrame, "CENTER", 0, 0)
+          DungeonFrame.Text:SetJustifyH("CENTER")
+          DungeonFrame.Tier:ClearAllPoints()
+          DungeonFrame.Tier:SetText("")
+          DungeonFrame.Score:ClearAllPoints()
+          if overallScore then
+            DungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore))
+          else
+            DungeonFrame.Score:SetText(color:WrapTextInColorCode("-"))
+          end
+          DungeonFrame.Score:SetPoint("LEFT", DungeonFrame, "CENTER")
+          DungeonFrame.Score:SetPoint("RIGHT", DungeonFrame, "RIGHT")
+          DungeonFrame.Score:SetJustifyH("CENTER")
+
+          if not self.db.global.showScores then
+            DungeonFrame.Text:ClearAllPoints()
+            DungeonFrame.Text:SetPoint("CENTER", DungeonFrame, "CENTER")
+            DungeonFrame.Score:SetText("")
+          else
+            if not self.db.global.showTiers then
+              DungeonFrame.Text:SetPoint("RIGHT", DungeonFrame, "CENTER", 0, 0)
+              DungeonFrame.Text:SetJustifyH("CENTER")
+            end
+          end
+
+          if level == "-" then
+            DungeonFrame.Text:ClearAllPoints()
+            DungeonFrame.Text:SetPoint("CENTER", DungeonFrame, "CENTER")
+            DungeonFrame.Tier:SetText("")
+            DungeonFrame.Score:SetText("")
+          end
+
           DungeonFrame:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
             GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText(dungeon.name, 1, 1, 1);
-            if characterDungeon and characterDungeon.affixScores and AE_table_count(characterDungeon.affixScores) > 0 then
-              if (characterDungeon.rating) then
-                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(overallScoreColor:WrapTextInColorCode(characterDungeon.rating)), GREEN_FONT_COLOR);
+            GameTooltip:SetText(dungeon.name, 1, 1, 1)
+
+            if affixScores and AE_table_count(affixScores) > 0 then
+              if overallScore and (inTimeInfo or overTimeInfo) then
+                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(overallScore)), GREEN_FONT_COLOR)
               end
-              for _, affixInfo in ipairs(characterDungeon.affixScores) do
-                GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_BEST_AFFIX:format(affixInfo.name));
-                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(affixInfo.level), HIGHLIGHT_FONT_COLOR);
-                if (affixInfo.overTime) then
-                  if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
-                    GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, true)), LIGHTGRAY_FONT_COLOR);
-                  else
-                    GameTooltip_AddColoredLine(GameTooltip, DUNGEON_SCORE_OVERTIME_TIME:format(SecondsToClock(affixInfo.durationSec, false)), LIGHTGRAY_FONT_COLOR);
-                  end
+
+              if fastestAffixScore then
+                GameTooltip_AddBlankLineToTooltip(GameTooltip)
+                GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
+                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(fastestAffixScore.level), HIGHLIGHT_FONT_COLOR)
+
+                local displayZeroHours = fastestAffixScore.durationSec >= SECONDS_PER_HOUR
+                local durationText = SecondsToClock(fastestAffixScore.durationSec, displayZeroHours)
+
+                if fastestAffixScore.overTime then
+                  local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
+                  GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
                 else
-                  if (affixInfo.durationSec >= SECONDS_PER_HOUR) then
-                    GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, true), HIGHLIGHT_FONT_COLOR);
-                  else
-                    GameTooltip_AddColoredLine(GameTooltip, SecondsToClock(affixInfo.durationSec, false), HIGHLIGHT_FONT_COLOR);
-                  end
+                  GameTooltip_AddColoredLine(GameTooltip, durationText, HIGHLIGHT_FONT_COLOR)
                 end
               end
             end
+
             GameTooltip:Show()
             self:SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
           end)
@@ -2046,55 +2077,6 @@ function AlterEgo:UpdateUI()
             self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
           end)
 
-          for affixIndex, affix in ipairs(affixes) do
-            local AffixFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex .. "Affix" .. affixIndex]
-            if AffixFrame then
-              local level = "-"
-              local levelColor = "ffffffff"
-              local tier = ""
-
-              if characterDungeon == nil or characterDungeon.affixScores == nil then
-                level = "-"
-                levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-              else
-                local affixScore = AE_table_get(characterDungeon.affixScores, "id", affix.id)
-                if affixScore then
-                  level = affixScore.level
-
-                  if affixScore.durationSec <= dungeon.time * 0.6 then
-                    tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                  elseif affixScore.durationSec <= dungeon.time * 0.8 then
-                    tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                  elseif affixScore.durationSec <= dungeon.time then
-                    tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
-                  end
-
-                  if tier == "" then
-                    levelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
-                  elseif self.db.global.showAffixColors then
-                    local scoreColor = C_ChallengeMode.GetSpecificDungeonScoreRarityColor(affixScore.score)
-                    if scoreColor ~= nil then
-                      levelColor = scoreColor:GenerateHexColor()
-                    else
-                      levelColor = overallScoreColor:GenerateHexColor()
-                    end
-                  end
-                end
-              end
-
-              AffixFrame.Text:SetText("|c" .. levelColor .. level .. "|r")
-              AffixFrame.Tier:SetText(tier)
-              if self.db.global.showTiers then
-                AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOM", -1, 1)
-                AffixFrame.Text:SetJustifyH("RIGHT")
-                AffixFrame.Tier:Show()
-              else
-                AffixFrame.Text:SetPoint("BOTTOMRIGHT", AffixFrame, "BOTTOMRIGHT", -1, 1)
-                AffixFrame.Text:SetJustifyH("CENTER")
-                AffixFrame.Tier:Hide()
-              end
-            end
-          end
           anchorFrame = DungeonFrame
         end
       end

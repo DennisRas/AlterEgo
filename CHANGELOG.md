@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.14 - 2024-09-18
+
+### Added
+
+- Added a new setting to show dungeon rating next to key level
+
+### Updated
+
+- Removed Tyrannical/Fortified columns
+
 ## v1.1.13 - 2024-09-15
 
 ### Added
