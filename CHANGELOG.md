@@ -4,11 +4,15 @@
 
 ### Added
 
-- Added a new setting to show dungeon rating next to key level
+- Introduced a new setting to display dungeon rating alongside the key level
 
 ### Updated
 
-- Removed Tyrannical/Fortified columns
+- Removed the Tyrannical/Fortified columns
+
+### Fixed
+
+- Corrected the number of affix buttons displayed at the top of the window
 
 ## v1.1.13 - 2024-09-15
 
