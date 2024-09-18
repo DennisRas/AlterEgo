@@ -386,6 +386,7 @@ local dataCurrencies = {
   {seasonID = 13, seasonDisplayID = 1, id = 2916, currencyType = "crest"},                    -- Runed
   {seasonID = 13, seasonDisplayID = 1, id = 2917, currencyType = "crest"},                    -- Gilded
   {seasonID = 13, seasonDisplayID = 1, id = 3008, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 13, seasonDisplayID = 1, id = 2813, currencyType = "catalyst"},                 -- Catalyst
   {seasonID = 13, seasonDisplayID = 1, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
 }
 
