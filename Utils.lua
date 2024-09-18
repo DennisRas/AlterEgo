@@ -98,8 +98,8 @@ end
 ---@param character table
 ---@return table|nil, table|nil
 function AE_GetActivitiesProgress(character)
-  local activities = AE_table_filter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
-  table.sort(activities, function(left, right) return left.index < right.index; end);
+  local activities = AE_table_filter(character.vault.slots or {}, function(activity) return activity.type and activity.type == Enum.WeeklyRewardChestThresholdType.Activities end)
+  table.sort(activities, function(a, b) return a.index < b.index; end);
   local lastCompletedIndex = 0;
   for i, activityInfo in ipairs(activities) do
     if activityInfo.progress >= activityInfo.threshold then

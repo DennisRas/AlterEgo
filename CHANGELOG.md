@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.1.13 - 2024-09-15
+
+### Added
+
+- Added Great Vault row: World Activities
+
+### Updated
+
+- Updated a couple of vault tooltips with progress details
+
+## v1.1.12 - 2024-08-28
+
+### Updated
+
+- Added TWW Season 1 data, currencies and dungeons
+
+### Fixed
+
+- Temp. fix characters not showing at the new max level (80)
+
+## v1.1.11 - 2024-08-14
+
+### Updated
+
+- Updated the TOC version to 11.0.2
+
+## v1.1.10 - 2024-07-25
+
+### Updated
+
+- Updated the TOC version to 11.0.0
+
 ## v1.1.9 - 2024-06-09
 
 ### Updated
