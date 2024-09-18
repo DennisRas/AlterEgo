@@ -978,10 +978,10 @@ function AlterEgo:CreateUI()
   do -- TitleBar
     anchorFrame = winMain.TitleBar
     winMain.TitleBar.Affixes = CreateFrame("Button", "$parentAffixes", winMain.TitleBar)
-    for i = 1, 3 do
-      local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
-      affixButton:SetSize(20, 20)
-      if currentAffixes and AE_table_count(currentAffixes) > 0 then
+    if currentAffixes and AE_table_count(currentAffixes) > 0 then
+      for i = 1, AE_table_count(currentAffixes) do
+        local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
+        affixButton:SetSize(20, 20)
         local currentAffix = currentAffixes[i]
         if currentAffix ~= nil then
           local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
@@ -1000,10 +1000,10 @@ function AlterEgo:CreateUI()
             GameTooltip:Hide()
           end)
         end
+        affixButton:SetScript("OnClick", function()
+          self:ToggleWindow("Affixes")
+        end)
       end
-      affixButton:SetScript("OnClick", function()
-        self:ToggleWindow("Affixes")
-      end)
     end
     winMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", winMain.TitleBar)
     winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
@@ -1780,20 +1780,22 @@ function AlterEgo:UpdateUI()
       winMain.TitleBar.Affixes:Hide()
     end
 
-    for i = 1, 3 do
-      local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
-      if affixButton ~= nil then
-        if i == 1 then
-          affixButton:ClearAllPoints()
-          if numCharacters == 1 then
-            affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
+    if currentAffixes and AE_table_count(currentAffixes) > 0 then
+      for i = 1, AE_table_count(currentAffixes) do
+        local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
+        if affixButton ~= nil then
+          if i == 1 then
+            affixButton:ClearAllPoints()
+            if numCharacters == 1 then
+              affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
+            else
+              affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
+            end
           else
-            affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -26, 0)
+            affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
           end
-        else
-          affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
+          anchorFrame = affixButton
         end
-        anchorFrame = affixButton
       end
     end
   end
