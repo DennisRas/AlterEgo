@@ -37,10 +37,10 @@ function AlterEgo:GetCharacterInfo()
         if not self.db.global.showRealms then
           name = name .. format(" (%s)", character.info.realm)
         end
-        GameTooltip:AddLine(name, 1, 1, 1);
-        GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1);
+        GameTooltip:AddLine(name, 1, 1, 1)
+        GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1)
         if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
-          GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1);
+          GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1)
         end
         if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
           local dataCurrencies = self:GetCurrencies()
@@ -67,15 +67,15 @@ function AlterEgo:GetCharacterInfo()
           end)
         end
         if AE_table_count(characterCurrencies) > 0 then
-          GameTooltip:AddLine(" ");
+          GameTooltip:AddLine(" ")
           GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
           AE_table_foreach(characterCurrencies, function(characterCurrency)
             GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
           end)
         end
         if character.lastUpdate ~= nil then
-          GameTooltip:AddLine(" ");
-          GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         end
         if type(character.equipment) == "table" then
           GameTooltip:AddLine(" ")
@@ -128,7 +128,7 @@ function AlterEgo:GetCharacterInfo()
                   OnClick = function()
                     if IsModifiedClick("CHATLINK") then
                       if not ChatEdit_InsertLink(item.itemLink) then
-                        ChatFrame_OpenChat(item.itemLink);
+                        ChatFrame_OpenChat(item.itemLink)
                       end
                     end
                   end
@@ -195,17 +195,17 @@ function AlterEgo:GetCharacterInfo()
             itemLevelTooltip = itemLevelTooltip .. HIGHLIGHT_FONT_COLOR_CODE .. format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_AVERAGE_ITEM_LEVEL) .. " " .. floor(character.info.ilvl.level)
           end
           if character.info.ilvl.level ~= nil and character.info.ilvl.equipped ~= nil and character.info.ilvl.level ~= character.info.ilvl.equipped then
-            itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped);
+            itemLevelTooltip = itemLevelTooltip .. "  " .. format(STAT_AVERAGE_ITEM_LEVEL_EQUIPPED, character.info.ilvl.equipped)
           end
           if character.info.ilvl.level ~= nil then
             itemLevelTooltip = itemLevelTooltip .. FONT_COLOR_CODE_CLOSE
           end
           if character.info.ilvl.level ~= nil and character.info.ilvl.pvp ~= nil and floor(character.info.ilvl.level) ~= character.info.ilvl.pvp then
-            itemLevelTooltip2 = itemLevelTooltip2 .. "\n\n" .. STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)));
+            itemLevelTooltip2 = itemLevelTooltip2 .. "\n\n" .. STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)))
           end
         end
-        GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1);
-        GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+        GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1)
+        GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true)
       end,
       enabled = true,
     },
@@ -252,16 +252,16 @@ function AlterEgo:GetCharacterInfo()
           end
           rating = tostring(character.mythicplus.rating)
         end
-        GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1);
-        GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
-        GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+        GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1)
+        GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+        GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
           local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(bestSeasonScore)
           if bestSeasonNumber > 0 then
             local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
             bestSeasonValue = format("%s %s", bestSeasonValue, season)
           end
-          GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+          GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         end
         if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
           GameTooltip:AddLine(" ")
@@ -304,11 +304,11 @@ function AlterEgo:GetCharacterInfo()
           and numSeasonRuns > 0
           and IsModifiedClick("CHATLINK")
         then
-          local dungeonScoreDungeonTable = {};
+          local dungeonScoreDungeonTable = {}
           for _, dungeon in pairs(character.mythicplus.dungeons) do
-            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID);
-            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0);
-            table.insert(dungeonScoreDungeonTable, dungeon.level);
+            table.insert(dungeonScoreDungeonTable, dungeon.challengeModeID)
+            table.insert(dungeonScoreDungeonTable, dungeon.finishedSuccess and 1 or 0)
+            table.insert(dungeonScoreDungeonTable, dungeon.level)
           end
           local dungeonScoreTable = {
             character.mythicplus.rating,
@@ -321,10 +321,10 @@ function AlterEgo:GetCharacterInfo()
             character.mythicplus.bestSeasonScore,
             character.mythicplus.bestSeasonNumber,
             unpack(dungeonScoreDungeonTable)
-          };
-          local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)));
+          }
+          local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)))
           if not ChatEdit_InsertLink(link) then
-            ChatFrame_OpenChat(link);
+            ChatFrame_OpenChat(link)
           end
         end
       end,
@@ -362,7 +362,7 @@ function AlterEgo:GetCharacterInfo()
         if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
           if IsModifiedClick("CHATLINK") then
             if not ChatEdit_InsertLink(character.mythicplus.keystone.itemLink) then
-              ChatFrame_OpenChat(character.mythicplus.keystone.itemLink);
+              ChatFrame_OpenChat(character.mythicplus.keystone.itemLink)
             end
           end
         end
@@ -517,42 +517,45 @@ function AlterEgo:GetCharacterInfo()
         return table.concat(value, "  ")
       end,
       OnEnter = function(character)
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1);
+        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
+        local addBlankLine = false
 
         do -- Stats
+          local lineAdded = false
           if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
             local numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
             local numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
             local numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
-            local lineAdded = false
             if numHeroic > 0 then
-              GameTooltip:AddLine("Heroic runs this Week: " .. "|cffffffff" .. tostring(numHeroic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+              GameTooltip:AddLine("Heroic runs this Week: " .. "|cffffffff" .. tostring(numHeroic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
               lineAdded = true
             end
             if numMythic > 0 then
-              GameTooltip:AddLine("Mythic runs this Week: " .. "|cffffffff" .. tostring(numMythic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+              GameTooltip:AddLine("Mythic runs this Week: " .. "|cffffffff" .. tostring(numMythic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
               lineAdded = true
             end
             if numMythicPlus > 0 then
-              GameTooltip:AddLine("Mythic+ runs this Week: " .. "|cffffffff" .. tostring(numMythicPlus) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+              GameTooltip:AddLine("Mythic+ runs this Week: " .. "|cffffffff" .. tostring(numMythicPlus) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
               lineAdded = true
             end
-            if lineAdded then
-              GameTooltip_AddBlankLineToTooltip(GameTooltip);
-            end
           end
+          addBlankLine = lineAdded
         end
 
         do -- Show progress
+          local lineAdded = false
           local runsThisWeek = AE_table_filter(character.mythicplus.runHistory or {}, function(run)
             return run.thisWeek == true
           end)
           local numRunsThisWeek = AE_table_count(runsThisWeek) or 0
           if numRunsThisWeek > 0 then
-            GameTooltip_AddBlankLineToTooltip(GameTooltip)
             table.sort(runsThisWeek, function(a, b)
               return a.level > b.level
             end)
+
+            if addBlankLine then GameTooltip_AddBlankLineToTooltip(GameTooltip) end
+            GameTooltip:AddLine("Top Runs This Week:", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+            lineAdded = true
 
             for runIndex, run in ipairs(runsThisWeek) do
               local threshold = AE_table_find(character.vault.slots, function(slot)
@@ -565,41 +568,50 @@ function AlterEgo:GetCharacterInfo()
                 color = GREEN_FONT_COLOR
               end
               if dungeon then
-                GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
+                GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, color.r, color.g, color.b)
               end
               if runIndex == 8 then
                 break
               end
             end
           end
+          addBlankLine = lineAdded
         end
 
         do -- Show improvement info
-          local lastCompletedActivityInfo, nextActivityInfo = AE_GetActivitiesProgress(character);
+          local lineAdded = false
+          if addBlankLine then
+            GameTooltip_AddBlankLineToTooltip(GameTooltip)
+            addBlankLine = false
+          end
+          local lastCompletedActivityInfo, nextActivityInfo = AE_GetActivitiesProgress(character)
           if not lastCompletedActivityInfo then
-            GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE);
+            GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE)
+            lineAdded = true
           else
             if nextActivityInfo then
-              local globalString = (lastCompletedActivityInfo.index == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND;
-              GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress));
+              local globalString = (lastCompletedActivityInfo.index == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND
+              GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress))
+              lineAdded = true
             else
-              GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD);
-              local level, count = AE_GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold);
+              GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD)
+              local level, count = AE_GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold)
               if level == WeeklyRewardsUtil.HeroicLevel then
-                GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
-                GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count));
+                GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR)
+                GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count))
+                lineAdded = true
               else
-                local nextLevel = WeeklyRewardsUtil.GetNextMythicLevel(level);
+                local nextLevel = WeeklyRewardsUtil.GetNextMythicLevel(level)
                 -- Blizzard bug: Above function always does +1 even at max reward level lol
                 if nextLevel < 10 then
-                  GameTooltip_AddBlankLineToTooltip(GameTooltip);
-                  GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR);
-                  GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, nextLevel));
+                  GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR)
+                  GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, nextLevel))
+                  lineAdded = true
                 end
               end
             end
           end
+          addBlankLine = lineAdded
         end
       end,
       enabled = true,
@@ -916,8 +928,8 @@ function AlterEgo:CreateUI()
                 text = "|T" .. affix.fileDataID .. ":0|t " .. name,
                 backgroundColor = backgroundColor or nil,
                 OnEnter = function()
-                  GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true);
-                  GameTooltip:AddLine(affix.description, nil, nil, nil, true);
+                  GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)
+                  GameTooltip:AddLine(affix.description, nil, nil, nil, true)
                 end,
               })
             end
@@ -945,13 +957,13 @@ function AlterEgo:CreateUI()
         affixButton:SetSize(20, 20)
         local currentAffix = currentAffixes[i]
         if currentAffix ~= nil then
-          local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id);
+          local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(currentAffix.id)
           affixButton:SetNormalTexture(fileDataID)
           affixButton:SetScript("OnEnter", function()
             GameTooltip:ClearAllPoints()
             GameTooltip:ClearLines()
             GameTooltip:SetOwner(affixButton, "ANCHOR_TOP")
-            GameTooltip:SetText(name, 1, 1, 1);
+            GameTooltip:SetText(name, 1, 1, 1)
             GameTooltip:AddLine(desc, nil, nil, nil, true)
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
@@ -1253,7 +1265,7 @@ function AlterEgo:CreateUI()
             hasOpacity = false,
             func = UIDropDownMenuButton_OpenColorPicker,
             swatchFunc = function()
-              local r, g, b = ColorPickerFrame:GetColorRGB();
+              local r, g, b = ColorPickerFrame:GetColorRGB()
               self.db.global.interface.windowColor.r = r
               self.db.global.interface.windowColor.g = g
               self.db.global.interface.windowColor.b = b
@@ -1279,8 +1291,8 @@ function AlterEgo:CreateUI()
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.SettingsButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Settings", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+      GameTooltip:SetText("Settings", 1, 1, 1, 1, true)
+      GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       GameTooltip:Show()
     end)
     winMain.TitleBar.SettingsButton:SetScript("OnLeave", function()
@@ -1329,8 +1341,8 @@ function AlterEgo:CreateUI()
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.SortingButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Sorting", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+      GameTooltip:SetText("Sorting", 1, 1, 1, 1, true)
+      GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       GameTooltip:Show()
     end)
     winMain.TitleBar.SortingButton:SetScript("OnLeave", function()
@@ -1389,8 +1401,8 @@ function AlterEgo:CreateUI()
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.CharactersButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Characters", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+      GameTooltip:SetText("Characters", 1, 1, 1, 1, true)
+      GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       GameTooltip:Show()
     end)
     winMain.TitleBar.CharactersButton:SetScript("OnLeave", function()
@@ -1484,8 +1496,8 @@ function AlterEgo:CreateUI()
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.AnnounceButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true);
-      GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+      GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true)
+      GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       GameTooltip:Show()
     end)
     winMain.TitleBar.AnnounceButton:SetScript("OnLeave", function()
@@ -1587,7 +1599,7 @@ function AlterEgo:CreateUI()
         GameTooltip:ClearAllPoints()
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(RaidFrame, "ANCHOR_RIGHT")
-        GameTooltip:SetText(raid.name, 1, 1, 1);
+        GameTooltip:SetText(raid.name, 1, 1, 1)
         if raid.modifiedInstanceInfo then
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
@@ -1626,7 +1638,7 @@ function AlterEgo:CreateUI()
           GameTooltip:ClearAllPoints()
           GameTooltip:ClearLines()
           GameTooltip:SetOwner(DifficultFrame, "ANCHOR_RIGHT")
-          GameTooltip:SetText(difficulty.name, 1, 1, 1);
+          GameTooltip:SetText(difficulty.name, 1, 1, 1)
           GameTooltip:Show()
         end)
         DifficultFrame:SetScript("OnLeave", function()
@@ -1699,7 +1711,7 @@ function AlterEgo:UpdateUI()
   end
 
   local affixes = self:GetAffixes(true)
-  local currentAffixes = self:GetCurrentAffixes();
+  local currentAffixes = self:GetCurrentAffixes()
   local characters = self:GetCharacters()
   local numCharacters = AE_table_count(characters)
   local dungeons = self:GetDungeons()
@@ -1827,7 +1839,7 @@ function AlterEgo:UpdateUI()
         GameTooltip:ClearAllPoints()
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(Label, "ANCHOR_RIGHT")
-        GameTooltip:SetText(dungeon.name, 1, 1, 1);
+        GameTooltip:SetText(dungeon.name, 1, 1, 1)
         if dungeon.spellID then
           if IsSpellKnown(dungeon.spellID) then
             GameTooltip:ClearLines()
@@ -1961,7 +1973,7 @@ function AlterEgo:UpdateUI()
           local overallScore
           local inTimeInfo
           local overTimeInfo
-          local fastestAffixScore
+          local bestAffixScore
           local level = "-"
           local color = HIGHLIGHT_FONT_COLOR
           local tier = ""
@@ -1973,25 +1985,25 @@ function AlterEgo:UpdateUI()
             overTimeInfo = characterDungeon.bestNotTimedRun
 
             if overallScore and self.db.global.showAffixColors then
-              local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore);
+              local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
               if rarityColor ~= nil then
                 color = rarityColor
               end
             end
 
             if affixScores then
-              fastestAffixScore = TableUtil.FindMin(affixScores, function(affixScore)
-                return affixScore.durationSec
+              bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
+                return affixScore.score
               end)
 
-              if fastestAffixScore then
-                level = fastestAffixScore.level
+              if bestAffixScore then
+                level = bestAffixScore.level
 
-                if fastestAffixScore.durationSec <= dungeon.time * 0.6 then
+                if bestAffixScore.durationSec <= dungeon.time * 0.6 then
                   tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                elseif fastestAffixScore.durationSec <= dungeon.time * 0.8 then
+                elseif bestAffixScore.durationSec <= dungeon.time * 0.8 then
                   tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                elseif fastestAffixScore.durationSec <= dungeon.time then
+                elseif bestAffixScore.durationSec <= dungeon.time then
                   tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
                 end
               end
@@ -2052,15 +2064,15 @@ function AlterEgo:UpdateUI()
                 GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(overallScore)), GREEN_FONT_COLOR)
               end
 
-              if fastestAffixScore then
+              if bestAffixScore then
                 GameTooltip_AddBlankLineToTooltip(GameTooltip)
                 GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
-                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(fastestAffixScore.level), HIGHLIGHT_FONT_COLOR)
+                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(bestAffixScore.level), HIGHLIGHT_FONT_COLOR)
 
-                local displayZeroHours = fastestAffixScore.durationSec >= SECONDS_PER_HOUR
-                local durationText = SecondsToClock(fastestAffixScore.durationSec, displayZeroHours)
+                local displayZeroHours = bestAffixScore.durationSec >= SECONDS_PER_HOUR
+                local durationText = SecondsToClock(bestAffixScore.durationSec, displayZeroHours)
 
-                if fastestAffixScore.overTime then
+                if bestAffixScore.overTime then
                   local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
                   GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
                 else
@@ -2103,8 +2115,8 @@ function AlterEgo:UpdateUI()
                     GameTooltip:ClearAllPoints()
                     GameTooltip:ClearLines()
                     GameTooltip:SetOwner(DifficultyFrame, "ANCHOR_RIGHT")
-                    GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
-                    GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
+                    GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
+                    GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
                     if character.raids.savedInstances ~= nil then
                       local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
                         return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
