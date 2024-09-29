@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.15 - 2024-09-29
+
+### Fixed
+
+- Fixed a Blizzard bug affecting "Best Run" data for dungeons (Thanks to everyone who reported it)
+- Resolved an issue with line spacing in the dungeon vault tooltips
+
 ## v1.1.14 - 2024-09-18
 
 ### Added
