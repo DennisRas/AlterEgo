@@ -1961,7 +1961,7 @@ function AlterEgo:UpdateUI()
           local overallScore
           local inTimeInfo
           local overTimeInfo
-          local fastestAffixScore
+          local bestAffixScore
           local level = "-"
           local color = HIGHLIGHT_FONT_COLOR
           local tier = ""
@@ -1980,18 +1980,18 @@ function AlterEgo:UpdateUI()
             end
 
             if affixScores then
-              fastestAffixScore = TableUtil.FindMin(affixScores, function(affixScore)
-                return affixScore.durationSec
+              bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
+                return affixScore.score
               end)
 
-              if fastestAffixScore then
-                level = fastestAffixScore.level
+              if bestAffixScore then
+                level = bestAffixScore.level
 
-                if fastestAffixScore.durationSec <= dungeon.time * 0.6 then
+                if bestAffixScore.durationSec <= dungeon.time * 0.6 then
                   tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                elseif fastestAffixScore.durationSec <= dungeon.time * 0.8 then
+                elseif bestAffixScore.durationSec <= dungeon.time * 0.8 then
                   tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                elseif fastestAffixScore.durationSec <= dungeon.time then
+                elseif bestAffixScore.durationSec <= dungeon.time then
                   tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
                 end
               end
@@ -2052,15 +2052,15 @@ function AlterEgo:UpdateUI()
                 GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(overallScore)), GREEN_FONT_COLOR)
               end
 
-              if fastestAffixScore then
+              if bestAffixScore then
                 GameTooltip_AddBlankLineToTooltip(GameTooltip)
                 GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
-                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(fastestAffixScore.level), HIGHLIGHT_FONT_COLOR)
+                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(bestAffixScore.level), HIGHLIGHT_FONT_COLOR)
 
-                local displayZeroHours = fastestAffixScore.durationSec >= SECONDS_PER_HOUR
-                local durationText = SecondsToClock(fastestAffixScore.durationSec, displayZeroHours)
+                local displayZeroHours = bestAffixScore.durationSec >= SECONDS_PER_HOUR
+                local durationText = SecondsToClock(bestAffixScore.durationSec, displayZeroHours)
 
-                if fastestAffixScore.overTime then
+                if bestAffixScore.overTime then
                   local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
                   GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
                 else
