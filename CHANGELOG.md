@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.1.16 - 2024-11-10
+
+### Added
+
+- Included dungeon timer cutoffs in the score tooltips
+
+### Fixed
+
+- Score icons now display the correct tier icon (+1, +2, +3)
+- Score colors now account for the additional 90 seconds from Challenger's Peril
+
 ## v1.1.15 - 2024-09-29
 
 ### Fixed

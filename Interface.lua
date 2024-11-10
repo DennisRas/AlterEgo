@@ -1966,6 +1966,20 @@ function AlterEgo:UpdateUI()
       end
 
       do -- Dungeon rows
+        local function calculateDungeonTimer(time, level, tier)
+          if tier == 3 then
+            time = time * 0.6
+          elseif tier == 2 then
+            time = time * 0.8
+          end
+
+          if level >= 7 then
+            time = time + 90
+          end
+
+          return time
+        end
+
         for dungeonIndex, dungeon in ipairs(dungeons) do
           local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
           local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
@@ -1977,6 +1991,7 @@ function AlterEgo:UpdateUI()
           local level = "-"
           local color = HIGHLIGHT_FONT_COLOR
           local tier = ""
+          local dungeonLevel = 0
 
           if characterDungeon then
             affixScores = characterDungeon.affixScores
@@ -1998,20 +2013,21 @@ function AlterEgo:UpdateUI()
 
               if bestAffixScore then
                 level = bestAffixScore.level
+                dungeonLevel = bestAffixScore.level or 0
 
-                if bestAffixScore.durationSec <= dungeon.time * 0.6 then
-                  tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a"
-                elseif bestAffixScore.durationSec <= dungeon.time * 0.8 then
-                  tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a"
-                elseif bestAffixScore.durationSec <= dungeon.time then
-                  tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:-1|a"
+                if bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
+                elseif bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
+                elseif bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
+                end
+
+                if bestAffixScore.overTime then
+                  color = LIGHTGRAY_FONT_COLOR
                 end
               end
             end
-          end
-
-          if tier == "" then
-            color = LIGHTGRAY_FONT_COLOR
           end
 
           if level ~= "-" and self.db.global.showTiers then
@@ -2076,10 +2092,16 @@ function AlterEgo:UpdateUI()
                   local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
                   GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
                 else
-                  GameTooltip_AddColoredLine(GameTooltip, durationText, HIGHLIGHT_FONT_COLOR)
+                  GameTooltip_AddColoredLine(GameTooltip, tier .. " " .. durationText, HIGHLIGHT_FONT_COLOR)
                 end
               end
             end
+
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("Dungeon Timers")
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
 
             GameTooltip:Show()
             self:SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
