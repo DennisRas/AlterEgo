@@ -911,8 +911,8 @@ function AlterEgo:CreateUI()
       table.insert(data.columns, {width = 500})
       table.insert(data.rows, {cols = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
     else
-      AE_table_foreach(affixRotation.activation, function(activationLevel)
-        table.insert(data.columns, {width = 140})
+      AE_table_foreach(affixRotation.activation, function(activationLevel, activationLevelIndex)
+        table.insert(data.columns, {width = activationLevelIndex == 1 and 220 or 140})
         table.insert(firstRow.cols, {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}})
       end)
       table.insert(data.rows, firstRow)
@@ -925,7 +925,7 @@ function AlterEgo:CreateUI()
             if affix then
               local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
               table.insert(row.cols, {
-                text = "|T" .. affix.fileDataID .. ":0|t " .. name,
+                text = "|T" .. affix.fileDataID .. ":18|t " .. name,
                 backgroundColor = backgroundColor or nil,
                 OnEnter = function()
                   GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)

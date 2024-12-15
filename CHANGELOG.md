@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.17 - ?
+
+### Added
+
+- Added Weekly affix rotation data
+
 ## v1.1.16 - 2024-11-10
 
 ### Added

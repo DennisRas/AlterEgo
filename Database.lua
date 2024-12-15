@@ -245,21 +245,34 @@ local AFFIX_STORMING = 124
 local AFFIX_ENTANGLING = 134
 local AFFIX_AFFLICTED = 135
 local AFFIX_INCORPOREAL = 136
+local AFFIX_XALATAHS_GUILE = 147
+local AFFIX_XALATAHS_BARGAIN_ASCENDANT = 148
+local AFFIX_CHALLENGERS_PERIL = 152
+local AFFIX_XALATAHS_BARGAIN_VOIDBOUND = 158
+local AFFIX_XALATAHS_BARGAIN_OBLIVION = 159
+local AFFIX_XALATAHS_BARGAIN_DEVOUR = 160
+
 
 ---@type Affix[]
 local dataAffixes = {
-  {id = AFFIX_VOLCANIC,    base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_RAGING,      base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_BOLSTERING,  base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_SANGUINE,    base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_FORTIFIED,   base = 1, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_TYRANNICAL,  base = 1, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_BURSTING,    base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_SPITEFUL,    base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_STORMING,    base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_ENTANGLING,  base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_AFFLICTED,   base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_INCORPOREAL, base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_VOLCANIC,                   base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_RAGING,                     base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_BOLSTERING,                 base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_SANGUINE,                   base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_FORTIFIED,                  base = 1, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_TYRANNICAL,                 base = 1, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_BURSTING,                   base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_SPITEFUL,                   base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_STORMING,                   base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_ENTANGLING,                 base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_AFFLICTED,                  base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_INCORPOREAL,                base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_XALATAHS_GUILE,             base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_XALATAHS_BARGAIN_ASCENDANT, base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_CHALLENGERS_PERIL,          base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND, base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_XALATAHS_BARGAIN_OBLIVION,  base = 0, name = "", description = "", fileDataID = nil},
+  {id = AFFIX_XALATAHS_BARGAIN_DEVOUR,    base = 0, name = "", description = "", fileDataID = nil},
 }
 
 ---@type MythicPlusKeystoneAffix[]
@@ -301,7 +314,22 @@ local dataAffixRotations = {
       {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
       {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
     }
-  }
+  },
+  {
+    seasonID = 13,
+    seasonDisplayID = 1,
+    activation = {2, 4, 7, 10, 12},
+    affixes = {
+      {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_OBLIVION,  AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_OBLIVION,  AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+    }
+  },
 }
 
 ---@type Keystone[]
