@@ -539,7 +539,7 @@ function AlterEgo:GetActiveAffixRotation(currentAffixes)
 end
 
 --- Get the Keystone ItemID of the current season
----@return Keystone|nil
+---@return integer|nil
 function AlterEgo:GetKeystoneItemID()
   local seasonID = self:GetCurrentSeason()
   local keystone = AE_table_get(dataKeystones, "seasonID", seasonID)
@@ -653,6 +653,8 @@ end
 function AlterEgo:UpdateDB()
   self:UpdateRaidInstances()
   self:UpdateCharacterInfo()
+  self:UpdateEquipment()
+  self:UpdateCurrencies()
   self:UpdateKeystoneItem()
   self:UpdateVault()
   self:UpdateMythicPlus()
@@ -806,70 +808,69 @@ end
 
 function AlterEgo:UpdateRaidInstances()
   local character = self:GetCharacter()
-  if not character then
-    return
-  end
-  local raids = self:GetRaids();
+  if not character then return end
+
+  local raids = self:GetRaids()
+  wipe(character.raids.savedInstances or {})
+
   local numSavedInstances = GetNumSavedInstances()
-  character.raids.savedInstances = {}
-  if numSavedInstances > 0 then
-    for savedInstanceIndex = 1, numSavedInstances do
-      local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
-      local raid = AE_table_get(raids, "instanceID", instanceID)
-      local savedInstance = {
-        index = savedInstanceIndex,
-        id = lockoutId,
-        name = name,
-        lockoutId = lockoutId,
-        reset = reset,
-        difficultyID = difficultyID,
-        locked = locked,
-        extended = extended,
-        instanceIDMostSig = instanceIDMostSig,
-        isRaid = isRaid,
-        maxPlayers = maxPlayers,
-        difficultyName = difficultyName,
-        numEncounters = numEncounters,
-        encounterProgress = encounterProgress,
-        extendDisabled = extendDisabled,
-        instanceID = instanceID,
-        link = GetSavedInstanceChatLink(savedInstanceIndex),
-        expires = 0,
-        encounters = {}
-      }
-      if reset and reset > 0 then
-        savedInstance.expires = reset + time()
-      end
-      for encounterIndex = 1, numEncounters do
-        local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
-        local instanceEncounterID = 0
-        if raid then
-          AE_table_foreach(raid.encounters, function(encounter)
-            if string.lower(encounter.name) == string.lower(bossName) then
-              instanceEncounterID = encounter.instanceEncounterID
-            end
-          end)
-        end
-        local encounter = {
-          index = encounterIndex,
-          instanceEncounterID = instanceEncounterID,
-          bossName = bossName,
-          fileDataID = fileDataID or 0,
-          killed = killed
-        }
-        savedInstance.encounters[encounterIndex] = encounter
-      end
-      character.raids.savedInstances[savedInstanceIndex] = savedInstance
+  if numSavedInstances == 0 then return end
+
+  for savedInstanceIndex = 1, numSavedInstances do
+    local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
+    local raid = AE_table_get(raids, "instanceID", instanceID)
+    local savedInstance = {
+      index = savedInstanceIndex,
+      id = lockoutId,
+      name = name,
+      lockoutId = lockoutId,
+      reset = reset,
+      difficultyID = difficultyID,
+      locked = locked,
+      extended = extended,
+      instanceIDMostSig = instanceIDMostSig,
+      isRaid = isRaid,
+      maxPlayers = maxPlayers,
+      difficultyName = difficultyName,
+      numEncounters = numEncounters,
+      encounterProgress = encounterProgress,
+      extendDisabled = extendDisabled,
+      instanceID = instanceID,
+      link = GetSavedInstanceChatLink(savedInstanceIndex),
+      expires = 0,
+      encounters = {}
+    }
+    if reset and reset > 0 then
+      savedInstance.expires = reset + time()
     end
+    for encounterIndex = 1, numEncounters do
+      local bossName, fileDataID, killed = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
+      local instanceEncounterID = 0
+      if raid then
+        AE_table_foreach(raid.encounters, function(encounter)
+          if string.lower(encounter.name) == string.lower(bossName) then
+            instanceEncounterID = encounter.instanceEncounterID
+          end
+        end)
+      end
+      local encounter = {
+        index = encounterIndex,
+        instanceEncounterID = instanceEncounterID,
+        bossName = bossName,
+        fileDataID = fileDataID or 0,
+        killed = killed
+      }
+      savedInstance.encounters[encounterIndex] = encounter
+    end
+    character.raids.savedInstances[savedInstanceIndex] = savedInstance
   end
   self:UpdateUI()
 end
 
 function AlterEgo:UpdateCharacterInfo()
   local character = self:GetCharacter()
-  if not character then
-    return
-  end
+  if not character then return end
+
   local playerName = UnitName("player")
   local playerRealm = GetRealmName()
   local playerLevel = UnitLevel("player")
@@ -878,6 +879,7 @@ function AlterEgo:UpdateCharacterInfo()
   local playerFactionGroupEnglish, playerFactionGroupLocalized = UnitFactionGroup("player")
   local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
   local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
+
   if playerName then character.info.name = playerName end
   if playerRealm then character.info.realm = playerRealm end
   if playerLevel then character.info.level = playerLevel end
@@ -896,11 +898,38 @@ function AlterEgo:UpdateCharacterInfo()
   if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
   if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
   if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
+
+  character.lastUpdate = GetServerTime()
+  self:UpdateUI()
+end
+
+function AlterEgo:UpdateCurrencies()
+  local character = self:GetCharacter()
+  if not character then return end
+
   if character.currencies == nil then
     character.currencies = {}
   else
     wipe(character.currencies or {})
   end
+
+  AE_table_foreach(dataCurrencies, function(dataCurrency)
+    local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+    if not currency then return end
+    currency.id = dataCurrency.id
+    currency.currencyType = dataCurrency.currencyType
+    if dataCurrency.itemID then
+      currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
+      currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
+    end
+    table.insert(character.currencies, currency)
+  end)
+end
+
+function AlterEgo:UpdateEquipment()
+  local character = self:GetCharacter()
+  if not character then return end
+
   if character.equipment == nil then
     character.equipment = {}
   else
@@ -910,138 +939,130 @@ function AlterEgo:UpdateCharacterInfo()
   local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
   upgradePattern = upgradePattern:format("(.+)", "(%d+)", "(%d+)")
-  for _, slot in ipairs(dataInventory) do
+
+  AE_table_foreach(dataInventory, function(slot)
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
-    if inventoryItemLink then
-      local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
-      local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
-      itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
-      expacID, setID, isCraftingReagent = C_Item.GetItemInfo(inventoryItemLink)
+    if not inventoryItemLink then return end
 
-      tooltipScan:ClearLines()
-      tooltipScan:SetHyperlink(inventoryItemLink)
-      AE_table_foreach({tooltipScan:GetRegions()}, function(region)
-        if region:IsObjectType("FontString") then
-          local text = region:GetText()
-          if text then
-            local match, _, uTrack, uLevel, uMax = text:find(upgradePattern)
-            if match then
-              itemUpgradeTrack = uTrack
-              itemUpgradeLevel = uLevel
-              itemUpgradeMax = uMax
-            end
-          end
-        end
-      end)
+    local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", "", ""
+    local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
+    itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
+    expacID, setID, isCraftingReagent = C_Item.GetItemInfo(inventoryItemLink)
+    if itemName == nil then return end
 
-      if itemName ~= nil then
-        table.insert(character.equipment, {
-          itemName = itemName,
-          itemLink = itemLink,
-          itemQuality = itemQuality,
-          itemLevel = itemLevel,
-          itemMinLevel = itemMinLevel,
-          itemType = itemType,
-          itemSubType = itemSubType,
-          itemStackCount = itemStackCount,
-          itemEquipLoc = itemEquipLoc,
-          itemTexture = itemTexture,
-          sellPrice = sellPrice,
-          classID = classID,
-          subclassID = subclassID,
-          bindType = bindType,
-          expacID = expacID,
-          setID = setID,
-          isCraftingReagent = isCraftingReagent,
-          itemUpgradeTrack = itemUpgradeTrack,
-          itemUpgradeLevel = itemUpgradeLevel,
-          itemUpgradeMax = itemUpgradeMax,
-          itemSlotID = slot.id,
-          itemSlotName = slot.name
-        })
-      end
-    end
-  end
-  AE_table_foreach(dataCurrencies, function(dataCurrency)
-    local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-    if currency then
-      currency.id = dataCurrency.id
-      currency.currencyType = dataCurrency.currencyType
-      if dataCurrency.itemID then
-        currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
-        currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
-      end
-      table.insert(character.currencies, currency)
-    end
+    local tooltipData = C_TooltipInfo.GetInventoryItem("player", slot.id)
+    AE_table_foreach(tooltipData.lines, function(line)
+      if not line.leftText then return end
+      local match, _, uTrack, uLevel, uMax = line.leftText:find(upgradePattern)
+      if not match then return end
+      itemUpgradeTrack = uTrack
+      itemUpgradeLevel = uLevel
+      itemUpgradeMax = uMax
+    end)
+
+    table.insert(character.equipment, {
+      itemName = itemName,
+      itemLink = itemLink,
+      itemQuality = itemQuality,
+      itemLevel = itemLevel,
+      itemMinLevel = itemMinLevel,
+      itemType = itemType,
+      itemSubType = itemSubType,
+      itemStackCount = itemStackCount,
+      itemEquipLoc = itemEquipLoc,
+      itemTexture = itemTexture,
+      sellPrice = sellPrice,
+      classID = classID,
+      subclassID = subclassID,
+      bindType = bindType,
+      expacID = expacID,
+      setID = setID,
+      isCraftingReagent = isCraftingReagent,
+      itemUpgradeTrack = itemUpgradeTrack,
+      itemUpgradeLevel = itemUpgradeLevel,
+      itemUpgradeMax = itemUpgradeMax,
+      itemSlotID = slot.id,
+      itemSlotName = slot.name
+    })
   end)
-  character.lastUpdate = GetServerTime()
-  self:UpdateUI()
 end
 
 function AlterEgo:UpdateKeystoneItem()
   local character = self:GetCharacter()
-  if not character then
-    return
-  end
+  if not character then return end
   local dungeons = self:GetDungeons()
   local keystoneItemID = self:GetKeystoneItemID()
+
+  local keystoneItemLink = nil
   if keystoneItemID ~= nil then
     for bagID = 0, NUM_BAG_SLOTS do
       for slotID = 1, C_Container.GetContainerNumSlots(bagID) do
         local itemId = C_Container.GetContainerItemID(bagID, slotID)
         if itemId and itemId == keystoneItemID then
-          local itemLink = C_Container.GetContainerItemLink(bagID, slotID)
-          local _, _, challengeModeID, level = strsplit(":", itemLink)
-          local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
-          if dungeon then
-            local newKeystone = false
-            if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
-              if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) or character.mythicplus.keystone.level < tonumber(level) then
-                newKeystone = true
-              end
-            elseif tonumber(dungeon.mapId) and tonumber(level) then
-              newKeystone = true
-            end
-            local color = "ffffffff"
-            local keystoneColor = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
-            if keystoneColor ~= nil then
-              color = keystoneColor:GenerateHexColor()
-            end
-            character.mythicplus.keystone = {
-              challengeModeID = tonumber(dungeon.challengeModeID),
-              mapId = tonumber(dungeon.mapId),
-              level = tonumber(level),
-              color = color,
-              itemId = tonumber(itemId),
-              itemLink = itemLink,
-            }
-            if newKeystone then
-              if IsInGroup() and self.db.global.announceKeystones.autoParty then
-                SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
-              end
-              if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-                SendChatMessage(self.constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
-              end
-            end
-          end
+          keystoneItemLink = C_Container.GetContainerItemLink(bagID, slotID)
           break
         end
       end
+      if keystoneItemLink then
+        break
+      end
     end
   end
-  local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-  local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-  if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) end
-  if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) end
+
+  if not keystoneItemLink then
+    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) end
+    if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) end
+    return
+  end
+
+  local _, _, challengeModeID, level = strsplit(":", keystoneItemLink)
+  local dungeon = AE_table_get(dungeons, "challengeModeID", tonumber(challengeModeID))
+  if not dungeon then return end
+
+  local newKeystone = false
+  if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
+    if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) or character.mythicplus.keystone.level < tonumber(level) then
+      newKeystone = true
+    end
+  elseif tonumber(dungeon.mapId) and tonumber(level) then
+    newKeystone = true
+  end
+
+  local color = "ffffffff"
+  local keystoneColor = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
+  if keystoneColor ~= nil then
+    color = keystoneColor:GenerateHexColor()
+  end
+
+  character.mythicplus.keystone = {
+    challengeModeID = tonumber(dungeon.challengeModeID),
+    mapId = tonumber(dungeon.mapId),
+    level = tonumber(level),
+    color = color,
+    itemId = tonumber(keystoneItemID),
+    itemLink = keystoneItemLink,
+  }
+
+  if newKeystone then
+    if IsInGroup() and self.db.global.announceKeystones.autoParty then
+      SendChatMessage(self.constants.prefix .. "New Keystone: " .. keystoneItemLink, "PARTY")
+    end
+    if IsInGuild() and self.db.global.announceKeystones.autoGuild then
+      SendChatMessage(self.constants.prefix .. "New Keystone: " .. keystoneItemLink, "GUILD")
+    end
+  end
+
   self:UpdateUI()
 end
 
 function AlterEgo:UpdateVault()
   local character = self:GetCharacter()
-  if not character then
-    return
-  end
+  if not character then return end
+
   wipe(character.vault.slots or {})
+
   local activities = C_WeeklyRewards.GetActivities()
   AE_table_foreach(activities, function(activity)
     activity.exampleRewardLink = ""
@@ -1060,9 +1081,8 @@ end
 
 function AlterEgo:UpdateMythicPlus()
   local character = self:GetCharacter()
-  if not character then
-    return
-  end
+  if not character then return end
+
   local dungeons = self:GetDungeons()
   local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
   local runHistory = C_MythicPlus.GetRunHistory(true, true)

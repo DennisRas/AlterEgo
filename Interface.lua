@@ -1701,12 +1701,18 @@ function AlterEgo:CreateUI()
 
   winMain.Body:SetPoint("BOTTOMLEFT", winMain.Footer, "TOPLEFT")
   winMain.Body:SetPoint("BOTTOMRIGHT", winMain.Footer, "TOPRIGHT")
+  winMain:SetScript("OnShow", function()
+    self:UpdateUI()
+  end)
   self:UpdateUI()
 end
 
 function AlterEgo:UpdateUI()
   local winMain = self:GetWindow("Main")
   if not winMain then
+    return
+  end
+  if not winMain:IsVisible() then
     return
   end
 

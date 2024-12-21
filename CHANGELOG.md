@@ -4,11 +4,16 @@
 
 ### Added
 
-- Added Weekly affix rotation data
+- Introduced Season 1 Weekly affix rotation data
+
+### Updated
+
+- Optimized addon performance to prevent game freezes
 
 ### Fixed
 
-- Fixed an issue with new keystones not being announced to party/guild
+- Resolved an issue where new keystones were not announced to party or guild
+- Fixed lag and stuttering when looting items
 
 ## v1.1.16 - 2024-11-10
 
