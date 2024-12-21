@@ -6,6 +6,10 @@
 
 - Added Weekly affix rotation data
 
+### Fixed
+
+- Fixed an issue with new keystones not being announced to party/guild
+
 ## v1.1.16 - 2024-11-10
 
 ### Added

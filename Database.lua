@@ -336,7 +336,7 @@ local dataAffixRotations = {
 local dataKeystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
   {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
-  {seasonID = 13, seasonDisplayID = 1, itemID = 151086},
+  {seasonID = 13, seasonDisplayID = 1, itemID = 180653},
 }
 
 ---@type Dungeon[]
@@ -1002,16 +1002,16 @@ function AlterEgo:UpdateKeystoneItem()
             elseif tonumber(dungeon.mapId) and tonumber(level) then
               newKeystone = true
             end
-            local keystoneColor = "ffffffff"
-            local color = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
-            if color ~= nil then
-              keystoneColor = color:GenerateHexColor()
+            local color = "ffffffff"
+            local keystoneColor = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
+            if keystoneColor ~= nil then
+              color = keystoneColor:GenerateHexColor()
             end
             character.mythicplus.keystone = {
               challengeModeID = tonumber(dungeon.challengeModeID),
               mapId = tonumber(dungeon.mapId),
               level = tonumber(level),
-              color = keystoneColor,
+              color = color,
               itemId = tonumber(itemId),
               itemLink = itemLink,
             }
