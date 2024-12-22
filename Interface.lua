@@ -1,8 +1,16 @@
----@diagnostic disable: inject-field, deprecated
-function AlterEgo:GetCharacterInfo()
-  local dungeons = self:GetDungeons()
-  local difficulties = self:GetRaidDifficulties(true)
-  local _, seasonDisplayID = self:GetCurrentSeason()
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+---@class AE_UI
+local UI = {}
+addon.UI = UI
+
+function UI:GetCharacterInfo()
+  local dungeons = addon.Data:GetDungeons()
+  local difficulties = addon.Data:GetRaidDifficulties(true)
+  local _, seasonDisplayID = addon.Data:GetCurrentSeason()
   return {
     {
       label = CHARACTER,
@@ -34,7 +42,7 @@ function AlterEgo:GetCharacterInfo()
           end
         end
         name = "|c" .. nameColor .. name .. "|r"
-        if not self.db.global.showRealms then
+        if not addon.Data.db.global.showRealms then
           name = name .. format(" (%s)", character.info.realm)
         end
         GameTooltip:AddLine(name, 1, 1, 1)
@@ -42,10 +50,10 @@ function AlterEgo:GetCharacterInfo()
         if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
           GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1)
         end
-        if character.currencies ~= nil and AE_table_count(character.currencies) > 0 then
-          local dataCurrencies = self:GetCurrencies()
-          AE_table_foreach(dataCurrencies, function(dataCurrency)
-            local characterCurrency = AE_table_get(character.currencies, "id", dataCurrency.id)
+        if character.currencies ~= nil and addon.Utils:TableCount(character.currencies) > 0 then
+          local dataCurrencies = addon.Data:GetCurrencies()
+          addon.Utils:TableForEach(dataCurrencies, function(dataCurrency)
+            local characterCurrency = addon.Utils:TableGet(character.currencies, "id", dataCurrency.id)
             if characterCurrency then
               local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
               local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
@@ -66,10 +74,10 @@ function AlterEgo:GetCharacterInfo()
             end
           end)
         end
-        if AE_table_count(characterCurrencies) > 0 then
+        if addon.Utils:TableCount(characterCurrencies) > 0 then
           GameTooltip:AddLine(" ")
           GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-          AE_table_foreach(characterCurrencies, function(characterCurrency)
+          addon.Utils:TableForEach(characterCurrencies, function(characterCurrency)
             GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
           end)
         end
@@ -83,7 +91,7 @@ function AlterEgo:GetCharacterInfo()
         end
       end,
       OnClick = function(character)
-        local windowCharacter = self:GetWindow("Character")
+        local windowCharacter = addon.Window:GetWindow("Character")
         if windowCharacter.character and windowCharacter.character == character and windowCharacter:IsVisible() then
           windowCharacter:Hide()
           return
@@ -107,7 +115,7 @@ function AlterEgo:GetCharacterInfo()
           }
         }
         if type(character.equipment) == "table" then
-          AE_table_foreach(character.equipment, function(item)
+          addon.Utils:TableForEach(character.equipment, function(item)
             local upgradeLevel = ""
             if item.itemUpgradeTrack ~= "" then
               upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
@@ -141,7 +149,7 @@ function AlterEgo:GetCharacterInfo()
           end)
           windowCharacter.Body.Table:SetData(data)
           local w, h = windowCharacter.Body.Table:GetSize()
-          windowCharacter:SetSize(w, h + self.constants.sizes.titlebar.height)
+          windowCharacter:SetSize(w, h + addon.Constants.sizes.titlebar.height)
           local nameColor = WHITE_FONT_COLOR
           if character.info.class.file ~= nil then
             local classColor = C_ClassColor.GetClassColor(character.info.class.file)
@@ -168,7 +176,7 @@ function AlterEgo:GetCharacterInfo()
         return realmColor:WrapTextInColorCode(realm)
       end,
       tooltip = false,
-      enabled = self.db.global.showRealms,
+      enabled = addon.Data.db.global.showRealms,
     },
     {
       label = STAT_AVERAGE_ITEM_LEVEL,
@@ -216,7 +224,7 @@ function AlterEgo:GetCharacterInfo()
         local ratingColor = LIGHTGRAY_FONT_COLOR
         if character.mythicplus.rating ~= nil then
           rating = tostring(character.mythicplus.rating)
-          local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = color
           else
@@ -233,20 +241,20 @@ function AlterEgo:GetCharacterInfo()
         local bestSeasonNumber = nil
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+          numSeasonRuns = addon.Utils:TableCount(character.mythicplus.runHistory)
         end
         if character.mythicplus.bestSeasonNumber ~= nil then
           bestSeasonNumber = character.mythicplus.bestSeasonNumber
         end
         if character.mythicplus.bestSeasonScore ~= nil then
           bestSeasonScore = character.mythicplus.bestSeasonScore
-          local color = AE_GetRatingColor(bestSeasonScore, self.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
+          local color = addon.Utils:GetRatingColor(bestSeasonScore, addon.Data.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
           if color ~= nil then
             bestSeasonScoreColor = color
           end
         end
         if character.mythicplus.rating ~= nil then
-          local color = AE_GetRatingColor(character.mythicplus.rating, self.db.global.useRIOScoreColor, false)
+          local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = color
           end
@@ -263,7 +271,7 @@ function AlterEgo:GetCharacterInfo()
           end
           GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         end
-        if character.mythicplus.dungeons ~= nil and AE_table_count(character.mythicplus.dungeons) > 0 then
+        if character.mythicplus.dungeons ~= nil and addon.Utils:TableCount(character.mythicplus.dungeons) > 0 then
           GameTooltip:AddLine(" ")
           local characterDungeons = CopyTable(character.mythicplus.dungeons)
           for _, dungeon in pairs(characterDungeons) do
@@ -297,10 +305,10 @@ function AlterEgo:GetCharacterInfo()
       OnClick = function(character)
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = AE_table_count(character.mythicplus.runHistory)
+          numSeasonRuns = addon.Utils:TableCount(character.mythicplus.runHistory)
         end
         if character.mythicplus.dungeons ~= nil
-          and AE_table_count(character.mythicplus.dungeons) > 0
+          and addon.Utils:TableCount(character.mythicplus.dungeons) > 0
           and numSeasonRuns > 0
           and IsModifiedClick("CHATLINK")
         then
@@ -337,9 +345,9 @@ function AlterEgo:GetCharacterInfo()
         if character.mythicplus.keystone ~= nil then
           local dungeon
           if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
-            dungeon = AE_table_get(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+            dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
           elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
-            dungeon = AE_table_get(dungeons, "mapId", character.mythicplus.keystone.mapId)
+            dungeon = addon.Utils:TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
           end
           if dungeon ~= nil then
             currentKeystone = dungeon.abbr
@@ -387,20 +395,20 @@ function AlterEgo:GetCharacterInfo()
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode("Raids"),
       value = function(character)
-        local activities = AE_table_filter(character.vault.slots or {}, function(activity) return activity.type == Enum.WeeklyRewardChestThresholdType.Raid end)
+        local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type == Enum.WeeklyRewardChestThresholdType.Raid end)
         local values = {}
 
         for i = 1, 3 do
-          local activity = AE_table_get(activities, "index", i)
+          local activity = addon.Utils:TableGet(activities, "index", i)
           local value = "-"
           local color = LIGHTGRAY_FONT_COLOR
 
           if activity then
             if activity.level > 0 then
-              local dataDifficulty = AE_table_get(difficulties, "id", activity.level)
+              local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
               if dataDifficulty then
                 value = dataDifficulty.abbr
-                if self.db.global.raids.colors then
+                if addon.Data.db.global.raids.colors then
                   color = dataDifficulty.color
                 end
               end
@@ -425,13 +433,13 @@ function AlterEgo:GetCharacterInfo()
       OnEnter = function(character)
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
         local characterSlots = character.vault.slots or {}
-        local activities = AE_table_filter(characterSlots, function(slot)
+        local activities = addon.Utils:TableFilter(characterSlots, function(slot)
           return slot.type and slot.type == Enum.WeeklyRewardChestThresholdType.Raid
         end)
 
         do -- Show boss progress
           for i = 1, 3 do
-            local activity = AE_table_get(activities, "index", i)
+            local activity = addon.Utils:TableGet(activities, "index", i)
             local label = format("%d bosses:", i * 2)
             local value = "Locked"
             local color = LIGHTGRAY_FONT_COLOR
@@ -442,7 +450,7 @@ function AlterEgo:GetCharacterInfo()
                 if activity.exampleRewardLink ~= nil and activity.exampleRewardLink ~= "" then
                   local itemLevel = GetDetailedItemLevelInfo(activity.exampleRewardLink)
                   local difficultyName = GetDifficultyInfo(activity.level)
-                  local dataDifficulty = AE_table_get(difficulties, "id", activity.level)
+                  local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
                   if dataDifficulty then
                     difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
                   end
@@ -458,12 +466,12 @@ function AlterEgo:GetCharacterInfo()
 
         do -- Show improvement info
           local tooltip = ""
-          local incompleteSlots = AE_table_filter(activities, function(slot) return slot.progress < slot.threshold end)
+          local incompleteSlots = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
           table.sort(incompleteSlots, function(a, b) return a.threshold < b.threshold end)
 
-          if AE_table_count(activities) > 0 then
-            if AE_table_count(incompleteSlots) > 0 then
-              if AE_table_count(incompleteSlots) == AE_table_count(activities) then
+          if addon.Utils:TableCount(activities) > 0 then
+            if addon.Utils:TableCount(incompleteSlots) > 0 then
+              if addon.Utils:TableCount(incompleteSlots) == addon.Utils:TableCount(activities) then
                 tooltip = format("Defeat %d bosses this week to unlock your first Great Vault reward.", incompleteSlots[1].threshold)
               else
                 local diff = incompleteSlots[1].threshold - incompleteSlots[1].progress
@@ -484,18 +492,18 @@ function AlterEgo:GetCharacterInfo()
           end
         end
       end,
-      enabled = self.db.global.raids.enabled,
+      enabled = addon.Data.db.global.raids.enabled,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode("Dungeons"),
       value = function(character)
         local value = {}
         if character.vault.slots ~= nil then
-          local slots = AE_table_filter(character.vault.slots, function(slot)
+          local slots = addon.Utils:TableFilter(character.vault.slots, function(slot)
             return slot.type == Enum.WeeklyRewardChestThresholdType.Activities
           end)
           if #slots > 0 then
-            AE_table_foreach(slots, function(slot)
+            addon.Utils:TableForEach(slots, function(slot)
               local level = "-"
               local color = LIGHTGRAY_FONT_COLOR
               if slot.progress >= slot.threshold then
@@ -544,10 +552,10 @@ function AlterEgo:GetCharacterInfo()
 
         do -- Show progress
           local lineAdded = false
-          local runsThisWeek = AE_table_filter(character.mythicplus.runHistory or {}, function(run)
+          local runsThisWeek = addon.Utils:TableFilter(character.mythicplus.runHistory or {}, function(run)
             return run.thisWeek == true
           end)
-          local numRunsThisWeek = AE_table_count(runsThisWeek) or 0
+          local numRunsThisWeek = addon.Utils:TableCount(runsThisWeek) or 0
           if numRunsThisWeek > 0 then
             table.sort(runsThisWeek, function(a, b)
               return a.level > b.level
@@ -558,11 +566,11 @@ function AlterEgo:GetCharacterInfo()
             lineAdded = true
 
             for runIndex, run in ipairs(runsThisWeek) do
-              local threshold = AE_table_find(character.vault.slots, function(slot)
+              local threshold = addon.Utils:TableFind(character.vault.slots, function(slot)
                 return slot.type and slot.type == Enum.WeeklyRewardChestThresholdType.Activities and slot.threshold and slot.threshold == runIndex
               end)
               local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
-              local dungeon = AE_table_get(dungeons, "challengeModeID", run.mapChallengeModeID)
+              local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
               local color = WHITE_FONT_COLOR
               if threshold then
                 color = GREEN_FONT_COLOR
@@ -584,7 +592,7 @@ function AlterEgo:GetCharacterInfo()
             GameTooltip_AddBlankLineToTooltip(GameTooltip)
             addBlankLine = false
           end
-          local lastCompletedActivityInfo, nextActivityInfo = AE_GetActivitiesProgress(character)
+          local lastCompletedActivityInfo, nextActivityInfo = addon.Utils:GetActivitiesProgress(character)
           if not lastCompletedActivityInfo then
             GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE)
             lineAdded = true
@@ -595,7 +603,7 @@ function AlterEgo:GetCharacterInfo()
               lineAdded = true
             else
               GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD)
-              local level, count = AE_GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold)
+              local level, count = addon.Utils:GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold)
               if level == WeeklyRewardsUtil.HeroicLevel then
                 GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR)
                 GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count))
@@ -619,11 +627,11 @@ function AlterEgo:GetCharacterInfo()
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode("World"),
       value = function(character)
-        local activities = AE_table_filter(character.vault.slots or {}, function(activity) return activity.type and activity.type == Enum.WeeklyRewardChestThresholdType.World end)
+        local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == Enum.WeeklyRewardChestThresholdType.World end)
         local values = {}
 
         for i = 1, 3 do
-          local activity = AE_table_get(activities, "index", i)
+          local activity = addon.Utils:TableGet(activities, "index", i)
           local value = "-"
           local color = LIGHTGRAY_FONT_COLOR
           if activity then
@@ -639,13 +647,13 @@ function AlterEgo:GetCharacterInfo()
       end,
       OnEnter = function(character)
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
-        local activities = AE_table_filter(character.vault.slots or {}, function(actvity) return actvity.type and actvity.type == Enum.WeeklyRewardChestThresholdType.World end)
-        local lockedActivities = AE_table_filter(activities, function(activity) return activity.progress < activity.threshold end)
+        local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(actvity) return actvity.type and actvity.type == Enum.WeeklyRewardChestThresholdType.World end)
+        local lockedActivities = addon.Utils:TableFilter(activities, function(activity) return activity.progress < activity.threshold end)
         table.sort(lockedActivities, function(a, b) return a.threshold < b.threshold end)
 
         do -- Show activity status
           for i = 1, 3 do
-            local activity = AE_table_get(activities, "index", i)
+            local activity = addon.Utils:TableGet(activities, "index", i)
             local value = "Locked"
             local valueColor = LIGHTGRAY_FONT_COLOR
             local label = format("%d activities:", i * 2)
@@ -669,16 +677,16 @@ function AlterEgo:GetCharacterInfo()
 
         do -- Show improvement info
           local tooltip = ""
-          if AE_table_count(activities) > 0 then
-            if AE_table_count(lockedActivities) == 0 then
+          if addon.Utils:TableCount(activities) > 0 then
+            if addon.Utils:TableCount(lockedActivities) == 0 then
               -- Item level improvements
             else
               local diff = lockedActivities[1].threshold - lockedActivities[1].progress
-              if AE_table_count(lockedActivities) == 1 then
+              if addon.Utils:TableCount(lockedActivities) == 1 then
                 tooltip = GREAT_VAULT_REWARDS_WORLD_COMPLETED_SECOND:format(diff)
-              elseif AE_table_count(lockedActivities) == 2 then
+              elseif addon.Utils:TableCount(lockedActivities) == 2 then
                 tooltip = GREAT_VAULT_REWARDS_WORLD_COMPLETED_FIRST:format(diff)
-              elseif AE_table_count(lockedActivities) == 3 then
+              elseif addon.Utils:TableCount(lockedActivities) == 3 then
                 tooltip = GREAT_VAULT_REWARDS_WORLD_INCOMPLETE:format(diff)
               end
             end
@@ -692,37 +700,21 @@ function AlterEgo:GetCharacterInfo()
           end
         end
       end,
-      enabled = self.db.global.world and self.db.global.world.enabled == true,
+      enabled = addon.Data.db.global.world and addon.Data.db.global.world.enabled == true,
     },
   }
 end
 
---- Set the background color for a parent frame
----@param parent table
----@param r number
----@param g number
----@param b number
----@param a number
-function AlterEgo:SetBackgroundColor(parent, r, g, b, a)
-  if not parent.Background then
-    parent.Background = parent:CreateTexture(parent:GetName() .. "Background", "BACKGROUND")
-    parent.Background:SetTexture(self.constants.media.WhiteSquare)
-    parent.Background:SetAllPoints()
-  end
-
-  parent.Background:SetVertexColor(r, g, b, a)
-end
-
-function AlterEgo:CreateCharacterColumn(parent, index)
-  local affixes = self:GetAffixes(true)
-  local dungeons = self:GetDungeons()
-  local raids = self:GetRaids(true)
-  local difficulties = self:GetRaidDifficulties(true)
+function UI:CreateCharacterColumn(parent, index)
+  local affixes = addon.Data:GetAffixes(true)
+  local dungeons = addon.Data:GetDungeons()
+  local raids = addon.Data:GetRaids(true)
+  local difficulties = addon.Data:GetRaidDifficulties(true)
   local anchorFrame
 
   local CharacterColumn = CreateFrame("Frame", "$parentCharacterColumn" .. index, parent)
-  CharacterColumn:SetWidth(self.constants.sizes.column)
-  self:SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
+  CharacterColumn:SetWidth(addon.Constants.sizes.column)
+  addon.Utils:SetBackgroundColor(CharacterColumn, 1, 1, 1, index % 2 == 0 and 0.01 or 0)
   anchorFrame = CharacterColumn
 
   -- Character info
@@ -738,14 +730,14 @@ function AlterEgo:CreateCharacterColumn(parent, index)
         CharacterFrame:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
       end
 
-      CharacterFrame:SetHeight(self.constants.sizes.row)
+      CharacterFrame:SetHeight(addon.Constants.sizes.row)
       CharacterFrame.Text = CharacterFrame:CreateFontString(CharacterFrame:GetName() .. "Text", "OVERLAY")
-      CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", self.constants.sizes.padding, 0)
-      CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -self.constants.sizes.padding, 0)
+      CharacterFrame.Text:SetPoint("LEFT", CharacterFrame, "LEFT", addon.Constants.sizes.padding, 0)
+      CharacterFrame.Text:SetPoint("RIGHT", CharacterFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
       CharacterFrame.Text:SetJustifyH("CENTER")
       CharacterFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
       if info.backgroundColor then
-        self:SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
+        addon.Utils:SetBackgroundColor(CharacterFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
       end
 
       anchorFrame = CharacterFrame
@@ -756,17 +748,17 @@ function AlterEgo:CreateCharacterColumn(parent, index)
   CharacterColumn.DungeonHeader = CreateFrame("Frame", "$parentAffixes", CharacterColumn)
   CharacterColumn.DungeonHeader:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
   CharacterColumn.DungeonHeader:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-  CharacterColumn.DungeonHeader:SetHeight(self.constants.sizes.row)
-  self:SetBackgroundColor(CharacterColumn.DungeonHeader, 0, 0, 0, 0.3)
+  CharacterColumn.DungeonHeader:SetHeight(addon.Constants.sizes.row)
+  addon.Utils:SetBackgroundColor(CharacterColumn.DungeonHeader, 0, 0, 0, 0.3)
   anchorFrame = CharacterColumn.DungeonHeader
 
   -- Dungeon rows
   for dungeonIndex in ipairs(dungeons) do
     local DungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, CharacterColumn)
-    DungeonFrame:SetHeight(self.constants.sizes.row)
+    DungeonFrame:SetHeight(addon.Constants.sizes.row)
     DungeonFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     DungeonFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+    addon.Utils:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
 
     DungeonFrame.Text = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Text", "OVERLAY")
     DungeonFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
@@ -775,7 +767,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
     DungeonFrame.Tier:SetJustifyH("LEFT")
     DungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
     DungeonFrame.Score = DungeonFrame:CreateFontString(DungeonFrame:GetName() .. "Score", "OVERLAY")
-    DungeonFrame.Score:SetPoint("RIGHT", DungeonFrame, "RIGHT", -self.constants.sizes.padding * 2, 1)
+    DungeonFrame.Score:SetPoint("RIGHT", DungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
     DungeonFrame.Score:SetJustifyH("RIGHT")
     DungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
 
@@ -785,29 +777,29 @@ function AlterEgo:CreateCharacterColumn(parent, index)
   -- Raid Rows
   for raidIndex, raid in ipairs(raids) do
     local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, CharacterColumn)
-    RaidFrame:SetHeight(self.constants.sizes.row)
+    RaidFrame:SetHeight(addon.Constants.sizes.row)
     RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    self:SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
+    addon.Utils:SetBackgroundColor(RaidFrame, 0, 0, 0, 0.3)
     anchorFrame = RaidFrame
 
     for difficultyIndex in pairs(difficulties) do
       local DifficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
       DifficultyFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
       DifficultyFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-      DifficultyFrame:SetHeight(self.constants.sizes.row)
-      self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+      DifficultyFrame:SetHeight(addon.Constants.sizes.row)
+      addon.Utils:SetBackgroundColor(DifficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
       anchorFrame = DifficultyFrame
 
       for encounterIndex in ipairs(raid.encounters) do
         local EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
-        local size = self.constants.sizes.column
-        size = size - self.constants.sizes.padding -- left/right cell padding
-        size = size - (raid.numEncounters - 1) * 4 -- gaps
-        size = size / raid.numEncounters           -- box sizes
-        EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
-        EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
-        self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+        local size = addon.Constants.sizes.column
+        size = size - addon.Constants.sizes.padding -- left/right cell padding
+        size = size - (raid.numEncounters - 1) * 4  -- gaps
+        size = size / raid.numEncounters            -- box sizes
+        EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", addon.Constants.sizes.padding / 2, 0)
+        EncounterFrame:SetSize(size, addon.Constants.sizes.row - 12)
+        addon.Utils:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
         anchorFrame = EncounterFrame
       end
       anchorFrame = DifficultyFrame
@@ -818,7 +810,7 @@ function AlterEgo:CreateCharacterColumn(parent, index)
 end
 
 local CharacterColumns = {}
-function AlterEgo:GetCharacterColumn(parent, index)
+function UI:GetCharacterColumn(parent, index)
   if CharacterColumns[index] == nil then
     CharacterColumns[index] = self:CreateCharacterColumn(parent, index)
   end
@@ -827,83 +819,83 @@ function AlterEgo:GetCharacterColumn(parent, index)
 end
 
 --- Hide all character columns
-function AlterEgo:HideCharacterColumns()
-  AE_table_foreach(CharacterColumns, function(CharacterColumn)
+function UI:HideCharacterColumns()
+  addon.Utils:TableForEach(CharacterColumns, function(CharacterColumn)
     CharacterColumn:Hide()
   end)
 end
 
 --- Does the main window need scrollbars?
 ---@return boolean
-function AlterEgo:IsScrollbarNeeded()
-  local numCharacters = AE_table_count(self:GetCharacters())
-  return numCharacters > 0 and self.constants.sizes.sidebar.width + numCharacters * self.constants.sizes.column > self:GetMaxWindowWidth()
+function UI:IsScrollbarNeeded()
+  local numCharacters = addon.Utils:TableCount(addon.Data:GetCharacters())
+  return numCharacters > 0 and addon.Constants.sizes.sidebar.width + numCharacters * addon.Constants.sizes.column > addon.Window:GetMaxWindowWidth()
 end
 
 --- Calculate the main window size
 ---@return number, number
-function AlterEgo:GetWindowSize()
-  local numCharacters = AE_table_count(self:GetCharacters())
-  local numDungeons = AE_table_count(self:GetDungeons())
-  local numRaids = AE_table_count(self:GetRaids())
-  local numDifficulties = AE_table_count(self:GetRaidDifficulties())
-  local numCharacterInfo = AE_table_count(AE_table_filter(self:GetCharacterInfo(), function(label)
+function UI:GetWindowSize()
+  local numCharacters = addon.Utils:TableCount(addon.Data:GetCharacters())
+  local numDungeons = addon.Utils:TableCount(addon.Data:GetDungeons())
+  local numRaids = addon.Utils:TableCount(addon.Data:GetRaids())
+  local numDifficulties = addon.Utils:TableCount(addon.Data:GetRaidDifficulties())
+  local numCharacterInfo = addon.Utils:TableCount(addon.Utils:TableFilter(self:GetCharacterInfo(), function(label)
     return label.enabled == nil or label.enabled == true
   end))
   local width = 0
-  local maxWidth = self:GetMaxWindowWidth()
+  local maxWidth = addon.Window:GetMaxWindowWidth()
   local height = 0
 
   -- Width
   if numCharacters == 0 then
     width = 500
   else
-    width = width + self.constants.sizes.sidebar.width
-    width = width + numCharacters * self.constants.sizes.column
+    width = width + addon.Constants.sizes.sidebar.width
+    width = width + numCharacters * addon.Constants.sizes.column
   end
   if width > maxWidth then
     width = maxWidth
     if numCharacters > 0 then
-      height = height + self.constants.sizes.footer.height -- Shoes?
+      height = height + addon.Constants.sizes.footer.height -- Shoes?
     end
   end
 
   -- Height
-  height = height + self.constants.sizes.titlebar.height                          -- Titlebar duh
-  height = height + numCharacterInfo * self.constants.sizes.row                   -- Character info
-  height = height + (numDungeons + 1) * self.constants.sizes.row                  -- Dungeons
-  if self.db.global.raids.enabled == true then
-    height = height + numRaids * (numDifficulties + 1) * self.constants.sizes.row -- Raids
+  height = height + addon.Constants.sizes.titlebar.height                          -- Titlebar duh
+  height = height + numCharacterInfo * addon.Constants.sizes.row                   -- Character info
+  height = height + (numDungeons + 1) * addon.Constants.sizes.row                  -- Dungeons
+  if addon.Data.db.global.raids.enabled == true then
+    height = height + numRaids * (numDifficulties + 1) * addon.Constants.sizes.row -- Raids
   end
 
   return width, height
 end
 
-function AlterEgo:CreateUI()
-  local currentAffixes = self:GetCurrentAffixes()
-  local activeWeek = self:GetActiveAffixRotation(currentAffixes)
-  local seasonID = self:GetCurrentSeason()
-  local affixes = self:GetAffixes()
-  local affixRotation = self:GetAffixRotation()
-  local difficulties = self:GetRaidDifficulties(true)
-  local dungeons = self:GetDungeons()
+function UI:CreateUI()
+  local currentAffixes = addon.Data:GetCurrentAffixes()
+  local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
+  local seasonID = addon.Data:GetCurrentSeason()
+  local affixes = addon.Data:GetAffixes()
+  local affixRotation = addon.Data:GetAffixRotation()
+  local difficulties = addon.Data:GetRaidDifficulties(true)
+  local dungeons = addon.Data:GetDungeons()
   local labels = self:GetCharacterInfo()
-  local raids = self:GetRaids(true)
+  local raids = addon.Data:GetRaids(true)
   local anchorFrame
 
-  local winMain = self:CreateWindow("Main", "AlterEgo", UIParent)
-  local winAffixRotation = self:CreateWindow("Affixes", "Affixes", UIParent)
-  local winEquipment = self:CreateWindow("Character", "Character", UIParent)
-  local winKeyManager = self:CreateWindow("KeyManager", "KeyManager", UIParent)
+  local winMain = addon.Window:CreateWindow("Main", "AlterEgo", UIParent, addon.Data.db.global.interface.windowColor)
+  local winAffixRotation = addon.Window:CreateWindow("Affixes", "Affixes", UIParent, addon.Data.db.global.interface.windowColor)
+  local winEquipment = addon.Window:CreateWindow("Character", "Character", UIParent, addon.Data.db.global.interface.windowColor)
+  local winKeyManager = addon.Window:CreateWindow("KeyManager", "KeyManager", UIParent, addon.Data.db.global.interface.windowColor)
 
-  winEquipment.Body.Table = self.Table:New()
+  winEquipment.Body.Table = addon.Table:New()
   winEquipment.Body.Table.frame:SetParent(winEquipment.Body)
   winEquipment.Body.Table.frame:SetPoint("TOPLEFT", winEquipment.Body, "TOPLEFT")
 
   do -- Affix window
     local data = {columns = {}, rows = {}}
     local firstRow = {cols = {}}
-    winAffixRotation.Body.Table = self.Table:New({rowHeight = 28})
+    winAffixRotation.Body.Table = addon.Table:New({rowHeight = 28})
     winAffixRotation.Body.Table.frame:SetParent(winAffixRotation.Body)
     winAffixRotation.Body.Table.frame:SetPoint("TOPLEFT", winAffixRotation.Body, "TOPLEFT")
     winAffixRotation.TitleBar.Text:SetText("Weekly Affixes")
@@ -911,17 +903,17 @@ function AlterEgo:CreateUI()
       table.insert(data.columns, {width = 500})
       table.insert(data.rows, {cols = {{text = "The weekly schedule is not updated. Check back next addon update!"}}})
     else
-      AE_table_foreach(affixRotation.activation, function(activationLevel, activationLevelIndex)
+      addon.Utils:TableForEach(affixRotation.activation, function(activationLevel, activationLevelIndex)
         table.insert(data.columns, {width = activationLevelIndex == 1 and 220 or 140})
         table.insert(firstRow.cols, {text = "+" .. activationLevel, backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}})
       end)
       table.insert(data.rows, firstRow)
-      AE_table_foreach(affixRotation.affixes, function(affixValues, weekIndex)
+      addon.Utils:TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
         local row = {cols = {}}
         local backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil
-        AE_table_foreach(affixValues, function(affixValue)
+        addon.Utils:TableForEach(affixValues, function(affixValue)
           if type(affixValue) == "number" then
-            local affix = AE_table_get(affixes, "id", affixValue)
+            local affix = addon.Utils:TableGet(affixes, "id", affixValue)
             if affix then
               local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
               table.insert(row.cols, {
@@ -945,14 +937,14 @@ function AlterEgo:CreateUI()
     end
     winAffixRotation.Body.Table:SetData(data)
     local w, h = winAffixRotation.Body.Table:GetSize()
-    winAffixRotation:SetSize(w, h + self.constants.sizes.titlebar.height)
+    winAffixRotation:SetSize(w, h + addon.Constants.sizes.titlebar.height)
   end
 
   do -- TitleBar
     anchorFrame = winMain.TitleBar
     winMain.TitleBar.Affixes = CreateFrame("Button", "$parentAffixes", winMain.TitleBar)
-    if currentAffixes and AE_table_count(currentAffixes) > 0 then
-      for i = 1, AE_table_count(currentAffixes) do
+    if currentAffixes and addon.Utils:TableCount(currentAffixes) > 0 then
+      for i = 1, addon.Utils:TableCount(currentAffixes) do
         local affixButton = CreateFrame("Button", "$parent" .. i, winMain.TitleBar.Affixes)
         affixButton:SetSize(20, 20)
         local currentAffix = currentAffixes[i]
@@ -974,13 +966,13 @@ function AlterEgo:CreateUI()
           end)
         end
         affixButton:SetScript("OnClick", function()
-          self:ToggleWindow("Affixes")
+          addon.Window:ToggleWindow("Affixes")
         end)
       end
     end
     winMain.TitleBar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", winMain.TitleBar)
     winMain.TitleBar.SettingsButton:SetPoint("RIGHT", winMain.TitleBar.CloseButton, "LEFT", 0, 0)
-    winMain.TitleBar.SettingsButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.SettingsButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
     winMain.TitleBar.SettingsButton:RegisterForClicks("AnyUp")
     winMain.TitleBar.SettingsButton.HandlesGlobalMouseEvent = function()
       return true
@@ -991,25 +983,25 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.SettingsButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SettingsButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.SettingsButton.Icon:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER")
     winMain.TitleBar.SettingsButton.Icon:SetSize(12, 12)
-    winMain.TitleBar.SettingsButton.Icon:SetTexture(self.constants.media.IconSettings)
+    winMain.TitleBar.SettingsButton.Icon:SetTexture(addon.Constants.media.IconSettings)
     winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.SettingsButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SettingsButton:GetName() .. "Dropdown", winMain.TitleBar, "UIDropDownMenuTemplate")
     winMain.TitleBar.SettingsButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SettingsButton, "CENTER", 0, -6)
     winMain.TitleBar.SettingsButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.SettingsButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.SettingsButton.Dropdown, addon.Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.SettingsButton.Dropdown,
       function(frame, level, subMenuName)
         if subMenuName == "raiddifficulties" then
-          AE_table_foreach(difficulties, function(difficulty)
+          addon.Utils:TableForEach(difficulties, function(difficulty)
             UIDropDownMenu_AddButton(
               {
                 text = difficulty.name,
                 value = difficulty.id,
-                checked = self.db.global.raids.hiddenDifficulties and not self.db.global.raids.hiddenDifficulties[difficulty.id],
+                checked = addon.Data.db.global.raids.hiddenDifficulties and not addon.Data.db.global.raids.hiddenDifficulties[difficulty.id],
                 keepShownOnClick = true,
                 func = function(button, arg1, arg2, checked)
-                  self.db.global.raids.hiddenDifficulties[button.value] = not checked
+                  addon.Data.db.global.raids.hiddenDifficulties[button.value] = not checked
                   self:UpdateUI()
                 end
               },
@@ -1022,10 +1014,10 @@ function AlterEgo:CreateUI()
               {
                 text = i .. "%",
                 value = i,
-                checked = self.db.global.interface.windowScale == i,
+                checked = addon.Data.db.global.interface.windowScale == i,
                 keepShownOnClick = false,
                 func = function(button)
-                  self.db.global.interface.windowScale = button.value
+                  addon.Data.db.global.interface.windowScale = button.value
                   self:UpdateUI()
                 end
               },
@@ -1036,46 +1028,46 @@ function AlterEgo:CreateUI()
           UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show the weekly affixes",
-            checked = self.db.global.showAffixHeader,
+            checked = addon.Data.db.global.showAffixHeader,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show the weekly affixes",
             tooltipText = "The affixes will be shown at the top.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showAffixHeader = checked
+              addon.Data.db.global.showAffixHeader = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Show characters with zero rating",
-            checked = self.db.global.showZeroRatedCharacters,
+            checked = addon.Data.db.global.showZeroRatedCharacters,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show characters with zero rating",
             tooltipText = "Too many alts?",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showZeroRatedCharacters = checked
+              addon.Data.db.global.showZeroRatedCharacters = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Show realm names",
-            checked = self.db.global.showRealms,
+            checked = addon.Data.db.global.showRealms,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show realm names",
             tooltipText = "One big party!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showRealms = checked
+              addon.Data.db.global.showRealms = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Use Raider.io rating colors",
-            checked = self.db.global.useRIOScoreColor,
+            checked = addon.Data.db.global.useRIOScoreColor,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Use Raider.io rating colors",
@@ -1083,61 +1075,61 @@ function AlterEgo:CreateUI()
             tooltipOnButton = true,
             disabled = type(_G.RaiderIO) == "nil",
             func = function(button, arg1, arg2, checked)
-              self.db.global.useRIOScoreColor = checked
+              addon.Data.db.global.useRIOScoreColor = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Announce instance resets",
-            checked = self.db.global.announceResets,
+            checked = addon.Data.db.global.announceResets,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Announce instance resets",
             tooltipText = "Let others in your group know when you've reset the instances.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.announceResets = checked
+              addon.Data.db.global.announceResets = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Announce new keystones (Party)",
-            checked = self.db.global.announceKeystones.autoParty,
+            checked = addon.Data.db.global.announceKeystones.autoParty,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "New keystones (Party)",
             tooltipText = "Announce to your party when you loot a new keystone.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.announceKeystones.autoParty = checked
+              addon.Data.db.global.announceKeystones.autoParty = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Announce new keystones (Guild)",
-            checked = self.db.global.announceKeystones.autoGuild,
+            checked = addon.Data.db.global.announceKeystones.autoGuild,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "New keystones (Guild)",
             tooltipText = "Announce to your guild when you loot a new keystone.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.announceKeystones.autoGuild = checked
+              addon.Data.db.global.announceKeystones.autoGuild = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show raid progress",
-            checked = self.db.global.raids and self.db.global.raids.enabled,
+            checked = addon.Data.db.global.raids and addon.Data.db.global.raids.enabled,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show raid progress",
             tooltipText = "Because Mythic Plus ain't enough!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.raids.enabled = checked
+              addon.Data.db.global.raids.enabled = checked
               self:UpdateUI()
             end,
             hasArrow = true,
@@ -1146,110 +1138,110 @@ function AlterEgo:CreateUI()
           if seasonID == 12 then
             UIDropDownMenu_AddButton({
               text = "Show |cFF00FFFFAwakened|r raids only",
-              checked = self.db.global.raids and self.db.global.raids.modifiedInstanceOnly,
+              checked = addon.Data.db.global.raids and addon.Data.db.global.raids.modifiedInstanceOnly,
               keepShownOnClick = true,
               isNotRadio = true,
               tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
               tooltipText = "It's time to move on!",
               tooltipOnButton = true,
               func = function(button, arg1, arg2, checked)
-                self.db.global.raids.modifiedInstanceOnly = checked
+                addon.Data.db.global.raids.modifiedInstanceOnly = checked
                 self:UpdateUI()
               end
             })
           end
           UIDropDownMenu_AddButton({
             text = "Show difficulty colors",
-            checked = self.db.global.raids and self.db.global.raids.colors,
+            checked = addon.Data.db.global.raids and addon.Data.db.global.raids.colors,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show difficulty colors",
             tooltipText = "Argharhggh! So much greeeen!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.raids.colors = checked
+              addon.Data.db.global.raids.colors = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show icons",
-            checked = self.db.global.showTiers,
+            checked = addon.Data.db.global.showTiers,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show icons",
             tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showTiers = checked
+              addon.Data.db.global.showTiers = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Show rating",
-            checked = self.db.global.showScores,
+            checked = addon.Data.db.global.showScores,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show rating",
             tooltipText = "Show some values!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showScores = checked
+              addon.Data.db.global.showScores = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({
             text = "Use rating colors",
-            checked = self.db.global.showAffixColors,
+            checked = addon.Data.db.global.showAffixColors,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Use rating colors",
             tooltipText = "Show some colors!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.showAffixColors = checked
+              addon.Data.db.global.showAffixColors = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "World", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show world progress",
-            checked = self.db.global.world and self.db.global.world.enabled,
+            checked = addon.Data.db.global.world and addon.Data.db.global.world.enabled,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show world progress",
             tooltipText = "Is Brann being a good guy?",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.world.enabled = checked
+              addon.Data.db.global.world.enabled = checked
               self:UpdateUI()
             end
           })
           UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
           UIDropDownMenu_AddButton({
             text = "Show the minimap button",
-            checked = not self.db.global.minimap.hide,
+            checked = not addon.Data.db.global.minimap.hide,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Show the minimap button",
             tooltipText = "It does get crowded around the minimap sometimes.",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.minimap.hide = not checked
-              self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+              addon.Data.db.global.minimap.hide = not checked
+              self.Libs.LDBIcon:Refresh("AlterEgo", addon.Data.db.global.minimap)
             end
           })
           UIDropDownMenu_AddButton({
             text = "Lock the minimap button",
-            checked = self.db.global.minimap.lock,
+            checked = addon.Data.db.global.minimap.lock,
             keepShownOnClick = true,
             isNotRadio = true,
             tooltipTitle = "Lock the minimap button",
             tooltipText = "No more moving the button around accidentally!",
             tooltipOnButton = true,
             func = function(button, arg1, arg2, checked)
-              self.db.global.minimap.lock = checked
-              self.Libs.LDBIcon:Refresh("AlterEgo", self.db.global.minimap)
+              addon.Data.db.global.minimap.lock = checked
+              self.Libs.LDBIcon:Refresh("AlterEgo", addon.Data.db.global.minimap)
             end
           })
           UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
@@ -1258,26 +1250,26 @@ function AlterEgo:CreateUI()
             keepShownOnClick = false,
             notCheckable = true,
             hasColorSwatch = true,
-            r = self.db.global.interface.windowColor.r,
-            g = self.db.global.interface.windowColor.g,
-            b = self.db.global.interface.windowColor.b,
+            r = addon.Data.db.global.interface.windowColor.r,
+            g = addon.Data.db.global.interface.windowColor.g,
+            b = addon.Data.db.global.interface.windowColor.b,
             -- notClickable = true,
             hasOpacity = false,
             func = UIDropDownMenuButton_OpenColorPicker,
             swatchFunc = function()
               local r, g, b = ColorPickerFrame:GetColorRGB()
-              self.db.global.interface.windowColor.r = r
-              self.db.global.interface.windowColor.g = g
-              self.db.global.interface.windowColor.b = b
-              self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
-              -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+              addon.Data.db.global.interface.windowColor.r = r
+              addon.Data.db.global.interface.windowColor.g = g
+              addon.Data.db.global.interface.windowColor.b = b
+              addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
+              -- addon.Utils:SetBackgroundColor(winMain, addon.Data.db.global.interface.windowColor.r, addon.Data.db.global.interface.windowColor.g, addon.Data.db.global.interface.windowColor.b, addon.Data.db.global.interface.windowColor.a)
             end,
             cancelFunc = function(color)
-              self.db.global.interface.windowColor.r = color.r
-              self.db.global.interface.windowColor.g = color.g
-              self.db.global.interface.windowColor.b = color.b
-              self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
-              -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
+              addon.Data.db.global.interface.windowColor.r = color.r
+              addon.Data.db.global.interface.windowColor.g = color.g
+              addon.Data.db.global.interface.windowColor.b = color.b
+              addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
+              -- addon.Utils:SetBackgroundColor(winMain, addon.Data.db.global.interface.windowColor.r, addon.Data.db.global.interface.windowColor.g, addon.Data.db.global.interface.windowColor.b, addon.Data.db.global.interface.windowColor.a)
             end
           })
           UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
@@ -1287,7 +1279,7 @@ function AlterEgo:CreateUI()
     )
     winMain.TitleBar.SettingsButton:SetScript("OnEnter", function()
       winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0.05)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0.05)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.SettingsButton, "ANCHOR_TOP")
@@ -1297,12 +1289,12 @@ function AlterEgo:CreateUI()
     end)
     winMain.TitleBar.SettingsButton:SetScript("OnLeave", function()
       winMain.TitleBar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.SettingsButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
     winMain.TitleBar.SortingButton = CreateFrame("Button", "$parentSorting", winMain.TitleBar)
     winMain.TitleBar.SortingButton:SetPoint("RIGHT", winMain.TitleBar.SettingsButton, "LEFT", 0, 0)
-    winMain.TitleBar.SortingButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.SortingButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
     winMain.TitleBar.SortingButton.HandlesGlobalMouseEvent = function()
       return true
     end
@@ -1312,22 +1304,22 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.SortingButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.SortingButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.SortingButton.Icon:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER")
     winMain.TitleBar.SortingButton.Icon:SetSize(16, 16)
-    winMain.TitleBar.SortingButton.Icon:SetTexture(self.constants.media.IconSorting)
+    winMain.TitleBar.SortingButton.Icon:SetTexture(addon.Constants.media.IconSorting)
     winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.SortingButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.SortingButton:GetName() .. "Dropdown", winMain.TitleBar.SortingButton, "UIDropDownMenuTemplate")
     winMain.TitleBar.SortingButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.SortingButton, "CENTER", 0, -6)
     winMain.TitleBar.SortingButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.SortingButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.SortingButton.Dropdown, addon.Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.SortingButton.Dropdown,
       function()
-        for _, option in ipairs(self.constants.sortingOptions) do
+        for _, option in ipairs(addon.Constants.sortingOptions) do
           UIDropDownMenu_AddButton({
             text = option.text,
-            checked = self.db.global.sorting == option.value,
+            checked = addon.Data.db.global.sorting == option.value,
             arg1 = option.value,
             func = function(button, arg1, arg2, checked)
-              self.db.global.sorting = arg1
+              addon.Data.db.global.sorting = arg1
               self:UpdateUI()
             end
           })
@@ -1337,7 +1329,7 @@ function AlterEgo:CreateUI()
     )
     winMain.TitleBar.SortingButton:SetScript("OnEnter", function()
       winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0.05)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0.05)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.SortingButton, "ANCHOR_TOP")
@@ -1347,12 +1339,12 @@ function AlterEgo:CreateUI()
     end)
     winMain.TitleBar.SortingButton:SetScript("OnLeave", function()
       winMain.TitleBar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.SortingButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
     winMain.TitleBar.CharactersButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
     winMain.TitleBar.CharactersButton:SetPoint("RIGHT", winMain.TitleBar.SortingButton, "LEFT", 0, 0)
-    winMain.TitleBar.CharactersButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.CharactersButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
     winMain.TitleBar.CharactersButton.HandlesGlobalMouseEvent = function()
       return true
     end
@@ -1362,16 +1354,16 @@ function AlterEgo:CreateUI()
     winMain.TitleBar.CharactersButton.Icon = winMain.TitleBar:CreateTexture(winMain.TitleBar.CharactersButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.CharactersButton.Icon:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER")
     winMain.TitleBar.CharactersButton.Icon:SetSize(14, 14)
-    winMain.TitleBar.CharactersButton.Icon:SetTexture(self.constants.media.IconCharacters)
+    winMain.TitleBar.CharactersButton.Icon:SetTexture(addon.Constants.media.IconCharacters)
     winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.CharactersButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.CharactersButton:GetName() .. "Dropdown", winMain.TitleBar.CharactersButton, "UIDropDownMenuTemplate")
     winMain.TitleBar.CharactersButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.CharactersButton, "CENTER", 0, -6)
     winMain.TitleBar.CharactersButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.CharactersButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.CharactersButton.Dropdown, addon.Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.CharactersButton.Dropdown,
       function()
-        local charactersUnfilteredList = self:GetCharacters(true)
+        local charactersUnfilteredList = addon.Data:GetCharacters(true)
         for _, character in ipairs(charactersUnfilteredList) do
           local nameColor = "ffffffff"
           if character.info.class.file ~= nil then
@@ -1387,7 +1379,7 @@ function AlterEgo:CreateUI()
             keepShownOnClick = true,
             arg1 = character.GUID,
             func = function(button, arg1, arg2, checked)
-              self.db.global.characters[arg1].enabled = checked
+              addon.Data.db.global.characters[arg1].enabled = checked
               self:UpdateUI()
             end
           })
@@ -1397,7 +1389,7 @@ function AlterEgo:CreateUI()
     )
     winMain.TitleBar.CharactersButton:SetScript("OnEnter", function()
       winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0.05)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0.05)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.CharactersButton, "ANCHOR_TOP")
@@ -1407,12 +1399,12 @@ function AlterEgo:CreateUI()
     end)
     winMain.TitleBar.CharactersButton:SetScript("OnLeave", function()
       winMain.TitleBar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.CharactersButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
     winMain.TitleBar.AnnounceButton = CreateFrame("Button", "$parentCharacters", winMain.TitleBar)
     winMain.TitleBar.AnnounceButton:SetPoint("RIGHT", winMain.TitleBar.CharactersButton, "LEFT", 0, 0)
-    winMain.TitleBar.AnnounceButton:SetSize(self.constants.sizes.titlebar.height, self.constants.sizes.titlebar.height)
+    winMain.TitleBar.AnnounceButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
     winMain.TitleBar.AnnounceButton.HandlesGlobalMouseEvent = function()
       return true
     end
@@ -1423,12 +1415,12 @@ function AlterEgo:CreateUI()
       winMain.TitleBar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
     winMain.TitleBar.AnnounceButton.Icon:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER")
     winMain.TitleBar.AnnounceButton.Icon:SetSize(12, 12)
-    winMain.TitleBar.AnnounceButton.Icon:SetTexture(self.constants.media.IconAnnounce)
+    winMain.TitleBar.AnnounceButton.Icon:SetTexture(addon.Constants.media.IconAnnounce)
     winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     winMain.TitleBar.AnnounceButton.Dropdown = CreateFrame("Frame", winMain.TitleBar.AnnounceButton:GetName() .. "Dropdown", winMain.TitleBar.AnnounceButton, "UIDropDownMenuTemplate")
     winMain.TitleBar.AnnounceButton.Dropdown:SetPoint("CENTER", winMain.TitleBar.AnnounceButton, "CENTER", 0, -6)
     winMain.TitleBar.AnnounceButton.Dropdown.Button:Hide()
-    UIDropDownMenu_SetWidth(winMain.TitleBar.AnnounceButton.Dropdown, self.constants.sizes.titlebar.height)
+    UIDropDownMenu_SetWidth(winMain.TitleBar.AnnounceButton.Dropdown, addon.Constants.sizes.titlebar.height)
     UIDropDownMenu_Initialize(
       winMain.TitleBar.AnnounceButton.Dropdown,
       function()
@@ -1444,7 +1436,7 @@ function AlterEgo:CreateUI()
               self:Print("No announcement. You are not in a party.")
               return
             end
-            self:AnnounceKeystones("PARTY")
+            addon.Core:AnnounceKeystones("PARTY")
           end
         })
         UIDropDownMenu_AddButton({
@@ -1459,32 +1451,32 @@ function AlterEgo:CreateUI()
               self:Print("No announcement. You are not in a guild.")
               return
             end
-            self:AnnounceKeystones("GUILD")
+            addon.Core:AnnounceKeystones("GUILD")
           end
         })
         UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
           text = "Multiple chat messages",
-          checked = self.db.global.announceKeystones.multiline,
+          checked = addon.Data.db.global.announceKeystones.multiline,
           keepShownOnClick = true,
           isNotRadio = true,
           tooltipTitle = "Announce keystones with multiple chat messages",
           tooltipText = "With too many alts it could get spammy though.",
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
-            self.db.global.announceKeystones.multiline = checked
+            addon.Data.db.global.announceKeystones.multiline = checked
           end
         })
         UIDropDownMenu_AddButton({
           text = "With character names",
-          checked = self.db.global.announceKeystones.multilineNames,
+          checked = addon.Data.db.global.announceKeystones.multilineNames,
           keepShownOnClick = true,
           isNotRadio = true,
           tooltipTitle = "Add character names before each keystone",
           tooltipText = "Character names are only added if multiple chat messages is enabled.",
           tooltipOnButton = true,
           func = function(button, arg1, arg2, checked)
-            self.db.global.announceKeystones.multilineNames = checked
+            addon.Data.db.global.announceKeystones.multilineNames = checked
           end
         })
       end,
@@ -1492,7 +1484,7 @@ function AlterEgo:CreateUI()
     )
     winMain.TitleBar.AnnounceButton:SetScript("OnEnter", function()
       winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      self:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0.05)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(winMain.TitleBar.AnnounceButton, "ANCHOR_TOP")
@@ -1502,7 +1494,7 @@ function AlterEgo:CreateUI()
     end)
     winMain.TitleBar.AnnounceButton:SetScript("OnLeave", function()
       winMain.TitleBar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      self:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0)
+      addon.Utils:SetBackgroundColor(winMain.TitleBar.AnnounceButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
   end
@@ -1515,7 +1507,7 @@ function AlterEgo:CreateUI()
     winMain.Body.NoCharacterText:SetJustifyV("MIDDLE")
     winMain.Body.NoCharacterText:SetFontObject("GameFontHighlight_NoShadow")
     local introductionText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
-    if not self.db.global.showZeroRatedCharacters and AE_table_count(self:GetCharacters(true)) > 0 then
+    if not addon.Data.db.global.showZeroRatedCharacters and addon.Utils:TableCount(addon.Data:GetCharacters(true)) > 0 then
       introductionText = introductionText .. "\n\n|cff00ee00New Season?|r\nYou are currently hiding characters with zero rating. If this is not your intention then enable the setting |cffffffffShow characters with zero rating|r"
     end
     winMain.Body.NoCharacterText:SetText(introductionText)
@@ -1527,8 +1519,8 @@ function AlterEgo:CreateUI()
     winMain.Body.Sidebar = CreateFrame("Frame", "$parentSidebar", winMain.Body)
     winMain.Body.Sidebar:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT")
     winMain.Body.Sidebar:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT")
-    winMain.Body.Sidebar:SetWidth(self.constants.sizes.sidebar.width)
-    self:SetBackgroundColor(winMain.Body.Sidebar, 0, 0, 0, 0.3)
+    winMain.Body.Sidebar:SetWidth(addon.Constants.sizes.sidebar.width)
+    addon.Utils:SetBackgroundColor(winMain.Body.Sidebar, 0, 0, 0, 0.3)
     anchorFrame = winMain.Body.Sidebar
   end
 
@@ -1542,10 +1534,10 @@ function AlterEgo:CreateUI()
         Label:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
         Label:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT")
       end
-      Label:SetHeight(self.constants.sizes.row)
+      Label:SetHeight(addon.Constants.sizes.row)
       Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-      Label.Text:SetPoint("LEFT", Label, "LEFT", self.constants.sizes.padding, 0)
-      Label.Text:SetPoint("RIGHT", Label, "RIGHT", -self.constants.sizes.padding, 0)
+      Label.Text:SetPoint("LEFT", Label, "LEFT", addon.Constants.sizes.padding, 0)
+      Label.Text:SetPoint("RIGHT", Label, "RIGHT", -addon.Constants.sizes.padding, 0)
       Label.Text:SetJustifyH("LEFT")
       Label.Text:SetFontObject("GameFontHighlight_NoShadow")
       Label.Text:SetText(info.label)
@@ -1558,10 +1550,10 @@ function AlterEgo:CreateUI()
     local Label = CreateFrame("Frame", "$parentMythicPlusLabel", winMain.Body.Sidebar)
     Label:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
     Label:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-    Label:SetHeight(self.constants.sizes.row)
+    Label:SetHeight(addon.Constants.sizes.row)
     Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-    Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", self.constants.sizes.padding, 0)
-    Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -self.constants.sizes.padding, 0)
+    Label.Text:SetPoint("TOPLEFT", Label, "TOPLEFT", addon.Constants.sizes.padding, 0)
+    Label.Text:SetPoint("BOTTOMRIGHT", Label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
     Label.Text:SetFontObject("GameFontHighlight_NoShadow")
     Label.Text:SetJustifyH("LEFT")
     Label.Text:SetText("Mythic Plus")
@@ -1574,14 +1566,14 @@ function AlterEgo:CreateUI()
       local Label = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, winMain.Body.Sidebar, "InsecureActionButtonTemplate")
       Label:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
       Label:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
-      Label:SetHeight(self.constants.sizes.row)
+      Label:SetHeight(addon.Constants.sizes.row)
       Label.Icon = Label:CreateTexture(Label:GetName() .. "Icon", "ARTWORK")
       Label.Icon:SetSize(16, 16)
-      Label.Icon:SetPoint("LEFT", Label:GetName(), "LEFT", self.constants.sizes.padding, 0)
+      Label.Icon:SetPoint("LEFT", Label:GetName(), "LEFT", addon.Constants.sizes.padding, 0)
       Label.Icon:SetTexture(dungeon.icon)
       Label.Text = Label:CreateFontString(Label:GetName() .. "Text", "OVERLAY")
-      Label.Text:SetPoint("TOPLEFT", Label:GetName(), "TOPLEFT", 16 + self.constants.sizes.padding * 2, -3)
-      Label.Text:SetPoint("BOTTOMRIGHT", Label:GetName(), "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
+      Label.Text:SetPoint("TOPLEFT", Label:GetName(), "TOPLEFT", 16 + addon.Constants.sizes.padding * 2, -3)
+      Label.Text:SetPoint("BOTTOMRIGHT", Label:GetName(), "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
       Label.Text:SetJustifyH("LEFT")
       Label.Text:SetFontObject("GameFontHighlight_NoShadow")
       Label.Text:SetText(dungeon.short and dungeon.short or dungeon.name)
@@ -1592,7 +1584,7 @@ function AlterEgo:CreateUI()
   do -- Raids & Difficulties
     for raidIndex, raid in ipairs(raids) do
       local RaidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, winMain.Body.Sidebar)
-      RaidFrame:SetHeight(self.constants.sizes.row)
+      RaidFrame:SetHeight(addon.Constants.sizes.row)
       RaidFrame:SetPoint("TOPLEFT", anchorFrame:GetName(), "BOTTOMLEFT")
       RaidFrame:SetPoint("TOPRIGHT", anchorFrame:GetName(), "BOTTOMRIGHT")
       RaidFrame:SetScript("OnEnter", function()
@@ -1610,7 +1602,7 @@ function AlterEgo:CreateUI()
         GameTooltip:Hide()
       end)
       RaidFrame.Text = RaidFrame:CreateFontString(RaidFrame:GetName() .. "Text", "OVERLAY")
-      RaidFrame.Text:SetPoint("LEFT", RaidFrame, "LEFT", self.constants.sizes.padding, 0)
+      RaidFrame.Text:SetPoint("LEFT", RaidFrame, "LEFT", addon.Constants.sizes.padding, 0)
       RaidFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
       RaidFrame.Text:SetJustifyH("LEFT")
       RaidFrame.Text:SetText(raid.short and raid.short or raid.name)
@@ -1618,14 +1610,14 @@ function AlterEgo:CreateUI()
       RaidFrame.Text:SetVertexColor(1.0, 0.82, 0.0, 1)
       RaidFrame.ModifiedIcon = RaidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
       RaidFrame.ModifiedIcon:SetSize(18, 18)
-      RaidFrame.ModifiedIcon:SetPoint("RIGHT", RaidFrame, "RIGHT", -(self.constants.sizes.padding / 2), 0)
+      RaidFrame.ModifiedIcon:SetPoint("RIGHT", RaidFrame, "RIGHT", -(addon.Constants.sizes.padding / 2), 0)
       if raid.modifiedInstanceInfo then
         RaidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
         RaidFrame.ModifiedIcon:Show()
-        RaidFrame.Text:SetPoint("RIGHT", RaidFrame.ModifiedIcon, "LEFT", -(self.constants.sizes.padding / 2), 0)
+        RaidFrame.Text:SetPoint("RIGHT", RaidFrame.ModifiedIcon, "LEFT", -(addon.Constants.sizes.padding / 2), 0)
       else
         RaidFrame.ModifiedIcon:Hide()
-        RaidFrame.Text:SetPoint("RIGHT", RaidFrame, "RIGHT", -self.constants.sizes.padding, 0)
+        RaidFrame.Text:SetPoint("RIGHT", RaidFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
       end
       anchorFrame = RaidFrame
 
@@ -1633,7 +1625,7 @@ function AlterEgo:CreateUI()
         local DifficultFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, RaidFrame)
         DifficultFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
         DifficultFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
-        DifficultFrame:SetHeight(self.constants.sizes.row)
+        DifficultFrame:SetHeight(addon.Constants.sizes.row)
         DifficultFrame:SetScript("OnEnter", function()
           GameTooltip:ClearAllPoints()
           GameTooltip:ClearLines()
@@ -1645,14 +1637,14 @@ function AlterEgo:CreateUI()
           GameTooltip:Hide()
         end)
         DifficultFrame.Text = DifficultFrame:CreateFontString(DifficultFrame:GetName() .. "Text", "OVERLAY")
-        DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", self.constants.sizes.padding, -3)
-        DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -self.constants.sizes.padding, 3)
+        DifficultFrame.Text:SetPoint("TOPLEFT", DifficultFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+        DifficultFrame.Text:SetPoint("BOTTOMRIGHT", DifficultFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
         DifficultFrame.Text:SetJustifyH("LEFT")
         DifficultFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
         DifficultFrame.Text:SetText(difficulty.short and difficulty.short or difficulty.name)
         -- RaidLabel.Icon = RaidLabel:CreateTexture(RaidLabel:GetName() .. "Icon", "ARTWORK")
         -- RaidLabel.Icon:SetSize(16, 16)
-        -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", self.constants.sizes.padding, 0)
+        -- RaidLabel.Icon:SetPoint("LEFT", RaidLabel, "LEFT", addon.Constants.sizes.padding, 0)
         -- RaidLabel.Icon:SetTexture(raid.icon)
         anchorFrame = DifficultFrame
       end
@@ -1660,22 +1652,22 @@ function AlterEgo:CreateUI()
   end
 
   winMain.Body.ScrollFrame = CreateFrame("ScrollFrame", "$parentScrollFrame", winMain.Body)
-  winMain.Body.ScrollFrame:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", self.constants.sizes.sidebar.width, 0)
-  winMain.Body.ScrollFrame:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT", self.constants.sizes.sidebar.width, 0)
+  winMain.Body.ScrollFrame:SetPoint("TOPLEFT", winMain.Body, "TOPLEFT", addon.Constants.sizes.sidebar.width, 0)
+  winMain.Body.ScrollFrame:SetPoint("BOTTOMLEFT", winMain.Body, "BOTTOMLEFT", addon.Constants.sizes.sidebar.width, 0)
   winMain.Body.ScrollFrame:SetPoint("BOTTOMRIGHT", winMain.Body, "BOTTOMRIGHT")
   winMain.Body.ScrollFrame:SetPoint("TOPRIGHT", winMain.Body, "TOPRIGHT")
   winMain.Body.ScrollFrame.ScrollChild = CreateFrame("Frame", "$parentScrollChild", winMain.Body.ScrollFrame)
   winMain.Body.ScrollFrame:SetScrollChild(winMain.Body.ScrollFrame.ScrollChild)
 
   winMain.Footer = CreateFrame("Frame", "$parentFooter", winMain)
-  winMain.Footer:SetHeight(self.constants.sizes.footer.height)
+  winMain.Footer:SetHeight(addon.Constants.sizes.footer.height)
   winMain.Footer:SetPoint("BOTTOMLEFT", winMain, "BOTTOMLEFT")
   winMain.Footer:SetPoint("BOTTOMRIGHT", winMain, "BOTTOMRIGHT")
-  self:SetBackgroundColor(winMain.Footer, 0, 0, 0, .3)
+  addon.Utils:SetBackgroundColor(winMain.Footer, 0, 0, 0, .3)
 
   winMain.Footer.Scrollbar = CreateFrame("Slider", "$parentScrollbar", winMain.Footer, "UISliderTemplate")
-  winMain.Footer.Scrollbar:SetPoint("TOPLEFT", winMain.Footer, "TOPLEFT", self.constants.sizes.sidebar.width, 0)
-  winMain.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", winMain.Footer, "BOTTOMRIGHT", -self.constants.sizes.padding / 2, 0)
+  winMain.Footer.Scrollbar:SetPoint("TOPLEFT", winMain.Footer, "TOPLEFT", addon.Constants.sizes.sidebar.width, 0)
+  winMain.Footer.Scrollbar:SetPoint("BOTTOMRIGHT", winMain.Footer, "BOTTOMRIGHT", -addon.Constants.sizes.padding / 2, 0)
   winMain.Footer.Scrollbar:SetMinMaxValues(0, 100)
   winMain.Footer.Scrollbar:SetValue(0)
   winMain.Footer.Scrollbar:SetValueStep(1)
@@ -1685,7 +1677,7 @@ function AlterEgo:CreateUI()
   winMain.Footer.Scrollbar.thumb = winMain.Footer.Scrollbar:GetThumbTexture()
   winMain.Footer.Scrollbar.thumb:SetPoint("CENTER")
   winMain.Footer.Scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
-  winMain.Footer.Scrollbar.thumb:SetHeight(self.constants.sizes.footer.height - 10)
+  winMain.Footer.Scrollbar.thumb:SetHeight(addon.Constants.sizes.footer.height - 10)
   winMain.Footer.Scrollbar:SetScript("OnValueChanged", function(_, value)
     winMain.Body.ScrollFrame:SetHorizontalScroll(value)
   end)
@@ -1707,8 +1699,8 @@ function AlterEgo:CreateUI()
   self:UpdateUI()
 end
 
-function AlterEgo:UpdateUI()
-  local winMain = self:GetWindow("Main")
+function UI:UpdateUI()
+  local winMain = addon.Window:GetWindow("Main")
   if not winMain then
     return
   end
@@ -1716,13 +1708,13 @@ function AlterEgo:UpdateUI()
     return
   end
 
-  local affixes = self:GetAffixes(true)
-  local currentAffixes = self:GetCurrentAffixes()
-  local characters = self:GetCharacters()
-  local numCharacters = AE_table_count(characters)
-  local dungeons = self:GetDungeons()
-  local raids = self:GetRaids(true)
-  local difficulties = self:GetRaidDifficulties(true)
+  local affixes = addon.Data:GetAffixes(true)
+  local currentAffixes = addon.Data:GetCurrentAffixes()
+  local characters = addon.Data:GetCharacters()
+  local numCharacters = addon.Utils:TableCount(characters)
+  local dungeons = addon.Data:GetDungeons()
+  local raids = addon.Data:GetRaids(true)
+  local difficulties = addon.Data:GetRaidDifficulties(true)
   local labels = self:GetCharacterInfo()
   local anchorFrame
 
@@ -1740,11 +1732,11 @@ function AlterEgo:UpdateUI()
 
   winMain:SetSize(self:GetWindowSize())
 
-  self:SetWindowScale(self.db.global.interface.windowScale / 100)
-  self:SetWindowBackgroundColor(self.db.global.interface.windowColor)
-  -- winMain:SetScale(self.db.global.interface.windowScale / 100)
-  -- self:SetBackgroundColor(winMain, self.db.global.interface.windowColor.r, self.db.global.interface.windowColor.g, self.db.global.interface.windowColor.b, self.db.global.interface.windowColor.a)
-  winMain.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * self.constants.sizes.column, winMain.Body.ScrollFrame:GetHeight())
+  addon.Window:SetWindowScale(addon.Data.db.global.interface.windowScale / 100)
+  addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
+  -- winMain:SetScale(addon.Data.db.global.interface.windowScale / 100)
+  -- addon.Utils:SetBackgroundColor(winMain, addon.Data.db.global.interface.windowColor.r, addon.Data.db.global.interface.windowColor.g, addon.Data.db.global.interface.windowColor.b, addon.Data.db.global.interface.windowColor.a)
+  winMain.Body.ScrollFrame.ScrollChild:SetSize(numCharacters * addon.Constants.sizes.column, winMain.Body.ScrollFrame:GetHeight())
 
   if self:IsScrollbarNeeded() then
     winMain.Footer.Scrollbar:SetMinMaxValues(0, winMain.Body.ScrollFrame.ScrollChild:GetWidth() - winMain.Body.ScrollFrame:GetWidth())
@@ -1766,7 +1758,7 @@ function AlterEgo:UpdateUI()
     else
       winMain.TitleBar.Text:Show()
     end
-    if currentAffixes and AE_table_count(currentAffixes) > 0 and self.db.global.showAffixHeader then
+    if currentAffixes and addon.Utils:TableCount(currentAffixes) > 0 and addon.Data.db.global.showAffixHeader then
       if numCharacters < 2 then
         winMain.TitleBar.Affixes:Hide()
       else
@@ -1776,8 +1768,8 @@ function AlterEgo:UpdateUI()
       winMain.TitleBar.Affixes:Hide()
     end
 
-    if currentAffixes and AE_table_count(currentAffixes) > 0 then
-      for i = 1, AE_table_count(currentAffixes) do
+    if currentAffixes and addon.Utils:TableCount(currentAffixes) > 0 then
+      for i = 1, addon.Utils:TableCount(currentAffixes) do
         local affixButton = _G[winMain.TitleBar.Affixes:GetName() .. i]
         if affixButton ~= nil then
           if i == 1 then
@@ -1785,7 +1777,7 @@ function AlterEgo:UpdateUI()
             if numCharacters < 3 then
               affixButton:SetPoint("LEFT", winMain.TitleBar.Icon, "RIGHT", 6, 0)
             else
-              affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -((AE_table_count(currentAffixes) * 20) / 2), 0)
+              affixButton:SetPoint("CENTER", anchorFrame, "CENTER", -((addon.Utils:TableCount(currentAffixes) * 20) / 2), 0)
             end
           else
             affixButton:SetPoint("LEFT", anchorFrame, "RIGHT", 6, 0)
@@ -1870,7 +1862,7 @@ function AlterEgo:UpdateUI()
     for raidIndex, raid in ipairs(raids) do
       local RaidFrame = _G[winMain.Body.Sidebar:GetName() .. "Raid" .. raidIndex]
       if RaidFrame then
-        if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo or self:GetCurrentSeason() ~= 12) then
+        if addon.Data.db.global.raids.enabled and (not addon.Data.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo or addon.Data:GetCurrentSeason() ~= 12) then
           RaidFrame:Show()
           RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
           RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -1878,7 +1870,7 @@ function AlterEgo:UpdateUI()
           for difficultyIndex, difficulty in ipairs(difficulties) do
             local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
             if DifficultyFrame then
-              if self.db.global.raids.hiddenDifficulties and self.db.global.raids.hiddenDifficulties[difficulty.id] then
+              if addon.Data.db.global.raids.hiddenDifficulties and addon.Data.db.global.raids.hiddenDifficulties[difficulty.id] then
                 DifficultyFrame:Hide()
               else
                 DifficultyFrame:Show()
@@ -1906,7 +1898,7 @@ function AlterEgo:UpdateUI()
         CharacterColumn:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT")
         CharacterColumn:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMLEFT")
       end
-      self:SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
+      addon.Utils:SetBackgroundColor(CharacterColumn, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
       anchorFrame = CharacterColumn
 
       do -- Character info
@@ -1923,22 +1915,22 @@ function AlterEgo:UpdateUI()
               info.OnEnter(character)
               GameTooltip:Show()
               if not info.backgroundColor then
-                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                addon.Utils:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
               end
             end)
             CharacterFrame:SetScript("OnLeave", function()
               GameTooltip:Hide()
               if not info.backgroundColor then
-                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                addon.Utils:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
               end
             end)
           else
             if not info.backgroundColor then
               CharacterFrame:SetScript("OnEnter", function()
-                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
+                addon.Utils:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0.05)
               end)
               CharacterFrame:SetScript("OnLeave", function()
-                self:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
+                addon.Utils:SetBackgroundColor(CharacterFrame, 1, 1, 1, 0)
               end)
             end
           end
@@ -1988,7 +1980,7 @@ function AlterEgo:UpdateUI()
 
         for dungeonIndex, dungeon in ipairs(dungeons) do
           local DungeonFrame = _G[CharacterColumn:GetName() .. "Dungeons" .. dungeonIndex]
-          local characterDungeon = AE_table_get(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+          local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
           local affixScores
           local overallScore
           local inTimeInfo
@@ -2005,7 +1997,7 @@ function AlterEgo:UpdateUI()
             inTimeInfo = characterDungeon.bestTimedRun
             overTimeInfo = characterDungeon.bestNotTimedRun
 
-            if overallScore and self.db.global.showAffixColors then
+            if overallScore and addon.Data.db.global.showAffixColors then
               local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
               if rarityColor ~= nil then
                 color = rarityColor
@@ -2036,7 +2028,7 @@ function AlterEgo:UpdateUI()
             end
           end
 
-          if level ~= "-" and self.db.global.showTiers then
+          if level ~= "-" and addon.Data.db.global.showTiers then
             level = format("%s %s", level, tier)
           end
 
@@ -2057,12 +2049,12 @@ function AlterEgo:UpdateUI()
           DungeonFrame.Score:SetPoint("RIGHT", DungeonFrame, "RIGHT")
           DungeonFrame.Score:SetJustifyH("CENTER")
 
-          if not self.db.global.showScores then
+          if not addon.Data.db.global.showScores then
             DungeonFrame.Text:ClearAllPoints()
             DungeonFrame.Text:SetPoint("CENTER", DungeonFrame, "CENTER")
             DungeonFrame.Score:SetText("")
           else
-            if not self.db.global.showTiers then
+            if not addon.Data.db.global.showTiers then
               DungeonFrame.Text:SetPoint("RIGHT", DungeonFrame, "CENTER", 0, 0)
               DungeonFrame.Text:SetJustifyH("CENTER")
             end
@@ -2081,7 +2073,7 @@ function AlterEgo:UpdateUI()
             GameTooltip:SetOwner(DungeonFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText(dungeon.name, 1, 1, 1)
 
-            if affixScores and AE_table_count(affixScores) > 0 then
+            if affixScores and addon.Utils:TableCount(affixScores) > 0 then
               if overallScore and (inTimeInfo or overTimeInfo) then
                 GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(overallScore)), GREEN_FONT_COLOR)
               end
@@ -2110,11 +2102,11 @@ function AlterEgo:UpdateUI()
             GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
 
             GameTooltip:Show()
-            self:SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
+            addon.Utils:SetBackgroundColor(DungeonFrame, 1, 1, 1, 0.05)
           end)
           DungeonFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
-            self:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+            addon.Utils:SetBackgroundColor(DungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
           end)
 
           anchorFrame = DungeonFrame
@@ -2124,7 +2116,7 @@ function AlterEgo:UpdateUI()
       do -- Raid Rows
         for raidIndex, raid in ipairs(raids) do
           local RaidFrame = _G[CharacterColumn:GetName() .. "Raid" .. raidIndex]
-          if self.db.global.raids.enabled and (not self.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo or self:GetCurrentSeason() ~= 12) then
+          if addon.Data.db.global.raids.enabled and (not addon.Data.db.global.raids.modifiedInstanceOnly or raid.modifiedInstanceInfo or addon.Data:GetCurrentSeason() ~= 12) then
             RaidFrame:Show()
             RaidFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
             RaidFrame:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT")
@@ -2132,7 +2124,7 @@ function AlterEgo:UpdateUI()
             for difficultyIndex, difficulty in pairs(difficulties) do
               local DifficultyFrame = _G[RaidFrame:GetName() .. "Difficulty" .. difficultyIndex]
               if DifficultyFrame then
-                if self.db.global.raids.hiddenDifficulties and self.db.global.raids.hiddenDifficulties[difficulty.id] then
+                if addon.Data.db.global.raids.hiddenDifficulties and addon.Data.db.global.raids.hiddenDifficulties[difficulty.id] then
                   DifficultyFrame:Hide()
                 else
                   DifficultyFrame:Show()
@@ -2146,7 +2138,7 @@ function AlterEgo:UpdateUI()
                     GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
                     GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
                     if character.raids.savedInstances ~= nil then
-                      local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                      local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                         return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                       end)
                       if savedInstance ~= nil then
@@ -2157,12 +2149,12 @@ function AlterEgo:UpdateUI()
                     for _, encounter in ipairs(raid.encounters) do
                       local color = LIGHTGRAY_FONT_COLOR
                       if character.raids.savedInstances then
-                        local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                        local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                           return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                         end)
                         if savedInstance ~= nil then
-                          local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
-                            return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
+                          local savedEncounter = addon.Utils:TableFind(savedInstance.encounters, function(enc)
+                            return enc.instanceEncounterID == encounter.instanceEncounterID and enc.isKilled == true
                           end)
                           if savedEncounter ~= nil then
                             color = GREEN_FONT_COLOR
@@ -2172,11 +2164,11 @@ function AlterEgo:UpdateUI()
                       GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
                     end
                     GameTooltip:Show()
-                    self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
+                    addon.Utils:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0.05)
                   end)
                   DifficultyFrame:SetScript("OnLeave", function()
                     GameTooltip:Hide()
-                    self:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
+                    addon.Utils:SetBackgroundColor(DifficultyFrame, 1, 1, 1, 0)
                   end)
                   for encounterIndex, encounter in ipairs(raid.encounters) do
                     local color = {r = 1, g = 1, b = 1}
@@ -2184,32 +2176,32 @@ function AlterEgo:UpdateUI()
                     local EncounterFrame = _G[DifficultyFrame:GetName() .. "Encounter" .. encounterIndex]
                     if not EncounterFrame then
                       EncounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, DifficultyFrame)
-                      local size = self.constants.sizes.column
-                      size = size - self.constants.sizes.padding -- left/right cell padding
-                      size = size - (raid.numEncounters - 1) * 4 -- gaps
-                      size = size / raid.numEncounters           -- box sizes
-                      EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", self.constants.sizes.padding / 2, 0)
-                      EncounterFrame:SetSize(size, self.constants.sizes.row - 12)
-                      self:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
+                      local size = addon.Constants.sizes.column
+                      size = size - addon.Constants.sizes.padding -- left/right cell padding
+                      size = size - (raid.numEncounters - 1) * 4  -- gaps
+                      size = size / raid.numEncounters            -- box sizes
+                      EncounterFrame:SetPoint("LEFT", anchorFrame, encounterIndex > 1 and "RIGHT" or "LEFT", addon.Constants.sizes.padding / 2, 0)
+                      EncounterFrame:SetSize(size, addon.Constants.sizes.row - 12)
+                      addon.Utils:SetBackgroundColor(EncounterFrame, 1, 1, 1, 0.1)
                     end
                     if character.raids.savedInstances then
-                      local savedInstance = AE_table_find(character.raids.savedInstances, function(savedInstance)
+                      local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                         return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                       end)
                       if savedInstance ~= nil then
-                        local savedEncounter = AE_table_find(savedInstance.encounters, function(enc)
-                          return enc.instanceEncounterID == encounter.instanceEncounterID and enc.killed == true
+                        local savedEncounter = addon.Utils:TableFind(savedInstance.encounters, function(enc)
+                          return enc.instanceEncounterID == encounter.instanceEncounterID and enc.isKilled == true
                         end)
                         if savedEncounter ~= nil then
                           color = UNCOMMON_GREEN_COLOR
-                          if self.db.global.raids.colors then
+                          if addon.Data.db.global.raids.colors then
                             color = difficulty.color
                           end
                           alpha = 0.5
                         end
                       end
                     end
-                    self:SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
+                    addon.Utils:SetBackgroundColor(EncounterFrame, color.r, color.g, color.b, alpha)
                     anchorFrame = EncounterFrame
                   end
                   anchorFrame = DifficultyFrame
