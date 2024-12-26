@@ -7,6 +7,8 @@ local addon = select(2, ...)
 local Utils = {}
 addon.Utils = Utils
 
+Utils.ScrollCollection = {}
+
 ---Set the background color for a parent frame
 ---@param parent Frame
 ---@param r number
@@ -62,6 +64,7 @@ end
 ---@param callback fun(value: T, index: number): boolean
 ---@return T|nil, number|nil
 function Utils:TableFind(tbl, callback)
+  assert(type(tbl) == "table", "Must be a table!")
   for i, v in ipairs(tbl) do
     if callback(v, i) then
       return v, i
@@ -77,7 +80,8 @@ end
 ---@param val any
 ---@return T|nil
 function Utils:TableGet(tbl, key, val)
-  return Utils:TableFind(tbl, function(elm)
+  assert(type(tbl) == "table", "Must be a table!")
+  return self:TableFind(tbl, function(elm)
     return elm[key] and elm[key] == val
   end)
 end
@@ -88,8 +92,9 @@ end
 ---@param callback fun(value: T, index: number): boolean
 ---@return T[]
 function Utils:TableFilter(tbl, callback)
+  assert(type(tbl) == "table", "Must be a table!")
   local t = {}
-  for i, v in ipairs(tbl) do
+  for i, v in pairs(tbl) do
     if callback(v, i) then
       table.insert(t, v)
     end
@@ -101,6 +106,7 @@ end
 ---@param tbl table
 ---@return number
 function Utils:TableCount(tbl)
+  assert(type(tbl) == "table", "Must be a table!")
   local n = 0
   for _ in pairs(tbl) do
     n = n + 1
@@ -114,6 +120,7 @@ end
 ---@param cache table?
 ---@return T[]
 function Utils:TableCopy(tbl, cache)
+  assert(type(tbl) == "table", "Must be a table!")
   local t = {}
   cache = cache or {}
   cache[tbl] = t
@@ -133,6 +140,7 @@ end
 ---@param callback fun(value: T, index: number): any
 ---@return T[]
 function Utils:TableMap(tbl, callback)
+  assert(type(tbl) == "table", "Must be a table!")
   local t = {}
   self:TableForEach(tbl, function(v, k)
     local newv, newk = callback(v, k)
@@ -147,7 +155,7 @@ end
 ---@param callback fun(value: T, index: number)
 ---@return T[]
 function Utils:TableForEach(tbl, callback)
-  assert(tbl, "Must be a table!")
+  assert(type(tbl) == "table", "Must be a table!")
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
   end
@@ -253,17 +261,29 @@ function Utils:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
   return color
 end
 
-function Utils:CreateScrollFrame(name, parent)
-  local frame = CreateFrame("ScrollFrame", name, parent)
+function Utils:CreateScrollFrame(config)
+  local frame = CreateFrame("ScrollFrame", addonName .. "ScrollFrame" .. (Utils:TableCount(self.ScrollCollection) + 1))
+  frame.config = CreateFromMixins(
+    {
+      scrollSpeedHorizontal = 20,
+      scrollSpeedVertical = 20,
+    },
+    config or {}
+  )
+
   frame.content = CreateFrame("Frame", "$parentContent", frame)
   frame.scrollbarH = CreateFrame("Slider", "$parentScrollbarH", frame, "UISliderTemplate")
   frame.scrollbarV = CreateFrame("Slider", "$parentScrollbarV", frame, "UISliderTemplate")
 
   frame:SetScript("OnMouseWheel", function(_, delta)
-    if IsModifierKeyDown() or not frame.scrollbarV:IsVisible() then
-      frame.scrollbarH:SetValue(frame.scrollbarH:GetValue() - delta * ((frame.content:GetWidth() - frame:GetWidth()) * 0.1))
+    if IsModifierKeyDown() then
+      if frame.scrollbarH:IsVisible() then
+        frame.scrollbarH:SetValue(frame.scrollbarH:GetValue() - delta * frame.config.scrollSpeedHorizontal)
+      end
     else
-      frame.scrollbarV:SetValue(frame.scrollbarV:GetValue() - delta * ((frame.content:GetHeight() - frame:GetHeight()) * 0.1))
+      if frame.scrollbarV:IsVisible() then
+        frame.scrollbarV:SetValue(frame.scrollbarV:GetValue() - delta * frame.config.scrollSpeedVertical)
+      end
     end
   end)
   frame:SetScript("OnSizeChanged", function() frame:RenderScrollFrame() end)
@@ -306,19 +326,29 @@ function Utils:CreateScrollFrame(name, parent)
   if frame.scrollbarV.NineSlice then frame.scrollbarV.NineSlice:Hide() end
 
   function frame:RenderScrollFrame()
-    local buffer = 4
-    if math.floor(frame.content:GetWidth()) - buffer > math.floor(frame:GetWidth()) then
-      frame.scrollbarH:SetMinMaxValues(0, frame.content:GetWidth() - frame:GetWidth())
-      frame.scrollbarH.thumb:SetWidth(frame.scrollbarH:GetWidth() / 10)
+    local viewportBuffer = 4
+    local viewportWidth = frame:GetWidth()
+    local viewportHeight = frame:GetHeight()
+    local contentWidth = frame.content:GetWidth()
+    local contentHeight = frame.content:GetHeight()
+    local ratioWidth = (viewportWidth + viewportBuffer) / contentWidth
+    local ratioHeight = (viewportHeight + viewportBuffer) / contentHeight
+    -- Horizontal
+    if ratioWidth < 1 then
+      frame.scrollbarH:SetValueStep(frame.config.scrollSpeedHorizontal)
+      frame.scrollbarH:SetMinMaxValues(0, contentWidth - viewportWidth)
+      frame.scrollbarH.thumb:SetWidth(viewportWidth * ratioWidth)
       frame.scrollbarH.thumb:SetHeight(frame.scrollbarH:GetHeight())
       frame.scrollbarH:Show()
     else
       frame:SetHorizontalScroll(0)
       frame.scrollbarH:Hide()
     end
-    if math.floor(frame.content:GetHeight()) - buffer > math.floor(frame:GetHeight()) then
-      frame.scrollbarV:SetMinMaxValues(0, frame.content:GetHeight() - frame:GetHeight())
-      frame.scrollbarV.thumb:SetHeight(frame.scrollbarV:GetHeight() / 10)
+    -- Vertical
+    if ratioHeight < 1 then
+      frame.scrollbarV:SetValueStep(frame.config.scrollSpeedVertical)
+      frame.scrollbarV:SetMinMaxValues(0, contentHeight - viewportHeight)
+      frame.scrollbarV.thumb:SetHeight(math.min(viewportHeight * ratioHeight, viewportHeight / 3))
       frame.scrollbarV.thumb:SetWidth(frame.scrollbarV:GetWidth())
       frame.scrollbarV:Show()
     else
@@ -330,3 +360,81 @@ function Utils:CreateScrollFrame(name, parent)
   frame:RenderScrollFrame()
   return frame
 end
+
+-- function Utils:CreateScrollFrame(name, parent)
+--   local frame = CreateFrame("ScrollFrame", name, parent)
+--   frame.content = CreateFrame("Frame", "$parentContent", frame)
+--   frame.scrollbarH = CreateFrame("Slider", "$parentScrollbarH", frame, "UISliderTemplate")
+--   frame.scrollbarV = CreateFrame("Slider", "$parentScrollbarV", frame, "UISliderTemplate")
+
+--   frame:SetScript("OnMouseWheel", function(_, delta)
+--     if IsModifierKeyDown() or not frame.scrollbarV:IsVisible() then
+--       frame.scrollbarH:SetValue(frame.scrollbarH:GetValue() - delta * ((frame.content:GetWidth() - frame:GetWidth()) * 0.1))
+--     else
+--       frame.scrollbarV:SetValue(frame.scrollbarV:GetValue() - delta * ((frame.content:GetHeight() - frame:GetHeight()) * 0.1))
+--     end
+--   end)
+--   frame:SetScript("OnSizeChanged", function() frame:RenderScrollFrame() end)
+--   frame:SetScrollChild(frame.content)
+--   frame.content:SetScript("OnSizeChanged", function() frame:RenderScrollFrame() end)
+
+--   frame.scrollbarH:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+--   frame.scrollbarH:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+--   frame.scrollbarH:SetHeight(6)
+--   frame.scrollbarH:SetMinMaxValues(0, 100)
+--   frame.scrollbarH:SetValue(0)
+--   frame.scrollbarH:SetValueStep(1)
+--   frame.scrollbarH:SetOrientation("HORIZONTAL")
+--   frame.scrollbarH:SetObeyStepOnDrag(true)
+--   frame.scrollbarH.thumb = frame.scrollbarH:GetThumbTexture()
+--   frame.scrollbarH.thumb:SetPoint("CENTER")
+--   frame.scrollbarH.thumb:SetColorTexture(1, 1, 1, 0.15)
+--   frame.scrollbarH.thumb:SetHeight(10)
+--   frame.scrollbarH:SetScript("OnValueChanged", function(_, value) frame:SetHorizontalScroll(value) end)
+--   frame.scrollbarH:SetScript("OnEnter", function() frame.scrollbarH.thumb:SetColorTexture(1, 1, 1, 0.2) end)
+--   frame.scrollbarH:SetScript("OnLeave", function() frame.scrollbarH.thumb:SetColorTexture(1, 1, 1, 0.15) end)
+
+--   frame.scrollbarV:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+--   frame.scrollbarV:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+--   frame.scrollbarV:SetWidth(6)
+--   frame.scrollbarV:SetMinMaxValues(0, 100)
+--   frame.scrollbarV:SetValue(0)
+--   frame.scrollbarV:SetValueStep(1)
+--   frame.scrollbarV:SetOrientation("VERTICAL")
+--   frame.scrollbarV:SetObeyStepOnDrag(true)
+--   frame.scrollbarV.thumb = frame.scrollbarV:GetThumbTexture()
+--   frame.scrollbarV.thumb:SetPoint("CENTER")
+--   frame.scrollbarV.thumb:SetColorTexture(1, 1, 1, 0.15)
+--   frame.scrollbarV.thumb:SetWidth(10)
+--   frame.scrollbarV:SetScript("OnValueChanged", function(_, value) frame:SetVerticalScroll(value) end)
+--   frame.scrollbarV:SetScript("OnEnter", function() frame.scrollbarV.thumb:SetColorTexture(1, 1, 1, 0.2) end)
+--   frame.scrollbarV:SetScript("OnLeave", function() frame.scrollbarV.thumb:SetColorTexture(1, 1, 1, 0.15) end)
+
+--   if frame.scrollbarH.NineSlice then frame.scrollbarH.NineSlice:Hide() end
+--   if frame.scrollbarV.NineSlice then frame.scrollbarV.NineSlice:Hide() end
+
+--   function frame:RenderScrollFrame()
+--     local buffer = 4
+--     if math.floor(frame.content:GetWidth()) - buffer > math.floor(frame:GetWidth()) then
+--       frame.scrollbarH:SetMinMaxValues(0, frame.content:GetWidth() - frame:GetWidth())
+--       frame.scrollbarH.thumb:SetWidth(frame.scrollbarH:GetWidth() / 10)
+--       frame.scrollbarH.thumb:SetHeight(frame.scrollbarH:GetHeight())
+--       frame.scrollbarH:Show()
+--     else
+--       frame:SetHorizontalScroll(0)
+--       frame.scrollbarH:Hide()
+--     end
+--     if math.floor(frame.content:GetHeight()) - buffer > math.floor(frame:GetHeight()) then
+--       frame.scrollbarV:SetMinMaxValues(0, frame.content:GetHeight() - frame:GetHeight())
+--       frame.scrollbarV.thumb:SetHeight(frame.scrollbarV:GetHeight() / 10)
+--       frame.scrollbarV.thumb:SetWidth(frame.scrollbarV:GetWidth())
+--       frame.scrollbarV:Show()
+--     else
+--       frame:SetVerticalScroll(0)
+--       frame.scrollbarV:Hide()
+--     end
+--   end
+
+--   frame:RenderScrollFrame()
+--   return frame
+-- end

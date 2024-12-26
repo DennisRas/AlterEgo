@@ -1477,12 +1477,6 @@ function UI:RenderMainWindow()
   if self.window.zeroCharacters then
     self.window.zeroCharacters:SetText(zeroCharactersText)
   end
-
-  -- if numCharacters == 1 then
-  --   self.window.titlebar.title:Hide()
-  -- else
-  --   self.window.titlebar.title:Show()
-  -- end
 end
 
 function UI:SetupButtons()
