@@ -33,20 +33,6 @@ function Table:New(config)
         padding = 8,
         highlight = false
       },
-      -- width = 400,
-      -- height = 100,
-      -- maxHeight = 0,
-      -- maxWidth = 0,
-      -- width = 600,
-      -- rowHeight = 22,
-      -- cellPadding = 8,
-      -- frame = CreateFrame("Frame"),
-      -- rowFrames = {},
-      -- config = {
-      --   width = 600,
-      --   rowHeight = 22,
-      --   cellPadding = 8,
-      -- },
       ---@type AE_TableData
       data = {
         columns = {},
@@ -118,16 +104,6 @@ function Table:New(config)
         end
       end
 
-      -- if frame.config.rows.striped and rowIndex % 2 == 1 then
-      --   addon.Utils:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
-      -- end
-
-      -- if row.backgroundColor then
-      --   addon.Utils:SetBackgroundColor(rowFrame, row.backgroundColor.r, row.backgroundColor.g, row.backgroundColor.b, row.backgroundColor.a)
-      -- end
-
-      -- rowFrame:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -offsetY)
-      -- rowFrame:SetPoint("TOPRIGHT", frame.content, "TOPRIGHT", 0, -offsetY)
       rowFrame.data = row
       rowFrame:SetHeight(rowHeight)
       rowFrame:SetScript("OnEnter", function() rowFrame:onEnterHandler(rowFrame) end)
@@ -158,19 +134,6 @@ function Table:New(config)
           row:onClick(f)
         end
       end
-
-      -- -- Sticky header
-      -- if frame.config.header.sticky and rowIndex == 1 then
-      --   if frame then
-      --     rowFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -offsetY)
-      --     rowFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -offsetY)
-      --     -- rowFrame:SetToplevel(true)
-      --     rowFrame:SetFrameStrata("HIGH")
-      --   end
-      --   if not row.backgroundColor then
-      --     addon.Utils:SetBackgroundColor(rowFrame, Constants.colors.sidebar.r, Constants.colors.sidebar.g, Constants.colors.sidebar.b, 1)
-      --   end
-      -- end
 
       offsetX = 0
       addon.Utils:TableForEach(rowFrame.columns, function(columnFrame) columnFrame:Hide() end)
@@ -240,7 +203,6 @@ function Table:New(config)
       end
     end)
 
-    -- frame.content:SetSize(offsetX, offsetY)
     frame.scrollFrame:SetParent(frame)
     frame.scrollFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, frame.config.header.sticky and -frame.config.header.height or 0)
     frame.scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
