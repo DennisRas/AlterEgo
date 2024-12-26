@@ -13,18 +13,13 @@ _G[addonName] = addon;
 local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 addon.Core = Core
 
-Core.Libs = {}
-Core.Libs.AceDB = LibStub:GetLibrary("AceDB-3.0")
-Core.Libs.LDB = LibStub:GetLibrary("LibDataBroker-1.1")
-Core.Libs.LDBIcon = LibStub("LibDBIcon-1.0")
-
 function Core:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
   self:RegisterChatCommand("ae", function()
-    addon.Window:ToggleWindow()
+    self:ToggleWindow()
   end)
   self:RegisterChatCommand("alterego", function()
-    addon.Window:ToggleWindow()
+    self:ToggleWindow()
   end)
   addon.Data:Initialize()
 
@@ -34,7 +29,7 @@ function Core:OnInitialize()
     type = "launcher",
     icon = addon.Constants.media.Logo,
     OnClick = function()
-      addon.Window:ToggleWindow()
+      self:ToggleWindow()
     end,
     OnTooltipShow = function(tooltip)
       tooltip:SetText(addonName, 1, 1, 1)
@@ -46,9 +41,6 @@ function Core:OnInitialize()
       tooltip:AddLine(dragText .. ".", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     end
   }
-  -- self.Libs.LDB:NewDataObject(addonName, libDataObject)
-  -- self.Libs.LDBIcon:Register(addonName, libDataObject, addon.Data.db.global.minimap)
-  -- self.Libs.LDBIcon:AddButtonToCompartment(addonName)
 
   LibDataBroker:NewDataObject(addonName, libDataObject)
   LibDBIcon:Register(addonName, libDataObject, addon.Data.db.global.minimap)
@@ -57,6 +49,13 @@ function Core:OnInitialize()
   hooksecurefunc("ResetInstances", function()
     self:OnInstanceReset()
   end)
+  addon.UI:Render()
+end
+
+function Core:ToggleWindow()
+  local window = addon.Window:GetWindow("Main")
+  if not window then return end
+  window:Toggle()
 end
 
 function Core:OnEnable()
@@ -83,10 +82,14 @@ function Core:CheckGameData()
     addon.Data:UpdateCharacterInfo()
     addon.Data:UpdateEquipment()
   end)
-  self:RegisterBucketEvent({"RAID_INSTANCE_WELCOME", "LFG_LOCK_INFO_RECEIVED", "BOSS_KILL"}, 2, RequestRaidInfo)
-  self:RegisterEvent("ENCOUNTER_END", RequestRaidInfo)
+  self:RegisterBucketEvent({"RAID_INSTANCE_WELCOME", "LFG_LOCK_INFO_RECEIVED", "BOSS_KILL"}, 2, function()
+    RequestRaidInfo()
+  end)
+  self:RegisterEvent("ENCOUNTER_END", function()
+    RequestRaidInfo()
+  end)
   self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
-    addon.UI:UpdateUI()
+    addon.UI:Render()
   end)
   self:RegisterBucketEvent("WEEKLY_REWARDS_UPDATE", 2, function()
     addon.Data:UpdateVault()
@@ -104,7 +107,9 @@ function Core:CheckGameData()
   self:RegisterEvent("PLAYER_LEVEL_UP", function()
     addon.Data:UpdateDB()
   end)
-  self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
+  self:RegisterEvent("CHAT_MSG_SYSTEM", function()
+    self:OnChatMessageSystem()
+  end)
   self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, function()
     addon.Data:UpdateCurrencies()
   end)
@@ -113,8 +118,8 @@ function Core:CheckGameData()
   addon.Data:MigrateDB()
   addon.Data:TaskWeeklyReset()
   addon.Data:TaskSeasonReset()
-  addon.UI:CreateUI()
   addon.Data:UpdateDB()
+  addon.UI:Render()
 end
 
 function Core:OnInstanceReset()

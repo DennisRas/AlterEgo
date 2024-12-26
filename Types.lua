@@ -1,59 +1,3 @@
--- -@class Affix
--- -@field id number
--- -@field base 0 | 1
--- -@field name string
--- -@field description string
--- -@field fileDataID number|nil
-
--- -@class AffixRotation
--- -@field seasonID number
--- -@field seasonDisplayID number
--- -@field activation number[]
--- -@field affixes table<number, number[]>
-
--- -@class Currency
--- -@field id number
--- -@field seasonID number
--- -@field seasonDisplayID number
--- -@field currencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve"
-
--- -@class Dungeon
--- -@field seasonID number
--- -@field seasonDisplayID number
--- -@field challengeModeID number
--- -@field mapId number
--- -@field spellID number
--- -@field time number
--- -@field abbr string
--- -@field name string
--- -@field short string?
-
--- -@class Keystone
--- -@field seasonID number
--- -@field seasonDisplayID number
--- -@field itemID number
-
--- -@class Raid
--- -@field seasonID number
--- -@field seasonDisplayID number
--- -@field journalInstanceID number
--- -@field instanceID number
--- -@field order number
--- -@field numEncounters number
--- -@field encounters table
--- -@field modifiedInstanceInfo table|nil
--- -@field abbr string
--- -@field name string
--- -@field short string?
-
--- -@class RaidDifficulty
--- -@field id number
--- -@field color table
--- -@field order number
--- -@field abbr string
--- -@field name string
--- -@field short string?
-
 ---@class AE_Inventory
 ---@field id number
 ---@field name string
@@ -84,17 +28,17 @@
 ---@field exampleRewardLink string
 ---@field exampleRewardUpgradeLink string
 
----@alias currencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve"
+---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve"
 
 ---@class AE_Currency
 ---@field id number
 ---@field seasonID number
 ---@field seasonDisplayID number
----@field currencyType currencyType
+---@field currencyType AE_CurrencyType
 
 ---@class AE_CharacterCurrency : CurrencyInfo
 ---@field id number
----@field currencyType currencyType
+---@field currencyType AE_CurrencyType
 
 ---@class AE_Character
 ---@field GUID WOWGUID
@@ -139,6 +83,7 @@
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field challengeModeID number
+---@field journalInstanceID number
 ---@field mapId number
 ---@field spellID number
 ---@field time number
@@ -218,3 +163,31 @@
 ---@field itemUpgradeMax number|nil
 ---@field itemSlotID number
 ---@field itemSlotName string
+
+---@class AE_WindowOptions
+---@field parent any?
+---@field name string?
+---@field title string?
+---@field sidebar number?
+---@field titlebar boolean?
+---@field border number?
+---@field windowScale number?
+---@field windowColor table?
+
+---@class AE_TableData
+---@field columns AE_TableDataColumn[]?
+---@field rows AE_TableDataRow[]
+
+---@class AE_TableDataColumn
+---@field width number
+---@field align string?
+
+---@class AE_TableDataRow
+---@field columns AE_TableDataRowColumn[]
+
+---@class AE_TableDataRowColumn
+---@field text string?
+---@field backgroundColor table?
+---@field onEnter function?
+---@field onLeave function?
+---@field onClick function?

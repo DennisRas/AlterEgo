@@ -3,128 +3,187 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@class AE_Window
+---@type Frame[]
+local WindowCollection = {}
+local TITLEBAR_HEIGHT = 30
+local FOOTER_HEIGHT = 16
+-- local SIDEBAR_WIDTH = 150
+
+---@class AE_WindowManager
 local Window = {}
 addon.Window = Window
 
-local windows = {}
-function Window:GetWindow(name)
-  name = "AlterEgo" .. name
-  return windows[name]
-end
+---Create a window frame
+---@param options AE_WindowOptions
+---@return AE_Window
+function Window:New(options)
+  ---@class AE_Window : Frame
+  local window = CreateFrame("Frame", addonName .. "Window" .. (options and options.name or #WindowCollection + 1), options.parent or UIParent)
+  window.config = CreateFromMixins(
+    {
+      parent = UIParent,
+      name = "",
+      title = "",
+      border = addon.Constants.sizes.border,
+      titlebar = true,
+      windowScale = 100,
+      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+    },
+    options or {}
+  )
+  window:SetFrameStrata("MEDIUM")
+  window:SetFrameLevel(3000)
+  window:SetToplevel(true)
+  window:SetClampedToScreen(true)
+  window:SetMovable(true)
+  -- window:SetUserPlaced(true)
+  window:SetPoint("CENTER")
+  window:SetSize(300, 300)
+  window:EnableMouse(true) -- Disable click-throughs
+  window:SetParent(window.config.parent)
+  addon.Utils:SetBackgroundColor(window, window.config.windowColor.r, window.config.windowColor.g, window.config.windowColor.b, window.config.windowColor.a)
 
-function Window:SetWindowScale(scale)
-  addon.Utils:TableForEach(windows, function(window)
-    window:SetScale(scale)
-  end)
-end
-
-function Window:SetWindowBackgroundColor(color)
-  addon.Utils:TableForEach(windows, function(window)
-    addon.Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
-  end)
-end
-
-function Window:SetHeight(name, height)
-  if name == nil then name = "Main" end
-  local window = self:GetWindow(name)
-  if not window then return end
-end
-
-function Window:SetTitle(name, title)
-  if name == nil then name = "Main" end
-  local window = self:GetWindow(name)
-  if not window then return end
-  window.Titlebar.Text:SetText(title)
-end
-
-function Window:CreateWindow(name, title, parent, color)
-  name = "AlterEgo" .. name
-  local window = self:GetWindow(name)
-  if window then
-    return window
+  ---Show or hide the window
+  ---@param state boolean?
+  function window:Toggle(state)
+    if state == nil then
+      state = not window:IsVisible()
+    end
+    window:SetShown(state)
   end
 
-  if parent == nil then parent = UIParent end
-  if title == nil then title = "" end
-
-  local windowFrame = CreateFrame("Frame", name, parent)
-  windowFrame:SetFrameStrata("HIGH")
-  windowFrame:SetFrameLevel(1000 + 100 * (addon.Utils:TableCount(windows) + 1))
-  windowFrame:SetClampedToScreen(true)
-  windowFrame:SetMovable(true)
-  windowFrame:SetUserPlaced(true)
-  windowFrame:SetPoint("CENTER")
-  windowFrame:SetSize(300, 300)
-  addon.Utils:SetBackgroundColor(windowFrame, color.r, color.g, color.b, color.a)
-
-  do -- Border
-    windowFrame.Border = CreateFrame("Frame", "$parentBorder", windowFrame, "BackdropTemplate")
-    windowFrame.Border:SetPoint("TOPLEFT", windowFrame, "TOPLEFT", -3, 3)
-    windowFrame.Border:SetPoint("BOTTOMRIGHT", windowFrame, "BOTTOMRIGHT", 3, -3)
-    windowFrame.Border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = addon.Constants.sizes.border, right = addon.Constants.sizes.border, top = addon.Constants.sizes.border, bottom = addon.Constants.sizes.border}})
-    windowFrame.Border:SetBackdropBorderColor(0, 0, 0, .5)
-    windowFrame.Border:Show()
+  ---Set the title of the window
+  ---@param title string
+  function window:SetTitle(title)
+    if not window.config.titlebar then return end
+    window.titlebar.title:SetText(title)
   end
 
-  do -- Titlebar
-    windowFrame.TitleBar = CreateFrame("Frame", "$parentTitleBar", windowFrame)
-    windowFrame.TitleBar:EnableMouse(true)
-    windowFrame.TitleBar:RegisterForDrag("LeftButton")
-    windowFrame.TitleBar:SetScript("OnDragStart", function() windowFrame:StartMoving() end)
-    windowFrame.TitleBar:SetScript("OnDragStop", function() windowFrame:StopMovingOrSizing() end)
-    windowFrame.TitleBar:SetPoint("TOPLEFT", windowFrame, "TOPLEFT")
-    windowFrame.TitleBar:SetPoint("TOPRIGHT", windowFrame, "TOPRIGHT")
-    windowFrame.TitleBar:SetHeight(addon.Constants.sizes.titlebar.height)
-    addon.Utils:SetBackgroundColor(windowFrame.TitleBar, 0, 0, 0, 0.5)
-    windowFrame.TitleBar.Icon = windowFrame.TitleBar:CreateTexture("$parentIcon", "ARTWORK")
-    windowFrame.TitleBar.Icon:SetPoint("LEFT", windowFrame.TitleBar, "LEFT", 6, 0)
-    windowFrame.TitleBar.Icon:SetSize(20, 20)
-    windowFrame.TitleBar.Icon:SetTexture(addon.Constants.media.LogoTransparent)
-    windowFrame.TitleBar.Text = windowFrame.TitleBar:CreateFontString("$parentText", "OVERLAY")
-    windowFrame.TitleBar.Text:SetPoint("LEFT", windowFrame.TitleBar, "LEFT", 20 + addon.Constants.sizes.padding, 0)
-    windowFrame.TitleBar.Text:SetFontObject("SystemFont_Med3")
-    windowFrame.TitleBar.Text:SetText(title)
-    windowFrame.TitleBar.CloseButton = CreateFrame("Button", "$parentCloseButton", windowFrame.TitleBar)
-    windowFrame.TitleBar.CloseButton:SetPoint("RIGHT", windowFrame.TitleBar, "RIGHT", 0, 0)
-    windowFrame.TitleBar.CloseButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
-    windowFrame.TitleBar.CloseButton:RegisterForClicks("AnyUp")
-    windowFrame.TitleBar.CloseButton:SetScript("OnClick", function() windowFrame:Hide() end)
-    windowFrame.TitleBar.CloseButton.Icon = windowFrame.TitleBar:CreateTexture("$parentIcon", "ARTWORK")
-    windowFrame.TitleBar.CloseButton.Icon:SetPoint("CENTER", windowFrame.TitleBar.CloseButton, "CENTER")
-    windowFrame.TitleBar.CloseButton.Icon:SetSize(10, 10)
-    windowFrame.TitleBar.CloseButton.Icon:SetTexture(addon.Constants.media.IconClose)
-    windowFrame.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    windowFrame.TitleBar.CloseButton:SetScript("OnEnter", function()
-      windowFrame.TitleBar.CloseButton.Icon:SetVertexColor(1, 1, 1, 1)
-      addon.Utils:SetBackgroundColor(windowFrame.TitleBar.CloseButton, 1, 0, 0, 0.2)
+  ---Set body size and adjust window size
+  ---@param width number
+  ---@param height number
+  function window:SetBodySize(width, height)
+    local w = width
+    local h = height
+    if window.config.sidebar then
+      w = w + window.config.sidebar
+    end
+    if window.config.titlebar then
+      h = h + TITLEBAR_HEIGHT
+    end
+    window:SetSize(w, h)
+  end
+
+  -- Border
+  if window.config.border > 0 then
+    window.border = CreateFrame("Frame", "$parentBorder", window, "BackdropTemplate")
+    window.border:SetPoint("TOPLEFT", window, "TOPLEFT", -3, 3)
+    window.border:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 3, -3)
+    window.border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = window.config.border, right = window.config.border, top = window.config.border, bottom = window.config.border}})
+    window.border:SetBackdropBorderColor(0, 0, 0, .5)
+    window.border:Show()
+  end
+
+  -- Titlebar
+  if window.config.titlebar then
+    window.titlebar = CreateFrame("Frame", "$parentTitleBar", window)
+    window.titlebar:EnableMouse(true)
+    window.titlebar:RegisterForDrag("LeftButton")
+    window.titlebar:SetScript("OnDragStart", function() window:StartMoving() end)
+    window.titlebar:SetScript("OnDragStop", function() window:StopMovingOrSizing() end)
+    window.titlebar:SetPoint("TOPLEFT", window, "TOPLEFT")
+    window.titlebar:SetPoint("TOPRIGHT", window, "TOPRIGHT")
+    window.titlebar:SetHeight(TITLEBAR_HEIGHT)
+    addon.Utils:SetBackgroundColor(window.titlebar, 0, 0, 0, 0.5)
+    window.titlebar.icon = window.titlebar:CreateTexture("$parentIcon", "ARTWORK")
+    window.titlebar.icon:SetPoint("LEFT", window.titlebar, "LEFT", 6, 0)
+    window.titlebar.icon:SetSize(20, 20)
+    window.titlebar.icon:SetTexture(addon.Constants.media.LogoTransparent)
+    window.titlebar.title = window.titlebar:CreateFontString("$parentText", "OVERLAY")
+    window.titlebar.title:SetPoint("LEFT", window.titlebar, "LEFT", 20 + addon.Constants.sizes.padding, 0)
+    window.titlebar.title:SetFontObject("SystemFont_Med3")
+    window.titlebar.title:SetText(window.config.title or window.config.name)
+    window.titlebar.CloseButton = CreateFrame("Button", "$parentCloseButton", window.titlebar)
+    window.titlebar.CloseButton:SetPoint("RIGHT", window.titlebar, "RIGHT", 0, 0)
+    window.titlebar.CloseButton:SetSize(TITLEBAR_HEIGHT, TITLEBAR_HEIGHT)
+    window.titlebar.CloseButton:RegisterForClicks("AnyUp")
+    window.titlebar.CloseButton:SetScript("OnClick", function() window:Hide() end)
+    window.titlebar.CloseButton.Icon = window.titlebar:CreateTexture("$parentIcon", "ARTWORK")
+    window.titlebar.CloseButton.Icon:SetPoint("CENTER", window.titlebar.CloseButton, "CENTER")
+    window.titlebar.CloseButton.Icon:SetSize(10, 10)
+    window.titlebar.CloseButton.Icon:SetTexture(addon.Constants.media.IconClose)
+    window.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    window.titlebar.CloseButton:SetScript("OnEnter", function()
+      window.titlebar.CloseButton.Icon:SetVertexColor(1, 1, 1, 1)
+      addon.Utils:SetBackgroundColor(window.titlebar.CloseButton, 1, 0, 0, 0.2)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
-      GameTooltip:SetOwner(windowFrame.TitleBar.CloseButton, "ANCHOR_TOP")
+      GameTooltip:SetOwner(window.titlebar.CloseButton, "ANCHOR_TOP")
       GameTooltip:SetText("Close the window", 1, 1, 1, 1, true);
-      -- GameTooltip:AddLine("Click to close the window.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
       GameTooltip:Show()
     end)
-    windowFrame.TitleBar.CloseButton:SetScript("OnLeave", function()
-      windowFrame.TitleBar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      addon.Utils:SetBackgroundColor(windowFrame.TitleBar.CloseButton, 1, 1, 1, 0)
+    window.titlebar.CloseButton:SetScript("OnLeave", function()
+      window.titlebar.CloseButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+      addon.Utils:SetBackgroundColor(window.titlebar.CloseButton, 1, 1, 1, 0)
       GameTooltip:Hide()
     end)
   end
 
-  do -- Body
-    windowFrame.Body = CreateFrame("Frame", "$parentBody", windowFrame)
-    windowFrame.Body:SetPoint("TOPLEFT", windowFrame.TitleBar, "BOTTOMLEFT")
-    windowFrame.Body:SetPoint("TOPRIGHT", windowFrame.TitleBar, "BOTTOMRIGHT")
-    windowFrame.Body:SetPoint("BOTTOMLEFT", windowFrame, "BOTTOMLEFT")
-    windowFrame.Body:SetPoint("BOTTOMRIGHT", windowFrame, "BOTTOMRIGHT")
-    addon.Utils:SetBackgroundColor(windowFrame.Body, 0, 0, 0, 0)
+  local topOffset = 0
+  local leftOffset = 0
+
+  if window.config.titlebar then
+    topOffset = -TITLEBAR_HEIGHT
   end
 
-  windowFrame:Hide()
-  table.insert(UISpecialFrames, name)
-  windows[name] = windowFrame
-  return windows[name]
+  if window.config.sidebar then
+    leftOffset = window.config.sidebar
+  end
+
+  -- Body
+  window.body = CreateFrame("Frame", "$parentBody", window)
+  window.body:SetPoint("TOPLEFT", window, "TOPLEFT", leftOffset, topOffset)
+  window.body:SetPoint("TOPRIGHT", window, "TOPRIGHT", 0, topOffset)
+  window.body:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT", leftOffset, 0)
+  window.body:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 0, 0)
+  addon.Utils:SetBackgroundColor(window.body, 0, 0, 0, 0)
+
+  -- Sidebar
+  if window.config.sidebar then
+    window.sidebar = CreateFrame("Frame", "$parentSidebar", window)
+    window.sidebar:SetPoint("TOPLEFT", window, "TOPLEFT", 0, topOffset)
+    window.sidebar:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT")
+    window.sidebar:SetWidth(window.config.sidebar)
+    addon.Utils:SetBackgroundColor(window.sidebar, 0, 0, 0, 0.3)
+  end
+
+  window:Hide()
+  table.insert(UISpecialFrames, window:GetName())
+  WindowCollection[window.config.name] = window
+  return window
+end
+
+---Get a window by name
+---@param name string
+---@return Frame
+function Window:GetWindow(name)
+  return WindowCollection[name]
+end
+
+---Scale each window
+---@param scale number
+function Window:SetWindowScale(scale)
+  addon.Utils:TableForEach(WindowCollection, function(window)
+    window:SetScale(scale)
+  end)
+end
+
+---Set background color to each window
+---@param color ColorMixin
+function Window:SetWindowBackgroundColor(color)
+  addon.Utils:TableForEach(WindowCollection, function(window)
+    addon.Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
+  end)
 end
 
 function Window:GetMaxWindowWidth()

@@ -7,178 +7,206 @@ local addon = select(2, ...)
 local Table = {}
 addon.Table = Table
 
+local TableCollection = {}
+
 function Table:New(config)
-  local instance = {
-    frame = CreateFrame("Frame"),
-    rowFrames = {},
-    config = {
-      width = 600,
-      rowHeight = 22,
-      cellPadding = 8,
-    },
-    data = {
-      columns = {
-        -- [1] = {
-        --     width = number,
-        --     align? = string,
-        -- }
+  local frame = addon.Utils:CreateScrollFrame(addonName .. "Table" .. (addon.Utils:TableCount(TableCollection) + 1))
+  frame.config = CreateFromMixins(
+    {
+      header = {
+        enabled = true,
+        sticky = false,
+        height = 30,
       },
       rows = {
-        -- [1] = {
-        --     cols = {
-        --         [1] = {
-        --             text = string
-        --         }
-        --     }
-        -- }
-      }
-    }
-  }
-  Mixin(instance.config, config or {})
-  setmetatable(instance, self)
-  self.__index = self
-  return instance;
-end
+        height = 22,
+        highlight = true,
+        striped = true
+      },
+      columns = {
+        width = 100,
+        highlight = false,
+        striped = false
+      },
+      cells = {
+        padding = 8,
+        highlight = false
+      },
+      -- width = 400,
+      -- height = 100,
+      -- maxHeight = 0,
+      -- maxWidth = 0,
+      -- width = 600,
+      -- rowHeight = 22,
+      -- cellPadding = 8,
+      -- frame = CreateFrame("Frame"),
+      -- rowFrames = {},
+      -- config = {
+      --   width = 600,
+      --   rowHeight = 22,
+      --   cellPadding = 8,
+      -- },
+      ---@type AE_TableData
+      data = {
+        columns = {},
+        rows = {},
+      },
+    },
+    config or {}
+  )
+  frame.rows = {}
+  frame.data = frame.config.data
 
-function Table:SetData(data)
-  self.data = data
-  self:Update()
-end
+  ---Set the table data
+  ---@param data AE_TableData
+  function frame:SetData(data)
+    frame.data = data
+    frame:RenderTable()
+  end
 
-function Table:SetWidth(width)
-  self.width = width
-  self:Update()
-end
+  function frame:SetRowHeight(height)
+    self.config.rows.height = height
+    self:Update()
+  end
 
-function Table:SetRowHeight(rowHeight)
-  self.config.rowHeight = rowHeight
-  self:Update()
-end
+  function frame:RenderTable()
+    local offsetY = 0
+    local offsetX = 0
 
-function Table:GetSize()
-  return self.frame:GetSize()
-end
+    addon.Utils:TableForEach(frame.rows, function(rowFrame) rowFrame:Hide() end)
+    addon.Utils:TableForEach(frame.data.rows, function(row, rowIndex)
+      local rowFrame = frame.rows[rowIndex]
+      local rowHeight = rowIndex == 1 and 30 or frame.config.rows.height
 
-function Table:Update()
-  local rows = self.data.rows
-  local rowFrames = self.rowFrames
-  for rowIndex = 1, #rows do
-    local row = rows[rowIndex]
-    local columns = row.cols
-    local rowFrame = rowFrames[rowIndex]
+      if not rowFrame then
+        rowFrame = CreateFrame("Button", "$parentRow" .. rowIndex, frame.content)
+        rowFrame.columns = {}
+        frame.rows[rowIndex] = rowFrame
+      end
 
-    if rowFrame then
+      rowFrame.data = row
+      rowFrame:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -offsetY)
+      rowFrame:SetPoint("TOPRIGHT", frame.content, "TOPRIGHT", 0, -offsetY)
+      rowFrame:SetHeight(rowHeight)
+      rowFrame:SetScript("OnEnter", function() rowFrame:onEnterHandler(rowFrame) end)
+      rowFrame:SetScript("OnLeave", function() rowFrame:onLeaveHandler(rowFrame) end)
+      rowFrame:SetScript("OnClick", function() rowFrame:onClickHandler(rowFrame) end)
       rowFrame:Show()
-    else
-      rowFrame = CreateFrame("Button", "$parentRow" .. rowIndex, self.frame)
-      rowFrames[rowIndex] = rowFrame
-    end
 
-    if not rowFrame.colFrames then
-      rowFrame.colFrames = {}
-    end
-
-    if rowIndex > 1 then
-      rowFrame:SetPoint("TOPLEFT", rowFrames[rowIndex - 1], "BOTTOMLEFT", 0, 0)
-      rowFrame:SetPoint("TOPRIGHT", rowFrames[rowIndex - 1], "BOTTOMRIGHT", 0, 0)
-
-      if rowIndex % 2 == 1 then
+      if frame.config.rows.striped and rowIndex % 2 == 1 then
         addon.Utils:SetBackgroundColor(rowFrame, 1, 1, 1, .02)
       end
-    else
-      rowFrame:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, 0)
-      rowFrame:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", 0, 0)
-      -- AlterEgo:SetBackgroundColor(rowFrame, 0, 0, 0, .3)
-    end
 
-    rowFrame:SetHeight(self.config.rowHeight)
-
-    for colIndex = 1, #columns do
-      local column = columns[colIndex]
-      local colFrame = rowFrame.colFrames[colIndex]
-
-      if colFrame then
-        colFrame:Show()
-      else
-        colFrame = CreateFrame("Button", "$parentCol" .. colIndex, rowFrame)
-        colFrame.Text = colFrame:CreateFontString("$parentText", "OVERLAY")
-        colFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
-        colFrame.Text:SetWordWrap(false)
-        colFrame.Text:SetJustifyH(self.data.columns[colIndex].align or "LEFT")
-        -- colFrame.Text:SetAllPoints()
-        colFrame.Text:SetPoint("LEFT", colFrame, "LEFT", self.config.cellPadding, 0)
-        colFrame.Text:SetPoint("RIGHT", colFrame, "RIGHT", -self.config.cellPadding, 0)
-        rowFrame.colFrames[colIndex] = colFrame
+      if row.backgroundColor then
+        addon.Utils:SetBackgroundColor(rowFrame, row.backgroundColor.r, row.backgroundColor.g, row.backgroundColor.b, row.backgroundColor.a)
       end
 
-      if colIndex > 1 then
-        colFrame:SetPoint("LEFT", rowFrame.colFrames[colIndex - 1], "RIGHT")
-      else
-        colFrame:SetPoint("LEFT", rowFrame, "LEFT")
-      end
-
-      if column.OnEnter then
-        colFrame:SetScript("OnEnter", function()
-          GameTooltip:ClearAllPoints()
-          GameTooltip:ClearLines()
-          GameTooltip:SetOwner(colFrame, "ANCHOR_RIGHT")
-          column.OnEnter(column)
-          GameTooltip:Show()
-          if not column.backgroundColor then
-            addon.Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0.05)
-          end
-        end)
-        colFrame:SetScript("OnLeave", function()
-          GameTooltip:Hide()
-          if not column.backgroundColor then
-            addon.Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0)
-          end
-        end)
-      else
-        if not column.backgroundColor then
-          colFrame:SetScript("OnEnter", function()
-            addon.Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0.05)
-          end)
-          colFrame:SetScript("OnLeave", function()
-            addon.Utils:SetBackgroundColor(colFrame, 1, 1, 1, 0)
-          end)
+      function rowFrame:onEnterHandler(arg1, arg2, arg3)
+        if rowIndex > 1 then
+          addon.Utils:SetHighlightColor(rowFrame, 1, 1, 1, .03)
+        end
+        if row.OnEnter then
+          row:OnEnter(arg1, arg2, arg3)
         end
       end
 
-      if column.OnClick then
-        colFrame:SetScript("OnClick", column.OnClick)
-      else
-        colFrame:SetScript("OnClick", nil)
+      function rowFrame:onLeaveHandler(...)
+        if rowIndex > 1 then
+          addon.Utils:SetHighlightColor(rowFrame, 1, 1, 1, 0)
+        end
+        if row.OnLeave then
+          row:OnLeave(...)
+        end
       end
 
-      if column.backgroundColor then
-        addon.Utils:SetBackgroundColor(colFrame, column.backgroundColor.r, column.backgroundColor.g, column.backgroundColor.b, column.backgroundColor.a)
+      function rowFrame:onClickHandler(...)
+        if row.OnClick then
+          row:OnClick(...)
+        end
       end
 
-      colFrame:SetSize(self.data.columns[colIndex].width, self.config.rowHeight)
-      colFrame.Text:SetText(column.text)
-      colFrame:Show()
-    end
+      -- Sticky header
+      if frame.config.header.sticky and rowIndex == 1 then
+        if frame then
+          rowFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -offsetY)
+          rowFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -offsetY)
+          -- rowFrame:SetToplevel(true)
+          rowFrame:SetFrameStrata("HIGH")
+        end
+        if not row.backgroundColor then
+          addon.Utils:SetBackgroundColor(rowFrame, Constants.colors.sidebar.r, Constants.colors.sidebar.g, Constants.colors.sidebar.b, 1)
+        end
+      end
 
-    -- Hide extra unused columns
-    local ce = #columns + 1
-    while rowFrame.colFrames[ce] do
-      rowFrame.colFrames[ce]:Hide()
-      ce = ce + 1
-    end
+      offsetX = 0
+      addon.Utils:TableForEach(rowFrame.columns, function(columnFrame) columnFrame:Hide() end)
+      addon.Utils:TableForEach(row.columns, function(column, columnIndex)
+        local columnFrame = rowFrame.columns[columnIndex]
+        local columnConfig = frame.data.columns[columnIndex]
+        local columnWidth = columnConfig and columnConfig.width or frame.config.columns.width
+        local columnTextAlign = columnConfig and columnConfig.align or "LEFT"
+
+        if not columnFrame then
+          columnFrame = CreateFrame("Button", "$parentCol" .. columnIndex, rowFrame)
+          columnFrame.text = columnFrame:CreateFontString("$parentText", "OVERLAY")
+          columnFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+          rowFrame.columns[columnIndex] = columnFrame
+        end
+
+        columnFrame.data = column
+        columnFrame:SetPoint("TOPLEFT", rowFrame, "TOPLEFT", offsetX, 0)
+        columnFrame:SetPoint("BOTTOMLEFT", rowFrame, "BOTTOMLEFT", offsetX, 0)
+        columnFrame:SetWidth(columnWidth)
+        columnFrame:SetScript("OnEnter", function() columnFrame:onEnterHandler(columnFrame) end)
+        columnFrame:SetScript("OnLeave", function() columnFrame:onLeaveHandler(columnFrame) end)
+        columnFrame:SetScript("OnClick", function() columnFrame:onClickHandler(columnFrame) end)
+        columnFrame.text:SetWordWrap(false)
+        columnFrame.text:SetJustifyH(columnTextAlign)
+        columnFrame.text:SetPoint("TOPLEFT", columnFrame, "TOPLEFT", frame.config.cells.padding, -frame.config.cells.padding)
+        columnFrame.text:SetPoint("BOTTOMRIGHT", columnFrame, "BOTTOMRIGHT", -frame.config.cells.padding, frame.config.cells.padding)
+        columnFrame.text:SetText(column.text)
+        columnFrame:Show()
+
+        if column.backgroundColor then
+          addon.Utils:SetBackgroundColor(columnFrame, column.backgroundColor.r, column.backgroundColor.g, column.backgroundColor.b, column.backgroundColor.a)
+        end
+
+        function columnFrame:onEnterHandler(...)
+          rowFrame:onEnterHandler(...)
+          if column.onEnter then
+            column.onEnter(...)
+          end
+        end
+
+        function columnFrame:onLeaveHandler(...)
+          rowFrame:onLeaveHandler(...)
+          if column.onLeave then
+            column.onLeave(...)
+          end
+          -- TODO: move tooltip stuff to the callback source
+          if column.onEnter then
+            GameTooltip:Hide()
+          end
+        end
+
+        function columnFrame:onClickHandler(...)
+          rowFrame:onClickHandler(...)
+          if column.onClick then
+            column:onClick(...)
+          end
+        end
+
+        offsetX = offsetX + columnWidth
+      end)
+
+      offsetY = offsetY + rowHeight
+    end)
+
+    frame.content:SetSize(offsetX, offsetY)
   end
 
-  -- Hide extra unused rows
-  local re = #rows + 1
-  while rowFrames[re] do
-    rowFrames[re]:Hide()
-    re = re + 1
-  end
-
-  local width = 0
-  for colIndex = 1, #self.data.columns do
-    width = width + self.data.columns[colIndex].width
-  end
-
-  self.frame:SetSize(width, #rows * self.config.rowHeight)
+  frame:HookScript("OnSizeChanged", function() frame:RenderTable() end)
+  frame:RenderTable()
+  table.insert(TableCollection, frame)
+  return frame;
 end

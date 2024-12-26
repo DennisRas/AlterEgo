@@ -347,38 +347,38 @@ Data.keystones = {
 
 ---@type AE_Dungeon[]
 Data.dungeons = {
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 206, mapId = 1458, encounters = {}, loot = {}, spellID = 410078,                                                        time = 0, abbr = "NL",    name = "Neltharion's Lair"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 245, mapId = 1754, encounters = {}, loot = {}, spellID = 410071,                                                        time = 0, abbr = "FH",    name = "Freehold"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 251, mapId = 1841, encounters = {}, loot = {}, spellID = 410074,                                                        time = 0, abbr = "UNDR",  name = "The Underrot"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 403, mapId = 2451, encounters = {}, loot = {}, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 404, mapId = 2519, encounters = {}, loot = {}, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 405, mapId = 2520, encounters = {}, loot = {}, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 406, mapId = 2527, encounters = {}, loot = {}, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
-  {seasonID = 10, seasonDisplayID = 2, challengeModeID = 438, mapId = 657,  encounters = {}, loot = {}, spellID = 410080,                                                        time = 0, abbr = "VP",    name = "The Vortex Pinnacle"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 168, mapId = 1279, encounters = {}, loot = {}, spellID = 159901,                                                        time = 0, abbr = "EB",    name = "The Everbloom"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 198, mapId = 1466, encounters = {}, loot = {}, spellID = 424163,                                                        time = 0, abbr = "DHT",   name = "Darkheart Thicket"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 199, mapId = 1501, encounters = {}, loot = {}, spellID = 424153,                                                        time = 0, abbr = "BRH",   name = "Black Rook Hold"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 244, mapId = 1763, encounters = {}, loot = {}, spellID = 424187,                                                        time = 0, abbr = "AD",    name = "Atal'Dazar"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 248, mapId = 1862, encounters = {}, loot = {}, spellID = 424167,                                                        time = 0, abbr = "WM",    name = "Waycrest Manor"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 456, mapId = 643,  encounters = {}, loot = {}, spellID = 424142,                                                        time = 0, abbr = "TOTT",  name = "Throne of the Tides"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 463, mapId = 2579, encounters = {}, loot = {}, spellID = 424197,                                                        time = 0, abbr = "FALL",  name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
-  {seasonID = 11, seasonDisplayID = 3, challengeModeID = 464, mapId = 2579, encounters = {}, loot = {}, spellID = 424197,                                                        time = 0, abbr = "RISE",  name = "Dawn of the Infinite: Murozond's Rise",  short = "DOTI: Murozond's Rise"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 399, mapId = 2521, encounters = {}, loot = {}, spellID = 393256,                                                        time = 0, abbr = "RLP",   name = "Ruby Life Pools"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 400, mapId = 2516, encounters = {}, loot = {}, spellID = 393262,                                                        time = 0, abbr = "NO",    name = "The Nokhud Offensive"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 401, mapId = 2515, encounters = {}, loot = {}, spellID = 393279,                                                        time = 0, abbr = "AV",    name = "The Azure Vault"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 402, mapId = 2526, encounters = {}, loot = {}, spellID = 393273,                                                        time = 0, abbr = "AA",    name = "Algeth'ar Academy"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 403, mapId = 2451, encounters = {}, loot = {}, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 404, mapId = 2519, encounters = {}, loot = {}, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 405, mapId = 2520, encounters = {}, loot = {}, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
-  {seasonID = 12, seasonDisplayID = 4, challengeModeID = 406, mapId = 2527, encounters = {}, loot = {}, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 503, mapId = 2660, encounters = {}, loot = {}, spellID = 445417,                                                        time = 0, abbr = "ARAK",  name = "Ara-Kara, City of Echoes"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 502, mapId = 2669, encounters = {}, loot = {}, spellID = 445416,                                                        time = 0, abbr = "COT",   name = "City of Threads"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 507, mapId = 670,  encounters = {}, loot = {}, spellID = 445424,                                                        time = 0, abbr = "GB",    name = "Grim Batol"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 375, mapId = 2290, encounters = {}, loot = {}, spellID = 354464,                                                        time = 0, abbr = "MISTS", name = "Mists of Tirna Scithe"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 353, mapId = 1822, encounters = {}, loot = {}, spellID = UnitFactionGroup("player") == "Alliance" and 445418 or 464256, time = 0, abbr = "SIEGE", name = "Siege of Boralus"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 505, mapId = 2662, encounters = {}, loot = {}, spellID = 445414,                                                        time = 0, abbr = "DAWN",  name = "The Dawnbreaker"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 376, mapId = 2286, encounters = {}, loot = {}, spellID = 354462,                                                        time = 0, abbr = "NW",    name = "The Necrotic Wake"},
-  {seasonID = 13, seasonDisplayID = 1, challengeModeID = 501, mapId = 2652, encounters = {}, loot = {}, spellID = 445269,                                                        time = 0, abbr = "SV",    name = "The Stonevault"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 767,  challengeModeID = 206, mapId = 1458, encounters = {}, loot = {}, spellID = 410078,                                                        time = 0, abbr = "NL",    name = "Neltharion's Lair"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1001, challengeModeID = 245, mapId = 1754, encounters = {}, loot = {}, spellID = 410071,                                                        time = 0, abbr = "FH",    name = "Freehold"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1022, challengeModeID = 251, mapId = 1841, encounters = {}, loot = {}, spellID = 410074,                                                        time = 0, abbr = "UNDR",  name = "The Underrot"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1197, challengeModeID = 403, mapId = 2451, encounters = {}, loot = {}, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1199, challengeModeID = 404, mapId = 2519, encounters = {}, loot = {}, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1196, challengeModeID = 405, mapId = 2520, encounters = {}, loot = {}, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1204, challengeModeID = 406, mapId = 2527, encounters = {}, loot = {}, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
+  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 68,   challengeModeID = 438, mapId = 657,  encounters = {}, loot = {}, spellID = 410080,                                                        time = 0, abbr = "VP",    name = "The Vortex Pinnacle"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 556,  challengeModeID = 168, mapId = 1279, encounters = {}, loot = {}, spellID = 159901,                                                        time = 0, abbr = "EB",    name = "The Everbloom"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 762,  challengeModeID = 198, mapId = 1466, encounters = {}, loot = {}, spellID = 424163,                                                        time = 0, abbr = "DHT",   name = "Darkheart Thicket"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 740,  challengeModeID = 199, mapId = 1501, encounters = {}, loot = {}, spellID = 424153,                                                        time = 0, abbr = "BRH",   name = "Black Rook Hold"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 968,  challengeModeID = 244, mapId = 1763, encounters = {}, loot = {}, spellID = 424187,                                                        time = 0, abbr = "AD",    name = "Atal'Dazar"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1021, challengeModeID = 248, mapId = 1862, encounters = {}, loot = {}, spellID = 424167,                                                        time = 0, abbr = "WM",    name = "Waycrest Manor"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 65,   challengeModeID = 456, mapId = 643,  encounters = {}, loot = {}, spellID = 424142,                                                        time = 0, abbr = "TOTT",  name = "Throne of the Tides"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1209, challengeModeID = 463, mapId = 2579, encounters = {}, loot = {}, spellID = 424197,                                                        time = 0, abbr = "FALL",  name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
+  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1209, challengeModeID = 464, mapId = 2579, encounters = {}, loot = {}, spellID = 424197,                                                        time = 0, abbr = "RISE",  name = "Dawn of the Infinite: Murozond's Rise",  short = "DOTI: Murozond's Rise"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1202, challengeModeID = 399, mapId = 2521, encounters = {}, loot = {}, spellID = 393256,                                                        time = 0, abbr = "RLP",   name = "Ruby Life Pools"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1198, challengeModeID = 400, mapId = 2516, encounters = {}, loot = {}, spellID = 393262,                                                        time = 0, abbr = "NO",    name = "The Nokhud Offensive"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1203, challengeModeID = 401, mapId = 2515, encounters = {}, loot = {}, spellID = 393279,                                                        time = 0, abbr = "AV",    name = "The Azure Vault"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1201, challengeModeID = 402, mapId = 2526, encounters = {}, loot = {}, spellID = 393273,                                                        time = 0, abbr = "AA",    name = "Algeth'ar Academy"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1197, challengeModeID = 403, mapId = 2451, encounters = {}, loot = {}, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1199, challengeModeID = 404, mapId = 2519, encounters = {}, loot = {}, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1196, challengeModeID = 405, mapId = 2520, encounters = {}, loot = {}, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
+  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1204, challengeModeID = 406, mapId = 2527, encounters = {}, loot = {}, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1271, challengeModeID = 503, mapId = 2660, encounters = {}, loot = {}, spellID = 445417,                                                        time = 0, abbr = "ARAK",  name = "Ara-Kara, City of Echoes"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1274, challengeModeID = 502, mapId = 2669, encounters = {}, loot = {}, spellID = 445416,                                                        time = 0, abbr = "COT",   name = "City of Threads"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 71,   challengeModeID = 507, mapId = 670,  encounters = {}, loot = {}, spellID = 445424,                                                        time = 0, abbr = "GB",    name = "Grim Batol"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1184, challengeModeID = 375, mapId = 2290, encounters = {}, loot = {}, spellID = 354464,                                                        time = 0, abbr = "MISTS", name = "Mists of Tirna Scithe"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1023, challengeModeID = 353, mapId = 1822, encounters = {}, loot = {}, spellID = UnitFactionGroup("player") == "Alliance" and 445418 or 464256, time = 0, abbr = "SIEGE", name = "Siege of Boralus"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1270, challengeModeID = 505, mapId = 2662, encounters = {}, loot = {}, spellID = 445414,                                                        time = 0, abbr = "DAWN",  name = "The Dawnbreaker"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1182, challengeModeID = 376, mapId = 2286, encounters = {}, loot = {}, spellID = 354462,                                                        time = 0, abbr = "NW",    name = "The Necrotic Wake"},
+  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1269, challengeModeID = 501, mapId = 2652, encounters = {}, loot = {}, spellID = 445269,                                                        time = 0, abbr = "SV",    name = "The Stonevault"},
 }
 
 ---@type AE_Raid[]
@@ -790,7 +790,7 @@ function Data:TaskSeasonReset()
 end
 
 function Data:loadGameData()
-  -- local seasonID = self:GetCurrentSeason()
+  local seasonID = self:GetCurrentSeason()
 
   for _, raid in pairs(self.raids) do
     -- if raid.seasonID == seasonID then
@@ -827,27 +827,30 @@ function Data:loadGameData()
     --   EJ_ResetLootFilter()
     -- end
 
-    local encounterIndex = 1
-    local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-    while bossID do
-      local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-      ---@type AE_Encounter
-      local encounter = {
-        index = encounterIndex,
-        name = name,
-        description = description,
-        journalInstanceID = journalInstanceID,
-        journalEncounterID = journalEncounterID,
-        journalEncounterSectionID = journalEncounterSectionID,
-        journalLink = journalLink,
-        instanceID = instanceID,
-        instanceEncounterID = instanceEncounterID,
-      }
-      raid.encounters[encounterIndex] = encounter
-      encounterIndex = encounterIndex + 1
-      _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+    if raid.seasonID == seasonID then
+      local encounterIndex = 1
+      EJ_SelectInstance(raid.journalInstanceID)
+      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+      while bossID do
+        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+        ---@type AE_Encounter
+        local encounter = {
+          index = encounterIndex,
+          name = name,
+          description = description,
+          journalInstanceID = journalInstanceID,
+          journalEncounterID = journalEncounterID,
+          journalEncounterSectionID = journalEncounterSectionID,
+          journalLink = journalLink,
+          instanceID = instanceID,
+          instanceEncounterID = instanceEncounterID,
+        }
+        raid.encounters[encounterIndex] = encounter
+        encounterIndex = encounterIndex + 1
+        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+      end
+      raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
     end
-    raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
   end
 
   for _, dungeon in pairs(self.dungeons) do
@@ -887,31 +890,34 @@ function Data:loadGameData()
     --   EJ_ResetLootFilter()
     -- end
 
-    -- TODO: Get and store more dungeon data for m+
-    local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
-    dungeon.name = dungeonName
-    dungeon.time = dungeonTimeLimit
-    dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
+    if dungeon.seasonID == seasonID then
+      -- TODO: Get and store more dungeon data for m+
+      local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
+      dungeon.name = dungeonName
+      dungeon.time = dungeonTimeLimit
+      dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
 
-    local encounterIndex = 1
-    local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-    while bossID do
-      local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-      ---@type AE_Encounter
-      local encounter = {
-        index = encounterIndex,
-        name = name,
-        description = description,
-        journalEncounterID = journalEncounterID,
-        journalEncounterSectionID = journalEncounterSectionID,
-        journalLink = journalLink,
-        journalInstanceID = journalInstanceID,
-        instanceEncounterID = instanceEncounterID,
-        instanceID = instanceID,
-      }
-      dungeon.encounters[encounterIndex] = encounter
-      encounterIndex = encounterIndex + 1
-      _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+      local encounterIndex = 1
+      EJ_SelectInstance(dungeon.journalInstanceID)
+      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+      while bossID do
+        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+        ---@type AE_Encounter
+        local encounter = {
+          index = encounterIndex,
+          name = name,
+          description = description,
+          journalEncounterID = journalEncounterID,
+          journalEncounterSectionID = journalEncounterSectionID,
+          journalLink = journalLink,
+          journalInstanceID = journalInstanceID,
+          instanceEncounterID = instanceEncounterID,
+          instanceID = instanceID,
+        }
+        dungeon.encounters[encounterIndex] = encounter
+        encounterIndex = encounterIndex + 1
+        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+      end
     end
   end
 
@@ -983,7 +989,7 @@ function Data:UpdateRaidInstances()
     end
     character.raids.savedInstances[savedInstanceIndex] = savedInstance
   end
-  addon.UI:UpdateUI()
+  addon.UI:Render()
 end
 
 function Data:UpdateCharacterInfo()
@@ -1019,7 +1025,7 @@ function Data:UpdateCharacterInfo()
   if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
 
   character.lastUpdate = GetServerTime()
-  addon.UI:UpdateUI()
+  addon.UI:Render()
 end
 
 function Data:UpdateCurrencies()
@@ -1174,14 +1180,14 @@ function Data:UpdateKeystoneItem()
 
   if newKeystone then
     if IsInGroup() and self.db.global.announceKeystones.autoParty then
-      SendChatMessage(self.constants.prefix .. "New Keystone: " .. keystoneItemLink, "PARTY")
+      SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. keystoneItemLink, "PARTY")
     end
     if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-      SendChatMessage(self.constants.prefix .. "New Keystone: " .. keystoneItemLink, "GUILD")
+      SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. keystoneItemLink, "GUILD")
     end
   end
 
-  addon.UI:UpdateUI()
+  addon.UI:Render()
 end
 
 function Data:UpdateVault()
@@ -1203,7 +1209,7 @@ function Data:UpdateVault()
   end)
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
-  addon.UI:UpdateUI()
+  addon.UI:Render()
 end
 
 function Data:UpdateMythicPlus()
@@ -1267,7 +1273,7 @@ function Data:UpdateMythicPlus()
     end
     table.insert(character.mythicplus.dungeons, dungeon)
   end
-  addon.UI:UpdateUI()
+  addon.UI:Render()
 end
 
 -- function Data:GetClasses()
