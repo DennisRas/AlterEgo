@@ -831,11 +831,13 @@ function UI:RenderMainWindow()
         affixFrame:SetScript("OnClick", function()
           addon.Window:ToggleWindow("Affixes")
         end)
+
         if affixIndex == 1 then
-          if numCharacters == 1 then
+          affixFrame:ClearAllPoints()
+          if numCharacters < 3 then
             affixFrame:SetPoint("LEFT", self.window.titlebar.icon, "RIGHT", 6, 0)
           else
-            affixFrame:SetPoint("CENTER", self.window.titlebar, "CENTER", -((addon.Utils:TableCount(currentAffixes) * 20) / 2), 0)
+            affixFrame:SetPoint("CENTER", affixAnchor, "CENTER", -((addon.Utils:TableCount(currentAffixes) * 20) / 2), 0)
           end
         else
           affixFrame:SetPoint("LEFT", affixAnchor, "RIGHT", 6, 0)
@@ -1453,11 +1455,11 @@ function UI:RenderMainWindow()
     self.window.zeroCharacters:SetText(zeroCharactersText)
   end
 
-  if numCharacters == 1 then
-    self.window.titlebar.title:Hide()
-  else
-    self.window.titlebar.title:Show()
-  end
+  -- if numCharacters == 1 then
+  --   self.window.titlebar.title:Hide()
+  -- else
+  --   self.window.titlebar.title:Show()
+  -- end
 end
 
 function UI:SetupButtons()
