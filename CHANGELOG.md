@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.0 - ?
+
+### Updated
+
+- Rendering code for the UI has been completely rewritten for a much better performance
+- Improved the scrolling logic and responsiveness
+
+### Fixed
+
+- The position of windows are now saved between reloads/sessions
+
 ## v1.1.17 - 2024-12-21
 
 ### Added
