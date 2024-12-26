@@ -103,7 +103,7 @@ function Table:New(config)
 
       function rowFrame:onEnterHandler(arg1, arg2, arg3)
         if rowIndex > 1 then
-          addon.Utils:SetHighlightColor(rowFrame, 1, 1, 1, .03)
+          addon.Utils:SetHighlightColor(rowFrame, 1, 1, 1, .05)
         end
         if row.OnEnter then
           row:OnEnter(arg1, arg2, arg3)
@@ -169,6 +169,8 @@ function Table:New(config)
 
         if column.backgroundColor then
           addon.Utils:SetBackgroundColor(columnFrame, column.backgroundColor.r, column.backgroundColor.g, column.backgroundColor.b, column.backgroundColor.a)
+        else
+          addon.Utils:SetBackgroundColor(columnFrame, 0, 0, 0, 0)
         end
 
         function columnFrame:onEnterHandler(...)
