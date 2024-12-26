@@ -50,6 +50,14 @@
 ---@field vault { hasAVailableRewards: boolean, slots: AE_CharacterVault[]}
 -- -@field pvp table
 
+---@class AE_CharacterInfo
+---@field label string
+---@field value function
+---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
+---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
+---@field onClick fun(infoFrame: Frame, character: AE_Character)?
+---@field enabled boolean
+
 ---@class AE_Affix
 ---@field id number
 ---@field base 0 | 1

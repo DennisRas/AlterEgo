@@ -25,7 +25,7 @@ end
 
 ---Set the highlight color for a parent frame
 ---@param parent Frame
----@param r number|table
+---@param r number|table?
 ---@param g number?
 ---@param b number?
 ---@param a number?
@@ -50,7 +50,7 @@ function Utils:SetHighlightColor(parent, r, g, b, a)
     b = 1
   end
   if a == nil then
-    a = 0.1
+    a = 0.05
   end
 
   parent.Highlight:SetVertexColor(r, g, b, a)

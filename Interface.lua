@@ -65,6 +65,8 @@ function UI:GetCharacterInfo(unfiltered)
   local dungeons = addon.Data:GetDungeons()
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local _, seasonDisplayID = addon.Data:GetCurrentSeason()
+
+  ---@type AE_CharacterInfo[]
   local rows = {
     {
       label = CHARACTER,
@@ -82,7 +84,7 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return "|c" .. nameColor .. name .. "|r"
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
         local name = "-"
         local nameColor = "ffffffff"
         local characterCurrencies = {}
@@ -99,6 +101,7 @@ function UI:GetCharacterInfo(unfiltered)
         if not addon.Data.db.global.showRealms then
           name = name .. format(" (%s)", character.info.realm)
         end
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine(name, 1, 1, 1)
         GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1)
         if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
@@ -143,8 +146,12 @@ function UI:GetCharacterInfo(unfiltered)
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine("<Click to View Equipment>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
         end
+        GameTooltip:Show()
       end,
-      OnClick = function(character)
+      onLeave = function()
+        GameTooltip:Hide()
+      end,
+      onClick = function(infoFrame, character)
         local window = addon.Window:GetWindow("Equipment")
         if not window then return end
         if self.equipmentCharacter and self.equipmentCharacter == character and window:IsVisible() then
@@ -188,7 +195,7 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return WrapTextInColorCode(itemLevel, itemLevelColor)
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
         local itemLevelTooltip = ""
         local itemLevelTooltip2 = STAT_AVERAGE_ITEM_LEVEL_TOOLTIP
         if character.info.ilvl ~= nil then
@@ -205,8 +212,13 @@ function UI:GetCharacterInfo(unfiltered)
             itemLevelTooltip2 = itemLevelTooltip2 .. "\n\n" .. STAT_AVERAGE_PVP_ITEM_LEVEL:format(tostring(floor(character.info.ilvl.pvp)))
           end
         end
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine(itemLevelTooltip, 1, 1, 1)
         GameTooltip:AddLine(itemLevelTooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true)
+        GameTooltip:Show()
+      end,
+      onLeave = function()
+        GameTooltip:Hide()
       end,
       enabled = true,
     },
@@ -226,7 +238,7 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return ratingColor:WrapTextInColorCode(rating)
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
         local rating = "-"
         local ratingColor = WHITE_FONT_COLOR
         local bestSeasonScore = nil
@@ -253,6 +265,7 @@ function UI:GetCharacterInfo(unfiltered)
           end
           rating = tostring(character.mythicplus.rating)
         end
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1)
         GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -294,8 +307,12 @@ function UI:GetCharacterInfo(unfiltered)
             GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
           end
         end
+        GameTooltip:Show()
       end,
-      OnClick = function(character)
+      onLeave = function()
+        GameTooltip:Hide()
+      end,
+      onClick = function(infoFrame, character)
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
           numSeasonRuns = addon.Utils:TableCount(character.mythicplus.runHistory)
@@ -351,14 +368,19 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return currentKeystone
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
         if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
+          GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
           GameTooltip:SetHyperlink(character.mythicplus.keystone.itemLink)
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+          GameTooltip:Show()
         end
       end,
-      OnClick = function(character)
+      onLeave = function()
+        GameTooltip:Hide()
+      end,
+      onClick = function(infoFrame, character)
         if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
           if IsModifiedClick("CHATLINK") then
             if not ChatEdit_InsertLink(character.mythicplus.keystone.itemLink) then
@@ -377,11 +399,16 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return ""
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
         if character.vault.hasAvailableRewards == true then
+          GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
           GameTooltip:AddLine("It's payday!", WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
           GameTooltip:AddLine(GREAT_VAULT_REWARDS_WAITING, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true)
+          GameTooltip:Show()
         end
+      end,
+      onLeave = function()
+        GameTooltip:Hide()
       end,
       backgroundColor = {r = 0, g = 0, b = 0, a = 0.3},
       enabled = true,
@@ -424,7 +451,8 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return table.concat(values, "  ")
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
         local characterSlots = character.vault.slots or {}
         local activities = addon.Utils:TableFilter(characterSlots, function(slot)
@@ -485,6 +513,10 @@ function UI:GetCharacterInfo(unfiltered)
             GameTooltip:AddLine(tooltip, nil, nil, nil, true)
           end
         end
+        GameTooltip:Show()
+      end,
+      onLeave = function()
+        GameTooltip:Hide()
       end,
       enabled = addon.Data.db.global.raids.enabled,
     },
@@ -518,7 +550,8 @@ function UI:GetCharacterInfo(unfiltered)
         end
         return table.concat(value, "  ")
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
         local addBlankLine = false
 
@@ -615,6 +648,10 @@ function UI:GetCharacterInfo(unfiltered)
           end
           addBlankLine = lineAdded
         end
+        GameTooltip:Show()
+      end,
+      OnLeave = function()
+        GameTooltip:Hide()
       end,
       enabled = true,
     },
@@ -639,7 +676,8 @@ function UI:GetCharacterInfo(unfiltered)
 
         return table.concat(values, "  ")
       end,
-      OnEnter = function(character)
+      onEnter = function(infoFrame, character)
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Vault Progress", 1, 1, 1)
         local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(actvity) return actvity.type and actvity.type == Enum.WeeklyRewardChestThresholdType.World end)
         local lockedActivities = addon.Utils:TableFilter(activities, function(activity) return activity.progress < activity.threshold end)
@@ -693,6 +731,10 @@ function UI:GetCharacterInfo(unfiltered)
             GameTooltip:AddLine(tooltip, nil, nil, nil, true)
           end
         end
+        GameTooltip:Show()
+      end,
+      onLeave = function()
+        GameTooltip:Hide()
       end,
       enabled = addon.Data.db.global.world and addon.Data.db.global.world.enabled == true,
     },
@@ -816,8 +858,6 @@ function UI:RenderMainWindow()
         affixFrame:SetSize(20, 20)
         affixFrame:SetNormalTexture(fileDataID)
         affixFrame:SetScript("OnEnter", function()
-          GameTooltip:ClearAllPoints()
-          GameTooltip:ClearLines()
           GameTooltip:SetOwner(affixFrame, "ANCHOR_TOP")
           GameTooltip:SetText(name, 1, 1, 1);
           GameTooltip:AddLine(desc, nil, nil, nil, true)
@@ -921,8 +961,6 @@ function UI:RenderMainWindow()
         end
 
         dungeonFrame:SetScript("OnEnter", function()
-          GameTooltip:ClearAllPoints()
-          GameTooltip:ClearLines()
           ---@diagnostic disable-next-line: param-type-mismatch
           GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
           GameTooltip:SetText(dungeon.name, 1, 1, 1);
@@ -976,8 +1014,6 @@ function UI:RenderMainWindow()
             end
 
             raidFrame:SetScript("OnEnter", function()
-              GameTooltip:ClearAllPoints()
-              GameTooltip:ClearLines()
               GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
               GameTooltip:SetText(raid.name, 1, 1, 1);
               if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
@@ -1021,8 +1057,6 @@ function UI:RenderMainWindow()
               end
 
               difficultyFrame:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
                 GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetText(difficulty.name, 1, 1, 1);
                 GameTooltip:Show()
@@ -1056,7 +1090,6 @@ function UI:RenderMainWindow()
         characterFrame.dungeonFrames = {}
         characterFrame.raidFrames = {}
         characterFrame.affixHeaderFrame = CreateFrame("Frame", "$parentAffixes", characterFrame)
-        addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
         self.window.characterFrames[characterIndex] = characterFrame
       end
 
@@ -1077,9 +1110,6 @@ function UI:RenderMainWindow()
             infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
             infoFrame.text:SetJustifyH("CENTER")
             infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-            if info.backgroundColor then
-              addon.Utils:SetBackgroundColor(infoFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
-            end
             characterFrame.infoFrames[infoIndex] = infoFrame
           end
 
@@ -1087,39 +1117,35 @@ function UI:RenderMainWindow()
             infoFrame.text:SetText(info.value(character))
           end
 
-          if info.OnEnter then
-            infoFrame:SetScript("OnEnter", function()
-              GameTooltip:ClearAllPoints()
-              GameTooltip:ClearLines()
-              GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
-              info.OnEnter(character)
-              GameTooltip:Show()
-              if not info.backgroundColor then
-                addon.Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0.05)
-              end
-            end)
-            infoFrame:SetScript("OnLeave", function()
-              GameTooltip:Hide()
-              if not info.backgroundColor then
-                addon.Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0)
-              end
-            end)
+          if info.backgroundColor then
+            addon.Utils:SetBackgroundColor(infoFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
           else
-            if not info.backgroundColor then
-              infoFrame:SetScript("OnEnter", function()
-                addon.Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0.05)
-              end)
-              infoFrame:SetScript("OnLeave", function()
-                addon.Utils:SetBackgroundColor(infoFrame, 1, 1, 1, 0)
-              end)
-            end
+            addon.Utils:SetBackgroundColor(infoFrame, 0, 0, 0, 0)
           end
 
-          if info.OnClick then
-            infoFrame:SetScript("OnClick", function()
-              info.OnClick(character)
-            end)
-          end
+          infoFrame:SetScript("OnEnter", function()
+            if info.onEnter then
+              info.onEnter(infoFrame, character)
+            end
+            if not info.backgroundColor then
+              addon.Utils:SetHighlightColor(infoFrame)
+            end
+          end)
+          infoFrame:SetScript("OnLeave", function()
+            -- GameTooltip:Hide()
+            if info.onLeave then
+              info.onLeave(infoFrame, character)
+            end
+            if not info.backgroundColor then
+              addon.Utils:SetHighlightColor(infoFrame, 1, 1, 1, 0)
+            end
+          end)
+
+          infoFrame:SetScript("OnClick", function()
+            if info.onClick then
+              info.onClick(infoFrame, character)
+            end
+          end)
 
           infoFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
           infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
@@ -1133,6 +1159,7 @@ function UI:RenderMainWindow()
         characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
         characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
         characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
+        addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
         rowCount = rowCount + 1
       end
 
@@ -1240,8 +1267,6 @@ function UI:RenderMainWindow()
           end
 
           dungeonFrame:SetScript("OnEnter", function()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:ClearLines()
             GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText(dungeon.name, 1, 1, 1)
 
@@ -1274,11 +1299,11 @@ function UI:RenderMainWindow()
             GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
             GameTooltip:Show()
 
-            addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, 0.05)
+            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
           end)
           dungeonFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
-            addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
           end)
 
           addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
@@ -1299,10 +1324,10 @@ function UI:RenderMainWindow()
               raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, characterFrame)
               raidFrame.difficultyFrames = {}
               raidFrame.headerFrame = CreateFrame("Frame", "$parentHeader", raidFrame)
-              addon.Utils:SetBackgroundColor(raidFrame.headerFrame, 0, 0, 0, 0.3)
               characterFrame.raidFrames[raidIndex] = raidFrame
             end
 
+            addon.Utils:SetBackgroundColor(raidFrame.headerFrame, 0, 0, 0, 0.3)
             raidFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
             raidFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
             raidFrame:Show()
@@ -1323,8 +1348,6 @@ function UI:RenderMainWindow()
               end
 
               difficultyFrame:SetScript("OnEnter", function()
-                GameTooltip:ClearAllPoints()
-                GameTooltip:ClearLines()
                 GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
                 GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
@@ -1355,12 +1378,12 @@ function UI:RenderMainWindow()
                   GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
                 end)
                 GameTooltip:Show()
-                addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, 0.05)
+                addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
               end)
 
               difficultyFrame:SetScript("OnLeave", function()
                 GameTooltip:Hide()
-                addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, 0)
+                addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
               end)
 
               addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
@@ -1785,8 +1808,6 @@ function UI:SetupButtons()
   self.window.titlebar.SettingsButton:SetScript("OnEnter", function()
     self.window.titlebar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
     addon.Utils:SetBackgroundColor(self.window.titlebar.SettingsButton, 1, 1, 1, 0.05)
-    GameTooltip:ClearAllPoints()
-    GameTooltip:ClearLines()
     GameTooltip:SetOwner(self.window.titlebar.SettingsButton, "ANCHOR_TOP")
     GameTooltip:SetText("Settings", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -1835,8 +1856,6 @@ function UI:SetupButtons()
   self.window.titlebar.SortingButton:SetScript("OnEnter", function()
     self.window.titlebar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
     addon.Utils:SetBackgroundColor(self.window.titlebar.SortingButton, 1, 1, 1, 0.05)
-    GameTooltip:ClearAllPoints()
-    GameTooltip:ClearLines()
     GameTooltip:SetOwner(self.window.titlebar.SortingButton, "ANCHOR_TOP")
     GameTooltip:SetText("Sorting", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -1895,8 +1914,6 @@ function UI:SetupButtons()
   self.window.titlebar.CharactersButton:SetScript("OnEnter", function()
     self.window.titlebar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
     addon.Utils:SetBackgroundColor(self.window.titlebar.CharactersButton, 1, 1, 1, 0.05)
-    GameTooltip:ClearAllPoints()
-    GameTooltip:ClearLines()
     GameTooltip:SetOwner(self.window.titlebar.CharactersButton, "ANCHOR_TOP")
     GameTooltip:SetText("Characters", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -1990,8 +2007,6 @@ function UI:SetupButtons()
   self.window.titlebar.AnnounceButton:SetScript("OnEnter", function()
     self.window.titlebar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
     addon.Utils:SetBackgroundColor(self.window.titlebar.AnnounceButton, 1, 1, 1, 0.05)
-    GameTooltip:ClearAllPoints()
-    GameTooltip:ClearLines()
     GameTooltip:SetOwner(self.window.titlebar.AnnounceButton, "ANCHOR_TOP")
     GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -2189,7 +2204,7 @@ function UI:RenderEquipmentWindow()
             end
           end
         },
-        {text = WrapTextInColorCode(item.itemLevel, select(4, GetItemQualityColor(item.itemQuality)))},
+        {text = WrapTextInColorCode(tostring(item.itemLevel), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
       }
     }
@@ -2209,76 +2224,4 @@ function UI:RenderEquipmentWindow()
   self.equipmentWindow:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
   self.equipmentTable:SetData(data)
   self.equipmentWindow:SetBodySize(tableWidth, tableHeight)
-
-
-
-  -- local self.equipmentWindow = addon.Window:GetWindow("Equipment")
-  -- if not self.equipmentWindow then return end
-  -- if self.equipmentWindow.character and self.equipmentWindow.character == character and self.equipmentWindow:IsVisible() then
-  --   self.equipmentWindow:Hide()
-  --   return
-  -- end
-  -- local data = {
-  --   columns = {
-  --     {width = 100},
-  --     {width = 280},
-  --     {width = 80, align = "CENTER"},
-  --     {width = 150},
-  --   },
-  --   rows = {
-  --     {
-  --       cols = {
-  --         {text = "Slot",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-  --         {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-  --         {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-  --         {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-  --       }
-  --     }
-  --   }
-  -- }
-  -- addon.Utils:TableForEach(character.equipment, function(item)
-  --   local upgradeLevel = ""
-  --   if item.itemUpgradeTrack ~= "" then
-  --     upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
-  --     if item.itemUpgradeLevel == item.itemUpgradeMax then
-  --       upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-  --     end
-  --   end
-  --   local row = {
-  --     cols = {
-  --       {text = _G[item.itemSlotName]},
-  --       {
-  --         text = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
-  --         OnEnter = function()
-  --           GameTooltip:SetHyperlink(item.itemLink)
-  --           GameTooltip:AddLine(" ")
-  --           GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-  --         end,
-  --         OnClick = function()
-  --           if IsModifiedClick("CHATLINK") then
-  --             if not ChatEdit_InsertLink(item.itemLink) then
-  --               ChatFrame_OpenChat(item.itemLink)
-  --             end
-  --           end
-  --         end
-  --       },
-  --       {text = WrapTextInColorCode(item.itemLevel, select(4, GetItemQualityColor(item.itemQuality)))},
-  --       {text = upgradeLevel},
-  --     }
-  --   }
-  --   table.insert(data.rows, row)
-  -- end)
-  -- self.equipmentWindow.Body.Table:SetData(data)
-  -- local w, h = self.equipmentWindow.Body.Table:GetSize()
-  -- self.equipmentWindow:SetSize(w, h + addon.Constants.sizes.titlebar.height)
-  -- local nameColor = WHITE_FONT_COLOR
-  -- if character.info.class.file ~= nil then
-  --   local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-  --   if classColor ~= nil then
-  --     nameColor = classColor
-  --   end
-  -- end
-  -- self.equipmentWindow.TitleBar.Text:SetText(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
-  -- self.equipmentWindow:Show()
-  -- self.equipmentWindow.character = character
 end
