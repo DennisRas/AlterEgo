@@ -11,6 +11,7 @@
 
 - The position of windows are now saved between reloads/sessions
 - Fixed some rendering issues with mouse highlight on certain rows
+- Shift clicking your keystone (sharing link to chat) now works again
 
 ## v1.1.17 - 2024-12-21
 
