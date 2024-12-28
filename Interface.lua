@@ -24,37 +24,6 @@ local function calculateDungeonTimer(time, level, tier)
   return time
 end
 
---- Calculate the main window size
----@return number, number
-function UI:GetBodySize()
-  local numCharacters = addon.Utils:TableCount(addon.Data:GetCharacters())
-  local numDungeons = addon.Utils:TableCount(addon.Data:GetDungeons())
-  local numRaids = addon.Utils:TableCount(addon.Data:GetRaids())
-  local numDifficulties = addon.Utils:TableCount(addon.Data:GetRaidDifficulties())
-  local numCharacterInfo = addon.Utils:TableCount(self:GetCharacterInfo())
-  local maxWidth = addon.Window:GetMaxWindowWidth()
-  local width, height = 0, 0
-
-  -- Width
-  if numCharacters == 0 then
-    width = 500
-  else
-    width = width + numCharacters * CHARACTER_WIDTH
-  end
-  if width > maxWidth then
-    width = maxWidth
-  end
-
-  -- Height
-  height = height + numCharacterInfo * addon.Constants.sizes.row                   -- Character info
-  height = height + (numDungeons + 1) * addon.Constants.sizes.row                  -- Dungeons
-  if addon.Data.db.global.raids.enabled == true then
-    height = height + numRaids * (numDifficulties + 1) * addon.Constants.sizes.row -- Raids
-  end
-
-  return width, height
-end
-
 function UI:Render()
   self:RenderMainWindow()
   self:RenderAffixWindow()
@@ -755,12 +724,14 @@ function UI:RenderMainWindow()
   local seasonID = addon.Data:GetCurrentSeason()
   local dungeons = addon.Data:GetDungeons()
   local affixRotation = addon.Data:GetAffixRotation()
-  local difficulties = addon.Data:GetRaidDifficulties()
+  local raidDifficulties = addon.Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
   local raids = addon.Data:GetRaids()
   local characters = addon.Data:GetCharacters()
   local numCharacters = addon.Utils:TableCount(characters)
   local affixes = addon.Data:GetAffixes(true)
+  local windowWidthMax = addon.Window:GetMaxWindowWidth()
+  local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
 
   if not self.window then
     self.window = addon.Window:New({
@@ -1044,7 +1015,7 @@ function UI:RenderMainWindow()
 
             -- Difficulties
             addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-            addon.Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
+            addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
               local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
               if not difficultyFrame then
                 difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
@@ -1076,6 +1047,7 @@ function UI:RenderMainWindow()
         end
       end
     end
+    windowHeight = windowHeight + rowCount * addon.Constants.sizes.row
   end
 
   do -- Characrer Columns
@@ -1339,7 +1311,7 @@ function UI:RenderMainWindow()
 
             -- Difficulties
             addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-            addon.Utils:TableForEach(difficulties, function(difficulty, difficultyIndex)
+            addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
               local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
               if not difficultyFrame then
                 difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
@@ -1442,11 +1414,12 @@ function UI:RenderMainWindow()
           end)
         end
       end
+      windowWidth = windowWidth + CHARACTER_WIDTH
     end)
   end
 
-  self.window:SetBodySize(self:GetBodySize())
-  self.window.body.scrollparent.scrollchild:SetSize(numCharacters * CHARACTER_WIDTH, self.window.body.scrollparent:GetHeight())
+  self.window:SetBodySize(math.min(windowWidth, windowWidthMax), windowHeight)
+  self.window.body.scrollparent.scrollchild:SetSize(windowWidth, windowHeight)
   addon.Window:SetWindowScale(addon.Data.db.global.interface.windowScale / 100)
   addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
 
