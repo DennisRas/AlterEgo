@@ -150,7 +150,7 @@ function Core:AnnounceKeystones(chatType)
   local keystonesCompact = {}
 
   if addon.Utils:TableCount(characters) < 1 then
-    self:Print("No announcement: You have no characters saved.")
+    self:Print("You have no characters saved.")
     return
   end
 
@@ -182,11 +182,12 @@ function Core:AnnounceKeystones(chatType)
   end)
 
   if addon.Utils:TableCount(keystones) < 1 then
-    self:Print("No announcement: You have no keystones saved.")
+    self:Print("You have no keystones saved.")
     return
   end
 
   if multiline then
+    SendChatMessage(addon.Constants.prefix .. "My keystones:", chatType)
     addon.Utils:TableForEach(keystones, function(keystone)
       local chatMessage = keystone.itemLink and keystone.itemLink or keystone.text
       if multilineNames == true then

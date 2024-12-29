@@ -1922,7 +1922,7 @@ function UI:SetupButtons()
         tooltipOnButton = true,
         func = function()
           if not IsInGroup() then
-            self:Print("No announcement. You are not in a party.")
+            addon.Core:Print("You are not in a party.")
             return
           end
           addon.Core:AnnounceKeystones("PARTY")
@@ -1937,7 +1937,7 @@ function UI:SetupButtons()
         tooltipOnButton = true,
         func = function()
           if not IsInGuild() then
-            self:Print("No announcement. You are not in a guild.")
+            addon.Core:Print("You are not in a guild.")
             return
           end
           addon.Core:AnnounceKeystones("GUILD")
