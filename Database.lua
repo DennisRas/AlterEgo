@@ -1151,6 +1151,8 @@ function Data:UpdateKeystoneItem()
   end
 
   local _, _, challengeModeID, level = strsplit(":", keystoneItemLink)
+  if not challengeModeID then return end
+
   local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", tonumber(challengeModeID))
   if not dungeon then return end
 
@@ -1164,9 +1166,12 @@ function Data:UpdateKeystoneItem()
   end
 
   local color = "ffffffff"
-  local keystoneColor = C_ChallengeMode.GetKeystoneLevelRarityColor(level)
-  if keystoneColor ~= nil then
-    color = keystoneColor:GenerateHexColor()
+  local levelNumber = tonumber(level)
+  if levelNumber then
+    local keystoneColor = C_ChallengeMode.GetKeystoneLevelRarityColor(levelNumber)
+    if keystoneColor ~= nil then
+      color = keystoneColor:GenerateHexColor()
+    end
   end
 
   character.mythicplus.keystone = {
