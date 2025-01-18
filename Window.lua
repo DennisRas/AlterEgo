@@ -35,12 +35,16 @@ function Window:New(options)
   window:SetFrameStrata("MEDIUM")
   window:SetFrameLevel(3000)
   window:SetToplevel(true)
-  window:SetClampedToScreen(true)
   window:SetMovable(true)
   window:SetPoint(unpack(window.config.point))
   window:SetSize(300, 300)
   window:EnableMouse(true) -- Disable click-throughs
   window:SetParent(window.config.parent)
+  window:SetClampedToScreen(true)
+  window:SetClampRectInsets(window:GetWidth() / 2, window:GetWidth() / -2, 0, window:GetHeight() / 2)
+  window:SetScript("OnSizeChanged", function()
+    window:SetClampRectInsets(window:GetWidth() / 2, window:GetWidth() / -2, 0, window:GetHeight() / 2)
+  end)
   addon.Utils:SetBackgroundColor(window, window.config.windowColor.r, window.config.windowColor.g, window.config.windowColor.b, window.config.windowColor.a)
 
   ---Show or hide the window

@@ -4,6 +4,7 @@
 
 ### Added
 
+- You can now move all windows halfway off the screen
 - Focusing a window will now move it to the front of other windows
 
 ### Updated
