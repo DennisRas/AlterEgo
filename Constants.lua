@@ -22,15 +22,15 @@ addon.Constants = {
     column = 100,
     border = 4,
     titlebar = {
-      height = 30
+      height = 30,
     },
     footer = {
-      height = 16
+      height = 16,
     },
     sidebar = {
       width = 150,
-      collapsedWidth = 30
-    }
+      collapsedWidth = 30,
+    },
   },
   sortingOptions = {
     {value = "lastUpdate",  text = "Recently played"},
@@ -44,5 +44,5 @@ addon.Constants = {
     {value = "ilvl.desc",   text = "Item Level (Highest)"},
     {value = "class.asc",   text = "Class (A-Z)"},
     {value = "class.desc",  text = "Class (Z-A)"},
-  }
+  },
 }

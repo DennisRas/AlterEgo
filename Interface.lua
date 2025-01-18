@@ -95,7 +95,7 @@ function UI:GetCharacterInfo(unfiltered)
               end
               table.insert(characterCurrencies, {
                 currencyLabel,
-                currencyValue
+                currencyValue,
               })
             end
           end)
@@ -307,7 +307,7 @@ function UI:GetCharacterInfo(unfiltered)
             numSeasonRuns,
             character.mythicplus.bestSeasonScore,
             character.mythicplus.bestSeasonNumber,
-            unpack(dungeonScoreDungeonTable)
+            unpack(dungeonScoreDungeonTable),
           }
           local link = NORMAL_FONT_COLOR:WrapTextInColorCode(LinkUtil.FormatLink("dungeonScore", DUNGEON_SCORE_LINK, unpack(dungeonScoreTable)))
           if not ChatEdit_InsertLink(link) then
@@ -1498,7 +1498,7 @@ function UI:SetupButtons()
               func = function(button, arg1, arg2, checked)
                 addon.Data.db.global.raids.hiddenDifficulties[button.value] = not checked
                 self:Render()
-              end
+              end,
             },
             level
           )
@@ -1514,7 +1514,7 @@ function UI:SetupButtons()
               func = function(button)
                 addon.Data.db.global.interface.windowScale = button.value
                 self:Render()
-              end
+              end,
             },
             level
           )
@@ -1532,7 +1532,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.showAffixHeader = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Show characters with zero rating",
@@ -1545,7 +1545,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.showZeroRatedCharacters = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Show realm names",
@@ -1558,7 +1558,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.showRealms = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Use Raider.io rating colors",
@@ -1572,7 +1572,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.useRIOScoreColor = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
@@ -1586,7 +1586,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.announceResets = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Announce new keystones (Party)",
@@ -1599,7 +1599,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.announceKeystones.autoParty = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Announce new keystones (Guild)",
@@ -1612,7 +1612,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.announceKeystones.autoGuild = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
@@ -1628,7 +1628,7 @@ function UI:SetupButtons()
             self:Render()
           end,
           hasArrow = true,
-          menuList = "raiddifficulties"
+          menuList = "raiddifficulties",
         })
         if seasonID == 12 then
           UIDropDownMenu_AddButton({
@@ -1642,7 +1642,7 @@ function UI:SetupButtons()
             func = function(button, arg1, arg2, checked)
               addon.Data.db.global.raids.modifiedInstanceOnly = checked
               self:Render()
-            end
+            end,
           })
         end
         UIDropDownMenu_AddButton({
@@ -1656,7 +1656,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.raids.colors = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
@@ -1670,7 +1670,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.showTiers = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Show rating",
@@ -1683,7 +1683,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.showScores = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Use rating colors",
@@ -1696,7 +1696,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.showAffixColors = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "World", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
@@ -1710,7 +1710,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.world.enabled = checked
             self:Render()
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
@@ -1724,7 +1724,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.minimap.hide = not checked
             LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
-          end
+          end,
         })
         UIDropDownMenu_AddButton({
           text = "Lock the minimap button",
@@ -1737,7 +1737,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.minimap.lock = checked
             LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
@@ -1765,7 +1765,7 @@ function UI:SetupButtons()
             addon.Data.db.global.interface.windowColor.b = color.b
             addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
             -- addon.Utils:SetBackgroundColor(winMain, addon.Data.db.global.interface.windowColor.r, addon.Data.db.global.interface.windowColor.g, addon.Data.db.global.interface.windowColor.b, addon.Data.db.global.interface.windowColor.a)
-          end
+          end,
         })
         UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
       end
@@ -1814,7 +1814,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.sorting = arg1
             self:Render()
-          end
+          end,
         })
       end
     end,
@@ -1872,7 +1872,7 @@ function UI:SetupButtons()
           func = function(button, arg1, arg2, checked)
             addon.Data.db.global.characters[arg1].enabled = checked
             self:Render()
-          end
+          end,
         })
       end
     end,
@@ -1926,7 +1926,7 @@ function UI:SetupButtons()
             return
           end
           addon.Core:AnnounceKeystones("PARTY")
-        end
+        end,
       })
       UIDropDownMenu_AddButton({
         text = "Send to Guild Chat",
@@ -1941,7 +1941,7 @@ function UI:SetupButtons()
             return
           end
           addon.Core:AnnounceKeystones("GUILD")
-        end
+        end,
       })
       UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
       UIDropDownMenu_AddButton({
@@ -1954,7 +1954,7 @@ function UI:SetupButtons()
         tooltipOnButton = true,
         func = function(button, arg1, arg2, checked)
           addon.Data.db.global.announceKeystones.multiline = checked
-        end
+        end,
       })
       UIDropDownMenu_AddButton({
         text = "With character names",
@@ -1966,7 +1966,7 @@ function UI:SetupButtons()
         tooltipOnButton = true,
         func = function(button, arg1, arg2, checked)
           addon.Data.db.global.announceKeystones.multilineNames = checked
-        end
+        end,
       })
     end,
     "MENU"
@@ -2001,7 +2001,7 @@ function UI:RenderAffixWindow()
     self.affixWindow = addon.Window:New({
       name = "Affixes",
       title = "Weekly Affixes",
-      point = {"TOP", UIParent, "TOP", 0, -15}
+      point = {"TOP", UIParent, "TOP", 0, -15},
     })
     self.affixTable = addon.Table:New({rows = {height = rowHeight, striped = true}})
     self.affixTable:SetParent(self.affixWindow.body)
@@ -2099,7 +2099,7 @@ function UI:RenderEquipmentWindow()
     self.equipmentWindow = addon.Window:New({
       name = "Equipment",
       title = "Character",
-      point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15}
+      point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15},
     })
     self.equipmentTable = addon.Table:New({rows = {height = rowHeight, striped = true}})
     self.equipmentTable:SetParent(self.equipmentWindow.body)
@@ -2134,9 +2134,9 @@ function UI:RenderEquipmentWindow()
           {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-        }
-      }
-    }
+        },
+      },
+    },
   }
   tableHeight = tableHeight + 30
 
@@ -2171,11 +2171,11 @@ function UI:RenderEquipmentWindow()
                 ChatFrame_OpenChat(item.itemLink)
               end
             end
-          end
+          end,
         },
         {text = WrapTextInColorCode(tostring(item.itemLevel), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
-      }
+      },
     }
     table.insert(data.rows, row)
     tableHeight = tableHeight + rowHeight

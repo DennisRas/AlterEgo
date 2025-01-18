@@ -40,7 +40,7 @@ function Core:OnInitialize()
         dragText = dragText .. " |cffff0000(locked)|r"
       end
       tooltip:AddLine(dragText .. ".", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-    end
+    end,
   }
 
   LibDataBroker:NewDataObject(addonName, libDataObject)
@@ -236,7 +236,7 @@ function Core:AnnounceKeystones(chatType)
     table.insert(keystones, {
       text = text,
       itemLink = keystone.itemLink,
-      characterName = character.info.name
+      characterName = character.info.name,
     })
     table.insert(keystonesCompact, text)
   end)

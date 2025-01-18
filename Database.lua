@@ -17,7 +17,7 @@ Data.defaultDB = {
     minimap = {
       minimapPos = 195,
       hide = false,
-      lock = false
+      lock = false,
     },
     sorting = "lastUpdate",
     showTiers = true,
@@ -47,10 +47,10 @@ Data.defaultDB = {
     interface = {
       -- fontSize = 12,
       windowScale = 100,
-      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
     },
     useRIOScoreColor = false,
-  }
+  },
 }
 
 ---@type AE_Character
@@ -219,7 +219,7 @@ Data.defaultCharacter = {
       --     ["exampleRewardLink"] = ""
       --     ["exampleRewardUpgradeLink"] = ""
       -- },
-    }
+    },
   },
 }
 
@@ -302,7 +302,7 @@ Data.affixRotations = {
       {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
       {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
       {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
-    }
+    },
   },
   {
     seasonID = 12,
@@ -319,7 +319,7 @@ Data.affixRotations = {
       {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
       {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
       {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
-    }
+    },
   },
   {
     seasonID = 13,
@@ -334,7 +334,7 @@ Data.affixRotations = {
       {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
       {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
       {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-    }
+    },
   },
 }
 
@@ -962,7 +962,7 @@ function Data:UpdateRaidInstances()
       instanceID = instanceID,
       link = GetSavedInstanceChatLink(savedInstanceIndex),
       expires = 0,
-      encounters = {}
+      encounters = {},
     }
     if reset and reset > 0 then
       savedInstance.expires = reset + time()
@@ -983,7 +983,7 @@ function Data:UpdateRaidInstances()
         instanceEncounterID = instanceEncounterID,
         bossName = bossName,
         fileDataID = fileDataID or 0,
-        isKilled = isKilled
+        isKilled = isKilled,
       }
       savedInstance.encounters[encounterIndex] = savedInstanceEncounter
     end
@@ -1114,7 +1114,7 @@ function Data:UpdateEquipment()
       itemUpgradeLevel = itemUpgradeLevel,
       itemUpgradeMax = itemUpgradeMax,
       itemSlotID = slot.id,
-      itemSlotName = slot.name
+      itemSlotName = slot.name,
     }
     table.insert(character.equipment, equipment)
   end)
@@ -1255,7 +1255,7 @@ function Data:UpdateMythicPlus()
       rating = 0,
       level = 0,
       finishedSuccess = false,
-      bestOverAllScore = 0
+      bestOverAllScore = 0,
     }
     if bestTimedRun ~= nil then dungeon.bestTimedRun = bestTimedRun end
     if bestNotTimedRun ~= nil then dungeon.bestNotTimedRun = bestNotTimedRun end

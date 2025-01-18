@@ -28,7 +28,7 @@ function Window:New(options)
       titlebar = true,
       windowScale = 100,
       windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
-      point = {"CENTER"}
+      point = {"CENTER"},
     },
     options or {}
   )

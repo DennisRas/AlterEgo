@@ -16,3 +16,4 @@ max_line_length = unset
 quote_style = double
 space_around_table_field_list = false
 space_before_attribute = false
+trailing_table_separator = smart

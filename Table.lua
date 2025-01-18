@@ -22,16 +22,16 @@ function Table:New(config)
       rows = {
         height = 22,
         highlight = true,
-        striped = true
+        striped = true,
       },
       columns = {
         width = 100,
         highlight = false,
-        striped = false
+        striped = false,
       },
       cells = {
         padding = 8,
-        highlight = false
+        highlight = false,
       },
       ---@type AE_TableData
       data = {
@@ -45,7 +45,7 @@ function Table:New(config)
   frame.data = frame.config.data
   frame.scrollFrame = addon.Utils:CreateScrollFrame({
     name = "$parentScrollFrame",
-    scrollSpeedVertical = frame.config.rows.height * 2
+    scrollSpeedVertical = frame.config.rows.height * 2,
   })
 
   ---Set the table data
