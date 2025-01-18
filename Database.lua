@@ -1227,7 +1227,7 @@ function Data:UpdateMythicPlus()
   local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
   local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
-  local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns();
+  local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns()
   local affixes = self:GetAffixes()
 
   if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
@@ -1245,7 +1245,7 @@ function Data:UpdateMythicPlus()
 
   wipe(character.mythicplus.dungeons or {})
   for _, dataDungeon in pairs(dungeons) do
-    local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID);
+    local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID)
     local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
     local dungeon = {
       challengeModeID = dataDungeon.challengeModeID,

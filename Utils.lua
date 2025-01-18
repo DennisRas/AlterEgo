@@ -167,25 +167,27 @@ end
 ---@return AE_CharacterVault|nil, AE_CharacterVault|nil
 function Utils:GetActivitiesProgress(character)
   local activities = Utils:TableFilter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
-  table.sort(activities, function(left, right) return left.index < right.index; end);
-  local lastCompletedIndex = 0;
+  table.sort(activities, function(left, right)
+    return left.index < right.index
+  end)
+  local lastCompletedIndex = 0
   for i, activityInfo in ipairs(activities) do
     if activityInfo.progress >= activityInfo.threshold then
-      lastCompletedIndex = i;
+      lastCompletedIndex = i
     end
   end
 
   if lastCompletedIndex == 0 then
-    return nil, nil;
+    return nil, nil
   end
 
   if lastCompletedIndex == #activities then
-    local info = activities[lastCompletedIndex];
-    return info, nil;
+    local info = activities[lastCompletedIndex]
+    return info, nil
   end
 
-  local nextInfo = activities[lastCompletedIndex + 1];
-  return activities[lastCompletedIndex], nextInfo;
+  local nextInfo = activities[lastCompletedIndex + 1]
+  return activities[lastCompletedIndex], nextInfo
 end
 
 ---Get the lowest keystone level completed from highest <numRuns> runs.
@@ -194,11 +196,11 @@ end
 ---@param numRuns number
 ---@return number|nil, number
 function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
-  local lowestLevel;
-  local lowestCount   = 0;
-  local numHeroic     = 0;
-  local numMythic     = 0;
-  local numMythicPlus = 0;
+  local lowestLevel
+  local lowestCount   = 0
+  local numHeroic     = 0
+  local numMythic     = 0
+  local numMythicPlus = 0
 
   if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
     numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
@@ -208,29 +210,31 @@ function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
 
   if numRuns > numMythicPlus and (numHeroic + numMythic) > 0 then
     if numRuns > numMythicPlus + numMythic and numHeroic > 0 then
-      lowestLevel = WeeklyRewardsUtil.HeroicLevel;
-      lowestCount = numRuns - numMythicPlus - numMythic;
+      lowestLevel = WeeklyRewardsUtil.HeroicLevel
+      lowestCount = numRuns - numMythicPlus - numMythic
     else
-      lowestLevel = WeeklyRewardsUtil.MythicLevel;
-      lowestCount = numRuns - numMythicPlus;
+      lowestLevel = WeeklyRewardsUtil.MythicLevel
+      lowestCount = numRuns - numMythicPlus
     end
-    return lowestLevel, lowestCount;
+    return lowestLevel, lowestCount
   end
 
-  local runHistory = Utils:TableFilter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end);
-  table.sort(runHistory, function(left, right) return left.level > right.level; end);
+  local runHistory = Utils:TableFilter(character.mythicplus.runHistory, function(run) return run.thisWeek == true end)
+  table.sort(runHistory, function(left, right)
+    return left.level > right.level
+  end)
   for i = math.min(numRuns, #runHistory), 1, -1 do
-    local run = runHistory[i];
+    local run = runHistory[i]
     if not lowestLevel then
-      lowestLevel = run.level;
+      lowestLevel = run.level
     end
     if lowestLevel == run.level then
-      lowestCount = lowestCount + 1;
+      lowestCount = lowestCount + 1
     else
-      break;
+      break
     end
   end
-  return lowestLevel, lowestCount;
+  return lowestLevel, lowestCount
 end
 
 ---Get the group type

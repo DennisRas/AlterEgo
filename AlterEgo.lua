@@ -7,7 +7,7 @@ local LibDataBroker = LibStub("LibDataBroker-1.1")
 local LibDBIcon = LibStub("LibDBIcon-1.0")
 
 --@debug@
-_G[addonName] = addon;
+_G[addonName] = addon
 --@end-debug@
 
 ---@class AE_Core : AceAddon
@@ -159,7 +159,7 @@ function Core:OnEnable()
 end
 
 function Core:RequestGameData()
-  C_MythicPlus.RequestCurrentAffixes();
+  C_MythicPlus.RequestCurrentAffixes()
   C_MythicPlus.RequestMapInfo()
   C_MythicPlus.RequestRewards()
   RequestRaidInfo()

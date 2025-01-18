@@ -212,5 +212,5 @@ function Table:New(config)
   frame.scrollFrame:HookScript("OnSizeChanged", function() frame:RenderTable() end)
   frame:RenderTable()
   table.insert(self.TableCollection, frame)
-  return frame;
+  return frame
 end

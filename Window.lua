@@ -119,7 +119,7 @@ function Window:New(options)
       GameTooltip:ClearAllPoints()
       GameTooltip:ClearLines()
       GameTooltip:SetOwner(window.titlebar.CloseButton, "ANCHOR_TOP")
-      GameTooltip:SetText("Close the window", 1, 1, 1, 1, true);
+      GameTooltip:SetText("Close the window", 1, 1, 1, 1, true)
       GameTooltip:Show()
     end)
     window.titlebar.CloseButton:SetScript("OnLeave", function()

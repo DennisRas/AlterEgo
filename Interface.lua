@@ -818,7 +818,7 @@ function UI:RenderMainWindow()
     if self.window.affixes:IsVisible() then
       local affixAnchor = self.window.titlebar
       addon.Utils:TableForEach(currentAffixes, function(affix, affixIndex)
-        local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id);
+        local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id)
         local affixFrame = self.window.affixes.buttons[affixIndex]
         if not affixFrame then
           affixFrame = CreateFrame("Button", "$parentAffix" .. affixIndex, self.window.affixes)
@@ -830,7 +830,7 @@ function UI:RenderMainWindow()
         affixFrame:SetNormalTexture(fileDataID)
         affixFrame:SetScript("OnEnter", function()
           GameTooltip:SetOwner(affixFrame, "ANCHOR_TOP")
-          GameTooltip:SetText(name, 1, 1, 1);
+          GameTooltip:SetText(name, 1, 1, 1)
           GameTooltip:AddLine(desc, nil, nil, nil, true)
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
@@ -934,7 +934,7 @@ function UI:RenderMainWindow()
         dungeonFrame:SetScript("OnEnter", function()
           ---@diagnostic disable-next-line: param-type-mismatch
           GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
-          GameTooltip:SetText(dungeon.name, 1, 1, 1);
+          GameTooltip:SetText(dungeon.name, 1, 1, 1)
           if dungeon.spellID then
             if IsSpellKnown(dungeon.spellID) then
               GameTooltip:ClearLines()
@@ -986,7 +986,7 @@ function UI:RenderMainWindow()
 
             raidFrame:SetScript("OnEnter", function()
               GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText(raid.name, 1, 1, 1);
+              GameTooltip:SetText(raid.name, 1, 1, 1)
               if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
                 GameTooltip:AddLine(" ")
                 GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
@@ -1029,7 +1029,7 @@ function UI:RenderMainWindow()
 
               difficultyFrame:SetScript("OnEnter", function()
                 GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(difficulty.name, 1, 1, 1);
+                GameTooltip:SetText(difficulty.name, 1, 1, 1)
                 GameTooltip:Show()
               end)
               difficultyFrame:SetScript("OnLeave", function()
@@ -1321,8 +1321,8 @@ function UI:RenderMainWindow()
 
               difficultyFrame:SetScript("OnEnter", function()
                 GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true);
-                GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name));
+                GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
+                GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
                 if character.raids.savedInstances ~= nil then
                   local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                     return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
