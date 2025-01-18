@@ -2000,7 +2000,8 @@ function UI:RenderAffixWindow()
   if not self.affixWindow then
     self.affixWindow = addon.Window:New({
       name = "Affixes",
-      title = "Weekly Affixes"
+      title = "Weekly Affixes",
+      point = {"TOP", UIParent, "TOP", 0, -15}
     })
     self.affixTable = addon.Table:New({rows = {height = rowHeight, striped = true}})
     self.affixTable:SetParent(self.affixWindow.body)
@@ -2097,7 +2098,8 @@ function UI:RenderEquipmentWindow()
   if not self.equipmentWindow then
     self.equipmentWindow = addon.Window:New({
       name = "Equipment",
-      title = "Character"
+      title = "Character",
+      point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15}
     })
     self.equipmentTable = addon.Table:New({rows = {height = rowHeight, striped = true}})
     self.equipmentTable:SetParent(self.equipmentWindow.body)

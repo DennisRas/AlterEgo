@@ -7,6 +7,7 @@
 - Rendering code for the UI has been completely rewritten for a much better performance
 - Improved the scrolling logic and responsiveness
 - Improved the load times of the addon and the game data within
+- The starting position of extra windows have been moved away from the center of the screen
 
 ### Fixed
 

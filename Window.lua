@@ -18,7 +18,7 @@ addon.Window = Window
 ---@return AE_Window
 function Window:New(options)
   ---@class AE_Window : Frame
-  local window = CreateFrame("Frame", addonName .. "Window" .. (options and options.name or #WindowCollection + 1), options.parent or UIParent)
+  local window = CreateFrame("Frame", addonName .. "Window123123" .. (options and options.name or #WindowCollection + 1), options.parent or UIParent)
   window.config = CreateFromMixins(
     {
       parent = UIParent,
@@ -27,7 +27,8 @@ function Window:New(options)
       border = addon.Constants.sizes.border,
       titlebar = true,
       windowScale = 100,
-      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1}
+      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
+      point = {"CENTER"}
     },
     options or {}
   )
@@ -36,8 +37,7 @@ function Window:New(options)
   window:SetToplevel(true)
   window:SetClampedToScreen(true)
   window:SetMovable(true)
-  -- window:SetUserPlaced(true)
-  window:SetPoint("CENTER")
+  window:SetPoint(unpack(window.config.point))
   window:SetSize(300, 300)
   window:EnableMouse(true) -- Disable click-throughs
   window:SetParent(window.config.parent)
