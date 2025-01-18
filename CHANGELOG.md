@@ -2,6 +2,10 @@
 
 ## v1.2.0 - ?
 
+### Added
+
+- Focusing a window will now move it to the front of other windows
+
 ### Updated
 
 - Rendering code for the UI has been completely rewritten for a much better performance
@@ -12,7 +16,7 @@
 ### Fixed
 
 - The position of windows are now saved between reloads/sessions
-- Fixed some rendering issues with mouse highlight on certain rows
+- Fixed some rendering issues highlighting certain rows with the mouse
 - Shift clicking your keystone (sharing link to chat) now works again
 
 ## v1.1.17 - 2024-12-21
