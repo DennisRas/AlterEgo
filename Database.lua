@@ -66,22 +66,22 @@ Data.defaultCharacter = {
     race = {
       name = "",
       file = "",
-      id = 0
+      id = 0,
     },
     class = {
       name = "",
       file = "",
-      id = 0
+      id = 0,
     },
     factionGroup = {
       english = "",
-      localized = ""
+      localized = "",
     },
     ilvl = {
       level = 0,
       equipped = 0,
       pvp = 0,
-      color = "ffffffff"
+      color = "ffffffff",
     },
   },
   equipment = {},
@@ -447,13 +447,13 @@ end
 ---Get the current Season IDs
 ---@return number, number
 function Data:GetCurrentSeason()
-  if not self.cache.seasonID then
+  if not self.cache.seasonID or self.cache.seasonID == -1 then
     self.cache.seasonID = C_MythicPlus.GetCurrentSeason()
   end
-  if not self.cache.seasonDisplayID then
+  if not self.cache.seasonDisplayID or self.cache.seasonDisplayID == -1 then
     self.cache.seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
-  return self.cache.seasonID or 0, self.cache.seasonDisplayID or 0
+  return self.cache.seasonID or -1, self.cache.seasonDisplayID or -1
 end
 
 ---Get the currencies of the current season

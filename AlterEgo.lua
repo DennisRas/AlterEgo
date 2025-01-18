@@ -10,6 +10,7 @@ local LibDBIcon = LibStub("LibDBIcon-1.0")
 _G[addonName] = addon;
 --@end-debug@
 
+---@class AE_Core : AceAddon
 local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 addon.Core = Core
 
@@ -59,7 +60,101 @@ function Core:ToggleWindow()
 end
 
 function Core:OnEnable()
-  self:RequestGameData()
+  self:RegisterBucketEvent(
+    {
+      "PLAYER_EQUIPMENT_CHANGED",
+      "UNIT_INVENTORY_CHANGED",
+    }, 3, function()
+      addon.Data:UpdateCharacterInfo()
+      addon.Data:UpdateEquipment()
+    end
+  )
+  self:RegisterBucketEvent(
+    {
+      "BOSS_KILL",
+      "CHALLENGE_MODE_COMPLETED",
+      "ENCOUNTER_END",
+      "LFG_LOCK_INFO_RECEIVED",
+      "RAID_INSTANCE_WELCOME",
+    }, 3, function()
+      self:RequestGameData()
+    end
+  )
+  self:RegisterBucketEvent(
+    {
+      "CHALLENGE_MODE_MAPS_UPDATE",
+      "WEEKLY_REWARDS_UPDATE",
+    }, 3, function()
+      addon.Data:UpdateVault()
+    end
+  )
+  self:RegisterBucketEvent(
+    {
+      "LFG_UPDATE_RANDOM_INFO",
+      "UPDATE_INSTANCE_INFO",
+    }, 3, function()
+      addon.Data:UpdateRaidInstances()
+    end
+  )
+  self:RegisterBucketEvent(
+    {
+      "BAG_UPDATE_DELAYED",
+      "CHALLENGE_MODE_COMPLETED",
+      "CHALLENGE_MODE_COMPLETED",
+      "CHALLENGE_MODE_MAPS_UPDATE",
+      "CHALLENGE_MODE_MAPS_UPDATE",
+      "CHALLENGE_MODE_RESET",
+      "CHALLENGE_MODE_RESET",
+      "ITEM_CHANGED",
+      "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
+      "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
+    }, 3, function()
+      addon.Data:UpdateKeystoneItem()
+    end
+  )
+  self:RegisterBucketEvent(
+    {
+      "CHALLENGE_MODE_COMPLETED",
+      "CHALLENGE_MODE_MAPS_UPDATE",
+      "CHALLENGE_MODE_RESET",
+      "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
+    }, 3, function()
+      addon.Data:UpdateMythicPlus()
+    end
+  )
+  self:RegisterBucketEvent(
+    {
+      "BONUS_ROLL_RESULT",
+      "CHAT_MSG_CURRENCY",
+      "CURRENCY_DISPLAY_UPDATE",
+      "PLAYER_TRADE_CURRENCY",
+      "POST_MATCH_CURRENCY_REWARD_UPDATE",
+      "QUEST_CURRENCY_LOOT_RECEIVED",
+      "SPELL_CONFIRMATION_PROMPT",
+      "TRADE_CURRENCY_CHANGED",
+      "TRADE_SKILL_CURRENCY_REWARD_RESULT",
+    }, 3, function()
+      addon.Data:UpdateCurrencies()
+    end
+  )
+  self:RegisterEvent(
+    "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
+    function()
+      addon.UI:Render()
+    end
+  )
+  self:RegisterEvent(
+    "CHAT_MSG_SYSTEM",
+    function(...)
+      self:OnChatMessageSystem(...)
+    end
+  )
+  self:RegisterEvent(
+    "PLAYER_LEVEL_UP",
+    function()
+      addon.Data:UpdateDB()
+    end
+  )
   self:CheckGameData()
 end
 
@@ -71,46 +166,11 @@ function Core:RequestGameData()
 end
 
 function Core:CheckGameData()
-  local seasonID = C_MythicPlus.GetCurrentSeason()
-  local currentUIDisplaySeason = C_MythicPlus.GetCurrentUIDisplaySeason()
-  if seasonID == nil or seasonID == -1 or currentUIDisplaySeason == nil then
+  local seasonID, seasonDisplayID = addon.Data:GetCurrentSeason()
+  if seasonID < 0 or seasonDisplayID < 0 then
     self:RequestGameData()
-    return self:ScheduleTimer("CheckGameData", 1)
+    return self:ScheduleTimer("CheckGameData", 3)
   end
-
-  self:RegisterBucketEvent({"PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED"}, 3, function()
-    addon.Data:UpdateCharacterInfo()
-    addon.Data:UpdateEquipment()
-  end)
-  self:RegisterBucketEvent({"RAID_INSTANCE_WELCOME", "LFG_LOCK_INFO_RECEIVED", "BOSS_KILL"}, 2, function()
-    RequestRaidInfo()
-  end)
-  self:RegisterEvent("ENCOUNTER_END", function()
-    RequestRaidInfo()
-  end)
-  self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", function()
-    addon.UI:Render()
-  end)
-  self:RegisterBucketEvent("WEEKLY_REWARDS_UPDATE", 2, function()
-    addon.Data:UpdateVault()
-  end)
-  self:RegisterBucketEvent({"UPDATE_INSTANCE_INFO", "LFG_UPDATE_RANDOM_INFO"}, 3, function()
-    addon.Data:UpdateRaidInstances()
-  end)
-  self:RegisterBucketEvent({"BAG_UPDATE_DELAYED", "ITEM_CHANGED"}, 3, function()
-    addon.Data:UpdateKeystoneItem()
-  end)
-  self:RegisterBucketEvent({"CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_MAPS_UPDATE", "MYTHIC_PLUS_NEW_WEEKLY_RECORD"}, 3, function()
-    addon.Data:UpdateMythicPlus()
-    addon.Data:UpdateKeystoneItem()
-  end)
-  self:RegisterEvent("PLAYER_LEVEL_UP", function()
-    addon.Data:UpdateDB()
-  end)
-  self:RegisterEvent("CHAT_MSG_SYSTEM", "OnChatMessageSystem")
-  self:RegisterBucketEvent({"BONUS_ROLL_RESULT", "QUEST_CURRENCY_LOOT_RECEIVED", "POST_MATCH_CURRENCY_REWARD_UPDATE", "PLAYER_TRADE_CURRENCY", "TRADE_CURRENCY_CHANGED", "TRADE_SKILL_CURRENCY_REWARD_RESULT", "SPELL_CONFIRMATION_PROMPT", "CHAT_MSG_CURRENCY", "CURRENCY_DISPLAY_UPDATE"}, 3, function()
-    addon.Data:UpdateCurrencies()
-  end)
 
   addon.Data:loadGameData()
   addon.Data:MigrateDB()

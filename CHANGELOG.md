@@ -6,6 +6,7 @@
 
 - Rendering code for the UI has been completely rewritten for a much better performance
 - Improved the scrolling logic and responsiveness
+- Improved the load times of the addon and the game data within
 
 ### Fixed
 
