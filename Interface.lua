@@ -619,7 +619,7 @@ function UI:GetCharacterInfo(unfiltered)
         end
         GameTooltip:Show()
       end,
-      OnLeave = function()
+      onLeave = function()
         GameTooltip:Hide()
       end,
       enabled = true,
