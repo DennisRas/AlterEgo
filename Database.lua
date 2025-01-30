@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 19
+Data.dbVersion = 20
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -59,6 +59,7 @@ Data.defaultCharacter = {
   lastUpdate = 0,
   currentSeason = 0,
   enabled = true,
+  order = 0,
   info = {
     name = "",
     realm = "",
@@ -612,6 +613,24 @@ function Data:GetRaids(unfiltered)
   return raids
 end
 
+---Set a new character order
+---@param character AE_Character
+---@param direction number
+function Data:SortCharacter(character, direction)
+  local characters = self:GetCharacters()
+  for i, _ in pairs(characters) do
+    if characters[i].GUID == character.GUID then
+      if direction > 0 and i < #characters and characters[i + 1] then
+        self.db.global.characters[character.GUID].order = characters[i + 1].order + 0.5
+        break
+      end
+      if direction < 0 and i > 1 and characters[i - 1] then
+        self.db.global.characters[character.GUID].order = characters[i - 1].order - 0.5
+      end
+    end
+  end
+end
+
 ---Get user characters
 ---@param unfiltered boolean?
 ---@return AE_Character[]
@@ -622,6 +641,16 @@ function Data:GetCharacters(unfiltered)
       table.insert(characters, character)
     end
   end
+
+  -- Update custom order
+  local order = 1
+  table.sort(characters, function(a, b)
+    return (a.order or 0) < (b.order or 0)
+  end)
+  addon.Utils:TableForEach(characters, function(character)
+    self.db.global.characters[character.GUID].order = order
+    order = order + 1
+  end)
 
   -- Sorting
   table.sort(characters, function(a, b)
@@ -645,6 +674,8 @@ function Data:GetCharacters(unfiltered)
       return strcmputf8i(a.info.class.name, b.info.class.name) < 0
     elseif self.db.global.sorting == "class.desc" then
       return strcmputf8i(a.info.class.name, b.info.class.name) > 0
+    elseif self.db.global.sorting == "custom" then
+      return (a.order or 0) < (b.order or 0)
     end
     return a.lastUpdate > b.lastUpdate
   end)

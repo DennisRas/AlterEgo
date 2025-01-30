@@ -1085,6 +1085,79 @@ function UI:RenderMainWindow()
             characterFrame.infoFrames[infoIndex] = infoFrame
           end
 
+          if infoIndex == 1 then
+            if not infoFrame.SortLeftButton then
+              infoFrame.SortLeftButton = CreateFrame("Button", infoFrame:GetName() .. "SortLeft", infoFrame)
+              infoFrame.SortLeftButton:SetSize(addon.Constants.sizes.row, addon.Constants.sizes.row)
+              infoFrame.SortLeftButton:SetPoint("LEFT", infoFrame, "LEFT")
+              infoFrame.SortLeftButton:SetPropagateMouseMotion(true)
+              infoFrame.SortLeftButton.Icon = infoFrame.SortLeftButton:CreateTexture(infoFrame.SortLeftButton:GetName() .. "Icon", "ARTWORK")
+              infoFrame.SortLeftButton.Icon:SetAtlas("common-icon-backarrow", true)
+              infoFrame.SortLeftButton.Icon:SetDesaturation(1)
+              infoFrame.SortLeftButton.Icon:SetSize(12, 12)
+              infoFrame.SortLeftButton.Icon:SetPoint("CENTER", infoFrame.SortLeftButton, "CENTER", 0, 0)
+              infoFrame.SortLeftButton:Hide()
+            end
+            infoFrame.SortLeftButton:SetScript("OnEnter", function()
+              if info.onLeave then
+                info.onLeave(infoFrame, character)
+              end
+              infoFrame.SortLeftButton.Icon:SetDesaturation(0)
+              GameTooltip:SetOwner(infoFrame.SortLeftButton, "ANCHOR_RIGHT")
+              GameTooltip:SetText("Custom Order", 1, 1, 1, 1, true)
+              GameTooltip:AddLine("Move your character around.")
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("<Click to Move Left>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+              GameTooltip:Show()
+            end)
+            infoFrame.SortLeftButton:SetScript("OnLeave", function()
+              infoFrame.SortLeftButton.Icon:SetDesaturation(1)
+              GameTooltip:Hide()
+              if info.onEnter then
+                info.onEnter(infoFrame, character)
+              end
+            end)
+            infoFrame.SortLeftButton:SetScript("OnClick", function()
+              addon.Data:SortCharacter(character, -1)
+              self:RenderMainWindow()
+            end)
+            if not infoFrame.SortRightButton then
+              infoFrame.SortRightButton = CreateFrame("Button", infoFrame:GetName() .. "SortRight", infoFrame)
+              infoFrame.SortRightButton:SetSize(addon.Constants.sizes.row, addon.Constants.sizes.row)
+              infoFrame.SortRightButton:SetPoint("RIGHT", infoFrame, "RIGHT")
+              infoFrame.SortRightButton:SetPropagateMouseMotion(true)
+              infoFrame.SortRightButton.Icon = infoFrame.SortRightButton:CreateTexture(infoFrame.SortRightButton:GetName() .. "Icon", "ARTWORK")
+              infoFrame.SortRightButton.Icon:SetAtlas("common-icon-forwardarrow", true)
+              infoFrame.SortRightButton.Icon:SetDesaturation(1)
+              infoFrame.SortRightButton.Icon:SetSize(12, 12)
+              infoFrame.SortRightButton.Icon:SetPoint("CENTER", infoFrame.SortRightButton, "CENTER", 0, 0)
+              infoFrame.SortRightButton:Hide()
+            end
+            infoFrame.SortRightButton:SetScript("OnEnter", function()
+              if info.onLeave then
+                info.onLeave(infoFrame, character)
+              end
+              infoFrame.SortRightButton.Icon:SetDesaturation(0)
+              GameTooltip:SetOwner(infoFrame.SortRightButton, "ANCHOR_RIGHT")
+              GameTooltip:SetText("Custom Order", 1, 1, 1, 1, true)
+              GameTooltip:AddLine("Move your character around.")
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("<Click to Move Right>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+              GameTooltip:Show()
+            end)
+            infoFrame.SortRightButton:SetScript("OnLeave", function()
+              infoFrame.SortRightButton.Icon:SetDesaturation(1)
+              GameTooltip:Hide()
+              if info.onEnter then
+                info.onEnter(infoFrame, character)
+              end
+            end)
+            infoFrame.SortRightButton:SetScript("OnClick", function()
+              addon.Data:SortCharacter(character, 1)
+              self:RenderMainWindow()
+            end)
+          end
+
           if info.value then
             infoFrame.text:SetText(info.value(character))
           end
@@ -1099,15 +1172,38 @@ function UI:RenderMainWindow()
             if info.onEnter then
               info.onEnter(infoFrame, character)
             end
+            if infoIndex == 1 then
+              if addon.Data.db.global.sorting == "custom" then
+                if characterIndex > 1 then
+                  infoFrame.SortLeftButton:Show()
+                else
+                  infoFrame.SortLeftButton:Hide()
+                end
+                if characterIndex < numCharacters then
+                  infoFrame.SortRightButton:Show()
+                else
+                  infoFrame.SortRightButton:Hide()
+                end
+              else
+                infoFrame.SortLeftButton:Hide()
+                infoFrame.SortRightButton:Hide()
+              end
+            end
             if not info.backgroundColor then
               addon.Utils:SetHighlightColor(infoFrame)
             end
           end)
+
           infoFrame:SetScript("OnLeave", function()
-            -- GameTooltip:Hide()
             if info.onLeave then
               info.onLeave(infoFrame, character)
             end
+
+            if infoIndex == 1 then
+              infoFrame.SortLeftButton:Hide()
+              infoFrame.SortRightButton:Hide()
+            end
+
             if not info.backgroundColor then
               addon.Utils:SetHighlightColor(infoFrame, 1, 1, 1, 0)
             end
@@ -1815,6 +1911,9 @@ function UI:SetupButtons()
             addon.Data.db.global.sorting = arg1
             self:Render()
           end,
+          tooltipTitle = option.tooltipTitle and option.tooltipTitle or false,
+          tooltipText = option.tooltipText and option.tooltipText or false,
+          tooltipOnButton = (option.tooltipTitle or option.tooltipText) and true or false,
         })
       end
     end,
