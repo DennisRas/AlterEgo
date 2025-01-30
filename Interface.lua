@@ -1078,8 +1078,8 @@ function UI:RenderMainWindow()
           if not infoFrame then
             infoFrame = CreateFrame("Button", "$parentInfo" .. infoIndex, characterFrame)
             infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-            infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", addon.Constants.sizes.padding, 0)
-            infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
+            infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", addon.Constants.sizes.padding * 1.5, -addon.Constants.sizes.padding)
+            infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding * 1.5, addon.Constants.sizes.padding)
             infoFrame.text:SetJustifyH("CENTER")
             infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
             characterFrame.infoFrames[infoIndex] = infoFrame

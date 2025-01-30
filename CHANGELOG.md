@@ -19,6 +19,7 @@
 - The position of windows are now saved between reloads/sessions
 - Fixed some rendering issues highlighting certain rows with the mouse
 - Shift clicking your keystone (sharing link to chat) now works again
+- Fixed an issue with character and realm names wrapping to a new line if too long
 
 ## v1.1.17 - 2024-12-21
 
