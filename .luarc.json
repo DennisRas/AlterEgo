@@ -177,6 +177,12 @@
         "GREAT_VAULT_REWARDS_WORLD_COMPLETED_FIRST",
         "GREAT_VAULT_REWARDS_WORLD_INCOMPLETE",
         "TableUtil",
-        "LFG_LIST_BEST_RUN"
+        "LFG_LIST_BEST_RUN",
+        "WEEKLY_REWARDS_CLICK_TO_PREVIEW_INSTRUCTIONS",
+        "WEEKLY_REWARDS_ADD_ITEMS",
+        "DELVES_GREAT_VAULT_LABEL",
+        "WeeklyRewards_ShowUI",
+        "WeeklyRewardsFrame",
+        "ToggleFrame"
     ]
 }

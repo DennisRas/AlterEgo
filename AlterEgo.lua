@@ -26,16 +26,25 @@ function Core:OnInitialize()
 
   local libDataObject = {
     label = addonName,
-    tocname = addonName,
     type = "launcher",
     icon = addon.Constants.media.Logo,
-    OnClick = function()
-      self:ToggleWindow()
+    OnClick = function(...)
+      local _, b = ...
+      if b and b == "RightButton" then
+        if WeeklyRewardsFrame and ToggleFrame then
+          ToggleFrame(WeeklyRewardsFrame)
+        else
+          WeeklyRewards_ShowUI()
+        end
+      else
+        self:ToggleWindow()
+      end
     end,
     OnTooltipShow = function(tooltip)
       tooltip:SetText(addonName, 1, 1, 1)
-      tooltip:AddLine("Click to show the character summary.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-      local dragText = "Drag to move this icon"
+      tooltip:AddLine("|cff00ff00Left click|r to open AlterEgo.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+      tooltip:AddLine("|cff00ff00Right click|r to open the Great Vault.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+      local dragText = "|cff00ff00Drag|r to move this icon"
       if addon.Data.db.global.minimap.lock then
         dragText = dragText .. " |cffff0000(locked)|r"
       end
