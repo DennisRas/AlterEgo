@@ -7,6 +7,8 @@
 - Added new character order: Custom Order - Customize the order of your characters
 - You can now move all windows halfway off the screen
 - Focusing a window will now move it to the front of other windows
+- Added a new button for opening the Great Vault
+- You can now right click the minimap button to open the Great Vault
 
 ### Updated
 
