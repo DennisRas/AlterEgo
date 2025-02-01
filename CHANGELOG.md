@@ -9,6 +9,7 @@
 - Focusing a window will now move it to the front of other windows
 - Added a new button for opening the Great Vault
 - You can now right click the minimap button to open the Great Vault
+- Added character gold to the character name tooltip
 
 ### Updated
 

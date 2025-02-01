@@ -146,6 +146,13 @@ function Core:OnEnable()
       addon.Data:UpdateCurrencies()
     end
   )
+  self:RegisterBucketEvent(
+    {
+      "PLAYER_MONEY",
+    }, 2, function()
+      addon.Data:UpdateMoney()
+    end
+  )
   self:RegisterEvent(
     "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
     function()

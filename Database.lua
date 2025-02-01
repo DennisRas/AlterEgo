@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 20
+Data.dbVersion = 21
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -86,6 +86,7 @@ Data.defaultCharacter = {
     },
   },
   equipment = {},
+  money = 0,
   currencies = {
     -- [1] = {
     --     name = string
@@ -705,6 +706,7 @@ end
 function Data:UpdateDB()
   self:UpdateCharacterInfo()
   self:UpdateEquipment()
+  self:UpdateMoney()
   self:UpdateCurrencies()
   self:UpdateKeystoneItem()
   self:UpdateRaidInstances()
@@ -1057,6 +1059,17 @@ function Data:UpdateCharacterInfo()
 
   character.lastUpdate = GetServerTime()
   addon.UI:Render()
+end
+
+---Store the character money
+function Data:UpdateMoney()
+  local character = self:GetCharacter()
+  if not character then return end
+
+  local money = GetMoney()
+  if money then
+    character.money = money
+  end
 end
 
 function Data:UpdateCurrencies()

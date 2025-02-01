@@ -76,6 +76,10 @@ function UI:GetCharacterInfo(unfiltered)
         if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
           GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1)
         end
+        if character.money ~= nil then
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine(GetMoneyString(character.money, true), 1, 1, 1)
+        end
         if character.currencies ~= nil and addon.Utils:TableCount(character.currencies) > 0 then
           local dataCurrencies = addon.Data:GetCurrencies()
           addon.Utils:TableForEach(dataCurrencies, function(dataCurrency)
