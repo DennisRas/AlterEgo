@@ -368,7 +368,7 @@ function UI:GetCharacterInfo(unfiltered)
       label = "Vault",
       value = function(character)
         if character.vault.hasAvailableRewards == true then
-          return GREEN_FONT_COLOR:WrapTextInColorCode("Rewards")
+          return GREEN_FONT_COLOR:WrapTextInColorCode(QUEST_REWARDS)
         end
         return ""
       end,
@@ -387,7 +387,7 @@ function UI:GetCharacterInfo(unfiltered)
       enabled = true,
     },
     {
-      label = WHITE_FONT_COLOR:WrapTextInColorCode("Raids"),
+      label = WHITE_FONT_COLOR:WrapTextInColorCode(RAIDS),
       value = function(character)
         local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type == Enum.WeeklyRewardChestThresholdType.Raid end)
         local values = {}
@@ -1714,7 +1714,7 @@ function UI:SetupButtons()
             self:Render()
           end,
         })
-        UIDropDownMenu_AddButton({text = "Raids", isTitle = true, notCheckable = true})
+        UIDropDownMenu_AddButton({text = RAIDS, isTitle = true, notCheckable = true})
         UIDropDownMenu_AddButton({
           text = "Show raid progress",
           checked = addon.Data.db.global.raids and addon.Data.db.global.raids.enabled,

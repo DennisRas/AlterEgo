@@ -183,6 +183,8 @@
         "DELVES_GREAT_VAULT_LABEL",
         "WeeklyRewards_ShowUI",
         "WeeklyRewardsFrame",
-        "ToggleFrame"
+        "ToggleFrame",
+        "QUEST_REWARDS",
+        "RAIDS"
     ]
 }
