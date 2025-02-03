@@ -185,6 +185,14 @@
         "WeeklyRewardsFrame",
         "ToggleFrame",
         "QUEST_REWARDS",
-        "RAIDS"
+        "RAIDS",
+        "DUNGEONS",
+        "WORLD",
+        "DifficultyUtil",
+        "GREAT_VAULT_WORLD_TIER",
+        "WEEKLY_REWARDS_MYTHIC",
+        "WEEKLY_REWARDS_HEROIC",
+        "MAP_LEGEND_CATEGORY_ACTIVITIES",
+        "RAID_BOSSES"
     ]
 }

@@ -30,6 +30,262 @@ function UI:Render()
   self:RenderEquipmentWindow()
 end
 
+local vaultObjectives = {
+  [Enum.WeeklyRewardChestThresholdType.Activities] = "|4dungeon:dungeons;",
+  [Enum.WeeklyRewardChestThresholdType.Raid] = "|4boss:bosses;",
+  [Enum.WeeklyRewardChestThresholdType.World] = "|4activity:activities;",
+}
+
+local function isCompletedAtHeroicLevel(activityTierID)
+  local difficultyID = C_WeeklyRewards.GetDifficultyIDForActivityTier(activityTierID)
+  return difficultyID == DifficultyUtil.ID.DungeonHeroic
+end
+
+local firstVaultSlotIndex = 1
+local vaultProgressInstructions = {
+  [Enum.WeeklyRewardChestThresholdType.Raid] = {
+    ["default"] = "Defeat bosses this week to unlock your first Great Vault reward.",
+    ["firstSlotZero"] = "Defeat %1$d |4boss:bosses; this week to unlock your first Great Vault reward.",
+    ["firstSlotProgress"] = "Defeat %1$d more |4boss:bosses; this week to unlock your first Great Vault reward.",
+    ["anotherSlot"] = "Defeat %1$d more |4boss:bosses; this week to unlock another Great Vault reward.",
+  },
+  [Enum.WeeklyRewardChestThresholdType.Activities] = {
+    ["default"] = "Complete a Timewalking, Heroic or Mythic dungeon this week to unlock your first Great Vault reward.",
+    ["firstSlotZero"] = "Complete %1$d Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock your first Great Vault reward.",
+    ["firstSlotProgress"] = "Complete %1$d more Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock your first Great Vault reward.",
+    ["anotherSlot"] = "Complete %1$d more Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock another Great Vault reward.",
+  },
+  [Enum.WeeklyRewardChestThresholdType.World] = {
+    ["default"] = "Complete delves or world activities this week to unlock your first Great Vault reward.",
+    ["firstSlotZero"] = "Complete %1$d |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
+    ["firstSlotProgress"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
+    ["anotherSlot"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock another Great Vault reward.",
+  },
+}
+
+local function getVaultProgressTooltip(infoFrame, character, activityType)
+  local difficulties = addon.Data:GetRaidDifficulties(true)
+  local dungeons = addon.Data:GetDungeons()
+  local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
+  local numActivities = addon.Utils:TableCount(activities)
+  local selfCharacter = addon.Data:GetCharacter()
+  local activitiesInProgress = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
+  local numActivitiesInProgress = addon.Utils:TableCount(activitiesInProgress)
+  table.sort(activities, function(a, b) return a.index < b.index end)
+  table.sort(activitiesInProgress, function(a, b) return a.threshold < b.threshold end)
+
+  GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
+  GameTooltip:AddLine("Vault Progress", 1, 1, 1)
+
+  do -- Activity Progress
+    for i = 1, 3 do
+      local textLeft = format("Vault Slot %d:", i)
+      local textRight = "Locked"
+      local color = LIGHTGRAY_FONT_COLOR
+      local rewardItemLevel = "?"
+
+      -- Get activity threshold + objective
+      local slotInfo = addon.Utils:TableFind(selfCharacter and selfCharacter.vault and selfCharacter.vault.slots or {}, function(slot)
+        return slot.type == activityType and slot.index == i
+      end)
+      if slotInfo then
+        local vaultObjective = vaultObjectives[Enum.WeeklyRewardChestThresholdType.World]
+        if vaultObjectives[slotInfo.type] then
+          vaultObjective = vaultObjectives[slotInfo.type]
+        end
+        textLeft = format("%d %s:", slotInfo.threshold, string.lower(vaultObjective or "?"))
+        textRight = format("Locked (%d/%d)", 0, slotInfo.threshold)
+      end
+
+      local activity = addon.Utils:TableGet(activities, "index", i)
+      if activity then
+        if activity.progress >= activity.threshold then
+          textRight = "Unlocked"
+          color = WHITE_FONT_COLOR
+
+          -- Difficulty name
+          if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
+            textRight = GetDifficultyInfo(activity.level)
+            if not textRight then
+              local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
+              if dataDifficulty then
+                textRight = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
+              end
+            end
+          elseif activity.type == Enum.WeeklyRewardChestThresholdType.Activities then
+            if isCompletedAtHeroicLevel(activity.activityTierID) then
+              textRight = WEEKLY_REWARDS_HEROIC
+            else
+              textRight = WEEKLY_REWARDS_MYTHIC:format(activity.level)
+            end
+          elseif activity.type == Enum.WeeklyRewardChestThresholdType.World then
+            textRight = GREAT_VAULT_WORLD_TIER:format(activity.level)
+          end
+
+          -- Reward iLvl
+          if activity.exampleRewardLink ~= nil and activity.exampleRewardLink ~= "" then
+            local detailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo(activity.exampleRewardLink)
+            if detailedItemLevelInfo then
+              rewardItemLevel = tostring(detailedItemLevelInfo)
+            end
+          end
+
+          textRight = format("%s (%d+)", textRight, rewardItemLevel)
+        else
+          textRight = format("Locked (%d/%d)", activity.progress, activity.threshold)
+        end
+      end
+      GameTooltip:AddDoubleLine(textLeft, textRight, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
+    end
+  end
+
+  do -- Raid stats
+    -- TODO: List raid bosses and the highest difficulty defeated
+  end
+
+  do -- Dungeon stats
+    if activityType == Enum.WeeklyRewardChestThresholdType.Activities then
+      if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
+        local numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
+        local numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
+        local numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
+        if numHeroic + numMythic + numMythicPlus > 0 then
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine("Total Runs This Week:")
+        end
+        if numHeroic > 0 then
+          GameTooltip:AddDoubleLine("Heroic", tostring(numHeroic), 1, 1, 1, 1, 1, 1)
+        end
+        if numMythic > 0 then
+          GameTooltip:AddDoubleLine("Mythic", tostring(numMythic), 1, 1, 1, 1, 1, 1)
+        end
+        if numMythicPlus > 0 then
+          GameTooltip:AddDoubleLine("Mythic+", tostring(numMythicPlus), 1, 1, 1, 1, 1, 1)
+        end
+      end
+    end
+  end
+
+  do -- Dungeon runs
+    if activityType == Enum.WeeklyRewardChestThresholdType.Activities then
+      local runsThisWeek = addon.Utils:TableFilter(character.mythicplus.runHistory or {}, function(run) return run.thisWeek == true end)
+      local numRunsThisWeek = addon.Utils:TableCount(runsThisWeek)
+      local numMaxRuns = 8
+      table.sort(runsThisWeek, function(a, b) return a.level > b.level end)
+
+      -- Detect max runs needed
+      local lastActivity = activities[numActivities]
+      if lastActivity then
+        numMaxRuns = lastActivity.threshold
+      end
+      if numRunsThisWeek > 0 then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Top Runs This Week:")
+        addon.Utils:TableForEach(runsThisWeek, function(run, i)
+          if i > numMaxRuns then return end
+          local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
+          local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
+          local dungeonName = "Mythic+"
+          local color = WHITE_FONT_COLOR
+          local matchesThreshold = addon.Utils:TableFind(character.vault.slots or {}, function(activity)
+            return activity.type and activity.type == activityType and activity.threshold and activity.threshold == i
+          end)
+          if matchesThreshold then
+            color = GREEN_FONT_COLOR
+          end
+          if dungeon then
+            dungeonName = dungeon.short and dungeon.short or dungeon.name
+          end
+          GameTooltip:AddDoubleLine(dungeonName, string.format("+%d (%d)", run.level, rewardLevel), 1, 1, 1, color.r, color.g, color.b)
+        end)
+      end
+
+      -- Check to see if we've done Mythic Zeros
+      -- Check to see if we've done Heroics
+    end
+  end
+
+  do -- Progress instructions
+    local text = ""
+    local instruction = vaultProgressInstructions[activityType]
+    if instruction then
+      text = instruction["default"]
+      if numActivities > 0 then
+        if numActivitiesInProgress > 0 then
+          local currentActivityInProgress = activitiesInProgress[1]
+          if currentActivityInProgress then
+            local missing = currentActivityInProgress.threshold - currentActivityInProgress.progress
+            if currentActivityInProgress.index == firstVaultSlotIndex then
+              if currentActivityInProgress.progress == 0 then
+                text = format(instruction["firstSlotZero"], missing)
+              else
+                text = format(instruction["firstSlotProgress"], missing)
+              end
+            else
+              text = format(instruction["anotherSlot"], missing)
+            end
+          end
+        end
+      end
+    end
+    if text ~= "" then
+      GameTooltip:AddLine(" ")
+      GameTooltip:AddLine("Next Step:")
+      GameTooltip:AddLine(text, 1, 1, 1, true)
+    end
+  end
+
+  do -- Reward upgrades
+    -- TODO: Show the next level reward instruction if possible
+  end
+  GameTooltip:Show()
+end
+
+local function getVaultProgressValue(character, activityType)
+  local difficulties = addon.Data:GetRaidDifficulties(true)
+  local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
+  local texts = {}
+
+  for i = 1, 3 do
+    local text = "-"
+    local color = LIGHTGRAY_FONT_COLOR
+
+    local activity = addon.Utils:TableGet(activities, "index", i)
+    if activity and activity.progress >= activity.threshold then
+      text = "?"
+      color = UNCOMMON_GREEN_COLOR
+
+      if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
+        local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
+        local difficultyName = GetDifficultyInfo(activity.level)
+        if difficultyName then
+          text = difficultyName
+        end
+        if dataDifficulty then
+          text = dataDifficulty.abbr and dataDifficulty.abbr or dataDifficulty.name
+          if addon.Data.db.global.raids.colors and dataDifficulty.color then
+            color = dataDifficulty.color
+          end
+        end
+
+        text = tostring(text):sub(1, 1)
+      elseif activity.type == Enum.WeeklyRewardChestThresholdType.Activities then
+        if isCompletedAtHeroicLevel(activity.activityTierID) then
+          text = WEEKLY_REWARDS_HEROIC:sub(1, 1)
+        else
+          text = tostring(activity.level)
+        end
+      elseif activity.type == Enum.WeeklyRewardChestThresholdType.World then
+        text = tostring(activity.level)
+      end
+    end
+
+    table.insert(texts, color:WrapTextInColorCode(text))
+  end
+
+  return table.concat(texts, "  ")
+end
+
 function UI:GetCharacterInfo(unfiltered)
   local dungeons = addon.Data:GetDungeons()
   local difficulties = addon.Data:GetRaidDifficulties(true)
@@ -388,327 +644,23 @@ function UI:GetCharacterInfo(unfiltered)
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(RAIDS),
-      value = function(character)
-        local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type == Enum.WeeklyRewardChestThresholdType.Raid end)
-        local values = {}
-
-        for i = 1, 3 do
-          local activity = addon.Utils:TableGet(activities, "index", i)
-          local value = "-"
-          local color = LIGHTGRAY_FONT_COLOR
-
-          if activity then
-            if activity.level > 0 then
-              local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
-              if dataDifficulty then
-                value = dataDifficulty.abbr
-                if addon.Data.db.global.raids.colors then
-                  color = dataDifficulty.color
-                end
-              end
-              if value == nil then
-                local difficultyName = GetDifficultyInfo(activity.level)
-                if difficultyName ~= nil then
-                  value = tostring(difficultyName):sub(1, 1)
-                else
-                  value = "?"
-                end
-              end
-              if color == nil then
-                color = UNCOMMON_GREEN_COLOR
-              end
-            end
-          end
-
-          table.insert(values, color:WrapTextInColorCode(value))
-        end
-        return table.concat(values, "  ")
-      end,
-      onEnter = function(infoFrame, character)
-        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
-        local characterSlots = character.vault.slots or {}
-        local activities = addon.Utils:TableFilter(characterSlots, function(slot)
-          return slot.type and slot.type == Enum.WeeklyRewardChestThresholdType.Raid
-        end)
-
-        do -- Show boss progress
-          for i = 1, 3 do
-            local activity = addon.Utils:TableGet(activities, "index", i)
-            local label = format("%d bosses:", i * 2)
-            local value = "Locked"
-            local color = LIGHTGRAY_FONT_COLOR
-            if activity then
-              label = format("%d bosses:", activity.threshold)
-              if activity.progress >= activity.threshold then
-                color = WHITE_FONT_COLOR
-                if activity.exampleRewardLink ~= nil and activity.exampleRewardLink ~= "" then
-                  local itemLevel = GetDetailedItemLevelInfo(activity.exampleRewardLink)
-                  local difficultyName = GetDifficultyInfo(activity.level)
-                  local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
-                  if dataDifficulty then
-                    difficultyName = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
-                  end
-                  value = format("%s (%d+)", difficultyName, itemLevel)
-                else
-                  value = "?"
-                end
-              end
-            end
-            GameTooltip:AddDoubleLine(label, value, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
-          end
-        end
-
-        do -- Show improvement info
-          local tooltip = ""
-          local incompleteSlots = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
-          table.sort(incompleteSlots, function(a, b) return a.threshold < b.threshold end)
-
-          if addon.Utils:TableCount(activities) > 0 then
-            if addon.Utils:TableCount(incompleteSlots) > 0 then
-              if addon.Utils:TableCount(incompleteSlots) == addon.Utils:TableCount(activities) then
-                tooltip = format("Defeat %d bosses this week to unlock your first Great Vault reward.", incompleteSlots[1].threshold)
-              else
-                local diff = incompleteSlots[1].threshold - incompleteSlots[1].progress
-                if diff == 1 then
-                  tooltip = format("Defeat %d more boss this week to unlock another Great Vault reward.", diff)
-                else
-                  tooltip = format("Defeat another %d bosses this week to unlock another Great Vault reward.", diff)
-                end
-              end
-            end
-          else
-            tooltip = "Defeat 2 bosses this week to unlock your first Great Vault reward."
-          end
-
-          if tooltip ~= "" then
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(tooltip, nil, nil, nil, true)
-          end
-        end
-        GameTooltip:Show()
-      end,
-      onLeave = function()
-        GameTooltip:Hide()
-      end,
+      value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.Raid) end,
+      onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.Raid) end,
+      onLeave = function() GameTooltip:Hide() end,
       enabled = addon.Data.db.global.raids.enabled,
     },
     {
-      label = WHITE_FONT_COLOR:WrapTextInColorCode("Dungeons"),
-      value = function(character)
-        local value = {}
-        if character.vault.slots ~= nil then
-          local slots = addon.Utils:TableFilter(character.vault.slots, function(slot)
-            return slot.type == Enum.WeeklyRewardChestThresholdType.Activities
-          end)
-          if #slots > 0 then
-            addon.Utils:TableForEach(slots, function(slot)
-              local level = "-"
-              local color = LIGHTGRAY_FONT_COLOR
-              if slot.progress >= slot.threshold then
-                level = tostring(slot.level)
-                color = UNCOMMON_GREEN_COLOR
-              end
-              table.insert(value, color:WrapTextInColorCode(level))
-            end)
-          else
-            for i = 1, 3 do
-              table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
-            end
-          end
-        else
-          for i = 1, 3 do
-            table.insert(value, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode("-"))
-          end
-        end
-        return table.concat(value, "  ")
-      end,
-      onEnter = function(infoFrame, character)
-        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
-        local addBlankLine = false
-
-        do -- Stats
-          local lineAdded = false
-          if character.mythicplus ~= nil and character.mythicplus.numCompletedDungeonRuns ~= nil then
-            local numHeroic = character.mythicplus.numCompletedDungeonRuns.heroic or 0
-            local numMythic = character.mythicplus.numCompletedDungeonRuns.mythic or 0
-            local numMythicPlus = character.mythicplus.numCompletedDungeonRuns.mythicPlus or 0
-            if numHeroic > 0 then
-              GameTooltip:AddLine("Heroic runs this Week: " .. "|cffffffff" .. tostring(numHeroic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-              lineAdded = true
-            end
-            if numMythic > 0 then
-              GameTooltip:AddLine("Mythic runs this Week: " .. "|cffffffff" .. tostring(numMythic) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-              lineAdded = true
-            end
-            if numMythicPlus > 0 then
-              GameTooltip:AddLine("Mythic+ runs this Week: " .. "|cffffffff" .. tostring(numMythicPlus) .. "|r", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-              lineAdded = true
-            end
-          end
-          addBlankLine = lineAdded
-        end
-
-        do -- Show progress
-          local lineAdded = false
-          local runsThisWeek = addon.Utils:TableFilter(character.mythicplus.runHistory or {}, function(run)
-            return run.thisWeek == true
-          end)
-          local numRunsThisWeek = addon.Utils:TableCount(runsThisWeek) or 0
-          if numRunsThisWeek > 0 then
-            table.sort(runsThisWeek, function(a, b)
-              return a.level > b.level
-            end)
-
-            if addBlankLine then GameTooltip_AddBlankLineToTooltip(GameTooltip) end
-            GameTooltip:AddLine("Top Runs This Week:", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-            lineAdded = true
-
-            for runIndex, run in ipairs(runsThisWeek) do
-              local threshold = addon.Utils:TableFind(character.vault.slots, function(slot)
-                return slot.type and slot.type == Enum.WeeklyRewardChestThresholdType.Activities and slot.threshold and slot.threshold == runIndex
-              end)
-              local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
-              local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
-              local color = WHITE_FONT_COLOR
-              if threshold then
-                color = GREEN_FONT_COLOR
-              end
-              if dungeon then
-                GameTooltip:AddDoubleLine(dungeon.short and dungeon.short or dungeon.name, string.format("+%d (%d)", run.level, rewardLevel), WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, color.r, color.g, color.b)
-              end
-              if runIndex == 8 then
-                break
-              end
-            end
-          end
-          addBlankLine = lineAdded
-        end
-
-        do -- Show improvement info
-          local lineAdded = false
-          if addBlankLine then
-            GameTooltip_AddBlankLineToTooltip(GameTooltip)
-            addBlankLine = false
-          end
-          local lastCompletedActivityInfo, nextActivityInfo = addon.Utils:GetActivitiesProgress(character)
-          if not lastCompletedActivityInfo then
-            GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_INCOMPLETE)
-            lineAdded = true
-          else
-            if nextActivityInfo then
-              local globalString = (lastCompletedActivityInfo.index == 1) and GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_FIRST or GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_SECOND
-              GameTooltip_AddNormalLine(GameTooltip, globalString:format(nextActivityInfo.threshold - nextActivityInfo.progress))
-              lineAdded = true
-            else
-              GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_COMPLETED_THIRD)
-              local level, count = addon.Utils:GetLowestLevelInTopDungeonRuns(character, lastCompletedActivityInfo.threshold)
-              if level == WeeklyRewardsUtil.HeroicLevel then
-                GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR)
-                GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_HEROIC_IMPROVE:format(count))
-                lineAdded = true
-              else
-                local nextLevel = WeeklyRewardsUtil.GetNextMythicLevel(level)
-                -- Blizzard bug: Above function always does +1 even at max reward level lol
-                if nextLevel < 10 then
-                  GameTooltip_AddColoredLine(GameTooltip, GREAT_VAULT_IMPROVE_REWARD, GREEN_FONT_COLOR)
-                  GameTooltip_AddNormalLine(GameTooltip, GREAT_VAULT_REWARDS_MYTHIC_IMPROVE:format(count, nextLevel))
-                  lineAdded = true
-                end
-              end
-            end
-          end
-          addBlankLine = lineAdded
-        end
-        GameTooltip:Show()
-      end,
-      onLeave = function()
-        GameTooltip:Hide()
-      end,
+      label = WHITE_FONT_COLOR:WrapTextInColorCode(DUNGEONS),
+      value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.Activities) end,
+      onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.Activities) end,
+      onLeave = function() GameTooltip:Hide() end,
       enabled = true,
     },
     {
-      label = WHITE_FONT_COLOR:WrapTextInColorCode("World"),
-      value = function(character)
-        local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == Enum.WeeklyRewardChestThresholdType.World end)
-        local values = {}
-
-        for i = 1, 3 do
-          local activity = addon.Utils:TableGet(activities, "index", i)
-          local value = "-"
-          local color = LIGHTGRAY_FONT_COLOR
-          if activity then
-            if activity.progress >= activity.threshold then
-              value = tostring(activity.level)
-              color = UNCOMMON_GREEN_COLOR
-            end
-          end
-          table.insert(values, color:WrapTextInColorCode(value))
-        end
-
-        return table.concat(values, "  ")
-      end,
-      onEnter = function(infoFrame, character)
-        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Vault Progress", 1, 1, 1)
-        local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(actvity) return actvity.type and actvity.type == Enum.WeeklyRewardChestThresholdType.World end)
-        local lockedActivities = addon.Utils:TableFilter(activities, function(activity) return activity.progress < activity.threshold end)
-        table.sort(lockedActivities, function(a, b) return a.threshold < b.threshold end)
-
-        do -- Show activity status
-          for i = 1, 3 do
-            local activity = addon.Utils:TableGet(activities, "index", i)
-            local value = "Locked"
-            local valueColor = LIGHTGRAY_FONT_COLOR
-            local label = format("%d activities:", i * 2)
-
-            if activity then
-              label = format("%d activities:", activity.threshold)
-              if activity.progress >= activity.threshold then
-                valueColor = WHITE_FONT_COLOR
-                value = format("Tier %d", activity.level)
-                if activity.exampleRewardLink ~= nil and activity.exampleRewardLink ~= "" then
-                  local itemLevel = GetDetailedItemLevelInfo(activity.exampleRewardLink)
-                  if itemLevel then
-                    value = format("Tier %d (%d+)", activity.level, itemLevel)
-                  end
-                end
-              end
-            end
-            GameTooltip:AddDoubleLine(label, value, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, valueColor.r, valueColor.g, valueColor.b)
-          end
-        end
-
-        do -- Show improvement info
-          local tooltip = ""
-          if addon.Utils:TableCount(activities) > 0 then
-            if addon.Utils:TableCount(lockedActivities) == 0 then
-              -- Item level improvements
-            else
-              local diff = lockedActivities[1].threshold - lockedActivities[1].progress
-              if addon.Utils:TableCount(lockedActivities) == 1 then
-                tooltip = GREAT_VAULT_REWARDS_WORLD_COMPLETED_SECOND:format(diff)
-              elseif addon.Utils:TableCount(lockedActivities) == 2 then
-                tooltip = GREAT_VAULT_REWARDS_WORLD_COMPLETED_FIRST:format(diff)
-              elseif addon.Utils:TableCount(lockedActivities) == 3 then
-                tooltip = GREAT_VAULT_REWARDS_WORLD_INCOMPLETE:format(diff)
-              end
-            end
-          else
-            tooltip = GREAT_VAULT_REWARDS_WORLD_INCOMPLETE:format(2)
-          end
-
-          if tooltip ~= "" then
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(tooltip, nil, nil, nil, true)
-          end
-        end
-        GameTooltip:Show()
-      end,
-      onLeave = function()
-        GameTooltip:Hide()
-      end,
+      label = WHITE_FONT_COLOR:WrapTextInColorCode(WORLD),
+      value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.World) end,
+      onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.World) end,
+      onLeave = function() GameTooltip:Hide() end,
       enabled = addon.Data.db.global.world and addon.Data.db.global.world.enabled == true,
     },
   }
