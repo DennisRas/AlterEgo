@@ -30,49 +30,77 @@ function UI:Render()
   self:RenderEquipmentWindow()
 end
 
-local vaultObjectives = {
-  [Enum.WeeklyRewardChestThresholdType.Activities] = "|4dungeon:dungeons;",
-  [Enum.WeeklyRewardChestThresholdType.Raid] = "|4boss:bosses;",
-  [Enum.WeeklyRewardChestThresholdType.World] = "|4activity:activities;",
-}
-
 local function isCompletedAtHeroicLevel(activityTierID)
   local difficultyID = C_WeeklyRewards.GetDifficultyIDForActivityTier(activityTierID)
   return difficultyID == DifficultyUtil.ID.DungeonHeroic
 end
 
-local firstVaultSlotIndex = 1
-local vaultProgressInstructions = {
+local function EncountersSort(left, right)
+  if left.instanceID ~= right.instanceID then
+    return left.instanceID < right.instanceID
+  end
+  local leftCompleted = left.bestDifficulty > 0
+  local rightCompleted = right.bestDifficulty > 0
+  if leftCompleted ~= rightCompleted then
+    return leftCompleted
+  end
+  return left.uiOrder < right.uiOrder
+end
+
+local function getRaidName(activityType, activityIndex)
+  local encounters = C_WeeklyRewards.GetActivityEncounterInfo(activityType, activityIndex)
+  if encounters then
+    table.sort(encounters, EncountersSort)
+    if encounters[1] then
+      local name, description, encounterID, rootSectionID, link, instanceID = EJ_GetEncounterInfo(encounters[1].encounterID)
+      local instanceName = EJ_GetInstanceInfo(instanceID)
+      return instanceName
+    end
+  end
+end
+
+local vaultSlotOneIndex = 1
+local vaultTooltipTexts = {
   [Enum.WeeklyRewardChestThresholdType.Raid] = {
+    ["objective"] = "|4boss:bosses;",
     ["default"] = "Defeat bosses this week to unlock your first Great Vault reward.",
-    ["firstSlotZero"] = "Defeat %1$d |4boss:bosses; this week to unlock your first Great Vault reward.",
-    ["firstSlotProgress"] = "Defeat %1$d more |4boss:bosses; this week to unlock your first Great Vault reward.",
-    ["anotherSlot"] = "Defeat %1$d more |4boss:bosses; this week to unlock another Great Vault reward.",
+    ["firstSlotStart"] = "Defeat %1$d |4boss:bosses; this week to unlock your first Great Vault reward.",
+    ["firstSlotMore"] = "Defeat %1$d more |4boss:bosses; this week to unlock your first Great Vault reward.",
+    ["nextSlotMore"] = "Defeat %1$d more |4boss:bosses; this week to unlock another Great Vault reward.",
+    ["rewardsImprove"] = "Defeat bosses on %s difficulty or higher to improve your vault Great Vault rewards.",
+    ["rewardsMaxed"] = "Good job - You are done! There are no more rewards to improve.",
   },
   [Enum.WeeklyRewardChestThresholdType.Activities] = {
+    ["objective"] = "|4dungeon:dungeons;",
     ["default"] = "Complete a Timewalking, Heroic or Mythic dungeon this week to unlock your first Great Vault reward.",
-    ["firstSlotZero"] = "Complete %1$d Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock your first Great Vault reward.",
-    ["firstSlotProgress"] = "Complete %1$d more Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock your first Great Vault reward.",
-    ["anotherSlot"] = "Complete %1$d more Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock another Great Vault reward.",
+    ["firstSlotStart"] = "Complete %1$d Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock your first Great Vault reward.",
+    ["firstSlotMore"] = "Complete %1$d more Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock your first Great Vault reward.",
+    ["nextSlotMore"] = "Complete %1$d more Timewalking, Heroic or Mythic |4dungeon:dungeons; this week to unlock another Great Vault reward.",
+    ["rewardsImprove"] = "Complete Mythic dungeons on level %d or higher to improve your vault Great Vault rewards.",
+    ["rewardsMaxed"] = "Good job - You are done! There are no more rewards to improve. Time to work on your rating?",
   },
   [Enum.WeeklyRewardChestThresholdType.World] = {
+    ["objective"] = "|4activity:activities;",
     ["default"] = "Complete delves or world activities this week to unlock your first Great Vault reward.",
-    ["firstSlotZero"] = "Complete %1$d |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
-    ["firstSlotProgress"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
-    ["anotherSlot"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock another Great Vault reward.",
+    ["firstSlotStart"] = "Complete %1$d |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
+    ["firstSlotMore"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
+    ["nextSlotMore"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock another Great Vault reward.",
+    ["rewardsImprove"] = "Complete delves on tier %d or higher to improve your vault Great Vault rewards.",
+    ["rewardsMaxed"] = "Good job - You are done! There are no more rewards to improve.",
   },
 }
 
 local function getVaultProgressTooltip(infoFrame, character, activityType)
+  local loggedCharacter = addon.Data:GetCharacter()
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local dungeons = addon.Data:GetDungeons()
   local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
   local numActivities = addon.Utils:TableCount(activities)
-  local selfCharacter = addon.Data:GetCharacter()
   local activitiesInProgress = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
   local numActivitiesInProgress = addon.Utils:TableCount(activitiesInProgress)
   table.sort(activities, function(a, b) return a.index < b.index end)
   table.sort(activitiesInProgress, function(a, b) return a.threshold < b.threshold end)
+  local vaultTooltipText = vaultTooltipTexts[activityType]
 
   GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
   GameTooltip:AddLine("Vault Progress", 1, 1, 1)
@@ -84,33 +112,21 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       local color = LIGHTGRAY_FONT_COLOR
       local rewardItemLevel = "?"
 
-      -- Get activity threshold + objective
-      local slotInfo = addon.Utils:TableFind(selfCharacter and selfCharacter.vault and selfCharacter.vault.slots or {}, function(slot)
-        return slot.type == activityType and slot.index == i
-      end)
-      if slotInfo then
-        local vaultObjective = vaultObjectives[Enum.WeeklyRewardChestThresholdType.World]
-        if vaultObjectives[slotInfo.type] then
-          vaultObjective = vaultObjectives[slotInfo.type]
-        end
-        textLeft = format("%d %s:", slotInfo.threshold, string.lower(vaultObjective or "?"))
-        textRight = format("Locked (%d/%d)", 0, slotInfo.threshold)
-      end
-
       local activity = addon.Utils:TableGet(activities, "index", i)
       if activity then
+        textLeft = format("%d %s:", activity.threshold, string.lower(activity.type and vaultTooltipTexts[activity.type] and vaultTooltipTexts[activity.type]["objective"] or vaultTooltipText["objective"]))
         if activity.progress >= activity.threshold then
           textRight = "Unlocked"
           color = WHITE_FONT_COLOR
 
           -- Difficulty name
-          if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
-            textRight = GetDifficultyInfo(activity.level)
-            if not textRight then
-              local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
-              if dataDifficulty then
-                textRight = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
-              end
+          if activity.type == Enum.WeeklyRewardChestThresholdType.Raid then
+            local difficultyName = GetDifficultyInfo(activity.level)
+            local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
+            if difficultyName then
+              textRight = difficultyName
+            elseif dataDifficulty then
+              textRight = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
             end
           elseif activity.type == Enum.WeeklyRewardChestThresholdType.Activities then
             if isCompletedAtHeroicLevel(activity.activityTierID) then
@@ -134,13 +150,44 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
         else
           textRight = format("Locked (%d/%d)", activity.progress, activity.threshold)
         end
+      else
+        -- Get activity threshold and objective from logged in character since current character is missing vault activity data
+        local activityInfo = addon.Utils:TableFind(loggedCharacter and loggedCharacter.vault and loggedCharacter.vault.slots or {}, function(slot) return slot.type == activityType and slot.index == i end)
+        if activityInfo then
+          textLeft = format("%d %s:", activityInfo.threshold, string.lower(activityInfo.type and vaultTooltipTexts[activityInfo.type] and vaultTooltipTexts[activityInfo.type]["objective"] or vaultTooltipText["objective"]))
+          textRight = format("Locked (%d/%d)", 0, activityInfo.threshold)
+        end
       end
       GameTooltip:AddDoubleLine(textLeft, textRight, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, color.r, color.g, color.b)
     end
   end
 
   do -- Raid stats
-    -- TODO: List raid bosses and the highest difficulty defeated
+    if activityType == Enum.WeeklyRewardChestThresholdType.Raid and numActivities > 0 then
+      local activity = activities[numActivities]
+      local encounters = C_WeeklyRewards.GetActivityEncounterInfo(activity.type, activity.index)
+      if encounters then
+        table.sort(encounters, EncountersSort)
+        local lastInstanceID = nil
+        for index, encounter in ipairs(encounters) do
+          local name, description, encounterID, rootSectionID, link, instanceID = EJ_GetEncounterInfo(encounter.encounterID)
+          if instanceID ~= lastInstanceID then
+            local instanceName = EJ_GetInstanceInfo(instanceID)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(format(WEEKLY_REWARDS_ENCOUNTER_LIST, instanceName), 1, 1, 1)
+            lastInstanceID = instanceID
+          end
+          if name then
+            if encounter.bestDifficulty > 0 then
+              local completedDifficultyName = DifficultyUtil.GetDifficultyName(encounter.bestDifficulty)
+              GameTooltip:AddLine(format(WEEKLY_REWARDS_COMPLETED_ENCOUNTER, name, completedDifficultyName), GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            else
+              GameTooltip:AddLine(format(DASH_WITH_TEXT, name), DISABLED_FONT_COLOR.r, DISABLED_FONT_COLOR.g, DISABLED_FONT_COLOR.b)
+            end
+          end
+        end
+      end
+    end
   end
 
   do -- Dungeon stats
@@ -207,36 +254,60 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
 
   do -- Progress instructions
     local text = ""
-    local instruction = vaultProgressInstructions[activityType]
-    if instruction then
-      text = instruction["default"]
-      if numActivities > 0 then
-        if numActivitiesInProgress > 0 then
-          local currentActivityInProgress = activitiesInProgress[1]
-          if currentActivityInProgress then
-            local missing = currentActivityInProgress.threshold - currentActivityInProgress.progress
-            if currentActivityInProgress.index == firstVaultSlotIndex then
-              if currentActivityInProgress.progress == 0 then
-                text = format(instruction["firstSlotZero"], missing)
-              else
-                text = format(instruction["firstSlotProgress"], missing)
-              end
+    if vaultTooltipText then
+      if numActivities == 0 or numActivitiesInProgress == 0 then
+        text = vaultTooltipText["default"]
+      end
+      if numActivitiesInProgress > 0 then
+        local currentActivityInProgress = activitiesInProgress[1]
+        if currentActivityInProgress then
+          local missing = currentActivityInProgress.threshold - currentActivityInProgress.progress
+          if currentActivityInProgress.index == vaultSlotOneIndex then
+            if currentActivityInProgress.progress == 0 then
+              text = format(vaultTooltipText["firstSlotStart"], missing)
             else
-              text = format(instruction["anotherSlot"], missing)
+              text = format(vaultTooltipText["firstSlotMore"], missing)
             end
+          else
+            text = format(vaultTooltipText["nextSlotMore"], missing)
           end
         end
+      elseif numActivities > 0 then
+        if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
+          -- local activity = activities[numActivities]
+          -- local encounters = C_WeeklyRewards.GetActivityEncounterInfo(activity.type, activity.index);
+          -- if encounters then
+          --   table.sort(encounters, EncountersSort);
+          --   local lastInstanceID = nil;
+          --   for _, encounter in ipairs(encounters) do
+          --     local name, description, encounterID, rootSectionID, link, instanceID = EJ_GetEncounterInfo(encounter.encounterID);
+          --     if name then
+          --       if encounter.bestDifficulty > 0 then
+          --         local completedDifficultyName = DifficultyUtil.GetDifficultyName(encounter.bestDifficulty);
+          --         GameTooltip_AddColoredLine(GameTooltip, format(WEEKLY_REWARDS_COMPLETED_ENCOUNTER, name, completedDifficultyName), GREEN_FONT_COLOR);
+          --       else
+          --         GameTooltip_AddColoredLine(GameTooltip, format(DASH_WITH_TEXT, name), DISABLED_FONT_COLOR);
+          --       end
+          --     end
+          --   end
+          -- end
+        elseif activityType == Enum.WeeklyRewardChestThresholdType.Activities then
+          local activity = activities[numActivities]
+          local level = addon.Utils:GetLowestLevelInTopDungeonRuns(character, activity.threshold)
+          if level and level < 10 then
+            text = format(vaultTooltipText["rewardsImprove"], WeeklyRewardsUtil.GetNextMythicLevel(level))
+          else
+            text = vaultTooltipText["rewardsMaxed"]
+          end
+        elseif activityType == Enum.WeeklyRewardChestThresholdType.World then
+        end
+      end
+      if text ~= "" then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Next Step:")
+        GameTooltip:AddLine(text, 1, 1, 1, true)
       end
     end
-    if text ~= "" then
-      GameTooltip:AddLine(" ")
-      GameTooltip:AddLine("Next Step:")
-      GameTooltip:AddLine(text, 1, 1, 1, true)
-    end
-  end
-
-  do -- Reward upgrades
-    -- TODO: Show the next level reward instruction if possible
   end
   GameTooltip:Show()
 end
