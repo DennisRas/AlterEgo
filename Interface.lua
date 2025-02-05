@@ -123,10 +123,10 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           if activity.type == Enum.WeeklyRewardChestThresholdType.Raid then
             local difficultyName = GetDifficultyInfo(activity.level)
             local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
-            if difficultyName then
-              textRight = difficultyName
-            elseif dataDifficulty then
+            if dataDifficulty then
               textRight = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
+            elseif difficultyName then
+              textRight = difficultyName
             end
           elseif activity.type == Enum.WeeklyRewardChestThresholdType.Activities then
             if isCompletedAtHeroicLevel(activity.activityTierID) then
@@ -163,30 +163,47 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
   end
 
   do -- Raid stats
-    if activityType == Enum.WeeklyRewardChestThresholdType.Raid and numActivities > 0 then
-      local activity = activities[numActivities]
-      local encounters = C_WeeklyRewards.GetActivityEncounterInfo(activity.type, activity.index)
-      if encounters then
-        table.sort(encounters, EncountersSort)
-        local lastInstanceID = nil
-        for index, encounter in ipairs(encounters) do
-          local name, description, encounterID, rootSectionID, link, instanceID = EJ_GetEncounterInfo(encounter.encounterID)
-          if instanceID ~= lastInstanceID then
-            local instanceName = EJ_GetInstanceInfo(instanceID)
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(format(WEEKLY_REWARDS_ENCOUNTER_LIST, instanceName), 1, 1, 1)
-            lastInstanceID = instanceID
-          end
-          if name then
-            if encounter.bestDifficulty > 0 then
-              local completedDifficultyName = DifficultyUtil.GetDifficultyName(encounter.bestDifficulty)
-              GameTooltip:AddLine(format(WEEKLY_REWARDS_COMPLETED_ENCOUNTER, name, completedDifficultyName), GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-            else
-              GameTooltip:AddLine(format(DASH_WITH_TEXT, name), DISABLED_FONT_COLOR.r, DISABLED_FONT_COLOR.g, DISABLED_FONT_COLOR.b)
-            end
-          end
+    if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
+      local lastInstanceID = nil
+      addon.Utils:TableForEach(addon.Data:GetRaids(), function(raid)
+        local bestEncounters = {}
+        local savedInstances = addon.Utils:TableFilter(character.raids.savedInstances or {}, function(savedInstance)
+          return savedInstance.expires > time() and savedInstance.instanceID == raid.instanceID
+        end)
+        if savedInstances then
+          addon.Utils:TableForEach(savedInstances, function(savedInstance)
+            local dataDifficulty = addon.Utils:TableGet(difficulties, "id", savedInstance.difficultyID)
+            if not dataDifficulty then return end
+            addon.Utils:TableForEach(savedInstance.encounters, function(savedInstanceEncounter)
+              if savedInstanceEncounter.isKilled == true then
+                local bestEncounter = bestEncounters[savedInstanceEncounter.instanceEncounterID]
+                if bestEncounter then
+                  if bestEncounter.order < dataDifficulty.order then
+                    bestEncounters[savedInstanceEncounter.instanceEncounterID] = dataDifficulty
+                  end
+                else
+                  bestEncounters[savedInstanceEncounter.instanceEncounterID] = dataDifficulty
+                end
+              end
+            end)
+          end)
         end
-      end
+        if lastInstanceID ~= raid.instanceID then
+          GameTooltip:AddLine(" ")
+          GameTooltip:AddLine(raid.name, 1, 1, 1)
+        end
+        addon.Utils:TableForEach(raid.encounters, function(encounter)
+          local color = DISABLED_FONT_COLOR
+          local difficultyName = "-"
+          local bestEncounter = bestEncounters[encounter.instanceEncounterID]
+          if bestEncounter then
+            color = GREEN_FONT_COLOR
+            difficultyName = bestEncounter.short and bestEncounter.short or bestEncounter.name
+          end
+          GameTooltip:AddDoubleLine(encounter.name, difficultyName, color.r, color.g, color.b, color.r, color.g, color.b)
+        end)
+        lastInstanceID = raid.instanceID
+      end)
     end
   end
 
