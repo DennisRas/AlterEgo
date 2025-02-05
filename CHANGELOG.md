@@ -24,6 +24,7 @@
 - Fixed some rendering issues highlighting certain rows with the mouse
 - Shift clicking your keystone (sharing link to chat) now works again
 - Fixed an issue with character and realm names wrapping to a new line if too long
+- Fixed a bug with raid difficulties disappearing from the Show Raid Progress option
 
 ## v1.1.17 - 2024-12-21
 

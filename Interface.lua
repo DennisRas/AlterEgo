@@ -1611,7 +1611,7 @@ function UI:SetupButtons()
     self.window.titlebar.SettingsButton.Dropdown,
     function(frame, level, subMenuName)
       if subMenuName == "raiddifficulties" then
-        addon.Utils:TableForEach(difficulties, function(difficulty)
+        addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
           UIDropDownMenu_AddButton(
             {
               text = difficulty.name,
