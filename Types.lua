@@ -2,19 +2,29 @@
 ---@field id number
 ---@field name string
 
----@class AE_Raid
+---@class AE_Season
 ---@field seasonID number
 ---@field seasonDisplayID number
+---@field name string
+---@field affixes table<number, table<number, number>>
+---@field dungeons AE_Dungeon[]
+---@field raids AE_Raid[]
+---@field currencies AE_Currency[]
+---@field keystoneItemID number
+
+---@class AE_Raid
 ---@field journalInstanceID number
 ---@field instanceID number
 ---@field order number
--- ---@field numEncounters number
 ---@field encounters AE_Encounter[]
 ---@field modifiedInstanceInfo table|nil
 ---@field abbr string
 ---@field name string
 ---@field short string?
 ---@field loot table
+-----@field numEncounters number
+-----@field seasonID number
+-----@field seasonDisplayID number
 
 ---@class AE_RaidDifficulty
 ---@field id number
@@ -32,9 +42,9 @@
 
 ---@class AE_Currency
 ---@field id number
----@field seasonID number
----@field seasonDisplayID number
 ---@field currencyType AE_CurrencyType
+-----@field seasonID number
+-----@field seasonDisplayID number
 
 ---@class AE_CharacterCurrency : CurrencyInfo
 ---@field id number
@@ -60,21 +70,24 @@
 
 ---@class AE_Affix
 ---@field id number
----@field base 0 | 1
+---@field level number
 ---@field name string
 ---@field description string
 ---@field fileDataID number|nil
+-----@field base 0 | 1
+
+---@class AE_AffixWeek
 
 ---@class AE_AffixRotation
----@field seasonID number
----@field seasonDisplayID number
 ---@field activation number[]
 ---@field affixes table<number, number[]>
+-----@field seasonID number
+-----@field seasonDisplayID number
 
 ---@class AE_Keystone
----@field seasonID number
----@field seasonDisplayID number
 ---@field itemID number
+-----@field seasonID number
+-----@field seasonDisplayID number
 
 ---@class AE_Encounter
 ---@field index number
@@ -88,8 +101,6 @@
 ---@field instanceID number|nil
 
 ---@class AE_Dungeon
----@field seasonID number
----@field seasonDisplayID number
 ---@field challengeModeID number
 ---@field journalInstanceID number
 ---@field mapId number
@@ -100,6 +111,8 @@
 ---@field name string
 ---@field short string?
 ---@field loot table
+-----@field seasonID number
+-----@field seasonDisplayID number
 
 ---@class AE_SavedInstance
 ---@field index number
