@@ -225,26 +225,6 @@ Data.defaultCharacter = {
   },
 }
 
----@type AE_Inventory[]
-Data.inventory = {
-  {id = INVSLOT_HEAD,     name = "HEADSLOT"},
-  {id = INVSLOT_NECK,     name = "NECKSLOT"},
-  {id = INVSLOT_SHOULDER, name = "SHOULDERSLOT"},
-  {id = INVSLOT_BACK,     name = "BACKSLOT"},
-  {id = INVSLOT_CHEST,    name = "CHESTSLOT"},
-  {id = INVSLOT_WRIST,    name = "WRISTSLOT"},
-  {id = INVSLOT_HAND,     name = "HANDSSLOT"},
-  {id = INVSLOT_WAIST,    name = "WAISTSLOT"},
-  {id = INVSLOT_LEGS,     name = "LEGSSLOT"},
-  {id = INVSLOT_FEET,     name = "FEETSLOT"},
-  {id = INVSLOT_FINGER1,  name = "FINGER0SLOT"},
-  {id = INVSLOT_FINGER2,  name = "FINGER1SLOT"},
-  {id = INVSLOT_TRINKET1, name = "TRINKET0SLOT"},
-  {id = INVSLOT_TRINKET2, name = "TRINKET1SLOT"},
-  {id = INVSLOT_MAINHAND, name = "MAINHANDSLOT"},
-  {id = INVSLOT_OFFHAND,  name = "SECONDARYHANDSLOT"},
-}
-
 local AFFIX_VOLCANIC = 3
 local AFFIX_RAGING = 6
 local AFFIX_BOLSTERING = 7
@@ -265,150 +245,47 @@ local AFFIX_XALATAHS_BARGAIN_OBLIVION = 159
 local AFFIX_XALATAHS_BARGAIN_DEVOUR = 160
 local AFFIX_XALATAHS_BARGAIN_PULSAR = 162
 
----@type AE_Affix[]
-Data.affixes = {
-  {id = AFFIX_VOLCANIC,                   base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_RAGING,                     base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_BOLSTERING,                 base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_SANGUINE,                   base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_FORTIFIED,                  base = 1, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_TYRANNICAL,                 base = 1, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_BURSTING,                   base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_SPITEFUL,                   base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_STORMING,                   base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_ENTANGLING,                 base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_AFFLICTED,                  base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_INCORPOREAL,                base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_XALATAHS_GUILE,             base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_XALATAHS_BARGAIN_ASCENDANT, base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_CHALLENGERS_PERIL,          base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND, base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_XALATAHS_BARGAIN_OBLIVION,  base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_XALATAHS_BARGAIN_DEVOUR,    base = 0, name = "", description = "", fileDataID = nil},
-  {id = AFFIX_XALATAHS_BARGAIN_PULSAR,    base = 0, name = "", description = "", fileDataID = nil},
-}
+-- ---@type AE_Affix[]
+-- Data.affixes = {
+--   {id = AFFIX_VOLCANIC,                   base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_RAGING,                     base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_BOLSTERING,                 base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_SANGUINE,                   base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_FORTIFIED,                  base = 1, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_TYRANNICAL,                 base = 1, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_BURSTING,                   base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_SPITEFUL,                   base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_STORMING,                   base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_ENTANGLING,                 base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_AFFLICTED,                  base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_INCORPOREAL,                base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_XALATAHS_GUILE,             base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_XALATAHS_BARGAIN_ASCENDANT, base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_CHALLENGERS_PERIL,          base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND, base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_XALATAHS_BARGAIN_OBLIVION,  base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_XALATAHS_BARGAIN_DEVOUR,    base = 0, name = "", description = "", fileDataID = nil},
+--   {id = AFFIX_XALATAHS_BARGAIN_PULSAR,    base = 0, name = "", description = "", fileDataID = nil},
+-- }
 
--- Rotation: https://mythicpl.us
----@type AE_AffixRotation[]
-Data.affixRotations = {
-  {
-    seasonID = 11,
-    seasonDisplayID = 3,
-    activation = {2, 7, 14},
-    affixes = {
-      {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
-      {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
-      {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
-      {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
-      {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
-      {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
-      {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
-      {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
-      {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
-      {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
-    },
-  },
-  {
-    seasonID = 12,
-    seasonDisplayID = 4,
-    activation = {2, 5, 10},
-    affixes = {
-      {AFFIX_TYRANNICAL, AFFIX_STORMING,    AFFIX_RAGING},
-      {AFFIX_FORTIFIED,  AFFIX_ENTANGLING,  AFFIX_BOLSTERING},
-      {AFFIX_TYRANNICAL, AFFIX_INCORPOREAL, AFFIX_SPITEFUL},
-      {AFFIX_FORTIFIED,  AFFIX_AFFLICTED,   AFFIX_RAGING},
-      {AFFIX_TYRANNICAL, AFFIX_VOLCANIC,    AFFIX_SANGUINE},
-      {AFFIX_FORTIFIED,  AFFIX_STORMING,    AFFIX_BURSTING},
-      {AFFIX_TYRANNICAL, AFFIX_AFFLICTED,   AFFIX_BOLSTERING},
-      {AFFIX_FORTIFIED,  AFFIX_INCORPOREAL, AFFIX_SANGUINE},
-      {AFFIX_TYRANNICAL, AFFIX_ENTANGLING,  AFFIX_BURSTING},
-      {AFFIX_FORTIFIED,  AFFIX_VOLCANIC,    AFFIX_SPITEFUL},
-    },
-  },
-  {
-    seasonID = 13,
-    seasonDisplayID = 1,
-    activation = {2, 4, 7, 10, 12},
-    affixes = {
-      {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_OBLIVION,  AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_OBLIVION,  AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_TYRANNICAL, AFFIX_CHALLENGERS_PERIL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-      {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_FORTIFIED,  AFFIX_CHALLENGERS_PERIL, AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-    },
-    {
-      seasonID = 14,
-      seasonDisplayID = 2,
-      activation = {4, 7, 10, 12},
-      affixes = {
-        {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_PULSAR,    AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_PULSAR,    AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
-        {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
-      },
-    },
-  },
-}
-
----@type AE_Keystone[]
-Data.keystones = {
-  {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
-  {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
-  {seasonID = 13, seasonDisplayID = 1, itemID = 180653},
-}
-
----@type AE_Dungeon[]
-Data.dungeons = {
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 767,  challengeModeID = 206, mapId = 1458, encounters = {}, loot = {}, spellID = 410078,                                                        time = 0, abbr = "NL",    name = "Neltharion's Lair"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1001, challengeModeID = 245, mapId = 1754, encounters = {}, loot = {}, spellID = 410071,                                                        time = 0, abbr = "FH",    name = "Freehold"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1022, challengeModeID = 251, mapId = 1841, encounters = {}, loot = {}, spellID = 410074,                                                        time = 0, abbr = "UNDR",  name = "The Underrot"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1197, challengeModeID = 403, mapId = 2451, encounters = {}, loot = {}, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1199, challengeModeID = 404, mapId = 2519, encounters = {}, loot = {}, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1196, challengeModeID = 405, mapId = 2520, encounters = {}, loot = {}, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1204, challengeModeID = 406, mapId = 2527, encounters = {}, loot = {}, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 68,   challengeModeID = 438, mapId = 657,  encounters = {}, loot = {}, spellID = 410080,                                                        time = 0, abbr = "VP",    name = "The Vortex Pinnacle"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 556,  challengeModeID = 168, mapId = 1279, encounters = {}, loot = {}, spellID = 159901,                                                        time = 0, abbr = "EB",    name = "The Everbloom"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 762,  challengeModeID = 198, mapId = 1466, encounters = {}, loot = {}, spellID = 424163,                                                        time = 0, abbr = "DHT",   name = "Darkheart Thicket"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 740,  challengeModeID = 199, mapId = 1501, encounters = {}, loot = {}, spellID = 424153,                                                        time = 0, abbr = "BRH",   name = "Black Rook Hold"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 968,  challengeModeID = 244, mapId = 1763, encounters = {}, loot = {}, spellID = 424187,                                                        time = 0, abbr = "AD",    name = "Atal'Dazar"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1021, challengeModeID = 248, mapId = 1862, encounters = {}, loot = {}, spellID = 424167,                                                        time = 0, abbr = "WM",    name = "Waycrest Manor"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 65,   challengeModeID = 456, mapId = 643,  encounters = {}, loot = {}, spellID = 424142,                                                        time = 0, abbr = "TOTT",  name = "Throne of the Tides"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1209, challengeModeID = 463, mapId = 2579, encounters = {}, loot = {}, spellID = 424197,                                                        time = 0, abbr = "FALL",  name = "Dawn of the Infinite: Galakrond's Fall", short = "DOTI: Galakrond's Fall"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1209, challengeModeID = 464, mapId = 2579, encounters = {}, loot = {}, spellID = 424197,                                                        time = 0, abbr = "RISE",  name = "Dawn of the Infinite: Murozond's Rise",  short = "DOTI: Murozond's Rise"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1202, challengeModeID = 399, mapId = 2521, encounters = {}, loot = {}, spellID = 393256,                                                        time = 0, abbr = "RLP",   name = "Ruby Life Pools"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1198, challengeModeID = 400, mapId = 2516, encounters = {}, loot = {}, spellID = 393262,                                                        time = 0, abbr = "NO",    name = "The Nokhud Offensive"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1203, challengeModeID = 401, mapId = 2515, encounters = {}, loot = {}, spellID = 393279,                                                        time = 0, abbr = "AV",    name = "The Azure Vault"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1201, challengeModeID = 402, mapId = 2526, encounters = {}, loot = {}, spellID = 393273,                                                        time = 0, abbr = "AA",    name = "Algeth'ar Academy"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1197, challengeModeID = 403, mapId = 2451, encounters = {}, loot = {}, spellID = 393222,                                                        time = 0, abbr = "ULD",   name = "Uldaman: Legacy of Tyr"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1199, challengeModeID = 404, mapId = 2519, encounters = {}, loot = {}, spellID = 393276,                                                        time = 0, abbr = "NELT",  name = "Neltharus"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1196, challengeModeID = 405, mapId = 2520, encounters = {}, loot = {}, spellID = 393267,                                                        time = 0, abbr = "BH",    name = "Brackenhide Hollow"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1204, challengeModeID = 406, mapId = 2527, encounters = {}, loot = {}, spellID = 393283,                                                        time = 0, abbr = "HOI",   name = "Halls of Infusion"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1271, challengeModeID = 503, mapId = 2660, encounters = {}, loot = {}, spellID = 445417,                                                        time = 0, abbr = "ARAK",  name = "Ara-Kara, City of Echoes"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1274, challengeModeID = 502, mapId = 2669, encounters = {}, loot = {}, spellID = 445416,                                                        time = 0, abbr = "COT",   name = "City of Threads"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 71,   challengeModeID = 507, mapId = 670,  encounters = {}, loot = {}, spellID = 445424,                                                        time = 0, abbr = "GB",    name = "Grim Batol"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1184, challengeModeID = 375, mapId = 2290, encounters = {}, loot = {}, spellID = 354464,                                                        time = 0, abbr = "MISTS", name = "Mists of Tirna Scithe"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1023, challengeModeID = 353, mapId = 1822, encounters = {}, loot = {}, spellID = UnitFactionGroup("player") == "Alliance" and 445418 or 464256, time = 0, abbr = "SIEGE", name = "Siege of Boralus"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1270, challengeModeID = 505, mapId = 2662, encounters = {}, loot = {}, spellID = 445414,                                                        time = 0, abbr = "DAWN",  name = "The Dawnbreaker"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1182, challengeModeID = 376, mapId = 2286, encounters = {}, loot = {}, spellID = 354462,                                                        time = 0, abbr = "NW",    name = "The Necrotic Wake"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1269, challengeModeID = 501, mapId = 2652, encounters = {}, loot = {}, spellID = 445269,                                                        time = 0, abbr = "SV",    name = "The Stonevault"},
-}
-
----@type AE_Raid[]
-Data.raids = {
-  {seasonID = 9,  seasonDisplayID = 1, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
-  {seasonID = 10, seasonDisplayID = 2, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
-  {seasonID = 11, seasonDisplayID = 3, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1200, instanceID = 2522, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "VOTI", name = "Vault of the Incarnates"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
-  {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
-  {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1273, instanceID = 2657, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP",  name = "Nerub-ar Palace"},
+---@type AE_Inventory[]
+Data.inventory = {
+  {id = INVSLOT_HEAD,     name = "HEADSLOT"},
+  {id = INVSLOT_NECK,     name = "NECKSLOT"},
+  {id = INVSLOT_SHOULDER, name = "SHOULDERSLOT"},
+  {id = INVSLOT_BACK,     name = "BACKSLOT"},
+  {id = INVSLOT_CHEST,    name = "CHESTSLOT"},
+  {id = INVSLOT_WRIST,    name = "WRISTSLOT"},
+  {id = INVSLOT_HAND,     name = "HANDSSLOT"},
+  {id = INVSLOT_WAIST,    name = "WAISTSLOT"},
+  {id = INVSLOT_LEGS,     name = "LEGSSLOT"},
+  {id = INVSLOT_FEET,     name = "FEETSLOT"},
+  {id = INVSLOT_FINGER1,  name = "FINGER0SLOT"},
+  {id = INVSLOT_FINGER2,  name = "FINGER1SLOT"},
+  {id = INVSLOT_TRINKET1, name = "TRINKET0SLOT"},
+  {id = INVSLOT_TRINKET2, name = "TRINKET1SLOT"},
+  {id = INVSLOT_MAINHAND, name = "MAINHANDSLOT"},
+  {id = INVSLOT_OFFHAND,  name = "SECONDARYHANDSLOT"},
 }
 
 ---@type AE_RaidDifficulty[]
@@ -419,28 +296,87 @@ Data.raidDifficulties = {
   {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "L", name = "Looking For Raid", short = "LFR"},
 }
 
----@type AE_Currency[]
-Data.currencies = {
-  {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},                    -- Aspect
-  {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},                    -- Wyrm
-  {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},                    -- Drake
-  {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},                    -- Whelpling
-  {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},                  -- Flightstones
-  {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 2812, currencyType = "crest"},                    -- Aspect
-  {seasonID = 12, seasonDisplayID = 4, id = 2809, currencyType = "crest"},                    -- Wyrm
-  {seasonID = 12, seasonDisplayID = 4, id = 2807, currencyType = "crest"},                    -- Drake
-  {seasonID = 12, seasonDisplayID = 4, id = 2806, currencyType = "crest"},                    -- Whelpling
-  {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},                  -- Flightstones
-  {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar",   itemID = 213089}, -- Dinar
-  {seasonID = 13, seasonDisplayID = 1, id = 2914, currencyType = "crest"},                    -- Weathered
-  {seasonID = 13, seasonDisplayID = 1, id = 2915, currencyType = "crest"},                    -- Carved
-  {seasonID = 13, seasonDisplayID = 1, id = 2916, currencyType = "crest"},                    -- Runed
-  {seasonID = 13, seasonDisplayID = 1, id = 2917, currencyType = "crest"},                    -- Gilded
-  {seasonID = 13, seasonDisplayID = 1, id = 3008, currencyType = "upgrade"},                  -- Valorstones
-  {seasonID = 13, seasonDisplayID = 1, id = 2813, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 13, seasonDisplayID = 1, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
+---Season Data
+---@type AE_Season[]
+Data.seasons = {
+  {
+    seasonID = 13,
+    seasonDisplayID = 1,
+    name = "The War Within Season 1",
+    affixes = {
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_ASCENDANT}, {level = 4, id = AFFIX_TYRANNICAL}, {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_OBLIVION},  {level = 4, id = AFFIX_FORTIFIED},  {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND}, {level = 4, id = AFFIX_TYRANNICAL}, {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_DEVOUR},    {level = 4, id = AFFIX_FORTIFIED},  {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_OBLIVION},  {level = 4, id = AFFIX_TYRANNICAL}, {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_ASCENDANT}, {level = 4, id = AFFIX_FORTIFIED},  {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_DEVOUR},    {level = 4, id = AFFIX_TYRANNICAL}, {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 2, id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND}, {level = 4, id = AFFIX_FORTIFIED},  {level = 7, id = AFFIX_CHALLENGERS_PERIL}, {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+    },
+    dungeons = {
+      {challengeModeID = 503, mapId = 2660, journalInstanceID = 1271, abbr = "ARAK",  name = "Ara-Kara, City of Echoes", spellID = 445417},
+      {challengeModeID = 502, mapId = 2669, journalInstanceID = 1274, abbr = "COT",   name = "City of Threads",          spellID = 445416},
+      {challengeModeID = 507, mapId = 670,  journalInstanceID = 71,   abbr = "GB",    name = "Grim Batol",               spellID = 445424},
+      {challengeModeID = 375, mapId = 2290, journalInstanceID = 1184, abbr = "MISTS", name = "Mists of Tirna Scithe",    spellID = 354464},
+      {challengeModeID = 353, mapId = 1822, journalInstanceID = 1023, abbr = "SIEGE", name = "Siege of Boralus",         spellID = UnitFactionGroup("player") == "Alliance" and 445418 or 464256},
+      {challengeModeID = 505, mapId = 2662, journalInstanceID = 1270, abbr = "DAWN",  name = "The Dawnbreaker",          spellID = 445414},
+      {challengeModeID = 376, mapId = 2286, journalInstanceID = 1182, abbr = "NW",    name = "The Necrotic Wake",        spellID = 354462},
+      {challengeModeID = 501, mapId = 2652, journalInstanceID = 1269, abbr = "SV",    name = "The Stonevault",           spellID = 445269},
+    },
+    raids = {
+      {instanceID = 2657, journalInstanceID = 1273, order = 1, abbr = "NAP", name = "Nerub-ar Palace"},
+      -- {journalInstanceID = 1273, instanceID = 2657, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP", name = "Nerub-ar Palace"},
+    },
+    currencies = {
+      {id = 2914, currencyType = "crest"},    -- Weathered
+      {id = 2915, currencyType = "crest"},    -- Carved
+      {id = 2916, currencyType = "crest"},    -- Runed
+      {id = 2917, currencyType = "crest"},    -- Gilded
+      {id = 3008, currencyType = "upgrade"},  -- Valorstones
+      {id = 2813, currencyType = "catalyst"}, -- Catalyst
+      {id = 3028, currencyType = "delve"},    -- Restored Coffer key
+    },
+    keystoneItemID = 180653,
+  },
+  {
+    seasonID = 14,
+    seasonDisplayID = 2,
+    name = "The War Within Season 2",
+    affixes = {
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_ASCENDANT}, {level = 7, id = AFFIX_TYRANNICAL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_PULSAR},    {level = 7, id = AFFIX_FORTIFIED},  {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND}, {level = 7, id = AFFIX_TYRANNICAL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_DEVOUR},    {level = 7, id = AFFIX_FORTIFIED},  {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_PULSAR},    {level = 7, id = AFFIX_TYRANNICAL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_ASCENDANT}, {level = 7, id = AFFIX_FORTIFIED},  {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_DEVOUR},    {level = 7, id = AFFIX_TYRANNICAL}, {level = 10, id = AFFIX_FORTIFIED},  {level = 12, id = AFFIX_XALATAHS_GUILE}},
+      {{level = 4, id = AFFIX_XALATAHS_BARGAIN_VOIDBOUND}, {level = 7, id = AFFIX_FORTIFIED},  {level = 10, id = AFFIX_TYRANNICAL}, {level = 12, id = AFFIX_XALATAHS_GUILE}},
+    },
+    dungeons = {
+      {challengeModeID = 503, mapId = 2660, journalInstanceID = 1271, abbr = "ARAK",  name = "Ara-Kara, City of Echoes", spellID = 445417},
+      {challengeModeID = 502, mapId = 2669, journalInstanceID = 1274, abbr = "COT",   name = "City of Threads",          spellID = 445416},
+      {challengeModeID = 507, mapId = 670,  journalInstanceID = 71,   abbr = "GB",    name = "Grim Batol",               spellID = 445424},
+      {challengeModeID = 375, mapId = 2290, journalInstanceID = 1184, abbr = "MISTS", name = "Mists of Tirna Scithe",    spellID = 354464},
+      {challengeModeID = 353, mapId = 1822, journalInstanceID = 1023, abbr = "SIEGE", name = "Siege of Boralus",         spellID = UnitFactionGroup("player") == "Alliance" and 445418 or 464256},
+      {challengeModeID = 505, mapId = 2662, journalInstanceID = 1270, abbr = "DAWN",  name = "The Dawnbreaker",          spellID = 445414},
+      {challengeModeID = 376, mapId = 2286, journalInstanceID = 1182, abbr = "NW",    name = "The Necrotic Wake",        spellID = 354462},
+      {challengeModeID = 501, mapId = 2652, journalInstanceID = 1269, abbr = "SV",    name = "The Stonevault",           spellID = 445269},
+    },
+    raids = {
+      {instanceID = 2657, journalInstanceID = 1273, order = 1, abbr = "NAP", name = "Nerub-ar Palace"},
+      -- {journalInstanceID = 1273, instanceID = 2657, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP", name = "Nerub-ar Palace"},
+    },
+    currencies = {
+      {id = 2914, currencyType = "crest"},    -- Weathered
+      {id = 2915, currencyType = "crest"},    -- Carved
+      {id = 2916, currencyType = "crest"},    -- Runed
+      {id = 2917, currencyType = "crest"},    -- Gilded
+      {id = 3008, currencyType = "upgrade"},  -- Valorstones
+      {id = 2813, currencyType = "catalyst"}, -- Catalyst
+      {id = 3028, currencyType = "delve"},    -- Restored Coffer key
+    },
+    keystoneItemID = 180653,
+  },
 }
 
 Data.cache = {
@@ -450,6 +386,11 @@ Data.cache = {
   currentAffixes = {},
   classes = {},
   specs = {},
+  keystones = {},
+  dungeons = {},
+  raids = {},
+  currencies = {},
+  affixes = {},
 }
 
 ---Initiate AceDB
@@ -463,9 +404,27 @@ function Data:Initialize()
   )
 end
 
----Get the current Season IDs
+function Data:calculateDungeonTimer(time, level, tier)
+  if tier == 3 then
+    time = time * 0.6
+  elseif tier == 2 then
+    time = time * 0.8
+  end
+
+  local affixes = self:GetActiveAffixesByLevel(level)
+  local hasPeril = addon.Utils:TableFind(affixes, function(affix)
+    return affix == AFFIX_CHALLENGERS_PERIL
+  end)
+  if hasPeril then
+    time = time + 90
+  end
+
+  return time
+end
+
+---Get the current season IDs
 ---@return number, number
-function Data:GetCurrentSeason()
+function Data:GetSeasonIDs()
   if not self.cache.seasonID or self.cache.seasonID == -1 then
     self.cache.seasonID = C_MythicPlus.GetCurrentSeason()
   end
@@ -475,14 +434,288 @@ function Data:GetCurrentSeason()
   return self.cache.seasonID or -1, self.cache.seasonDisplayID or -1
 end
 
----Get the currencies of the current season
----@return AE_Currency[]
-function Data:GetCurrencies()
-  local seasonID = self:GetCurrentSeason()
-  return addon.Utils:TableFilter(self.currencies, function(dataCurrency)
-    return dataCurrency.seasonID == seasonID
-  end)
+---Get the season or current season
+---@param seasonID number?
+---@return AE_Season|nil
+function Data:GetSeason(seasonID)
+  local currentSeasonID = self:GetSeasonIDs()
+  if seasonID ~= nil then
+    currentSeasonID = seasonID
+  end
+  return addon.Utils:TableGet(self.seasons, "seasonID", currentSeasonID)
 end
+
+---Get the season currencies
+---@param seasonID number?
+---@return table
+function Data:GetSeasonCurrencies(seasonID)
+  local season = self:GetSeason(seasonID)
+  local currencies = {}
+  if not season or not season.currencies then return currencies end
+
+  addon.Utils:TableForEach(season.currencies, function(currency)
+    if not self.cache.currencies[currency.id] then
+      local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
+      if not currencyInfo then return end
+      currencyInfo.id = currency.id
+      currencyInfo.currencyType = currency.currencyType
+      if currency.itemID then
+        currencyInfo.itemID = currency.itemID
+        currencyInfo.quantity = C_Item.GetItemCount(currency.itemID, true)
+        currencyInfo.iconFileID = C_Item.GetItemIconByID(currency.itemID) or 0
+      end
+      self.cache.currencies[currency.id] = currencyInfo
+    end
+    table.insert(currencies, self.cache.currencies[currency.id])
+  end)
+  return currencies
+end
+
+---Get the season affixes
+---@param seasonID number?
+-----@return AE_Affix[]
+function Data:GetSeasonAffixes(seasonID)
+  local season = self:GetSeason(seasonID)
+  local affixes = {}
+  if not season or not season.affixes then return affixes end
+
+  addon.Utils:TableForEach(season.affixes, function(affixRotation)
+    local affixWeek = {}
+    addon.Utils:TableForEach(affixRotation, function(affix)
+      -- Get cached data
+      if not self.cache.affixes[affix.id] then
+        local name, description, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id)
+        if not name then return end
+        self.cache.affixes[affix.id] = {
+          id = affix.id,
+          name = name,
+          description = description,
+          fileDataID = fileDataID,
+        }
+      end
+      -- Combine cached data with static data
+      local affixData = self.cache.affixes[affix.id]
+      affixData.level = affix.level
+      table.insert(affixWeek, affixData)
+    end)
+    table.insert(affixes, affixWeek)
+  end)
+
+  return affixes
+end
+
+---Get the season raids
+---@param seasonID number?
+---@return table
+function Data:GetSeasonRaids(seasonID)
+  local season = self:GetSeason(seasonID)
+  local raids = {}
+  if not season or not season.raids then return raids end
+
+  addon.Utils:TableForEach(season.raids, function(raid)
+    if not self.cache.raids[raid.instanceID] then
+      -- TODO: Get raid info
+      raid.encounters = {}
+
+      local encounterIndex = 1
+      EJ_SelectInstance(raid.journalInstanceID)
+      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+      while bossID do
+        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+        ---@type AE_Encounter
+        local encounter = {
+          index = encounterIndex,
+          name = name,
+          description = description,
+          journalInstanceID = journalInstanceID,
+          journalEncounterID = journalEncounterID,
+          journalEncounterSectionID = journalEncounterSectionID,
+          journalLink = journalLink,
+          instanceID = instanceID,
+          instanceEncounterID = instanceEncounterID,
+        }
+        raid.encounters[encounterIndex] = encounter
+        encounterIndex = encounterIndex + 1
+        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
+      end
+      raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
+      raid.loot = {}
+      --   EJ_ClearSearch()
+      --   EJ_ResetLootFilter()
+      --   EJ_SelectInstance(raid.journalInstanceID)
+      --   for classID = 1, GetNumClasses() do
+      --     for specIndex = 1, GetNumSpecializationsForClassID(classID) do
+      --       local specID = GetSpecializationInfoForClassID(classID, specIndex)
+      --       if specID then
+      --         EJ_SetLootFilter(classID, specID)
+      --         for i = 1, EJ_GetNumLoot() do
+      --           local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
+      --           if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
+      --             local item = raid.loot[lootInfo.itemID]
+      --             if not item then
+      --               item = lootInfo
+      --               item.stats = C_Item.GetItemStats(lootInfo.link)
+      --               item.classes = {}
+      --               item.specs = {}
+      --               raid.loot[lootInfo.itemID] = item
+      --             end
+      --             item.classes[classID] = true
+      --             item.specs[specID] = true
+      --             -- table.insert(item.classes, classID)
+      --             -- table.insert(item.specs, specID)
+      --             -- TODO: Make above arrays unique
+      --           end
+      --         end
+      --       end
+      --     end
+      --   end
+      --   EJ_ResetLootFilter()
+      self.cache.raids[raid.instanceID] = raid
+    end
+    table.insert(raids, self.cache.raids[raid.instanceID])
+  end)
+
+  table.sort(raids, function(a, b)
+    return a.order < b.order
+  end)
+
+  return raids
+end
+
+---Get the season M+ dungeons
+---@param seasonID number?
+---@return AE_Dungeon[]
+function Data:GetSeasonDungeons(seasonID)
+  local season = self:GetSeason(seasonID)
+  local dungeons = {}
+  if not season or not season.dungeons then return dungeons end
+
+  addon.Utils:TableForEach(season.dungeons, function(dungeon)
+    if not self.cache.dungeons[dungeon.challengeModeID] then
+      -- TODO: Get and store more dungeon data for m+
+      local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
+      if not dungeonName then return end
+      dungeon.name = dungeonName
+      dungeon.time = dungeonTimeLimit
+      dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
+      dungeon.encounters = {}
+
+      local encounterIndex = 1
+      EJ_SelectInstance(dungeon.journalInstanceID)
+      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+      while bossID do
+        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+        ---@type AE_Encounter
+        local encounter = {
+          index = encounterIndex,
+          name = name,
+          description = description,
+          journalEncounterID = journalEncounterID,
+          journalEncounterSectionID = journalEncounterSectionID,
+          journalLink = journalLink,
+          journalInstanceID = journalInstanceID,
+          instanceEncounterID = instanceEncounterID,
+          instanceID = instanceID,
+        }
+        dungeon.encounters[encounterIndex] = encounter
+        encounterIndex = encounterIndex + 1
+        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
+      end
+
+      dungeon.loot = {}
+      -- EJ_ClearSearch()
+      -- EJ_ResetLootFilter()
+      -- EJ_SelectInstance(dungeon.journalInstanceID)
+
+      -- local count = 0
+      -- for classID = 1, GetNumClasses() do
+      --   for specIndex = 1, GetNumSpecializationsForClassID(classID) do
+      --     local specID = GetSpecializationInfoForClassID(classID, specIndex)
+      --     if specID then
+      --       EJ_SetLootFilter(classID, specID)
+      --       for i = 1, EJ_GetNumLoot() do
+      --         local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
+      --         if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
+      --           local item = dungeon.loot[lootInfo.itemID]
+      --           if not item then
+      --             item = lootInfo
+      --             item.stats = C_Item.GetItemStats(lootInfo.link)
+      --             item.classes = {}
+      --             item.specs = {}
+      --             dungeon.loot[lootInfo.itemID] = item
+      --             count = count + 1
+      --           end
+      --           item.classes[classID] = true
+      --           item.specs[specID] = true
+      --           -- table.insert(item.classes, classID)
+      --           -- table.insert(item.specs, specID)
+      --           -- TODO: Make above arrays unique
+      --         end
+      --       end
+      --     end
+      --   end
+      -- end
+      -- EJ_ResetLootFilter()
+
+      self.cache.dungeons[dungeon.challengeModeID] = dungeon
+    end
+    table.insert(dungeons, self.cache.dungeons[dungeon.challengeModeID])
+  end)
+
+  table.sort(dungeons, function(a, b)
+    return strcmputf8i(a.name, b.name) < 0
+  end)
+
+  return dungeons
+end
+
+---Get all of the raids in the current season
+---@param unfiltered boolean?
+---@return AE_RaidDifficulty[]
+function Data:GetRaidDifficulties(unfiltered)
+  local difficulties = addon.Utils:TableFilter(self.raidDifficulties, function(difficulty)
+    return unfiltered or (self.db.global.raids.hiddenDifficulties and not self.db.global.raids.hiddenDifficulties[difficulty.id])
+  end)
+
+  table.sort(difficulties, function(a, b)
+    return a.order < b.order
+  end)
+
+  return difficulties
+end
+
+---Get the current affixes of the week
+---@return MythicPlusKeystoneAffix[]
+function Data:GetCurrentWeeklyAffixes()
+  if addon.Utils:TableCount(self.cache.currentAffixes) == 0 then
+    local currentAffixes = C_MythicPlus.GetCurrentAffixes()
+    if currentAffixes then
+      self.cache.currentAffixes = currentAffixes
+    end
+  end
+  return self.cache.currentAffixes
+end
+
+---Get the season Keystone ItemID
+---@param seasonID number?
+---@return number|nil
+function Data:GetSeasonKeystoneItemID(seasonID)
+  local season = self:GetSeason(seasonID)
+  return season and season.keystoneItemID or nil
+end
+
+---Get the season affix rotation
+---@param seasonID number?
+---@return AE_AffixRotation|nil
+function Data:GetAffixRotation(seasonID)
+  local season = self:GetSeason(seasonID)
+  return season and season.affixes or {}
+end
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 
 ---Get stored character by GUID
 ---@param playerGUID WOWGUID?
@@ -505,61 +738,6 @@ function Data:GetCharacter(playerGUID)
   return self.db.global.characters[playerGUID]
 end
 
----Get all of the raids in the current season
----@param unfiltered boolean?
----@return AE_RaidDifficulty[]
-function Data:GetRaidDifficulties(unfiltered)
-  local result = {}
-  for _, difficulty in pairs(self.raidDifficulties) do
-    table.insert(result, difficulty)
-  end
-
-  table.sort(result, function(a, b)
-    return a.order < b.order
-  end)
-
-  if unfiltered then
-    return result
-  end
-
-  local filtered = {}
-  for _, difficulty in ipairs(result) do
-    if self.db.global.raids.hiddenDifficulties and not self.db.global.raids.hiddenDifficulties[difficulty.id] then
-      table.insert(filtered, difficulty)
-    end
-  end
-
-  return filtered
-end
-
----Get the current affixes of the week
----@return MythicPlusKeystoneAffix[]
-function Data:GetCurrentAffixes()
-  if addon.Utils:TableCount(self.cache.currentAffixes) == 0 then
-    local currentAffixes = C_MythicPlus.GetCurrentAffixes()
-    if currentAffixes then
-      self.cache.currentAffixes = currentAffixes
-    end
-  end
-  return self.cache.currentAffixes
-end
-
----Get either all affixes or just the base seasonal affixes
----@param baseOnly boolean?
----@return AE_Affix[]
-function Data:GetAffixes(baseOnly)
-  return addon.Utils:TableFilter(self.affixes, function(dataAffix)
-    return not baseOnly or dataAffix.base == 1
-  end)
-end
-
----Get affix rotation of the season
----@return AE_AffixRotation|nil
-function Data:GetAffixRotation()
-  local seasonID = self:GetCurrentSeason()
-  return addon.Utils:TableGet(self.affixRotations, "seasonID", seasonID)
-end
-
 ---Get the index of the active affix week
 ---TODO: This is hardcoded for 3 affixes only but somehow still works
 ---@param currentAffixes MythicPlusKeystoneAffix|nil
@@ -577,58 +755,24 @@ function Data:GetActiveAffixRotation(currentAffixes)
   return index
 end
 
----Get the Keystone ItemID of the current season
----@return number|nil
-function Data:GetKeystoneItemID()
-  local seasonID = self:GetCurrentSeason()
-  local keystone = addon.Utils:TableGet(self.keystones, "seasonID", seasonID)
-
-  if keystone ~= nil then
-    return keystone.itemID
-  end
-
-  return nil
-end
-
----Get all of the M+ dungeons in the current season
----@return AE_Dungeon[]
-function Data:GetDungeons()
-  local seasonID = self:GetCurrentSeason()
-  local dungeons = addon.Utils:TableFilter(self.dungeons, function(dataDungeon)
-    return dataDungeon.seasonID == seasonID
-  end)
-
-  table.sort(dungeons, function(a, b)
-    return strcmputf8i(a.name, b.name) < 0
-  end)
-
-  return dungeons
-end
-
----Get all of the raids in the current season
----@param unfiltered boolean?
----@return AE_Raid[]
-function Data:GetRaids(unfiltered)
-  local seasonID = self:GetCurrentSeason()
-  local raids = addon.Utils:TableFilter(self.raids, function(dataRaid)
-    return dataRaid.seasonID == seasonID
-  end)
-
-  table.sort(raids, function(a, b)
-    return a.order < b.order
-  end)
-
-  if unfiltered then
-    return raids
-  end
-
-  if self.db.global.raids.modifiedInstanceOnly and seasonID == 12 then
-    raids = addon.Utils:TableFilter(raids, function(raid)
-      return raid.modifiedInstanceInfo ~= nil
+---Get activated affix IDs by keystone level
+---@param level number
+---@return number[]
+function Data:GetActiveAffixesByLevel(level)
+  ---@type number[]
+  local affixes = {}
+  local affixRotation = self:GetAffixRotation()
+  if affixRotation and affixRotation.activation and affixRotation.affixes then
+    addon.Utils:TableForEach(affixRotation.activation, function(activationLevel, activationIndex)
+      if activationLevel >= level then
+        local affix = affixRotation.affixes[activationIndex]
+        if affix then
+          table.insert(affixes, affix)
+        end
+      end
     end)
   end
-
-  return raids
+  return affixes
 end
 
 ---Set a new character order
@@ -751,7 +895,7 @@ function Data:MigrateDB()
     end
     -- Add missing affix IDs
     if self.db.global.dbVersion == 10 then
-      local affixes = self:GetAffixes()
+      local affixes = self:GetSeasonAffixes()
       for characterIndex in pairs(self.db.global.characters) do
         local character = self.db.global.characters[characterIndex]
         if character.mythicplus.dungeons ~= nil then
@@ -825,7 +969,7 @@ function Data:TaskWeeklyReset()
 end
 
 function Data:TaskSeasonReset()
-  local seasonID = self:GetCurrentSeason()
+  local seasonID = self:GetSeasonIDs()
   if seasonID then
     addon.Utils:TableForEach(self.db.global.characters, function(character)
       if character.currentSeason == nil or character.currentSeason < seasonID then
@@ -840,150 +984,16 @@ function Data:TaskSeasonReset()
 end
 
 function Data:loadGameData()
-  local seasonID = self:GetCurrentSeason()
-
-  for _, raid in pairs(self.raids) do
-    -- if raid.seasonID == seasonID then
-    --   EJ_ClearSearch()
-    --   EJ_ResetLootFilter()
-    --   EJ_SelectInstance(raid.journalInstanceID)
-
-    --   for classID = 1, GetNumClasses() do
-    --     for specIndex = 1, GetNumSpecializationsForClassID(classID) do
-    --       local specID = GetSpecializationInfoForClassID(classID, specIndex)
-    --       if specID then
-    --         EJ_SetLootFilter(classID, specID)
-    --         for i = 1, EJ_GetNumLoot() do
-    --           local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
-    --           if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
-    --             local item = raid.loot[lootInfo.itemID]
-    --             if not item then
-    --               item = lootInfo
-    --               item.stats = C_Item.GetItemStats(lootInfo.link)
-    --               item.classes = {}
-    --               item.specs = {}
-    --               raid.loot[lootInfo.itemID] = item
-    --             end
-    --             item.classes[classID] = true
-    --             item.specs[specID] = true
-    --             -- table.insert(item.classes, classID)
-    --             -- table.insert(item.specs, specID)
-    --             -- TODO: Make above arrays unique
-    --           end
-    --         end
-    --       end
-    --     end
-    --   end
-    --   EJ_ResetLootFilter()
-    -- end
-
-    if raid.seasonID == seasonID then
-      local encounterIndex = 1
-      EJ_SelectInstance(raid.journalInstanceID)
-      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-      while bossID do
-        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-        ---@type AE_Encounter
-        local encounter = {
-          index = encounterIndex,
-          name = name,
-          description = description,
-          journalInstanceID = journalInstanceID,
-          journalEncounterID = journalEncounterID,
-          journalEncounterSectionID = journalEncounterSectionID,
-          journalLink = journalLink,
-          instanceID = instanceID,
-          instanceEncounterID = instanceEncounterID,
-        }
-        raid.encounters[encounterIndex] = encounter
-        encounterIndex = encounterIndex + 1
-        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-      end
-      raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
-    end
-  end
-
-  for _, dungeon in pairs(self.dungeons) do
-    -- if dungeon.seasonID == seasonID then
-    --   EJ_ClearSearch()
-    --   EJ_ResetLootFilter()
-    --   EJ_SelectInstance(dungeon.journalInstanceID)
-
-    --   local count = 0
-    --   for classID = 1, GetNumClasses() do
-    --     for specIndex = 1, GetNumSpecializationsForClassID(classID) do
-    --       local specID = GetSpecializationInfoForClassID(classID, specIndex)
-    --       if specID then
-    --         EJ_SetLootFilter(classID, specID)
-    --         for i = 1, EJ_GetNumLoot() do
-    --           local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
-    --           if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
-    --             local item = dungeon.loot[lootInfo.itemID]
-    --             if not item then
-    --               item = lootInfo
-    --               item.stats = C_Item.GetItemStats(lootInfo.link)
-    --               item.classes = {}
-    --               item.specs = {}
-    --               dungeon.loot[lootInfo.itemID] = item
-    --               count = count + 1
-    --             end
-    --             item.classes[classID] = true
-    --             item.specs[specID] = true
-    --             -- table.insert(item.classes, classID)
-    --             -- table.insert(item.specs, specID)
-    --             -- TODO: Make above arrays unique
-    --           end
-    --         end
-    --       end
-    --     end
-    --   end
-    --   EJ_ResetLootFilter()
-    -- end
-
-    if dungeon.seasonID == seasonID then
-      -- TODO: Get and store more dungeon data for m+
-      local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
-      dungeon.name = dungeonName
-      dungeon.time = dungeonTimeLimit
-      dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
-
-      local encounterIndex = 1
-      EJ_SelectInstance(dungeon.journalInstanceID)
-      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-      while bossID do
-        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-        ---@type AE_Encounter
-        local encounter = {
-          index = encounterIndex,
-          name = name,
-          description = description,
-          journalEncounterID = journalEncounterID,
-          journalEncounterSectionID = journalEncounterSectionID,
-          journalLink = journalLink,
-          journalInstanceID = journalInstanceID,
-          instanceEncounterID = instanceEncounterID,
-          instanceID = instanceID,
-        }
-        dungeon.encounters[encounterIndex] = encounter
-        encounterIndex = encounterIndex + 1
-        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-      end
-    end
-  end
-
-  for _, affix in pairs(self.affixes) do
-    local name, description, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id)
-    affix.name = name
-    affix.description = description
-    affix.fileDataID = fileDataID
-  end
+  self:GetSeasonAffixes()
+  self:GetSeasonRaids()
+  self:GetSeasonDungeons()
 end
 
 function Data:UpdateRaidInstances()
   local character = self:GetCharacter()
   if not character then return end
 
-  local raids = self:GetRaids()
+  local raids = self:GetSeasonRaids()
   local numSavedInstances = GetNumSavedInstances()
 
   wipe(character.raids.savedInstances or {})
@@ -1099,7 +1109,7 @@ function Data:UpdateCurrencies()
     wipe(character.currencies or {})
   end
 
-  addon.Utils:TableForEach(self.currencies, function(dataCurrency)
+  addon.Utils:TableForEach(self.cache.currencies, function(dataCurrency)
     local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
     if not currency then return end
     currency.id = dataCurrency.id
@@ -1184,8 +1194,8 @@ end
 function Data:UpdateKeystoneItem()
   local character = self:GetCharacter()
   if not character then return end
-  local dungeons = self:GetDungeons()
-  local keystoneItemID = self:GetKeystoneItemID()
+  local dungeons = self:GetSeasonDungeons()
+  local keystoneItemID = self:GetSeasonKeystoneItemID()
 
   local keystoneItemLink = nil
   if keystoneItemID ~= nil then
@@ -1282,14 +1292,14 @@ function Data:UpdateMythicPlus()
   local character = self:GetCharacter()
   if not character then return end
 
-  local dungeons = self:GetDungeons()
+  local dungeons = self:GetSeasonDungeons()
   local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
   local runHistory = C_MythicPlus.GetRunHistory(true, true)
   local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
   local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns()
-  local affixes = self:GetAffixes()
+  local affixes = self:GetSeasonAffixes()
 
   if ratingSummary ~= nil and ratingSummary.currentSeasonScore ~= nil then character.mythicplus.rating = ratingSummary.currentSeasonScore end
   if runHistory ~= nil then character.mythicplus.runHistory = runHistory end

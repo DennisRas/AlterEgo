@@ -10,20 +10,6 @@ addon.UI = UI
 local LibDBIcon = LibStub("LibDBIcon-1.0")
 local CHARACTER_WIDTH = 120
 
-local function calculateDungeonTimer(time, level, tier)
-  if tier == 3 then
-    time = time * 0.6
-  elseif tier == 2 then
-    time = time * 0.8
-  end
-
-  if level >= 7 then
-    time = time + 90
-  end
-
-  return time
-end
-
 function UI:Render()
   self:RenderMainWindow()
   self:RenderAffixWindow()
@@ -73,7 +59,7 @@ local vaultTooltipTexts = {
 local function getVaultProgressTooltip(infoFrame, character, activityType)
   local loggedCharacter = addon.Data:GetCharacter()
   local difficulties = addon.Data:GetRaidDifficulties(true)
-  local dungeons = addon.Data:GetDungeons()
+  local dungeons = addon.Data:GetSeasonDungeons()
   local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
   local numActivities = addon.Utils:TableCount(activities)
   local activitiesInProgress = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
@@ -154,7 +140,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
   do -- Raid stats
     if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
       local lastInstanceID = nil
-      addon.Utils:TableForEach(addon.Data:GetRaids(), function(raid)
+      addon.Utils:TableForEach(addon.Data:GetSeasonRaids(), function(raid)
         local bestEncounters = {}
         local savedInstances = addon.Utils:TableFilter(character.raids.savedInstances or {}, function(savedInstance)
           return savedInstance.expires > time() and savedInstance.instanceID == raid.instanceID
@@ -377,9 +363,9 @@ local function getVaultProgressValue(character, activityType)
 end
 
 function UI:GetCharacterInfo(unfiltered)
-  local dungeons = addon.Data:GetDungeons()
+  local dungeons = addon.Data:GetSeasonDungeons()
   local difficulties = addon.Data:GetRaidDifficulties(true)
-  local _, seasonDisplayID = addon.Data:GetCurrentSeason()
+  local _, seasonDisplayID = addon.Data:GetSeasonIDs()
 
   ---@type AE_CharacterInfo[]
   local rows = {
@@ -427,7 +413,7 @@ function UI:GetCharacterInfo(unfiltered)
           GameTooltip:AddLine(GetMoneyString(character.money, true), 1, 1, 1)
         end
         if character.currencies ~= nil and addon.Utils:TableCount(character.currencies) > 0 then
-          local dataCurrencies = addon.Data:GetCurrencies()
+          local dataCurrencies = addon.Data:GetSeasonCurrencies()
           addon.Utils:TableForEach(dataCurrencies, function(dataCurrency)
             local characterCurrency = addon.Utils:TableGet(character.currencies, "id", dataCurrency.id)
             if characterCurrency then
@@ -765,17 +751,17 @@ function UI:GetCharacterInfo(unfiltered)
 end
 
 function UI:RenderMainWindow()
-  local currentAffixes = addon.Data:GetCurrentAffixes()
+  local currentAffixes = addon.Data:GetCurrentWeeklyAffixes()
   local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
-  local seasonID = addon.Data:GetCurrentSeason()
-  local dungeons = addon.Data:GetDungeons()
+  local seasonID = addon.Data:GetSeasonIDs()
+  local dungeons = addon.Data:GetSeasonDungeons()
   local affixRotation = addon.Data:GetAffixRotation()
   local raidDifficulties = addon.Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
-  local raids = addon.Data:GetRaids()
+  local raids = addon.Data:GetSeasonRaids()
   local characters = addon.Data:GetCharacters()
   local numCharacters = addon.Utils:TableCount(characters)
-  local affixes = addon.Data:GetAffixes(true)
+  local affixes = addon.Data:GetSeasonAffixes(true)
   local windowWidthMax = addon.Window:GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
 
@@ -1330,11 +1316,11 @@ function UI:RenderMainWindow()
                 level = bestAffixScore.level
                 dungeonLevel = bestAffixScore.level or 0
 
-                if bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
+                if bestAffixScore.durationSec <= addon.Data:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
                   tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
-                elseif bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
+                elseif bestAffixScore.durationSec <= addon.Data:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
                   tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
-                elseif bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
+                elseif bestAffixScore.durationSec <= addon.Data:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
                   tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
                 end
 
@@ -1408,9 +1394,9 @@ function UI:RenderMainWindow()
 
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine("Dungeon Timers")
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(addon.Data:calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(addon.Data:calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(addon.Data:calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
             GameTooltip:Show()
 
             addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
@@ -1595,17 +1581,17 @@ function UI:RenderMainWindow()
 end
 
 function UI:SetupButtons()
-  local currentAffixes = addon.Data:GetCurrentAffixes()
+  local currentAffixes = addon.Data:GetCurrentWeeklyAffixes()
   local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
-  local seasonID = addon.Data:GetCurrentSeason()
-  local dungeons = addon.Data:GetDungeons()
+  local seasonID = addon.Data:GetSeasonIDs()
+  local dungeons = addon.Data:GetSeasonDungeons()
   local affixRotation = addon.Data:GetAffixRotation()
   local difficulties = addon.Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
-  local raids = addon.Data:GetRaids()
+  local raids = addon.Data:GetSeasonRaids()
   local characters = addon.Data:GetCharacters()
   local numCharacters = addon.Utils:TableCount(characters)
-  local affixes = addon.Data:GetAffixes(true)
+  local affixes = addon.Data:GetSeasonAffixes()
 
   self.window.titlebar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", self.window.titlebar)
   self.window.titlebar.SettingsButton:SetPoint("RIGHT", self.window.titlebar.CloseButton, "LEFT", 0, 0)
@@ -2159,9 +2145,9 @@ function UI:SetupButtons()
 end
 
 function UI:RenderAffixWindow()
-  local affixes = addon.Data:GetAffixes()
+  local affixes = addon.Data:GetSeasonAffixes()
   local affixRotation = addon.Data:GetAffixRotation()
-  local currentAffixes = addon.Data:GetCurrentAffixes()
+  local currentAffixes = addon.Data:GetCurrentWeeklyAffixes()
   local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
 
   local tableWidth = 0

@@ -182,7 +182,7 @@ function Core:RequestGameData()
 end
 
 function Core:CheckGameData()
-  local seasonID, seasonDisplayID = addon.Data:GetCurrentSeason()
+  local seasonID, seasonDisplayID = addon.Data:GetSeasonIDs()
   if seasonID < 0 or seasonDisplayID < 0 then
     self:RequestGameData()
     return self:ScheduleTimer("CheckGameData", 3)
@@ -219,7 +219,7 @@ end
 
 function Core:AnnounceKeystones(chatType)
   local characters = addon.Data:GetCharacters()
-  local dungeons = addon.Data:GetDungeons()
+  local dungeons = addon.Data:GetSeasonDungeons()
   local multiline = addon.Data.db.global.announceKeystones.multiline
   local multilineNames = addon.Data.db.global.announceKeystones.multilineNames
   local keystones = {}
