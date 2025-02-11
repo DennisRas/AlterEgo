@@ -479,26 +479,25 @@ function Data:GetSeasonAffixes(seasonID)
   local affixes = {}
   if not season or not season.affixes then return affixes end
 
-  addon.Utils:TableForEach(season.affixes, function(affixRotation)
-    local affixWeek = {}
-    addon.Utils:TableForEach(affixRotation, function(affix)
-      -- Get cached data
-      if not self.cache.affixes[affix.id] then
-        local name, description, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id)
+  addon.Utils:TableForEach(season.affixes, function(affixWeek)
+    local affixWeekLoaded = {}
+    addon.Utils:TableForEach(affixWeek, function(affixID, affixLevel)
+      if not self.cache.affixes[affixID] then
+        local name, description, fileDataID = C_ChallengeMode.GetAffixInfo(affixID)
         if not name then return end
-        self.cache.affixes[affix.id] = {
-          id = affix.id,
+        self.cache.affixes[affixID] = {
+          id = affixID,
           name = name,
           description = description,
           fileDataID = fileDataID,
         }
       end
-      -- Combine cached data with static data
-      local affixData = self.cache.affixes[affix.id]
-      affixData.level = affix.level
-      table.insert(affixWeek, affixData)
+
+      local affix = self.cache.affixes[affixID]
+      affix.level = affixLevel
+      table.insert(affixWeekLoaded, affix)
     end)
-    table.insert(affixes, affixWeek)
+    table.insert(affixes, affixWeekLoaded)
   end)
 
   return affixes
@@ -515,7 +514,6 @@ function Data:GetSeasonRaids(seasonID)
   addon.Utils:TableForEach(season.raids, function(raid)
     if not self.cache.raids[raid.instanceID] then
       -- TODO: Get raid info
-      raid.encounters = {}
 
       local encounterIndex = 1
       EJ_SelectInstance(raid.journalInstanceID)
@@ -539,7 +537,6 @@ function Data:GetSeasonRaids(seasonID)
         _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
       end
       raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
-      raid.loot = {}
       --   EJ_ClearSearch()
       --   EJ_ResetLootFilter()
       --   EJ_SelectInstance(raid.journalInstanceID)
