@@ -17,6 +17,7 @@
 - Enhanced scrolling logic for smoother and more responsive navigation
 - Reduced addon load times and improved game data processing speed
 - Extra windows now open away from the center of the screen by default
+- Updated addon .toc for patch 11.0.7
 
 ### Fixed
 
