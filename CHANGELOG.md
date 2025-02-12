@@ -1,30 +1,30 @@
 # Changelog
 
-## v1.2.0 - ?
+## v1.2.0 - 2025-02-12
 
 ### Added
 
-- Added new character order: Custom Order - Customize the order of your characters
-- You can now move all windows halfway off the screen
-- Focusing a window will now move it to the front of other windows
-- Added a new button for opening the Great Vault
-- You can now right click the minimap button to open the Great Vault
-- Added character gold to the character name tooltip
+- Introduced a new character sorting option: Custom Order – Arrange your characters as you like
+- All windows can now be moved halfway off-screen
+- Focusing a window now brings it to the front of other windows
+- Added a new button to open the Great Vault
+- Right-clicking the minimap button now opens the Great Vault
+- Character tooltips now display gold amounts
 
 ### Updated
 
-- Rendering code for the UI has been completely rewritten for a much better performance
-- Improved the scrolling logic and responsiveness
-- Improved the load times of the addon and the game data within
-- The starting position of extra windows have been moved away from the center of the screen
+- Completely rewrote UI rendering code for significantly improved performance
+- Enhanced scrolling logic for smoother and more responsive navigation
+- Reduced addon load times and improved game data processing speed
+- Extra windows now open away from the center of the screen by default
 
 ### Fixed
 
-- The position of windows are now saved between reloads/sessions
-- Fixed some rendering issues highlighting certain rows with the mouse
-- Shift clicking your keystone (sharing link to chat) now works again
-- Fixed an issue with character and realm names wrapping to a new line if too long
-- Fixed a bug with raid difficulties disappearing from the Show Raid Progress option
+- Window positions are now properly saved between reloads and sessions
+- Resolved rendering issues when highlighting certain rows with the mouse
+- Shift-clicking a keystone to share its link in chat now works again
+- Fixed character and realm names from wrapping onto a new line when too long
+- Resolved a bug causing raid difficulties to disappear in the Show Raid Progress option
 
 ## v1.1.17 - 2024-12-21
 
