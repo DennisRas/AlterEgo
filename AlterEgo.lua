@@ -15,7 +15,10 @@ local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceT
 addon.Core = Core
 
 function Core:OnInitialize()
-  _G["BINDING_NAME_ALTEREGO"] = "Show/Hide the window"
+  _G["BINDING_NAME_ALTEREGO"] = "Toggle AlterEgo window"
+  _G["BINDING_NAME_ALTEREGOVAULT"] = "Toggle Great Vault window"
+  _G["ALTEREGO_TOGGLE_WINDOW"] = self.ToggleWindow
+  _G["ALTEREGO_TOGGLE_VAULT"] = self.ToggleVault
   self:RegisterChatCommand("ae", function()
     self:ToggleWindow()
   end)
@@ -31,11 +34,7 @@ function Core:OnInitialize()
     OnClick = function(...)
       local _, b = ...
       if b and b == "RightButton" then
-        if WeeklyRewardsFrame and ToggleFrame then
-          ToggleFrame(WeeklyRewardsFrame)
-        else
-          WeeklyRewards_ShowUI()
-        end
+        self:ToggleVault()
       else
         self:ToggleWindow()
       end
@@ -66,6 +65,14 @@ function Core:ToggleWindow()
   local window = addon.Window:GetWindow("Main")
   if not window then return end
   window:Toggle()
+end
+
+function Core:ToggleVault()
+  if WeeklyRewardsFrame and ToggleFrame then
+    ToggleFrame(WeeklyRewardsFrame)
+  else
+    WeeklyRewards_ShowUI()
+  end
 end
 
 function Core:OnEnable()

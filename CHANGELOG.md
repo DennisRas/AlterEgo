@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2.1 - 2025-02-14
+
+### Added
+
+- Added a new keybind option for opening the Great Vault
+
+### Fixed
+
+- The keybind for opening the AlterEgo window now functions properly again
+
 ## v1.2.0 - 2025-02-12
 
 ### Added
