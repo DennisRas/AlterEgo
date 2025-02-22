@@ -409,6 +409,7 @@ Data.raids = {
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1208, instanceID = 2569, order = 2, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATSC", name = "Aberrus, the Shadowed Crucible"},
   {seasonID = 12, seasonDisplayID = 4, journalInstanceID = 1207, instanceID = 2549, order = 3, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
   {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1273, instanceID = 2657, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP",  name = "Nerub-ar Palace"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1296, instanceID = 2769, order = 2, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "LOU",  name = "Liberation of Undermine"},
 }
 
 ---@type AE_RaidDifficulty[]
