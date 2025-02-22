@@ -362,6 +362,7 @@ Data.keystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
   {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
   {seasonID = 13, seasonDisplayID = 1, itemID = 180653},
+  {seasonID = 14, seasonDisplayID = 2, itemID = 180653}, -- This could be 151086 unless that's just on the PTR
 }
 
 ---@type AE_Dungeon[]
@@ -398,6 +399,14 @@ Data.dungeons = {
   {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1270, challengeModeID = 505, mapId = 2662, encounters = {}, loot = {}, spellID = 445414,                                                        time = 0, abbr = "DAWN",  name = "The Dawnbreaker"},
   {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1182, challengeModeID = 376, mapId = 2286, encounters = {}, loot = {}, spellID = 354462,                                                        time = 0, abbr = "NW",    name = "The Necrotic Wake"},
   {seasonID = 13, seasonDisplayID = 1, journalInstanceID = 1269, challengeModeID = 501, mapId = 2652, encounters = {}, loot = {}, spellID = 445269,                                                        time = 0, abbr = "SV",    name = "The Stonevault"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1012, challengeModeID = 247, mapId = 1594, encounters = {}, loot = {}, spellID = 467553, --[[Other ID: 467555]]                                 time = 0, abbr = "ML",    name = "The MOTHERLODE!!"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1178, challengeModeID = 370, mapId = 2097, encounters = {}, loot = {}, spellID = 373274,                                                        time = 0, abbr = "WORK",  name = "Operation: Mechagon"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1187, challengeModeID = 382, mapId = 2293, encounters = {}, loot = {}, spellID = 354467,                                                        time = 0, abbr = "TOP",   name = "Theater of Pain"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1267, challengeModeID = 499, mapId = 2649, encounters = {}, loot = {}, spellID = 445444,                                                        time = 0, abbr = "PSF",   name = "Priory of the Sacred Flame"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1268, challengeModeID = 500, mapId = 2648, encounters = {}, loot = {}, spellID = 445443,                                                        time = 0, abbr = "ROOK",  name = "The Rookery"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1210, challengeModeID = 504, mapId = 2651, encounters = {}, loot = {}, spellID = 445441,                                                        time = 0, abbr = "DCF",   name = "Darkflame Cleft"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1272, challengeModeID = 506, mapId = 2661, encounters = {}, loot = {}, spellID = 445440,                                                        time = 0, abbr = "BREW",  name = "Cinderbrew Meadery"},
+  {seasonID = 14, seasonDisplayID = 2, journalInstanceID = 1298, challengeModeID = 525, mapId = 2773, encounters = {}, loot = {}, spellID = 1216786,                                                       time = 0, abbr = "FLOOD", name = "Operation: Floodgate"},
 }
 
 ---@type AE_Raid[]
