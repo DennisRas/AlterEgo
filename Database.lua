@@ -344,6 +344,13 @@ Data.currencies = {
   {seasonID = 13, seasonDisplayID = 1, id = 3008, currencyType = "upgrade"},                  -- Valorstones
   {seasonID = 13, seasonDisplayID = 1, id = 2813, currencyType = "catalyst"},                 -- Catalyst
   {seasonID = 13, seasonDisplayID = 1, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 14, seasonDisplayID = 2, id = 3008, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 14, seasonDisplayID = 2, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 14, seasonDisplayID = 2, id = 3107, currencyType = "crest"},                    -- Weathered
+  {seasonID = 14, seasonDisplayID = 2, id = 3108, currencyType = "crest"},                    -- Carved
+  {seasonID = 14, seasonDisplayID = 2, id = 3109, currencyType = "crest"},                    -- Runed
+  {seasonID = 14, seasonDisplayID = 2, id = 3110, currencyType = "crest"},                    -- Gilded
+  {seasonID = 14, seasonDisplayID = 2, id = 3116, currencyType = "catalyst"},                 -- Catalyst
 }
 
 Data.cache = {
