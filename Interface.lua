@@ -376,12 +376,15 @@ local function getVaultProgressValue(character, activityType)
   return table.concat(texts, "  ")
 end
 
+---Get character rows for the grid
+---@param unfiltered boolean?
+---@return AE_CharacterRows[]
 function UI:GetCharacterInfo(unfiltered)
   local dungeons = addon.Data:GetDungeons()
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local _, seasonDisplayID = addon.Data:GetCurrentSeason()
 
-  ---@type AE_CharacterInfo[]
+  ---@type AE_CharacterRows[]
   local rows = {
     {
       label = CHARACTER,
@@ -577,7 +580,7 @@ function UI:GetCharacterInfo(unfiltered)
             bestSeasonScoreColor = color
           end
         end
-        if character.mythicplus.rating ~= nil then
+        if type(character.mythicplus.rating) == "number" then
           local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = color
@@ -589,7 +592,7 @@ function UI:GetCharacterInfo(unfiltered)
         GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
-          local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(bestSeasonScore)
+          local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(tostring(bestSeasonScore))
           if bestSeasonNumber > 0 then
             local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
             bestSeasonValue = format("%s %s", bestSeasonValue, season)
@@ -1363,7 +1366,7 @@ function UI:RenderMainWindow()
           dungeonFrame.Tier:ClearAllPoints()
           dungeonFrame.Tier:SetText("")
           dungeonFrame.Score:ClearAllPoints()
-          dungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore or "-"))
+          dungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore and tostring(overallScore) or "-"))
           dungeonFrame.Score:SetPoint("LEFT", dungeonFrame, "CENTER")
           dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT")
           dungeonFrame.Score:SetJustifyH("CENTER")
@@ -1392,7 +1395,7 @@ function UI:RenderMainWindow()
 
             if affixScores and addon.Utils:TableCount(affixScores) > 0 then
               if overallScore and (inTimeInfo or overTimeInfo) then
-                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(overallScore)), GREEN_FONT_COLOR)
+                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(tostring(overallScore))), GREEN_FONT_COLOR)
               end
 
               if bestAffixScore then

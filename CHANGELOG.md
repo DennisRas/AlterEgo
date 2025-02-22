@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.2 - 2025-02-23
+
+### Updated
+
+- Optimized and removed a lot of old or unused code
+
 ## v1.2.1 - 2025-02-14
 
 ### Added

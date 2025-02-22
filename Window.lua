@@ -183,7 +183,7 @@ function Window:SetWindowScale(scale)
 end
 
 ---Set background color to each window
----@param color ColorMixin
+---@param color ColorType
 function Window:SetWindowBackgroundColor(color)
   addon.Utils:TableForEach(WindowCollection, function(window)
     addon.Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)

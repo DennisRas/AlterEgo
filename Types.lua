@@ -40,22 +40,58 @@
 ---@field id number
 ---@field currencyType AE_CurrencyType
 
+---@class AE_CharacterInfo
+---@field name string
+---@field realm string
+---@field level number
+---@field race {name: string, file: string, id: number}
+---@field class {name: string, file: string, id: number}
+---@field factionGroup {english: string, localized: string}
+---@field ilvl {level: number, equipped: number, pvp: number, color: string}
+
+---@class AE_CharacterAffixScoreInfo : MythicPlusAffixScoreInfo
+---@field id number
+
+---@class AE_CharacterDungeon
+---@field challengeModeID number
+---@field rating number
+---@field level number
+---@field finishedSuccess boolean
+---@field bestTimedRun MapSeasonBestInfo|nil
+---@field bestNotTimedRun MapSeasonBestInfo|nil
+---@field affixScores AE_CharacterAffixScoreInfo[]
+---@field bestOverAllScore number
+
+---@class AE_CharacterMythicPlus
+---@field numCompletedDungeonRuns {heroic: number, mythic: number, mythicPlus: number}
+---@field rating number
+---@field keystone {challengeModeID: number, mapId: number, level: number, color: string, itemId: number, itemLink: string}
+---@field weeklyRewardAvailable boolean
+---@field bestSeasonScore number
+---@field bestSeasonNumber number
+---@field runHistory MythicPlusRunInfo[]
+---@field dungeons AE_CharacterDungeon[]
+
 ---@class AE_Character
 ---@field GUID WOWGUID
 ---@field lastUpdate number
 ---@field currentSeason number
----@field raids { savedInstances: AE_SavedInstance[] }
+---@field order number
+---@field info AE_CharacterInfo
 ---@field equipment AE_Equipment[]
+---@field money number
 ---@field currencies AE_CharacterCurrency[]
+---@field raids { savedInstances: AE_SavedInstance[] }
+---@field mythicplus AE_CharacterMythicPlus
 ---@field vault { hasAVailableRewards: boolean, slots: AE_CharacterVault[]}
--- -@field pvp table
 
----@class AE_CharacterInfo
+---@class AE_CharacterRows
 ---@field label string
 ---@field value function
 ---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
 ---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
 ---@field onClick fun(infoFrame: Frame, character: AE_Character)?
+---@field backgroundColor ColorType?
 ---@field enabled boolean
 
 ---@class AE_Affix
@@ -129,12 +165,34 @@
 ---@field fileDataID number|nil
 ---@field isKilled boolean
 
----TODO: Flatten
+---@alias AE_CharacterSortingOption "lastUpdate" | "name.asc" | "name.desc" | "realm.asc" | "realm.desc" | "class.asc" | "class.desc" | "ilvl.asc" | "ilvl.desc" | "rating.asc" | "rating.desc" | "custom"
+
+---@class AE_ConstantsSizes
+---@field padding number
+---@field row number
+---@field column number
+---@field border number
+---@field titlebar {height: number}
+---@field footer {height: number}
+---@field sidebar {width: number, collapsedWidth: number}
+
+---@class AE_ConstantsCharacterSortingOption
+---@field value AE_CharacterSortingOption
+---@field text string
+---@field tooltipTitle string?
+---@field tooltipText string?
+
+---@class AE_Constants
+---@field prefix string
+---@field media table<string, string>
+---@field sizes AE_ConstantsSizes
+---@field sortingOptions AE_ConstantsCharacterSortingOption[]
+
 ---@class AE_Global
 ---@field weeklyReset number
 ---@field characters AE_Character[]
 ---@field minimap { minimapPos: number, hide: boolean, lock: boolean }
----@field sorting string -- TODO: Enum/Alias
+---@field sorting AE_CharacterSortingOption
 ---@field showTiers boolean
 ---@field showAffixColors boolean
 ---@field showAffixHeader boolean
@@ -142,11 +200,9 @@
 ---@field showRealms boolean
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
----@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table, boxes: boolean, modifiedInstanceOnly: boolean }
----@field interface { windowScale: number, windowColor: {r: number, g: number, b: number, a: number} }
+---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
+---@field interface { windowScale: number, windowColor: ColorType}
 ---@field useRIOScoreColor boolean
--- -@field runHistory AE_RH
--- -@field pvp { enabled: boolean }
 
 ---@class AE_Equipment
 ---@field itemName string
