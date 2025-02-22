@@ -972,25 +972,31 @@ function UI:RenderMainWindow()
           self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
         end
 
-        if dungeon.spellID and IsSpellKnown(dungeon.spellID) and not InCombatLockdown() then
-          dungeonFrame:SetAttribute("type", "spell")
-          dungeonFrame:SetAttribute("spell", dungeon.spellID)
+        local knownTeleportSpellID = addon.Utils:TableFind(dungeon.teleports or {}, function(spellID)
+          return IsSpellKnown(spellID)
+        end)
+
+        if knownTeleportSpellID then
+          if not InCombatLockdown() then
+            dungeonFrame:SetAttribute("type", "spell")
+            dungeonFrame:SetAttribute("spell", knownTeleportSpellID)
+          end
+        else
+          -- TODO: Unset spell attribute? It's not like the dungeon pool changes during a session
         end
 
         dungeonFrame:SetScript("OnEnter", function()
           ---@diagnostic disable-next-line: param-type-mismatch
           GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
           GameTooltip:SetText(dungeon.name, 1, 1, 1)
-          if dungeon.spellID then
-            if IsSpellKnown(dungeon.spellID) then
-              GameTooltip:ClearLines()
-              GameTooltip:SetSpellByID(dungeon.spellID)
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-              _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
-            else
-              GameTooltip:AddLine(format("Time this dungeon on level %d or above to unlock teleportation.", dungeonPortalUnlockLevel), nil, nil, nil, true)
-            end
+          if knownTeleportSpellID then
+            GameTooltip:ClearLines()
+            GameTooltip:SetSpellByID(knownTeleportSpellID)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+          else
+            GameTooltip:AddLine(format("Time this dungeon on level %d or above to unlock teleportation.", dungeonPortalUnlockLevel), nil, nil, nil, true)
           end
           GameTooltip:Show()
         end)

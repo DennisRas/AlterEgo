@@ -93,7 +93,7 @@
 ---@field challengeModeID number
 ---@field journalInstanceID number
 ---@field mapId number
----@field spellID number
+---@field teleports number[]
 ---@field time number
 ---@field encounters AE_Encounter[]
 ---@field abbr string
