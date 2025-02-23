@@ -196,6 +196,9 @@
         "RAID_BOSSES",
         "WEEKLY_REWARDS_ENCOUNTER_LIST",
         "WEEKLY_REWARDS_COMPLETED_ENCOUNTER",
-        "DASH_WITH_TEXT"
+        "DASH_WITH_TEXT",
+        "MINIMAP_LABEL",
+        "INTERFACE_OPTIONS",
+        "MenuResponse"
     ]
 }

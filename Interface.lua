@@ -1607,567 +1607,513 @@ function UI:RenderMainWindow()
 end
 
 function UI:SetupButtons()
-  local currentAffixes = addon.Data:GetCurrentAffixes()
-  local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
-  local seasonID = addon.Data:GetCurrentSeason()
-  local dungeons = addon.Data:GetDungeons()
-  local affixRotation = addon.Data:GetAffixRotation()
-  local difficulties = addon.Data:GetRaidDifficulties()
-  local characterInfo = self:GetCharacterInfo()
-  local raids = addon.Data:GetRaids()
-  local characters = addon.Data:GetCharacters()
-  local numCharacters = addon.Utils:TableCount(characters)
-  local affixes = addon.Data:GetAffixes(true)
-
-  self.window.titlebar.SettingsButton = CreateFrame("Button", "$parentSettingsButton", self.window.titlebar)
-  self.window.titlebar.SettingsButton:SetPoint("RIGHT", self.window.titlebar.CloseButton, "LEFT", 0, 0)
-  self.window.titlebar.SettingsButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
-  self.window.titlebar.SettingsButton:RegisterForClicks("AnyUp")
-  self.window.titlebar.SettingsButton.HandlesGlobalMouseEvent = function()
-    return true
-  end
-  self.window.titlebar.SettingsButton:SetScript("OnClick", function()
-    ToggleDropDownMenu(1, nil, self.window.titlebar.SettingsButton.Dropdown)
-  end)
-  self.window.titlebar.SettingsButton.Icon = self.window.titlebar:CreateTexture(self.window.titlebar.SettingsButton:GetName() .. "Icon", "ARTWORK")
-  self.window.titlebar.SettingsButton.Icon:SetPoint("CENTER", self.window.titlebar.SettingsButton, "CENTER")
-  self.window.titlebar.SettingsButton.Icon:SetSize(12, 12)
-  self.window.titlebar.SettingsButton.Icon:SetTexture(addon.Constants.media.IconSettings)
-  self.window.titlebar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-  self.window.titlebar.SettingsButton.Dropdown = CreateFrame("Frame", self.window.titlebar.SettingsButton:GetName() .. "Dropdown", self.window.titlebar, "UIDropDownMenuTemplate")
-  self.window.titlebar.SettingsButton.Dropdown:SetPoint("CENTER", self.window.titlebar.SettingsButton, "CENTER", 0, -6)
-  self.window.titlebar.SettingsButton.Dropdown.Button:Hide()
-  UIDropDownMenu_SetWidth(self.window.titlebar.SettingsButton.Dropdown, addon.Constants.sizes.titlebar.height)
-  UIDropDownMenu_Initialize(
-    self.window.titlebar.SettingsButton.Dropdown,
-    function(frame, level, subMenuName)
-      if subMenuName == "raiddifficulties" then
-        addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
-          UIDropDownMenu_AddButton(
-            {
-              text = difficulty.name,
-              value = difficulty.id,
-              checked = addon.Data.db.global.raids.hiddenDifficulties and not addon.Data.db.global.raids.hiddenDifficulties[difficulty.id],
-              keepShownOnClick = true,
-              func = function(button, arg1, arg2, checked)
-                addon.Data.db.global.raids.hiddenDifficulties[button.value] = not checked
-                self:Render()
-              end,
-            },
-            level
-          )
-        end)
-      elseif subMenuName == "windowscale" then
-        for i = 80, 200, 10 do
-          UIDropDownMenu_AddButton(
-            {
-              text = i .. "%",
-              value = i,
-              checked = addon.Data.db.global.interface.windowScale == i,
-              keepShownOnClick = false,
-              func = function(button)
-                addon.Data.db.global.interface.windowScale = button.value
-                self:Render()
-              end,
-            },
-            level
-          )
-        end
-      elseif level == 1 then
-        UIDropDownMenu_AddButton({text = "General", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Show the weekly affixes",
-          checked = addon.Data.db.global.showAffixHeader,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show the weekly affixes",
-          tooltipText = "The affixes will be shown at the top.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.showAffixHeader = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Show characters with zero rating",
-          checked = addon.Data.db.global.showZeroRatedCharacters,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show characters with zero rating",
-          tooltipText = "Too many alts?",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.showZeroRatedCharacters = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Show realm names",
-          checked = addon.Data.db.global.showRealms,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show realm names",
-          tooltipText = "One big party!",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.showRealms = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Use Raider.io rating colors",
-          checked = addon.Data.db.global.useRIOScoreColor,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Use Raider.io rating colors",
-          tooltipText = "So many colors!",
-          tooltipOnButton = true,
-          disabled = type(_G.RaiderIO) == "nil",
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.useRIOScoreColor = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({text = "Automatic Announcements", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Announce instance resets",
-          checked = addon.Data.db.global.announceResets,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Announce instance resets",
-          tooltipText = "Let others in your group know when you've reset the instances.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.announceResets = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Announce new keystones (Party)",
-          checked = addon.Data.db.global.announceKeystones.autoParty,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "New keystones (Party)",
-          tooltipText = "Announce to your party when you loot a new keystone.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.announceKeystones.autoParty = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Announce new keystones (Guild)",
-          checked = addon.Data.db.global.announceKeystones.autoGuild,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "New keystones (Guild)",
-          tooltipText = "Announce to your guild when you loot a new keystone.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.announceKeystones.autoGuild = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({text = RAIDS, isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Show raid progress",
-          checked = addon.Data.db.global.raids and addon.Data.db.global.raids.enabled,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show raid progress",
-          tooltipText = "Because Mythic Plus ain't enough!",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.raids.enabled = checked
-            self:Render()
-          end,
-          hasArrow = true,
-          menuList = "raiddifficulties",
-        })
-        if seasonID == 12 then
-          UIDropDownMenu_AddButton({
-            text = "Show |cFF00FFFFAwakened|r raids only",
-            checked = addon.Data.db.global.raids and addon.Data.db.global.raids.modifiedInstanceOnly,
-            keepShownOnClick = true,
-            isNotRadio = true,
-            tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
-            tooltipText = "It's time to move on!",
-            tooltipOnButton = true,
-            func = function(button, arg1, arg2, checked)
-              addon.Data.db.global.raids.modifiedInstanceOnly = checked
-              self:Render()
-            end,
-          })
-        end
-        UIDropDownMenu_AddButton({
-          text = "Show difficulty colors",
-          checked = addon.Data.db.global.raids and addon.Data.db.global.raids.colors,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show difficulty colors",
-          tooltipText = "Argharhggh! So much greeeen!",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.raids.colors = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({text = "Dungeons", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Show icons",
-          checked = addon.Data.db.global.showTiers,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show icons",
-          tooltipText = "Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.showTiers = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Show rating",
-          checked = addon.Data.db.global.showScores,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show rating",
-          tooltipText = "Show some values!",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.showScores = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Use rating colors",
-          checked = addon.Data.db.global.showAffixColors,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Use rating colors",
-          tooltipText = "Show some colors!",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.showAffixColors = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({text = "World", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Show world progress",
-          checked = addon.Data.db.global.world and addon.Data.db.global.world.enabled,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show world progress",
-          tooltipText = "Is Brann being a good guy?",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.world.enabled = checked
-            self:Render()
-          end,
-        })
-        UIDropDownMenu_AddButton({text = "Minimap", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Show the minimap button",
-          checked = not addon.Data.db.global.minimap.hide,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Show the minimap button",
-          tooltipText = "It does get crowded around the minimap sometimes.",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.minimap.hide = not checked
-            LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
-          end,
-        })
-        UIDropDownMenu_AddButton({
-          text = "Lock the minimap button",
-          checked = addon.Data.db.global.minimap.lock,
-          keepShownOnClick = true,
-          isNotRadio = true,
-          tooltipTitle = "Lock the minimap button",
-          tooltipText = "No more moving the button around accidentally!",
-          tooltipOnButton = true,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.minimap.lock = checked
-            LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
-          end,
-        })
-        UIDropDownMenu_AddButton({text = "Interface", isTitle = true, notCheckable = true})
-        UIDropDownMenu_AddButton({
-          text = "Window color",
-          keepShownOnClick = false,
-          notCheckable = true,
-          hasColorSwatch = true,
-          r = addon.Data.db.global.interface.windowColor.r,
-          g = addon.Data.db.global.interface.windowColor.g,
-          b = addon.Data.db.global.interface.windowColor.b,
-          -- notClickable = true,
-          hasOpacity = false,
-          func = UIDropDownMenuButton_OpenColorPicker,
-          swatchFunc = function()
-            local r, g, b = ColorPickerFrame:GetColorRGB()
-            addon.Data.db.global.interface.windowColor.r = r
-            addon.Data.db.global.interface.windowColor.g = g
-            addon.Data.db.global.interface.windowColor.b = b
-            addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
-            -- addon.Utils:SetBackgroundColor(winMain, addon.Data.db.global.interface.windowColor.r, addon.Data.db.global.interface.windowColor.g, addon.Data.db.global.interface.windowColor.b, addon.Data.db.global.interface.windowColor.a)
-          end,
-          cancelFunc = function(color)
-            addon.Data.db.global.interface.windowColor.r = color.r
-            addon.Data.db.global.interface.windowColor.g = color.g
-            addon.Data.db.global.interface.windowColor.b = color.b
-            addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
-            -- addon.Utils:SetBackgroundColor(winMain, addon.Data.db.global.interface.windowColor.r, addon.Data.db.global.interface.windowColor.g, addon.Data.db.global.interface.windowColor.b, addon.Data.db.global.interface.windowColor.a)
-          end,
-        })
-        UIDropDownMenu_AddButton({text = "Window scale", notCheckable = true, hasArrow = true, menuList = "windowscale"})
-      end
-    end,
-    "MENU"
-  )
-  self.window.titlebar.SettingsButton:SetScript("OnEnter", function()
-    self.window.titlebar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.SettingsButton, 1, 1, 1, 0.05)
-    GameTooltip:SetOwner(self.window.titlebar.SettingsButton, "ANCHOR_TOP")
+  self.window.titlebar.SettingsButton = CreateFrame("DropdownButton", "$parentSettingsButton", self.window.titlebar)
+  local settingsButton = self.window.titlebar.SettingsButton
+  settingsButton:SetPoint("RIGHT", self.window.titlebar.CloseButton, "LEFT", 0, 0)
+  settingsButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
+  settingsButton:SetScript("OnEnter", function()
+    settingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(settingsButton, 1, 1, 1, 0.05)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    GameTooltip:SetOwner(settingsButton, "ANCHOR_TOP")
     GameTooltip:SetText("Settings", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Let's customize things a bit", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     GameTooltip:Show()
   end)
-  self.window.titlebar.SettingsButton:SetScript("OnLeave", function()
-    self.window.titlebar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.SettingsButton, 1, 1, 1, 0)
+  settingsButton:SetScript("OnLeave", function()
+    settingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(settingsButton, 1, 1, 1, 0)
     GameTooltip:Hide()
   end)
-  self.window.titlebar.SortingButton = CreateFrame("Button", "$parentSorting", self.window.titlebar)
-  self.window.titlebar.SortingButton:SetPoint("RIGHT", self.window.titlebar.SettingsButton, "LEFT", 0, 0)
-  self.window.titlebar.SortingButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
-  self.window.titlebar.SortingButton.HandlesGlobalMouseEvent = function()
-    return true
-  end
-  self.window.titlebar.SortingButton:SetScript("OnClick", function()
-    ToggleDropDownMenu(1, nil, self.window.titlebar.SortingButton.Dropdown)
-  end)
-  self.window.titlebar.SortingButton.Icon = self.window.titlebar:CreateTexture(self.window.titlebar.SortingButton:GetName() .. "Icon", "ARTWORK")
-  self.window.titlebar.SortingButton.Icon:SetPoint("CENTER", self.window.titlebar.SortingButton, "CENTER")
-  self.window.titlebar.SortingButton.Icon:SetSize(16, 16)
-  self.window.titlebar.SortingButton.Icon:SetTexture(addon.Constants.media.IconSorting)
-  self.window.titlebar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-  self.window.titlebar.SortingButton.Dropdown = CreateFrame("Frame", self.window.titlebar.SortingButton:GetName() .. "Dropdown", self.window.titlebar.SortingButton, "UIDropDownMenuTemplate")
-  self.window.titlebar.SortingButton.Dropdown:SetPoint("CENTER", self.window.titlebar.SortingButton, "CENTER", 0, -6)
-  self.window.titlebar.SortingButton.Dropdown.Button:Hide()
-  UIDropDownMenu_SetWidth(self.window.titlebar.SortingButton.Dropdown, addon.Constants.sizes.titlebar.height)
-  UIDropDownMenu_Initialize(
-    self.window.titlebar.SortingButton.Dropdown,
-    function()
-      for _, option in ipairs(addon.Constants.sortingOptions) do
-        UIDropDownMenu_AddButton({
-          text = option.text,
-          checked = addon.Data.db.global.sorting == option.value,
-          arg1 = option.value,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.sorting = arg1
-            self:Render()
-          end,
-          tooltipTitle = option.tooltipTitle and option.tooltipTitle or false,
-          tooltipText = option.tooltipText and option.tooltipText or false,
-          tooltipOnButton = (option.tooltipTitle or option.tooltipText) and true or false,
-        })
+  settingsButton.Icon = self.window.titlebar:CreateTexture(settingsButton:GetName() .. "Icon", "ARTWORK")
+  settingsButton.Icon:SetPoint("CENTER", settingsButton, "CENTER")
+  settingsButton.Icon:SetSize(12, 12)
+  settingsButton.Icon:SetTexture(addon.Constants.media.IconSettings)
+  settingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+  settingsButton:SetupMenu(function(_, menu)
+    menu:CreateTitle("General")
+    menu:CreateCheckbox(
+      "Show the weekly affixes",
+      function() return addon.Data.db.global.showAffixHeader end,
+      function()
+        addon.Data.db.global.showAffixHeader = not addon.Data.db.global.showAffixHeader
+        self:Render()
       end
-    end,
-    "MENU"
-  )
-  self.window.titlebar.SortingButton:SetScript("OnEnter", function()
-    self.window.titlebar.SortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.SortingButton, 1, 1, 1, 0.05)
-    GameTooltip:SetOwner(self.window.titlebar.SortingButton, "ANCHOR_TOP")
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("The affixes will be shown at the top.", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Show characters with zero rating",
+      function() return addon.Data.db.global.showZeroRatedCharacters end,
+      function()
+        addon.Data.db.global.showZeroRatedCharacters = not addon.Data.db.global.showZeroRatedCharacters
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Too many alts?", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Show realm names",
+      function() return addon.Data.db.global.showRealms end,
+      function()
+        addon.Data.db.global.showRealms = not addon.Data.db.global.showRealms
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("One big party!", nil, nil, nil, true)
+    end)
+    local rioColors = menu:CreateCheckbox(
+      "Use Raider.IO rating colors",
+      function() return addon.Data.db.global.useRIOScoreColor end,
+      function()
+        addon.Data.db.global.useRIOScoreColor = not addon.Data.db.global.useRIOScoreColor
+        self:Render()
+      end
+    )
+    rioColors:SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("So many colors!", nil, nil, nil, true)
+      if type(_G.RaiderIO) == "nil" then
+        tooltip:AddLine(" ")
+        tooltip:AddLine("Requires addon: Raider.IO", 1, 0, 0, true)
+      end
+    end)
+    rioColors:SetEnabled(type(_G.RaiderIO) ~= "nil")
+    menu:CreateTitle("Automatic Announcements")
+    menu:CreateCheckbox(
+      "Announce instance resets",
+      function() return addon.Data.db.global.announceResets end,
+      function()
+        addon.Data.db.global.announceResets = not addon.Data.db.global.announceResets
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Let others in your group know when you've reset the instances.", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Announce new keystones (Party)",
+      function() return addon.Data.db.global.announceKeystones.autoParty end,
+      function()
+        addon.Data.db.global.announceKeystones.autoParty = not addon.Data.db.global.announceKeystones.autoParty
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce to your party when you loot a new keystone.", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Announce new keystones (Guild)",
+      function() return addon.Data.db.global.announceKeystones.autoGuild end,
+      function()
+        addon.Data.db.global.announceKeystones.autoGuild = not addon.Data.db.global.announceKeystones.autoGuild
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce to your guild when you loot a new keystone.", nil, nil, nil, true)
+    end)
+    menu:CreateTitle(RAIDS)
+    menu:CreateCheckbox(
+      "Show raid progress",
+      function() return addon.Data.db.global.raids.enabled end,
+      function()
+        addon.Data.db.global.raids.enabled = not addon.Data.db.global.raids.enabled
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Use difficulty colors",
+      function() return addon.Data.db.global.raids.colors end,
+      function()
+        addon.Data.db.global.raids.colors = not addon.Data.db.global.raids.colors
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Argharhggh! So much greeeen!", nil, nil, nil, true)
+    end)
+    local raidDifficultiesSetting = menu:CreateButton(
+      "Enabled raid difficulties"
+    )
+    addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
+      local hiddenDifficulties = addon.Data.db.global.raids.hiddenDifficulties or {}
+      raidDifficultiesSetting:CreateCheckbox(
+        difficulty.name,
+        function(id) return not hiddenDifficulties[id] end,
+        function(id)
+          addon.Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
+          self:Render()
+        end,
+        difficulty.id
+      )
+    end)
+    -- TODO: Refactor to auto-detect if the season has awwakened raids
+    --       if seasonID == 12 then
+    --         UIDropDownMenu_AddButton({
+    --           text = "Show |cFF00FFFFAwakened|r raids only",
+    --           checked = addon.Data.db.global.raids and addon.Data.db.global.raids.modifiedInstanceOnly,
+    --           keepShownOnClick = true,
+    --           isNotRadio = true,
+    --           tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
+    --           tooltipText = "It's time to move on!",
+    --           tooltipOnButton = true,
+    --           func = function(button, arg1, arg2, checked)
+    --             addon.Data.db.global.raids.modifiedInstanceOnly = checked
+    --             self:Render()
+    --           end,
+    --         })
+    --       end
+    menu:CreateTitle(DUNGEONS)
+    menu:CreateCheckbox(
+      "Show icons",
+      function() return addon.Data.db.global.showTiers end,
+      function()
+        addon.Data.db.global.showTiers = not addon.Data.db.global.showTiers
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Show rating",
+      function() return addon.Data.db.global.showScores end,
+      function()
+        addon.Data.db.global.showScores = not addon.Data.db.global.showScores
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Show some scores!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Use rating colors",
+      function() return addon.Data.db.global.showAffixColors end,
+      function()
+        addon.Data.db.global.showAffixColors = not addon.Data.db.global.showAffixColors
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Show some colors!", nil, nil, nil, true)
+    end)
+    menu:CreateTitle(WORLD)
+    menu:CreateCheckbox(
+      "Show world progress",
+      function() return addon.Data.db.global.world.enabled end,
+      function()
+        addon.Data.db.global.world.enabled = not addon.Data.db.global.world.enabled
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Is Brann helping you out?", nil, nil, nil, true)
+    end)
+    menu:CreateTitle(MINIMAP_LABEL)
+    menu:CreateCheckbox(
+      "Show the minimap button",
+      function() return not addon.Data.db.global.minimap.hide end,
+      function()
+        addon.Data.db.global.minimap.hide = not addon.Data.db.global.minimap.hide
+        LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("It does get crowded around the minimap sometimes.", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Lock the minimap button",
+      function() return addon.Data.db.global.minimap.lock end,
+      function()
+        addon.Data.db.global.minimap.lock = not addon.Data.db.global.minimap.lock
+        LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("No more moving the button around accidentally!", nil, nil, nil, true)
+    end)
+    menu:CreateTitle(INTERFACE_OPTIONS)
+    -- TODO: Make this a slider with a different button template
+    local windowScaleButton = menu:CreateButton("Window scale")
+    for i = 80, 200, 10 do
+      windowScaleButton:CreateRadio(
+        i .. "%",
+        function(value) return addon.Data.db.global.interface.windowScale == value end,
+        function(value)
+          addon.Data.db.global.interface.windowScale = value
+          self:Render()
+          return MenuResponse.Refresh
+        end,
+        i
+      )
+    end
+    local function saveAndRefresh(color)
+      if color.r then
+        addon.Data.db.global.interface.windowColor.r = color.r
+        addon.Data.db.global.interface.windowColor.g = color.g
+        addon.Data.db.global.interface.windowColor.b = color.b
+      end
+      if color.a then
+        addon.Data.db.global.interface.windowColor.a = color.a
+      end
+      addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
+    end
+    local colorInfo = {
+      r = addon.Data.db.global.interface.windowColor.r,
+      g = addon.Data.db.global.interface.windowColor.g,
+      b = addon.Data.db.global.interface.windowColor.b,
+      opacity = addon.Data.db.global.interface.windowColor.a,
+      hasOpacity = 1,
+      swatchFunc = function()
+        local r, g, b = ColorPickerFrame:GetColorRGB()
+        local a = ColorPickerFrame:GetColorAlpha()
+        if r then
+          saveAndRefresh({r = r, g = g, b = b, a = a or 1})
+        end
+      end,
+      opacityFunc = function() end,
+      cancelFunc = saveAndRefresh,
+    }
+    menu:CreateColorSwatch(
+      "Window background color",
+      function()
+        ColorPickerFrame:SetupColorPickerAndShow(colorInfo)
+      end,
+      colorInfo
+    )
+  end)
+
+  self.window.titlebar.SortingButton = CreateFrame("DropdownButton", "$parentSorting", self.window.titlebar)
+  local sortingButton = self.window.titlebar.SortingButton
+  sortingButton:SetPoint("RIGHT", settingsButton, "LEFT", 0, 0)
+  sortingButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
+  sortingButton.Icon = self.window.titlebar:CreateTexture(sortingButton:GetName() .. "Icon", "ARTWORK")
+  sortingButton.Icon:SetPoint("CENTER", sortingButton, "CENTER")
+  sortingButton.Icon:SetSize(16, 16)
+  sortingButton.Icon:SetTexture(addon.Constants.media.IconSorting)
+  sortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+  sortingButton:SetupMenu(function(_, rootMenu)
+    for _, option in ipairs(addon.Constants.sortingOptions) do
+      local button = rootMenu:CreateRadio(
+        option.text,
+        function(value) return addon.Data.db.global.sorting == value end,
+        function(value)
+          addon.Data.db.global.sorting = value
+          self:Render()
+          return MenuResponse.Refresh
+        end,
+        option.value
+      )
+      if option.tooltipTitle or option.tooltipText then
+        button:SetTooltip(function(tooltip)
+          if option.tooltipTitle then
+            tooltip:AddLine(option.tooltipTitle, 1, 1, 1, true)
+          end
+          if option.tooltipText then
+            tooltip:AddLine(option.tooltipText, nil, nil, nil, true)
+          end
+        end)
+      end
+    end
+  end)
+  sortingButton:SetScript("OnEnter", function()
+    sortingButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(sortingButton, 1, 1, 1, 0.05)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    GameTooltip:SetOwner(sortingButton, "ANCHOR_TOP")
     GameTooltip:SetText("Sorting", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Sort your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     GameTooltip:Show()
   end)
-  self.window.titlebar.SortingButton:SetScript("OnLeave", function()
-    self.window.titlebar.SortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.SortingButton, 1, 1, 1, 0)
+  sortingButton:SetScript("OnLeave", function()
+    sortingButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(sortingButton, 1, 1, 1, 0)
     GameTooltip:Hide()
   end)
-  self.window.titlebar.CharactersButton = CreateFrame("Button", "$parentCharacters", self.window.titlebar)
-  self.window.titlebar.CharactersButton:SetPoint("RIGHT", self.window.titlebar.SortingButton, "LEFT", 0, 0)
-  self.window.titlebar.CharactersButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
-  self.window.titlebar.CharactersButton.HandlesGlobalMouseEvent = function()
-    return true
-  end
-  self.window.titlebar.CharactersButton:SetScript("OnClick", function()
-    ToggleDropDownMenu(1, nil, self.window.titlebar.CharactersButton.Dropdown)
-  end)
-  self.window.titlebar.CharactersButton.Icon = self.window.titlebar:CreateTexture(self.window.titlebar.CharactersButton:GetName() .. "Icon", "ARTWORK")
-  self.window.titlebar.CharactersButton.Icon:SetPoint("CENTER", self.window.titlebar.CharactersButton, "CENTER")
-  self.window.titlebar.CharactersButton.Icon:SetSize(14, 14)
-  self.window.titlebar.CharactersButton.Icon:SetTexture(addon.Constants.media.IconCharacters)
-  self.window.titlebar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-  self.window.titlebar.CharactersButton.Dropdown = CreateFrame("Frame", self.window.titlebar.CharactersButton:GetName() .. "Dropdown", self.window.titlebar.CharactersButton, "UIDropDownMenuTemplate")
-  self.window.titlebar.CharactersButton.Dropdown:SetPoint("CENTER", self.window.titlebar.CharactersButton, "CENTER", 0, -6)
-  self.window.titlebar.CharactersButton.Dropdown.Button:Hide()
-  UIDropDownMenu_SetWidth(self.window.titlebar.CharactersButton.Dropdown, addon.Constants.sizes.titlebar.height)
-  UIDropDownMenu_Initialize(
-    self.window.titlebar.CharactersButton.Dropdown,
-    function()
-      local charactersUnfilteredList = addon.Data:GetCharacters(true)
-      for _, character in ipairs(charactersUnfilteredList) do
-        local nameColor = "ffffffff"
-        if character.info.class.file ~= nil then
-          local classColor = C_ClassColor.GetClassColor(character.info.class.file)
-          if classColor ~= nil then
-            nameColor = classColor.GenerateHexColor(classColor)
-          end
-        end
-        UIDropDownMenu_AddButton({
-          text = "|c" .. nameColor .. character.info.name .. "|r (" .. character.info.realm .. ")",
-          checked = character.enabled,
-          isNotRadio = true,
-          keepShownOnClick = true,
-          arg1 = character.GUID,
-          func = function(button, arg1, arg2, checked)
-            addon.Data.db.global.characters[arg1].enabled = checked
-            self:Render()
-          end,
-        })
-      end
-    end,
-    "MENU"
-  )
-  self.window.titlebar.CharactersButton:SetScript("OnEnter", function()
-    self.window.titlebar.CharactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.CharactersButton, 1, 1, 1, 0.05)
-    GameTooltip:SetOwner(self.window.titlebar.CharactersButton, "ANCHOR_TOP")
+
+  self.window.titlebar.CharactersButton = CreateFrame("DropdownButton", "$parentCharacters", self.window.titlebar)
+  local charactersButton = self.window.titlebar.CharactersButton
+  charactersButton:SetPoint("RIGHT", sortingButton, "LEFT", 0, 0)
+  charactersButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
+  charactersButton:SetScript("OnEnter", function()
+    charactersButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(charactersButton, 1, 1, 1, 0.05)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    GameTooltip:SetOwner(charactersButton, "ANCHOR_TOP")
     GameTooltip:SetText("Characters", 1, 1, 1, 1, true)
-    GameTooltip:AddLine("Enable/Disable your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+    GameTooltip:AddLine("Toggle your characters.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     GameTooltip:Show()
   end)
-  self.window.titlebar.CharactersButton:SetScript("OnLeave", function()
-    self.window.titlebar.CharactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.CharactersButton, 1, 1, 1, 0)
+  charactersButton:SetScript("OnLeave", function()
+    charactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(charactersButton, 1, 1, 1, 0)
     GameTooltip:Hide()
   end)
-  self.window.titlebar.AnnounceButton = CreateFrame("Button", "$parentCharacters", self.window.titlebar)
-  self.window.titlebar.AnnounceButton:SetPoint("RIGHT", self.window.titlebar.CharactersButton, "LEFT", 0, 0)
-  self.window.titlebar.AnnounceButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
-  self.window.titlebar.AnnounceButton.HandlesGlobalMouseEvent = function()
-    return true
-  end
-  self.window.titlebar.AnnounceButton:SetScript("OnClick", function()
-    ToggleDropDownMenu(1, nil, self.window.titlebar.AnnounceButton.Dropdown)
+  charactersButton.Icon = self.window.titlebar:CreateTexture(charactersButton:GetName() .. "Icon", "ARTWORK")
+  charactersButton.Icon:SetPoint("CENTER", charactersButton, "CENTER")
+  charactersButton.Icon:SetSize(14, 14)
+  charactersButton.Icon:SetTexture(addon.Constants.media.IconCharacters)
+  charactersButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+  charactersButton:SetupMenu(function(_, rootMenu)
+    local charactersUnfiltered = addon.Data:GetCharacters(true)
+    addon.Utils:TableForEach(charactersUnfiltered, function(char)
+      local nameColor = WHITE_FONT_COLOR
+      if char.info.class.file ~= nil then
+        local classColor = C_ClassColor.GetClassColor(char.info.class.file)
+        if classColor ~= nil then
+          nameColor = classColor
+        end
+      end
+      rootMenu:CreateCheckbox(
+        format("%s (%s)", nameColor:WrapTextInColorCode(char.info.name), char.info.realm),
+        function(value) return addon.Data.db.global.characters[value].enabled end,
+        function(value)
+          addon.Data.db.global.characters[value].enabled = not addon.Data.db.global.characters[value].enabled
+          self:Render()
+        end,
+        char.GUID
+      )
+    end)
   end)
-  self.window.titlebar.AnnounceButton.Icon = self.window.titlebar:CreateTexture(
-    self.window.titlebar.AnnounceButton:GetName() .. "Icon", "ARTWORK")
-  self.window.titlebar.AnnounceButton.Icon:SetPoint("CENTER", self.window.titlebar.AnnounceButton, "CENTER")
-  self.window.titlebar.AnnounceButton.Icon:SetSize(12, 12)
-  self.window.titlebar.AnnounceButton.Icon:SetTexture(addon.Constants.media.IconAnnounce)
-  self.window.titlebar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-  self.window.titlebar.AnnounceButton.Dropdown = CreateFrame("Frame", self.window.titlebar.AnnounceButton:GetName() .. "Dropdown", self.window.titlebar.AnnounceButton, "UIDropDownMenuTemplate")
-  self.window.titlebar.AnnounceButton.Dropdown:SetPoint("CENTER", self.window.titlebar.AnnounceButton, "CENTER", 0, -6)
-  self.window.titlebar.AnnounceButton.Dropdown.Button:Hide()
-  UIDropDownMenu_SetWidth(self.window.titlebar.AnnounceButton.Dropdown, addon.Constants.sizes.titlebar.height)
-  UIDropDownMenu_Initialize(
-    self.window.titlebar.AnnounceButton.Dropdown,
-    function()
-      UIDropDownMenu_AddButton({
-        text = "Send to Party Chat",
-        isNotRadio = true,
-        notCheckable = true,
-        tooltipTitle = "Party",
-        tooltipText = "Announce all your keystones to the party chat",
-        tooltipOnButton = true,
-        func = function()
-          if not IsInGroup() then
-            addon.Core:Print("You are not in a party.")
-            return
-          end
-          addon.Core:AnnounceKeystones("PARTY")
-        end,
-      })
-      UIDropDownMenu_AddButton({
-        text = "Send to Guild Chat",
-        isNotRadio = true,
-        notCheckable = true,
-        tooltipTitle = "Guild",
-        tooltipText = "Announce all your keystones to the guild chat",
-        tooltipOnButton = true,
-        func = function()
-          if not IsInGuild() then
-            addon.Core:Print("You are not in a guild.")
-            return
-          end
-          addon.Core:AnnounceKeystones("GUILD")
-        end,
-      })
-      UIDropDownMenu_AddButton({text = "Settings", isTitle = true, notCheckable = true})
-      UIDropDownMenu_AddButton({
-        text = "Multiple chat messages",
-        checked = addon.Data.db.global.announceKeystones.multiline,
-        keepShownOnClick = true,
-        isNotRadio = true,
-        tooltipTitle = "Announce keystones with multiple chat messages",
-        tooltipText = "With too many alts it could get spammy though.",
-        tooltipOnButton = true,
-        func = function(button, arg1, arg2, checked)
-          addon.Data.db.global.announceKeystones.multiline = checked
-        end,
-      })
-      UIDropDownMenu_AddButton({
-        text = "With character names",
-        checked = addon.Data.db.global.announceKeystones.multilineNames,
-        keepShownOnClick = true,
-        isNotRadio = true,
-        tooltipTitle = "Add character names before each keystone",
-        tooltipText = "Character names are only added if multiple chat messages is enabled.",
-        tooltipOnButton = true,
-        func = function(button, arg1, arg2, checked)
-          addon.Data.db.global.announceKeystones.multilineNames = checked
-        end,
-      })
-    end,
-    "MENU"
-  )
-  self.window.titlebar.AnnounceButton:SetScript("OnEnter", function()
-    self.window.titlebar.AnnounceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.AnnounceButton, 1, 1, 1, 0.05)
-    GameTooltip:SetOwner(self.window.titlebar.AnnounceButton, "ANCHOR_TOP")
+
+  self.window.titlebar.AnnounceButton = CreateFrame("DropdownButton", "$parentCharacters", self.window.titlebar)
+  local announceButton = self.window.titlebar.AnnounceButton
+  announceButton:SetPoint("RIGHT", charactersButton, "LEFT", 0, 0)
+  announceButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
+  announceButton:SetScript("OnEnter", function()
+    announceButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(announceButton, 1, 1, 1, 0.05)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    GameTooltip:SetOwner(announceButton, "ANCHOR_TOP")
     GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     GameTooltip:Show()
   end)
-  self.window.titlebar.AnnounceButton:SetScript("OnLeave", function()
-    self.window.titlebar.AnnounceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.AnnounceButton, 1, 1, 1, 0)
+  announceButton:SetScript("OnLeave", function()
+    announceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    addon.Utils:SetBackgroundColor(announceButton, 1, 1, 1, 0)
     GameTooltip:Hide()
   end)
+  announceButton.Icon = self.window.titlebar:CreateTexture(announceButton:GetName() .. "Icon", "ARTWORK")
+  announceButton.Icon:SetPoint("CENTER", announceButton, "CENTER")
+  announceButton.Icon:SetSize(12, 12)
+  announceButton.Icon:SetTexture(addon.Constants.media.IconAnnounce)
+  announceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+  announceButton:SetupMenu(function(_, rootMenu)
+    rootMenu:CreateTitle("Announce Keystones")
+    local sendToParty = rootMenu:CreateButton(
+      "Send to Party Chat",
+      function()
+        if not IsInGroup() then
+          addon.Core:Print("You are not in a party.")
+          return
+        end
+        addon.Core:AnnounceKeystones("PARTY")
+      end
+    )
+    sendToParty:SetEnabled(IsInGroup())
+    sendToParty:SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce all your keystones to the party chat.", nil, nil, nil, true)
+      if not IsInGroup() then
+        tooltip:AddLine(" ")
+        tooltip:AddLine("You are not in a party.", 1, 0, 0, true)
+      end
+    end)
+    local sendToGuild = rootMenu:CreateButton(
+      "Send to Guild Chat",
+      function()
+        if not IsInGuild() then
+          addon.Core:Print("You are not in a guild.")
+          return
+        end
+        addon.Core:AnnounceKeystones("GUILD")
+      end
+    )
+    sendToGuild:SetEnabled(IsInGuild())
+    sendToGuild:SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce all your keystones to the guild chat.", nil, nil, nil, true)
+      if not IsInGuild() then
+        tooltip:AddLine(" ")
+        tooltip:AddLine("You are not in a guild.", 1, 0, 0, true)
+      end
+    end)
+    rootMenu:CreateTitle("Settings")
+    local withCharacterNames
+    local withMultipleMessages = rootMenu:CreateCheckbox(
+      "Multiple chat messages",
+      function() return addon.Data.db.global.announceKeystones.multiline end,
+      function()
+        addon.Data.db.global.announceKeystones.multiline = not addon.Data.db.global.announceKeystones.multiline
+        withCharacterNames:SetEnabled(addon.Data.db.global.announceKeystones.multiline)
+      end
+    )
+    withCharacterNames = rootMenu:CreateCheckbox(
+      "Include character names",
+      function() return addon.Data.db.global.announceKeystones.multilineNames end,
+      function() addon.Data.db.global.announceKeystones.multilineNames = not addon.Data.db.global.announceKeystones.multilineNames end
+    )
+    withMultipleMessages:SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce keystones with multiple chat messages.", nil, nil, nil, true)
+      tooltip:AddLine(" ")
+      tooltip:AddLine("|cffff0000Warning: |rIf you have a lot of characters it could get spammy and the messages may get blocked.", nil, nil, nil, true)
+    end)
+    withCharacterNames:SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Add character names before each keystone.", nil, nil, nil, true)
+      if not addon.Data.db.global.announceKeystones.multiline then
+        tooltip:AddLine(" ")
+        tooltip:AddLine("Multiple chat messages must be enabled.", 1, 0, 0, true)
+      end
+    end)
+    withCharacterNames:SetEnabled(addon.Data.db.global.announceKeystones.multiline)
+  end)
+
   self.window.titlebar.GreatVaultButton = CreateFrame("Button", "$parentGreatVaultButton", self.window.titlebar)
-  self.window.titlebar.GreatVaultButton:SetPoint("RIGHT", self.window.titlebar.AnnounceButton, "LEFT", 0, 0)
-  self.window.titlebar.GreatVaultButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
-  self.window.titlebar.GreatVaultButton:RegisterForClicks("AnyUp")
-  self.window.titlebar.GreatVaultButton:SetScript("OnClick", function()
+  local vaultButton = self.window.titlebar.GreatVaultButton
+  vaultButton:SetPoint("RIGHT", announceButton, "LEFT", 0, 0)
+  vaultButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
+  vaultButton:RegisterForClicks("AnyUp")
+  vaultButton:SetScript("OnClick", function()
     addon.Core:ToggleVault()
   end)
-  self.window.titlebar.GreatVaultButton.Icon = self.window.titlebar:CreateTexture("$parentIcon", "ARTWORK")
-  self.window.titlebar.GreatVaultButton.Icon:SetPoint("CENTER", self.window.titlebar.GreatVaultButton, "CENTER")
-  self.window.titlebar.GreatVaultButton.Icon:SetSize(13, 13)
-  self.window.titlebar.GreatVaultButton.Icon:SetTexture(addon.Constants.media.IconKeyhole)
-  self.window.titlebar.GreatVaultButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-  self.window.titlebar.GreatVaultButton:SetScript("OnEnter", function()
-    self.window.titlebar.GreatVaultButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.GreatVaultButton, 1, 1, 1, 0.05)
-    GameTooltip:SetOwner(self.window.titlebar.GreatVaultButton, "ANCHOR_TOP")
+  vaultButton:SetScript("OnEnter", function()
+    vaultButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+    addon.Utils:SetBackgroundColor(vaultButton, 1, 1, 1, 0.05)
+    GameTooltip:SetOwner(vaultButton, "ANCHOR_TOP")
     GameTooltip:SetText(DELVES_GREAT_VAULT_LABEL, 1, 1, 1, 1, true)
     GameTooltip:AddLine(WEEKLY_REWARDS_ADD_ITEMS, nil, nil, nil, true)
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(format("<%s>", WEEKLY_REWARDS_CLICK_TO_PREVIEW_INSTRUCTIONS), GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
     GameTooltip:Show()
   end)
-  self.window.titlebar.GreatVaultButton:SetScript("OnLeave", function()
-    self.window.titlebar.GreatVaultButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-    addon.Utils:SetBackgroundColor(self.window.titlebar.GreatVaultButton, 1, 1, 1, 0)
+  vaultButton:SetScript("OnLeave", function()
+    vaultButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    addon.Utils:SetBackgroundColor(vaultButton, 1, 1, 1, 0)
     GameTooltip:Hide()
   end)
+  vaultButton.Icon = self.window.titlebar:CreateTexture("$parentIcon", "ARTWORK")
+  vaultButton.Icon:SetPoint("CENTER", vaultButton, "CENTER")
+  vaultButton.Icon:SetSize(13, 13)
+  vaultButton.Icon:SetTexture(addon.Constants.media.IconKeyhole)
+  vaultButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
 end
 
 function UI:RenderAffixWindow()
