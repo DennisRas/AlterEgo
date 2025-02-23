@@ -9,6 +9,7 @@
 ### Updated
 
 - Optimized performance by removing outdated and unused code
+- Updated outdated code for detecting the weekly affix rotation
 
 ### Fixed
 

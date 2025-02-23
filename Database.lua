@@ -479,16 +479,21 @@ function Data:GetAffixRotation()
 end
 
 ---Get the index of the active affix week
----TODO: This is hardcoded for 3 affixes only but somehow still works
 ---@param currentAffixes MythicPlusKeystoneAffix|nil
 ---@return number
 function Data:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
   local index = 0
   if currentAffixes and affixRotation then
-    addon.Utils:TableForEach(affixRotation.affixes, function(affix, i)
-      if affix[1] == currentAffixes[1].id and affix[2] == currentAffixes[2].id and affix[3] == currentAffixes[3].id then
-        index = i
+    addon.Utils:TableForEach(affixRotation.affixes, function(affixWeek, affixWeekIndex)
+      local thisWeek = true
+      addon.Utils:TableForEach(affixWeek, function(affixID, affixIndex)
+        if not (currentAffixes[affixIndex] and currentAffixes[affixIndex].id == affixID) then
+          thisWeek = false
+        end
+      end)
+      if thisWeek then
+        index = affixWeekIndex
       end
     end)
   end
