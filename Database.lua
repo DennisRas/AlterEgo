@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 21
+Data.dbVersion = 22
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -115,6 +115,7 @@ Data.defaultCharacter = {
   vault = {
     hasAvailableRewards = false,
     slots = {},
+    activityEncounterInfo = {},
   },
 }
 
@@ -187,6 +188,13 @@ Data.raidDifficulties = {
   {id = 15, color = EPIC_PURPLE_COLOR,      order = 3, abbr = "H", name = "Heroic"},
   {id = 16, color = LEGENDARY_ORANGE_COLOR, order = 4, abbr = "M", name = "Mythic"},
   {id = 17, color = UNCOMMON_GREEN_COLOR,   order = 1, abbr = "L", name = "Looking For Raid", short = "LFR"},
+}
+
+---@type AE_VaultType[]
+Data.vaultTypes = {
+  {id = Enum.WeeklyRewardChestThresholdType.Raid,       name = RAIDS},
+  {id = Enum.WeeklyRewardChestThresholdType.Activities, name = DUNGEONS},
+  {id = Enum.WeeklyRewardChestThresholdType.World,      name = WORLD},
 }
 
 -- Rotation: https://mythicpl.us
@@ -726,6 +734,7 @@ function Data:TaskWeeklyReset()
       addon.Utils:TableForEach(character.mythicplus.runHistory, function(run)
         run.thisWeek = false
       end)
+      wipe(character.vault.activityEncounterInfo or {})
       wipe(character.vault.slots or {})
       wipe(character.mythicplus.keystone or {})
       wipe(character.mythicplus.numCompletedDungeonRuns or {})
@@ -892,11 +901,10 @@ end
 function Data:UpdateRaidInstances()
   local character = self:GetCharacter()
   if not character then return end
+  character.raids.savedInstances = wipe(character.raids.savedInstances or {})
 
   local raids = self:GetRaids()
   local numSavedInstances = GetNumSavedInstances()
-
-  wipe(character.raids.savedInstances or {})
   if numSavedInstances == 0 then return end
 
   for savedInstanceIndex = 1, numSavedInstances do
@@ -994,22 +1002,18 @@ function Data:UpdateMoney()
   if not character then return end
 
   local money = GetMoney()
-  if money then
-    character.money = money
-  end
+  if not money then return end
+
+  character.money = money
 end
 
 function Data:UpdateCurrencies()
   local character = self:GetCharacter()
   if not character then return end
 
-  if character.currencies == nil then
-    character.currencies = {}
-  else
-    wipe(character.currencies or {})
-  end
+  character.currencies = wipe(character.currencies or {})
 
-  addon.Utils:TableForEach(self.currencies, function(dataCurrency)
+  addon.Utils:TableForEach(self.currencies or {}, function(dataCurrency)
     local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
     if not currency then return end
     currency.id = dataCurrency.id
@@ -1026,17 +1030,13 @@ function Data:UpdateEquipment()
   local character = self:GetCharacter()
   if not character then return end
 
-  if character.equipment == nil then
-    character.equipment = {}
-  else
-    wipe(character.equipment or {})
-  end
+  character.equipment = wipe(character.equipment or {})
 
   local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
   upgradePattern = upgradePattern:format("(.+)", "(%d+)", "(%d+)")
 
-  addon.Utils:TableForEach(self.inventory, function(slot)
+  addon.Utils:TableForEach(self.inventory or {}, function(slot)
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if not inventoryItemLink then return end
 
@@ -1170,7 +1170,22 @@ function Data:UpdateVault()
   local character = self:GetCharacter()
   if not character then return end
 
-  wipe(character.vault.slots or {})
+  character.vault.activityEncounterInfo = wipe(character.vault.activityEncounterInfo or {})
+  character.vault.slots = wipe(character.vault.slots or {})
+
+  addon.Utils:TableForEach(self.vaultTypes or {}, function(vaultType)
+    for index = 1, 3 do
+      local encounters = C_WeeklyRewards.GetActivityEncounterInfo(vaultType.id, index)
+      if encounters then
+        addon.Utils:TableForEach(encounters, function(encounter)
+          if not encounter then return end
+          encounter.type = vaultType.id
+          encounter.index = index
+          table.insert(character.vault.activityEncounterInfo, encounter)
+        end)
+      end
+    end
+  end)
 
   local activities = C_WeeklyRewards.GetActivities()
   addon.Utils:TableForEach(activities, function(activity)
@@ -1214,15 +1229,17 @@ function Data:UpdateMythicPlus()
     mythicPlus = numMythicPlus or 0,
   }
 
-  wipe(character.mythicplus.dungeons or {})
+  character.mythicplus.dungeons = wipe(character.mythicplus.dungeons or {})
   for _, dataDungeon in pairs(dungeons) do
     local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID)
     local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
 
-    addon.Utils:TableForEach(affixScores, function(affixScore)
-      local affix = addon.Utils:TableGet(affixes, "name", affixScore.name)
-      affixScore.id = affix and affix.id or 0
-    end)
+    if affixScores then
+      addon.Utils:TableForEach(affixScores, function(affixScore)
+        local affix = addon.Utils:TableGet(affixes, "name", affixScore.name)
+        affixScore.id = affix and affix.id or 0
+      end)
+    end
 
     ---@type AE_CharacterDungeon
     local dungeon = {

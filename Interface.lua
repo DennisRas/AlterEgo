@@ -70,10 +70,15 @@ local vaultTooltipTexts = {
   },
 }
 
+---Print vault progress to tooltip
+---@param infoFrame Frame
+---@param character AE_Character
+---@param activityType Enum.WeeklyRewardChestThresholdType
 local function getVaultProgressTooltip(infoFrame, character, activityType)
   local loggedCharacter = addon.Data:GetCharacter()
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local dungeons = addon.Data:GetDungeons()
+  local raids = addon.Data:GetRaids()
   local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
   local numActivities = addon.Utils:TableCount(activities)
   local activitiesInProgress = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
@@ -153,45 +158,36 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
 
   do -- Raid stats
     if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
-      local lastInstanceID = nil
-      addon.Utils:TableForEach(addon.Data:GetRaids(), function(raid)
-        local bestEncounters = {}
-        local savedInstances = addon.Utils:TableFilter(character.raids.savedInstances or {}, function(savedInstance)
-          return savedInstance.expires > time() and savedInstance.instanceID == raid.instanceID
-        end)
-        if savedInstances then
-          addon.Utils:TableForEach(savedInstances, function(savedInstance)
-            local dataDifficulty = addon.Utils:TableGet(difficulties, "id", savedInstance.difficultyID)
-            if not dataDifficulty then return end
-            addon.Utils:TableForEach(savedInstance.encounters, function(savedInstanceEncounter)
-              if savedInstanceEncounter.isKilled == true then
-                local bestEncounter = bestEncounters[savedInstanceEncounter.instanceEncounterID]
-                if bestEncounter then
-                  if bestEncounter.order < dataDifficulty.order then
-                    bestEncounters[savedInstanceEncounter.instanceEncounterID] = dataDifficulty
-                  end
-                else
-                  bestEncounters[savedInstanceEncounter.instanceEncounterID] = dataDifficulty
-                end
-              end
-            end)
-          end)
-        end
-        if lastInstanceID ~= raid.instanceID then
+      local raidInstanceID = nil
+      local activityEncounterInfo = character.vault.activityEncounterInfo or {}
+      addon.Utils:TableForEach(raids, function(raid)
+        if raidInstanceID ~= raid.instanceID then
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine(raid.name, 1, 1, 1)
         end
-        addon.Utils:TableForEach(raid.encounters, function(encounter)
+
+        addon.Utils:TableForEach(raid.encounters or {}, function(encounter)
+          local bestDifficulty = nil
           local color = DISABLED_FONT_COLOR
           local difficultyName = "-"
-          local bestEncounter = bestEncounters[encounter.instanceEncounterID]
-          if bestEncounter then
-            color = GREEN_FONT_COLOR
-            difficultyName = bestEncounter.short and bestEncounter.short or bestEncounter.name
+
+          local encounterInfo = addon.Utils:TableFind(activityEncounterInfo, function(activityEncounter)
+            return activityEncounter.instanceID == raid.journalInstanceID and activityEncounter.encounterID == encounter.journalEncounterID and activityEncounter.index == 1
+          end)
+
+          if encounterInfo and encounterInfo.bestDifficulty then
+            bestDifficulty = addon.Utils:TableGet(difficulties, "id", encounterInfo.bestDifficulty)
           end
+
+          if bestDifficulty then
+            color = GREEN_FONT_COLOR
+            difficultyName = bestDifficulty.short and bestDifficulty.short or bestDifficulty.name
+          end
+
           GameTooltip:AddDoubleLine(encounter.name, difficultyName, color.r, color.g, color.b, color.r, color.g, color.b)
         end)
-        lastInstanceID = raid.instanceID
+
+        raidInstanceID = raid.instanceID
       end)
     end
   end

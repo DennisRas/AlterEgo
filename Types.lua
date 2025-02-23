@@ -24,6 +24,14 @@
 ---@field name string
 ---@field short string?
 
+---@class AE_VaultType
+---@field id Enum.WeeklyRewardChestThresholdType
+---@field name string
+
+---@class AE_WeeklyRewardActivityEncounterInfo : WeeklyRewardActivityEncounterInfo
+---@field type Enum.WeeklyRewardChestThresholdType
+---@field index number
+
 ---@class AE_CharacterVault: WeeklyRewardActivityInfo
 ---@field exampleRewardLink string
 ---@field exampleRewardUpgradeLink string
@@ -83,7 +91,7 @@
 ---@field currencies AE_CharacterCurrency[]
 ---@field raids { savedInstances: AE_SavedInstance[] }
 ---@field mythicplus AE_CharacterMythicPlus
----@field vault { hasAVailableRewards: boolean, slots: AE_CharacterVault[]}
+---@field vault { hasAVailableRewards: boolean, slots: AE_CharacterVault[], activityEncounterInfo: AE_WeeklyRewardActivityEncounterInfo[]}
 
 ---@class AE_CharacterRows
 ---@field label string

@@ -10,6 +10,10 @@
 
 - Optimized performance by removing outdated and unused code
 
+### Fixed
+
+- Fixed a bug with incorrect difficulty levels in the vault tooltip for raids
+
 ## v1.2.1 - 2025-02-14
 
 ### Added
