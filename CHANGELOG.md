@@ -5,16 +5,19 @@
 ### Added
 
 - Added Season 2 data, including Raids, Dungeons, Affixes, and Currencies
+- Added a new window background color setting that allows you to make the window transparent
 
 ### Updated
 
 - Optimized performance by removing outdated and unused code
-- Updated outdated code for detecting the weekly affix rotation
-- Adjusted dungeon timers for season 2 - No longer adding 90 seconds at level 7+
+- Updated code for detecting the weekly affix rotation
+- Adjusted dungeon timers for season 2 - No longer adds 90 seconds at level 7+
+- Rearranged some settings and updated tooltip instructions
+- Upgraded all dropdown menus (Settings, Sorting, etc.) to the new TWW layout
 
 ### Fixed
 
-- Fixed a bug with incorrect difficulty levels in the vault tooltip for raids
+- Resolved an issue where raid difficulty levels in the Vault tooltip were incorrect
 
 ## v1.2.1 - 2025-02-14
 
