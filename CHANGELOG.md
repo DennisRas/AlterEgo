@@ -2,9 +2,13 @@
 
 ## v1.2.2 - 2025-02-23
 
+### Added
+
+- Added Season 2 data, including Raids, Dungeons, Affixes, and Currencies
+
 ### Updated
 
-- Optimized and removed a lot of old or unused code
+- Optimized performance by removing outdated and unused code
 
 ## v1.2.1 - 2025-02-14
 
