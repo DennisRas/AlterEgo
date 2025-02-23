@@ -10,6 +10,11 @@ addon.UI = UI
 local LibDBIcon = LibStub("LibDBIcon-1.0")
 local CHARACTER_WIDTH = 120
 
+---Calculate the dungeon timer
+---@param time number
+---@param level number
+---@param tier number
+---@return number
 local function calculateDungeonTimer(time, level, tier)
   if tier == 3 then
     time = time * 0.6
@@ -17,7 +22,9 @@ local function calculateDungeonTimer(time, level, tier)
     time = time * 0.8
   end
 
-  if level >= 7 then
+  --- This was such a dumb thing to do by Blizzard
+  local seasonID = addon.Data:GetCurrentSeason()
+  if seasonID == 13 and level >= 7 then
     time = time + 90
   end
 
@@ -1298,11 +1305,9 @@ function UI:RenderMainWindow()
             dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
             dungeonFrame.Score:SetJustifyH("RIGHT")
             dungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
-
             characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
           end
 
-          local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
           local affixScores
           local overallScore
           local inTimeInfo
@@ -1313,6 +1318,7 @@ function UI:RenderMainWindow()
           local tier = ""
           local dungeonLevel = 0
 
+          local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
           if characterDungeon then
             affixScores = characterDungeon.affixScores
             overallScore = characterDungeon.bestOverAllScore
@@ -1327,12 +1333,13 @@ function UI:RenderMainWindow()
             end
 
             if affixScores then
+              ---@type AE_CharacterAffixScoreInfo
               bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
                 return affixScore.score
               end)
 
               if bestAffixScore then
-                level = bestAffixScore.level
+                level = tostring(bestAffixScore.level)
                 dungeonLevel = bestAffixScore.level or 0
 
                 if bestAffixScore.durationSec <= calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then

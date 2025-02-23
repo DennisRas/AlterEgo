@@ -10,6 +10,7 @@
 
 - Optimized performance by removing outdated and unused code
 - Updated outdated code for detecting the weekly affix rotation
+- Adjusted dungeon timers for season 2 - No longer adding 90 seconds at level 7+
 
 ### Fixed
 
