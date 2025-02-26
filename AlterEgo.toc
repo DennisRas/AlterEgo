@@ -1,4 +1,4 @@
-## Interface: 110007
+## Interface: 110100
 ## Title: AlterEgo
 ## Notes: Mythic Plus tracker for all of your characters
 ## Version: @project-version@
@@ -8,6 +8,17 @@
 ## X-Curse-Project-ID: 925037
 ## X-Wago-ID: mKOvqW6x
 ## X-WoWI-ID: 26718
+## Category-enUS: Dungeons & Raids
+## Category-deDE: Dungeons & Schlachtzüge
+## Category-esES: Mazmorras y bandas
+## Category-esMX: Calabozos y bandas
+## Category-frFR: Donjons et raids
+## Category-itIT: Spedizioni e incursioni
+## Category-koKR: 던전 및 공격대
+## Category-ptBR: Masmorras e Raides
+## Category-ruRU: Подземелья и рейды
+## Category-zhCN: 地下城和团队副本
+## Category-zhTW: 地城與團隊
 
 Libs\TaintLess\TaintLess.xml
 Libs\LibStub\LibStub.lua

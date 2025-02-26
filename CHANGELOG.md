@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2.3 - 2025-02-26
+
+### Added
+
+- Added addon category for the new AddOn List. Credit: Warcraft Wiki
+
+### Updated
+
+- Updated the TOC number to support patch 11.1
+
 ## v1.2.2 - 2025-02-23
 
 ### Added
