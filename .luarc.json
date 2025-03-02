@@ -199,6 +199,9 @@
         "DASH_WITH_TEXT",
         "MINIMAP_LABEL",
         "INTERFACE_OPTIONS",
-        "MenuResponse"
+        "MenuResponse",
+        "ALL_INVENTORY_SLOTS",
+        "ALL_CLASSES",
+        "ALL_SPECS"
     ]
 }

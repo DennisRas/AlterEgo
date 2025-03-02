@@ -37,6 +37,7 @@ Constants.lua
 Utils.lua
 Window.lua
 Table.lua
+Input.lua
 Database.lua
 Interface.lua
 AlterEgo.lua

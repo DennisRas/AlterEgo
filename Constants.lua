@@ -6,6 +6,11 @@ local addon = select(2, ...)
 ---@class AE_Constants
 addon.Constants = {
   prefix = format("<%s> ", addonName),
+  colors = {
+    primary = CreateColor(0.596, 0.796, 0.847),
+    titlebar = CreateColor(0.0549, 0.0706, 0.0824),
+    sidebar = CreateColor(0.0784, 0.0980, 0.1137),
+  },
   media = {
     WhiteSquare = "Interface/BUTTONS/WHITE8X8",
     Logo = format("Interface/AddOns/%s/Media/Logo.blp", addonName),
@@ -16,6 +21,8 @@ addon.Constants = {
     IconCharacters = format("Interface/AddOns/%s/Media/Icon_Characters.blp", addonName),
     IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addonName),
     IconKeyhole = format("Interface/AddOns/%s/Media/Icon_Keyhole.blp", addonName),
+    IconCheckmark = format("Interface/AddOns/%s/Media/Icon_Checkmark.blp", addonName),
+    IconCaretDown = format("Interface/AddOns/%s/Media/Icon_CaretDown.blp", addonName),
   },
   sizes = {
     padding = 8,

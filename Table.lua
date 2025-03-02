@@ -146,7 +146,7 @@ function Table:New(config)
         if not columnFrame then
           columnFrame = CreateFrame("Button", "$parentCol" .. columnIndex, rowFrame)
           columnFrame.text = columnFrame:CreateFontString("$parentText", "OVERLAY")
-          columnFrame.text:SetFontObject("GameFontHighlight")
+          columnFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           rowFrame.columns[columnIndex] = columnFrame
         end
 

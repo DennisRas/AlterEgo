@@ -50,6 +50,11 @@ Data.defaultDB = {
       windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
     },
     useRIOScoreColor = false,
+    runHistory = {
+      activeEncounter = nil,
+      activeRun = nil,
+      runs = {},
+    },
   },
 }
 
@@ -1321,3 +1326,157 @@ end
 
 --   return Data.cache.specs
 -- end
+
+function Data:RunHistory_OnPEW()
+  local activeRun = self:RunHistory_GetActiveRun()
+  if not activeRun then
+    self:RunHistory_DetectActiveRun()
+    return
+  end
+  self:RunHistory_UpdateActiveRun()
+end
+
+function Data:RunHistory_OnChallengeStart(...)
+  local activeRun = self:RunHistory_GetActiveRun()
+  if activeRun then
+    self:RunHistory_ClearActiveRun()
+  end
+
+  self:RunHistory_StartRun()
+end
+
+function Data:RunHistory_OnChallengeEnd(...)
+  local activeRun = self:RunHistory_GetActiveRun()
+  if not activeRun then return end
+
+  self:RunHistory_EndActiveRun()
+  -- activeRun.completedTimestamp = GetServerTime()
+end
+
+function Data:RunHistory_OnEncounterStart(...)
+  local _, encounterID = ...
+  self.db.global.runHistory.activeEncounter = encounterID
+
+  self:RunHistory_LogActiveRun({
+    timestamp = GetServerTime(),
+    type = "ENCOUNTER_START",
+    text = format("Pulled %s", encounterID),
+    data = {
+      encounterID = encounterID,
+    },
+  })
+
+  self:RunHistory_UpdateActiveRun()
+end
+
+function Data:RunHistory_OnEncounterEnd(...)
+  -- TODO: Get data from event table
+  local encounterID = self.db.global.runHistory.activeEncounter
+
+  self:RunHistory_LogActiveRun({
+    timestamp = GetServerTime(),
+    type = "ENCOUNTER_END",
+    text = format("Pulled %s", encounterID),
+    data = {
+      isKilled = true, -- Todo: Detect boss kill or wipe
+      encounterID = encounterID,
+    },
+  })
+
+  self.db.global.runHistory.activeEncounter = nil
+  self:RunHistory_UpdateActiveRun()
+end
+
+function Data:RunHistory_OnCombatLog(...)
+  local activeRun = self:RunHistory_GetActiveRun()
+  if not activeRun then return end
+
+  local timestamp, subEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags = CombatLogGetCurrentEventInfo()
+  if subEvent == "UNIT_DIED" and destGUID and string.find(destGUID, "Player") and not UnitIsFeignDeath(destGUID) then
+    self:RunHistory_LogActiveRun({
+      timestamp = timestamp,
+      type = "DEATH",
+      text = format("%s has died.", destName),
+      data = {
+        sourceGUID = sourceGUID,
+        sourceName = sourceName,
+        sourceFlags = sourceFlags,
+        destGUID = destGUID,
+        destName = destName,
+        destFlags = destFlags,
+      },
+    })
+  end
+end
+
+function Data:RunHistory_StartRun()
+  local run = self:RunHistory_GetActiveRun()
+  if run then
+    DevTools_Dump("RunHistory_StartRun(): run already started")
+    return
+  end
+  local newRun = self:RunHistory_CreateRun()
+  table.insert(self.db.global.runHistory.runs, newRun)
+  DevTools_Dump("New run created!")
+  self:RunHistory_SetActiveRun(newRun)
+end
+
+function Data:RunHistory_DetectActiveRun()
+  DevTools_Dump("RunHistory_DetectActiveRun()")
+end
+
+function Data:RunHistory_EndActiveRun()
+  local run = self:RunHistory_GetActiveRun()
+  if not run then return end
+
+  -- TODO: Set more data after a run is complete
+  run.endTimestamp = GetServerTime()
+
+  self:RunHistory_ClearActiveRun()
+end
+
+function Data:RunHistory_GetActiveRun()
+  DevTools_Dump("GetActiveRun(): " .. (self.db.global.runHistory.activeRun and "active run!" or "no active run!"))
+  return self.db.global.runHistory.activeRun
+end
+
+function Data:RunHistory_SetActiveRun(run)
+  self.db.global.runHistory.activeRun = run
+end
+
+function Data:RunHistory_ClearActiveRun()
+  self:RunHistory_SetActiveRun(nil)
+end
+
+function Data:RunHistory_UpdateActiveRun(fullScan)
+  local run = self:RunHistory_GetActiveRun()
+  if not run then return end
+
+  if fullScan then
+    -- TODO: Talents etc.
+  end
+end
+
+function Data:RunHistory_CreateRun()
+  local seasonID = self:GetCurrentSeason()
+  local run = {
+    seasonID = seasonID,
+    challengeModeID = 0,
+    status = "Running",
+    level = 0,
+    timers = {0, 0, 0},
+    time = 0,
+    numDeaths = 0,
+    affixes = {},
+    members = {},
+    events = {},
+    loot = {},
+  }
+  return run
+end
+
+-- TODO: Check if the run is over
+function Data:RunHistory_OnGroupChange(...)
+  local run = self:RunHistory_GetActiveRun()
+  if not run then return end
+end
