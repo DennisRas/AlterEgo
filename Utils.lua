@@ -266,7 +266,7 @@ function Utils:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
 end
 
 function Utils:CreateScrollFrame(config)
-  local frame = CreateFrame("ScrollFrame", addonName .. "ScrollFrame" .. (Utils:TableCount(self.ScrollCollection) + 1))
+  local frame = CreateFrame("ScrollFrame", addonName .. "ScrollFrame" .. (Utils:TableCount(self.ScrollCollection) + 1), config and config.parent or UIParent)
   frame.config = CreateFromMixins(
     {
       scrollSpeedHorizontal = 20,

@@ -35,7 +35,7 @@ function UI:Render()
   self:RenderMainWindow()
   self:RenderAffixWindow()
   self:RenderEquipmentWindow()
-  self:RenderRunHistoryWindow()
+  -- self:RenderRunHistoryWindow()
 end
 
 local function isCompletedAtHeroicLevel(activityTierID)
@@ -2122,7 +2122,10 @@ function UI:SetupButtons()
   runHistoryButton:SetSize(addon.Constants.sizes.titlebar.height, addon.Constants.sizes.titlebar.height)
   runHistoryButton:RegisterForClicks("AnyUp")
   runHistoryButton:SetScript("OnClick", function()
-    addon.Window:ToggleWindow("RunHistory")
+    ---@class AE_RunHistory : AceModule
+    local module = addon.Core:GetModule("RunHistory")
+    if not module then return end
+    module:ToggleWindow()
   end)
   runHistoryButton:SetScript("OnEnter", function()
     runHistoryButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
@@ -2353,237 +2356,237 @@ function UI:RenderEquipmentWindow()
   self.equipmentWindow:SetBodySize(tableWidth, tableHeight)
 end
 
-local function random_string(k)
-  local pw = {}
-  for i = 1, k
-  do
-    if i > 1 then
-      local alphabet = "abcdefghijklmnopqrstuvwxyz"
-      local n = string.len(alphabet)
-      pw[i] = string.byte(alphabet, math.random(n))
-    else
-      local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      local n = string.len(alphabet)
-      pw[i] = string.byte(alphabet, math.random(n))
-    end
-  end
-  return string.char(unpack(pw))
-end
+-- local function random_string(k)
+--   local pw = {}
+--   for i = 1, k
+--   do
+--     if i > 1 then
+--       local alphabet = "abcdefghijklmnopqrstuvwxyz"
+--       local n = string.len(alphabet)
+--       pw[i] = string.byte(alphabet, math.random(n))
+--     else
+--       local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+--       local n = string.len(alphabet)
+--       pw[i] = string.byte(alphabet, math.random(n))
+--     end
+--   end
+--   return string.char(unpack(pw))
+-- end
 
-local function random_player(isTank, isHealer)
-  isTank = isTank or false
-  isHealer = isHealer or false
-  local color = WHITE_FONT_COLOR
-  local classes = {}
-  if isTank then
-    classes = {"PALADIN", "DRUID", "WARRIOR", "DEATHKNIGHT", "MONK", "DEMONHUNTER"}
-  elseif isHealer then
-    classes = {"PRIEST", "PALADIN", "DRUID", "SHAMAN", "MONK"}
-  else
-    classes = {"HUNTER", "WARLOCK", "PRIEST", "PALADIN", "MAGE", "ROGUE", "DRUID", "SHAMAN", "WARRIOR", "DEATHKNIGHT", "MONK", "DEMONHUNTER"}
-  end
-  local randomClass = classes[math.random(#classes)]
-  if randomClass then
-    color = RAID_CLASS_COLORS[randomClass]
-  end
-  local name = random_string(math.random(8, 14))
-  return color:WrapTextInColorCode(name)
-end
+-- local function random_player(isTank, isHealer)
+--   isTank = isTank or false
+--   isHealer = isHealer or false
+--   local color = WHITE_FONT_COLOR
+--   local classes = {}
+--   if isTank then
+--     classes = {"PALADIN", "DRUID", "WARRIOR", "DEATHKNIGHT", "MONK", "DEMONHUNTER"}
+--   elseif isHealer then
+--     classes = {"PRIEST", "PALADIN", "DRUID", "SHAMAN", "MONK"}
+--   else
+--     classes = {"HUNTER", "WARLOCK", "PRIEST", "PALADIN", "MAGE", "ROGUE", "DRUID", "SHAMAN", "WARRIOR", "DEATHKNIGHT", "MONK", "DEMONHUNTER"}
+--   end
+--   local randomClass = classes[math.random(#classes)]
+--   if randomClass then
+--     color = RAID_CLASS_COLORS[randomClass]
+--   end
+--   local name = random_string(math.random(8, 14))
+--   return color:WrapTextInColorCode(name)
+-- end
 
-function UI:RenderRunHistoryWindow()
-  local tableWidth = 0
-  local tableHeight = 0
-  local rowHeight = 24
-  local dungeons = addon.Data:GetDungeons()
+-- function UI:RenderRunHistoryWindow()
+--   local tableWidth = 0
+--   local tableHeight = 0
+--   local rowHeight = 24
+--   local dungeons = addon.Data:GetDungeons()
 
-  if not self.runHistoryWindow then
-    self.runHistoryWindow = addon.Window:New({
-      name = "RunHistory",
-      title = "Run History",
-      point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15},
-      sidebar = 200,
-    })
+--   if not self.runHistoryWindow then
+--     self.runHistoryWindow = addon.Window:New({
+--       name = "RunHistory",
+--       title = "Run History",
+--       point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15},
+--       sidebar = 200,
+--     })
 
 
-    self.runHistoryWindow.sidebar.inputSearch = addon.Input:Textbox({parent = self.runHistoryWindow.sidebar, value = "", placeholder = "Search..."})
-    self.runHistoryWindow.sidebar.inputSearch:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar, "TOPLEFT", 10, -10)
-    self.runHistoryWindow.sidebar.inputSearch:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar, "TOPRIGHT", -10, -10)
+--     self.runHistoryWindow.sidebar.inputSearch = addon.Input:Textbox({parent = self.runHistoryWindow.sidebar, value = "", placeholder = "Search..."})
+--     self.runHistoryWindow.sidebar.inputSearch:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar, "TOPLEFT", 10, -10)
+--     self.runHistoryWindow.sidebar.inputSearch:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar, "TOPRIGHT", -10, -10)
 
-    self.runHistoryWindow.sidebar.inputCharacters = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
-    self.runHistoryWindow.sidebar.inputCharacters:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputSearch, "BOTTOMLEFT", 0, -10)
-    self.runHistoryWindow.sidebar.inputCharacters:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputSearch, "BOTTOMRIGHT", 0, -10)
-    self.runHistoryWindow.sidebar.inputCharacters:SetItems({{value = "", text = RAID_CLASS_COLORS["WARRIOR"]:WrapTextInColorCode("Liquidora")}})
+--     self.runHistoryWindow.sidebar.inputCharacters = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
+--     self.runHistoryWindow.sidebar.inputCharacters:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputSearch, "BOTTOMLEFT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputCharacters:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputSearch, "BOTTOMRIGHT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputCharacters:SetItems({{value = "", text = RAID_CLASS_COLORS["WARRIOR"]:WrapTextInColorCode("Liquidora")}})
 
-    self.runHistoryWindow.sidebar.inputInstances = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
-    self.runHistoryWindow.sidebar.inputInstances:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputCharacters, "BOTTOMLEFT", 0, -10)
-    self.runHistoryWindow.sidebar.inputInstances:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputCharacters, "BOTTOMRIGHT", 0, -10)
-    self.runHistoryWindow.sidebar.inputInstances:SetItems({{value = "", text = "All Dungeons"}})
+--     self.runHistoryWindow.sidebar.inputInstances = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
+--     self.runHistoryWindow.sidebar.inputInstances:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputCharacters, "BOTTOMLEFT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputInstances:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputCharacters, "BOTTOMRIGHT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputInstances:SetItems({{value = "", text = "All Dungeons"}})
 
-    self.runHistoryWindow.sidebar.inputStatus = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
-    self.runHistoryWindow.sidebar.inputStatus:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
-    self.runHistoryWindow.sidebar.inputStatus:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
-    self.runHistoryWindow.sidebar.inputStatus:SetItems({{value = "", text = DIM_GREEN_FONT_COLOR:WrapTextInColorCode("Timed")}})
+--     self.runHistoryWindow.sidebar.inputStatus = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
+--     self.runHistoryWindow.sidebar.inputStatus:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputStatus:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputStatus:SetItems({{value = "", text = DIM_GREEN_FONT_COLOR:WrapTextInColorCode("Timed")}})
 
-    self.runHistoryWindow.sidebar.inputAffixes = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
-    self.runHistoryWindow.sidebar.inputAffixes:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputStatus, "BOTTOMLEFT", 0, -10)
-    self.runHistoryWindow.sidebar.inputAffixes:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputStatus, "BOTTOMRIGHT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputAffixes = addon.Input:CreateDropdown({parent = self.runHistoryWindow.sidebar, value = "", items = {}})
+--     self.runHistoryWindow.sidebar.inputAffixes:SetPoint("TOPLEFT", self.runHistoryWindow.sidebar.inputStatus, "BOTTOMLEFT", 0, -10)
+--     self.runHistoryWindow.sidebar.inputAffixes:SetPoint("TOPRIGHT", self.runHistoryWindow.sidebar.inputStatus, "BOTTOMRIGHT", 0, -10)
 
-    self.runHistoryTable = addon.Table:New({
-      header = {
-        enabled = true,
-        sticky = true,
-        height = 30,
-      },
-      rows = {
-        height = rowHeight,
-        striped = true,
-      },
-    })
-    self.runHistoryTable:SetParent(self.runHistoryWindow.body)
-    self.runHistoryTable:SetAllPoints()
-    self.runHistoryWindow:SetScript("OnShow", function()
-      self:RenderRunHistoryWindow()
-    end)
-  end
+--     self.runHistoryTable = addon.Table:New({
+--       header = {
+--         enabled = true,
+--         sticky = true,
+--         height = 30,
+--       },
+--       rows = {
+--         height = rowHeight,
+--         striped = true,
+--       },
+--     })
+--     self.runHistoryTable:SetParent(self.runHistoryWindow.body)
+--     self.runHistoryTable:SetAllPoints()
+--     self.runHistoryWindow:SetScript("OnShow", function()
+--       self:RenderRunHistoryWindow()
+--     end)
+--   end
 
-  if not self.runHistoryWindow:IsVisible() then
-    return
-  end
+--   if not self.runHistoryWindow:IsVisible() then
+--     return
+--   end
 
-  local inputAffixes = {}
-  for a = 13, 16 do
-    local affix = addon.Data.affixes[a]
-    table.insert(inputAffixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
-  end
-  self.runHistoryWindow.sidebar.inputAffixes:SetItems({{value = "", text = table.concat(inputAffixes, " ")}})
+--   local inputAffixes = {}
+--   for a = 13, 16 do
+--     local affix = addon.Data.affixes[a]
+--     table.insert(inputAffixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
+--   end
+--   self.runHistoryWindow.sidebar.inputAffixes:SetItems({{value = "", text = table.concat(inputAffixes, " ")}})
 
-  ---@type AE_TableData
-  local data = {
-    columns = {
-      {width = 80},
-      {width = 50,  align = "center"},
-      {width = 60,  align = "center"},
-      {width = 90},
-      {width = 100},
-      {width = 120},
-      {width = 120},
-      {width = 120},
-      {width = 300},
-      {width = 180, align = "right"},
-      {width = 45,  align = "center"},
-    },
-    rows = {
-      {
-        columns = {
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Dungeon")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Level")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Score")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Time")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Status")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Affixes")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Tank")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Healer")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("DPS")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Note")},
-        },
-      },
-    },
-  }
-  tableHeight = tableHeight + 30
+--   ---@type AE_TableData
+--   local data = {
+--     columns = {
+--       {width = 80},
+--       {width = 50,  align = "center"},
+--       {width = 60,  align = "center"},
+--       {width = 90},
+--       {width = 100},
+--       {width = 120},
+--       {width = 120},
+--       {width = 120},
+--       {width = 300},
+--       {width = 180, align = "right"},
+--       {width = 45,  align = "center"},
+--     },
+--     rows = {
+--       {
+--         columns = {
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Dungeon")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Level")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Score")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Time")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Status")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Affixes")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Tank")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Healer")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("DPS")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("")},
+--           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Note")},
+--         },
+--       },
+--     },
+--   }
+--   tableHeight = tableHeight + 30
 
-  local lastWhen = GetServerTime()
-  for i = 1, 30 do
-    local when = date("%c", lastWhen)
-    lastWhen = lastWhen - math.random(5000, 15000)
+--   local lastWhen = GetServerTime()
+--   for i = 1, 30 do
+--     local when = date("%c", lastWhen)
+--     lastWhen = lastWhen - math.random(5000, 15000)
 
-    local level = math.random(2, 12)
-    local levelText = tostring(level)
+--     local level = math.random(2, 12)
+--     local levelText = tostring(level)
 
-    local score = 80 + level * 30
-    local scoreText = tostring(score)
-    local scoreColor = WHITE_FONT_COLOR
+--     local score = 80 + level * 30
+--     local scoreText = tostring(score)
+--     local scoreColor = WHITE_FONT_COLOR
 
-    local time = math.random(500, 2000)
-    local timeText = SecondsToClock(time)
-    local timeColor = WHITE_FONT_COLOR
+--     local time = math.random(500, 2000)
+--     local timeText = SecondsToClock(time)
+--     local timeColor = WHITE_FONT_COLOR
 
-    local status = math.random(1, 10)
-    local statusText = GREEN_FONT_COLOR:WrapTextInColorCode("Timed")
-    local statusColor = WHITE_FONT_COLOR
+--     local status = math.random(1, 10)
+--     local statusText = GREEN_FONT_COLOR:WrapTextInColorCode("Timed")
+--     local statusColor = WHITE_FONT_COLOR
 
-    local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(score)
-    if rarityColor ~= nil then
-      scoreColor = rarityColor
-    end
+--     local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(score)
+--     if rarityColor ~= nil then
+--       scoreColor = rarityColor
+--     end
 
-    local affixes = {}
-    for a = 13, 13 + math.random(1, 4) do
-      local affix = addon.Data.affixes[a]
-      table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
-    end
+--     local affixes = {}
+--     for a = 13, 13 + math.random(1, 4) do
+--       local affix = addon.Data.affixes[a]
+--       table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
+--     end
 
-    local dungeon = dungeons[math.random(#dungeons)]
-    local dungeonName = "ARAK"
-    if dungeon then
-      dungeonName = dungeon.texture and "|T" .. dungeon.texture .. ":16|t  " or ""
-      dungeonName = dungeonName .. (dungeon.abbr and dungeon.abbr or dungeon.name)
-    end
+--     local dungeon = dungeons[math.random(#dungeons)]
+--     local dungeonName = "ARAK"
+--     if dungeon then
+--       dungeonName = dungeon.texture and "|T" .. dungeon.texture .. ":16|t  " or ""
+--       dungeonName = dungeonName .. (dungeon.abbr and dungeon.abbr or dungeon.name)
+--     end
 
-    if status > 9 then
-      statusText = "Abandoned"
-      scoreText = ""
-      timeText = ""
-      scoreColor = DIM_RED_FONT_COLOR
-      timeColor = DIM_RED_FONT_COLOR
-      statusColor = DIM_RED_FONT_COLOR
-    elseif status > 7 then
-      statusText = "Overtime"
-      scoreColor = DISABLED_FONT_COLOR
-      timeColor = DISABLED_FONT_COLOR
-      statusColor = DISABLED_FONT_COLOR
-    else
-      statusText = "Timed"
-      statusColor = DIM_GREEN_FONT_COLOR
+--     if status > 9 then
+--       statusText = "Abandoned"
+--       scoreText = ""
+--       timeText = ""
+--       scoreColor = DIM_RED_FONT_COLOR
+--       timeColor = DIM_RED_FONT_COLOR
+--       statusColor = DIM_RED_FONT_COLOR
+--     elseif status > 7 then
+--       statusText = "Overtime"
+--       scoreColor = DISABLED_FONT_COLOR
+--       timeColor = DISABLED_FONT_COLOR
+--       statusColor = DISABLED_FONT_COLOR
+--     else
+--       statusText = "Timed"
+--       statusColor = DIM_GREEN_FONT_COLOR
 
-      if time < 800 then
-        timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
-      elseif time < 1200 then
-        timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
-      else
-        timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier1:16:16:0:0|a"
-      end
-    end
+--       if time < 800 then
+--         timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
+--       elseif time < 1200 then
+--         timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
+--       else
+--         timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier1:16:16:0:0|a"
+--       end
+--     end
 
-    ---@type AE_TableDataRow
-    local row = {
-      columns = {
-        {text = dungeonName},
-        {text = scoreColor:WrapTextInColorCode(levelText)},
-        {text = scoreColor:WrapTextInColorCode(scoreText)},
-        {text = timeColor:WrapTextInColorCode(timeText)},
-        {text = statusColor:WrapTextInColorCode(statusText)},
-        {text = table.concat(affixes, "")},
-        {text = random_player(true)},
-        {text = random_player(false, true)},
-        {text = format("%s  %s  %s", random_player(), random_player(), random_player())},
-        -- {text = random_player()},
-        -- {text = random_player()},
-        -- {text = random_player()},
-        {text = tostring(when)},
-        -- {text = tostring(when) .. "  " .. CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 30) .. "  "},
-        {text = CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 24 * 1.25)},
-        -- UI-HUD-MicroMenu-AdventureGuide-Up
-      },
-    }
-    table.insert(data.rows, row)
-    tableHeight = tableHeight + rowHeight
-  end
+--     ---@type AE_TableDataRow
+--     local row = {
+--       columns = {
+--         {text = dungeonName},
+--         {text = scoreColor:WrapTextInColorCode(levelText)},
+--         {text = scoreColor:WrapTextInColorCode(scoreText)},
+--         {text = timeColor:WrapTextInColorCode(timeText)},
+--         {text = statusColor:WrapTextInColorCode(statusText)},
+--         {text = table.concat(affixes, "")},
+--         {text = random_player(true)},
+--         {text = random_player(false, true)},
+--         {text = format("%s  %s  %s", random_player(), random_player(), random_player())},
+--         -- {text = random_player()},
+--         -- {text = random_player()},
+--         -- {text = random_player()},
+--         {text = tostring(when)},
+--         -- {text = tostring(when) .. "  " .. CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 30) .. "  "},
+--         {text = CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 24 * 1.25)},
+--         -- UI-HUD-MicroMenu-AdventureGuide-Up
+--       },
+--     }
+--     table.insert(data.rows, row)
+--     tableHeight = tableHeight + rowHeight
+--   end
 
-  addon.Utils:TableForEach(data.columns, function(col)
-    tableWidth = tableWidth + (col.width or 0)
-  end)
+--   addon.Utils:TableForEach(data.columns, function(col)
+--     tableWidth = tableWidth + (col.width or 0)
+--   end)
 
-  self.runHistoryTable:SetData(data)
-  self.runHistoryWindow:SetBodySize(tableWidth, 400)
-end
+--   self.runHistoryTable:SetData(data)
+--   self.runHistoryWindow:SetBodySize(tableWidth, 400)
+-- end

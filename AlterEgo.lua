@@ -178,42 +178,42 @@ function Core:OnEnable()
       addon.Data:UpdateDB()
     end
   )
-  self:RegisterEvent(
-    "CHALLENGE_MODE_START",
-    function(...)
-      addon.Data:RunHistory_OnChallengeStart(...)
-    end
-  )
-  self:RegisterEvent(
-    "COMBAT_LOG_EVENT_UNFILTERED",
-    function(...)
-      addon.Data:RunHistory_OnCombatLog(...)
-    end
-  )
-  self:RegisterEvent(
-    "CHALLENGE_MODE_COMPLETED",
-    function(...)
-      addon.Data:RunHistory_OnChallengeEnd(...)
-    end
-  )
-  self:RegisterEvent(
-    "ENCOUNTER_END",
-    function(...)
-      addon.Data:RunHistory_OnChallengeEnd(...)
-    end
-  )
-  self:RegisterEvent(
-    "ENCOUNTER_START",
-    function(...)
-      addon.Data:RunHistory_OnChallengeEnd(...)
-    end
-  )
-  self:RegisterEvent(
-    "PLAYER_ENTERING_WORLD",
-    function(...)
-      addon.Data:RunHistory_OnPEW()
-    end
-  )
+  -- self:RegisterEvent(
+  --   "CHALLENGE_MODE_START",
+  --   function(...)
+  --     addon.Data:RunHistory_OnChallengeStart(...)
+  --   end
+  -- )
+  -- self:RegisterEvent(
+  --   "COMBAT_LOG_EVENT_UNFILTERED",
+  --   function(...)
+  --     addon.Data:RunHistory_OnCombatLog(...)
+  --   end
+  -- )
+  -- self:RegisterEvent(
+  --   "CHALLENGE_MODE_COMPLETED",
+  --   function(...)
+  --     addon.Data:RunHistory_OnChallengeEnd(...)
+  --   end
+  -- )
+  -- self:RegisterEvent(
+  --   "ENCOUNTER_END",
+  --   function(...)
+  --     addon.Data:RunHistory_OnChallengeEnd(...)
+  --   end
+  -- )
+  -- self:RegisterEvent(
+  --   "ENCOUNTER_START",
+  --   function(...)
+  --     addon.Data:RunHistory_OnChallengeEnd(...)
+  --   end
+  -- )
+  -- self:RegisterEvent(
+  --   "PLAYER_ENTERING_WORLD",
+  --   function(...)
+  --     addon.Data:RunHistory_OnPEW()
+  --   end
+  -- )
   self:CheckGameData()
 end
 

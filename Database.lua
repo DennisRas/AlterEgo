@@ -1412,17 +1412,17 @@ end
 function Data:RunHistory_StartRun()
   local run = self:RunHistory_GetActiveRun()
   if run then
-    DevTools_Dump("RunHistory_StartRun(): run already started")
+    -- DevTools_Dump("RunHistory_StartRun(): run already started")
     return
   end
   local newRun = self:RunHistory_CreateRun()
   table.insert(self.db.global.runHistory.runs, newRun)
-  DevTools_Dump("New run created!")
+  -- DevTools_Dump("New run created!")
   self:RunHistory_SetActiveRun(newRun)
 end
 
 function Data:RunHistory_DetectActiveRun()
-  DevTools_Dump("RunHistory_DetectActiveRun()")
+  -- DevTools_Dump("RunHistory_DetectActiveRun()")
 end
 
 function Data:RunHistory_EndActiveRun()
@@ -1436,7 +1436,7 @@ function Data:RunHistory_EndActiveRun()
 end
 
 function Data:RunHistory_GetActiveRun()
-  DevTools_Dump("GetActiveRun(): " .. (self.db.global.runHistory.activeRun and "active run!" or "no active run!"))
+  -- DevTools_Dump("GetActiveRun(): " .. (self.db.global.runHistory.activeRun and "active run!" or "no active run!"))
   return self.db.global.runHistory.activeRun
 end
 
@@ -1463,6 +1463,9 @@ function Data:RunHistory_CreateRun()
     seasonID = seasonID,
     challengeModeID = 0,
     status = "Running",
+    startTimestamp = 0,
+    endTimestamp = 0,
+    lastUpdateTimestamp = 0,
     level = 0,
     timers = {0, 0, 0},
     time = 0,

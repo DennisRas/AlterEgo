@@ -41,3 +41,5 @@ Input.lua
 Database.lua
 Interface.lua
 AlterEgo.lua
+
+Modules/RunHistory.lua

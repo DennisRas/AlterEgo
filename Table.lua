@@ -69,7 +69,7 @@ function Table:New(config)
     addon.Utils:TableForEach(frame.rows, function(rowFrame) rowFrame:Hide() end)
     addon.Utils:TableForEach(frame.data.rows, function(row, rowIndex)
       local rowFrame = frame.rows[rowIndex]
-      local rowHeight = rowIndex == 1 and 30 or frame.config.rows.height
+      local rowHeight = rowIndex == 1 and frame.config.header.enabled and frame.config.header.height or frame.config.rows.height
       local isStickyRow = false
 
       if not rowFrame then
@@ -112,7 +112,7 @@ function Table:New(config)
       rowFrame:Show()
 
       function rowFrame:onEnterHandler(f)
-        if rowIndex > 1 or not frame.config.header.enabled then
+        if frame.config.rows.highlight and (rowIndex > 1 or not frame.config.header.enabled) then
           addon.Utils:SetHighlightColor(rowFrame, 1, 1, 1, .05)
         end
         if row.onEnter then

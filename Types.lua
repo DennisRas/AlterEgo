@@ -263,3 +263,83 @@
 ---@field onEnter function?
 ---@field onLeave function?
 ---@field onClick function?
+
+---@alias AE_RH_State "RUNNING" | "TIMED" | "OVERTIME" | "ABANDONED"
+
+---@class AE_RH_Run
+---@field id string
+---@field seasonID number
+---@field startTimestamp number
+---@field endTimestamp number?
+---@field updateTimestamp number
+---@field state AE_RH_State
+---@field affixes number[]
+---@field members AE_RH_Member[]
+---@field events AE_RH_Event[]
+---@field loot AE_RH_Loot[]
+---@field challengeModeTimers number[]
+---@field challengeModeID nil
+---@field challengeModeLevel nil
+---@field challengeModeTime nil
+---@field challengeModeOnTime nil
+---@field challengeModeKeystoneUpgradeLevels nil
+---@field challengeModePracticeRun nil
+---@field challengeModeOldOverallDungeonScore nil
+---@field challengeModeNewOverallDungeonScore nil
+---@field challengeModeIsMapRecord nil
+---@field challengeModeIsAffixRecord nil
+---@field challengeModePrimaryAffix nil
+---@field challengeModeisEligibleForScore nil
+---@field challengeModeUpgradeMembers nil
+---@field instanceName string?
+---@field instanceType string?
+---@field instanceDifficultyID number?
+---@field instanceDifficultyName string?
+---@field instanceMaxPlayers number?
+---@field instanceDynamicDifficulty number?
+---@field instanceIsDynamic boolean?
+---@field instanceID number?
+---@field instanceGroupSize number?
+---@field instanceLFGDungeonID number?
+---@field mapID number?
+---@field mapName string?
+---@field mapTimeLimit number?
+---@field mapTexture number?
+---@field mapBackgroundTexture number?
+---@field stepCount number?
+---@field deathCount number?
+---@field deathTimeLost number?
+---@field keystoneTimerID number?
+---@field keystoneTimerElapsedTime number?
+---@field keystoneTimerIsActive boolean?
+---@field bosses table
+---@field trashCount number?
+-----@field isChallengeModeActive boolean
+-----@field activeKeystoneLevel number
+-----@field activeKeystoneAffixIDs number[]
+-----@field activeChallengeModeID number?
+
+---@alias AE_RH_EventType "PLAYER_DEATH" | "ENCOUNTER_START" | "ENCOUNTER_KILL" | "ENCOUNTER_WIPE"
+
+---@class AE_RH_Event
+---@field timestamp number
+---@field type AE_RH_EventType
+---@field data table?
+
+---@class AE_RH_Loot
+---@field member WOWGUID
+---@field itemName string
+---@field itemLink string
+
+---@class AE_RH_Member
+---@field guid WOWGUID
+---@field name string
+---@field realm string
+---@field role "TANK" | "HEALER" | "DAMAGER" | "NONE"
+---@field classID integer
+---@field specID integer?
+---@field ratingStart number?
+---@field ratingEnd number?
+---@field ilvl number?
+---@field equipment table?
+---@field talents table?

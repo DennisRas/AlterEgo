@@ -202,6 +202,7 @@
         "MenuResponse",
         "ALL_INVENTORY_SLOTS",
         "ALL_CLASSES",
-        "ALL_SPECS"
+        "ALL_SPECS",
+        "LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE"
     ]
 }
