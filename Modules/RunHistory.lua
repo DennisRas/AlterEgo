@@ -323,23 +323,23 @@ function Module:StartRun()
   table.insert(addon.Data.db.global.runHistory.runs, run)
 
   self:SetActiveRun(run.id)
-  self:UpdateActiveRun()
+  self:UpdateRun()
 
   return run
 end
 
-function Module:EndActiveRun()
+function Module:EndRun()
   local run = self:GetActiveRun()
   if not run then return end
 
   -- TODO: Set more data after a run is complete
   run.endTimestamp = GetServerTime()
 
-  self:UpdateActiveRun()
+  self:UpdateRun()
   self:SetActiveRun(nil)
 end
 
-function Module:UpdateActiveRun()
+function Module:UpdateRun()
   -- local data = self:GetChallengeData()
   local run = self:GetActiveRun()
   if not run then return end
@@ -546,7 +546,7 @@ function Module:ClearActiveRun()
 end
 
 -- Todo: This is gonna suck
-function Module:DetectActiveRun()
+function Module:DetectAbandon()
 end
 
 function Module:COMBAT_LOG_EVENT_UNFILTERED(...)
@@ -575,13 +575,13 @@ function Module:COMBAT_LOG_EVENT_UNFILTERED(...)
     table.insert(run.events, event)
   end
 
-  self:UpdateActiveRun()
+  self:UpdateRun()
 end
 
 function Module:GROUP_ROSTER_UPDATE(...)
   if not self:GetActiveRun() then return end
   -- TODO: Check if the run is over
-  self:UpdateActiveRun()
+  self:UpdateRun()
 end
 
 function Module:CHALLENGE_MODE_START(...)
@@ -589,7 +589,7 @@ function Module:CHALLENGE_MODE_START(...)
 end
 
 function Module:CHALLENGE_MODE_COMPLETED(...)
-  self:EndActiveRun()
+  self:EndRun()
 end
 
 function Module:PLAYER_ENTERING_WORLD()
@@ -601,18 +601,18 @@ function Module:PLAYER_ENTERING_WORLD()
       self:StartRun()
     end
   end
-  self:UpdateActiveRun()
+  self:UpdateRun()
 end
 
 function Module:ENCOUNTER_START(...)
   local _, encounterID = ...
   addon.Data.db.global.runHistory.activeEncounter = encounterID
-  self:UpdateActiveRun()
+  self:UpdateRun()
 end
 
 function Module:ENCOUNTER_END(...)
   addon.Data.db.global.runHistory.activeEncounter = nil
-  self:UpdateActiveRun()
+  self:UpdateRun()
 end
 
 function Module:ToggleWindow()
@@ -657,28 +657,33 @@ local function random_player(isTank, isHealer)
   return color:WrapTextInColorCode(name)
 end
 
-function Module:ShowRunDetails(run)
-  self.runDetails = run
-  if not self.windowRunDetails then return end
-  self.windowRunDetails:Show()
+---Open run details
+---@param run AE_RH_Run
+function Module:ShowRun(run)
+  self.selectedRun = run
+  if not self.windowRun then return end
+  self.windowRun:Show()
   self:RenderRunHistory()
 end
 
 function Module:Render()
-  self:RenderRunDetails()
+  self:RenderRun()
   self:RenderRunHistory()
 end
 
-function Module:RenderRunDetails()
-  if not self.windowRunDetails then
-    self.windowRunDetails = addon.Window:New({
+function Module:RenderRun()
+  if not self.windowRun then
+    self.windowRun = addon.Window:New({
       name = "RunDetails",
       title = "Run Details",
     })
-    self.windowRunDetails:SetBodySize(600, 400)
+    self.windowRun:SetBodySize(600, 400)
+    self.windowRun:SetScript("OnShow", function()
+      self:RenderRun()
+    end)
 
     local rowHeight = 26
-    self.windowRunDetails.infoTable = addon.Table:New({
+    self.windowRun.infoTable = addon.Table:New({
       header = {
         enabled = false,
       },
@@ -692,45 +697,45 @@ function Module:RenderRunDetails()
         highlight = false,
       },
     })
-    self.windowRunDetails.infoTable:SetParent(self.windowRunDetails)
-    self.windowRunDetails.infoTable:SetPoint("TOPLEFT", self.windowRunDetails, "TOPLEFT", 0, -30)
-    self.windowRunDetails.infoTable:SetSize(300, 240)
+    self.windowRun.infoTable:SetParent(self.windowRun)
+    self.windowRun.infoTable:SetPoint("TOPLEFT", self.windowRun, "TOPLEFT", 0, -30)
+    self.windowRun.infoTable:SetSize(300, 240)
 
-    -- self.windowRunDetails.textLeft = self.windowRunDetails:CreateFontString()
-    -- self.windowRunDetails.textLeft:SetPoint("TOPLEFT", self.windowRunDetails, "TOPLEFT", 10, -40)
-    -- self.windowRunDetails.textLeft:SetSize(150, 300)
-    -- self.windowRunDetails.textLeft:SetFontObject("GameFontHighlight")
-    -- self.windowRunDetails.textLeft:SetText("")
-    -- self.windowRunDetails.textLeft:SetJustifyH("LEFT")
-    -- self.windowRunDetails.textLeft:SetJustifyV("TOP")
-    -- self.windowRunDetails.textLeft:SetTextHeight(11)
-    -- self.windowRunDetails.textLeft:SetSpacing(3)
+    -- self.windowRun.textLeft = self.windowRun:CreateFontString()
+    -- self.windowRun.textLeft:SetPoint("TOPLEFT", self.windowRun, "TOPLEFT", 10, -40)
+    -- self.windowRun.textLeft:SetSize(150, 300)
+    -- self.windowRun.textLeft:SetFontObject("GameFontHighlight")
+    -- self.windowRun.textLeft:SetText("")
+    -- self.windowRun.textLeft:SetJustifyH("LEFT")
+    -- self.windowRun.textLeft:SetJustifyV("TOP")
+    -- self.windowRun.textLeft:SetTextHeight(11)
+    -- self.windowRun.textLeft:SetSpacing(3)
 
-    -- self.windowRunDetails.textRight = self.windowRunDetails:CreateFontString()
-    -- self.windowRunDetails.textRight:SetPoint("TOPLEFT", self.windowRunDetails, "TOPLEFT", 170, -40)
-    -- self.windowRunDetails.textRight:SetSize(150, 300)
-    -- self.windowRunDetails.textRight:SetFontObject("GameFontHighlight")
-    -- self.windowRunDetails.textRight:SetText("")
-    -- self.windowRunDetails.textRight:SetJustifyH("LEFT")
-    -- self.windowRunDetails.textRight:SetJustifyV("TOP")
-    -- self.windowRunDetails.textRight:SetTextHeight(11)
-    -- self.windowRunDetails.textRight:SetSpacing(3)
+    -- self.windowRun.textRight = self.windowRun:CreateFontString()
+    -- self.windowRun.textRight:SetPoint("TOPLEFT", self.windowRun, "TOPLEFT", 170, -40)
+    -- self.windowRun.textRight:SetSize(150, 300)
+    -- self.windowRun.textRight:SetFontObject("GameFontHighlight")
+    -- self.windowRun.textRight:SetText("")
+    -- self.windowRun.textRight:SetJustifyH("LEFT")
+    -- self.windowRun.textRight:SetJustifyV("TOP")
+    -- self.windowRun.textRight:SetTextHeight(11)
+    -- self.windowRun.textRight:SetSpacing(3)
 
-    self.windowRunDetails.tabBody = CreateFrame("Frame", nil, self.windowRunDetails)
-    self.windowRunDetails.tabBody:SetPoint("BOTTOMLEFT", self.windowRunDetails, "BOTTOMLEFT", 10, 10)
-    self.windowRunDetails.tabBody:SetSize(280, 120)
-    addon.Utils:SetBackgroundColor(self.windowRunDetails.tabBody, 0, 0, 0, 0.25)
-    -- self.windowRunDetails.tabBody.content = addon.Utils:CreateScrollFrame({
-    --   parent = self.windowRunDetails.tabBody,
+    self.windowRun.tabBody = CreateFrame("Frame", nil, self.windowRun)
+    self.windowRun.tabBody:SetPoint("BOTTOMLEFT", self.windowRun, "BOTTOMLEFT", 10, 10)
+    self.windowRun.tabBody:SetSize(280, 120)
+    addon.Utils:SetBackgroundColor(self.windowRun.tabBody, 0, 0, 0, 0.25)
+    -- self.windowRun.tabBody.content = addon.Utils:CreateScrollFrame({
+    --   parent = self.windowRun.tabBody,
     -- })
-    -- self.windowRunDetails.tabBody.content:SetAllPoints()
+    -- self.windowRun.tabBody.content:SetAllPoints()
 
     local tabs = {"Events", "Note", "Loot", "Data"}
     addon.Utils:TableForEach(tabs, function(tab, tabIndex)
-      local tabFrame = CreateFrame("Frame", nil, self.windowRunDetails)
-      local width = self.windowRunDetails.tabBody:GetWidth() / #tabs
+      local tabFrame = CreateFrame("Frame", nil, self.windowRun)
+      local width = self.windowRun.tabBody:GetWidth() / #tabs
       tabFrame:SetSize(width, 26)
-      tabFrame:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabBody, "TOPLEFT", width * (tabIndex - 1), 0)
+      tabFrame:SetPoint("BOTTOMLEFT", self.windowRun.tabBody, "TOPLEFT", width * (tabIndex - 1), 0)
       tabFrame.text = tabFrame:CreateFontString()
       tabFrame.text:SetFontObject("GameFontHighlight")
       tabFrame.text:SetPoint("LEFT", tabFrame, "LEFT", 10, 0)
@@ -740,62 +745,62 @@ function Module:RenderRunDetails()
       tabFrame.text:SetJustifyV("MIDDLE")
       addon.Utils:SetBackgroundColor(tabFrame, 0, 0, 0, tabIndex == 1 and 0.25 or 0.1)
     end)
-    -- self.windowRunDetails.tabFirst = CreateFrame("Frame", nil, self.windowRunDetails)
-    -- self.windowRunDetails.tabFirst:SetSize(280 / 3, 26)
-    -- self.windowRunDetails.tabFirst:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabBody, "TOPLEFT", 0, 0)
-    -- self.windowRunDetails.tabFirst.text = self.windowRunDetails.tabFirst:CreateFontString()
-    -- self.windowRunDetails.tabFirst.text:SetFontObject("GameFontHighlight")
-    -- self.windowRunDetails.tabFirst.text:SetPoint("LEFT", self.windowRunDetails.tabFirst, "LEFT", 10, 0)
-    -- self.windowRunDetails.tabFirst.text:SetPoint("RIGHT", self.windowRunDetails.tabFirst, "RIGHT", -10, 0)
-    -- self.windowRunDetails.tabFirst.text:SetText("Events")
-    -- self.windowRunDetails.tabFirst.text:SetJustifyH("CENTER")
-    -- self.windowRunDetails.tabFirst.text:SetJustifyV("MIDDLE")
-    -- addon.Utils:SetBackgroundColor(self.windowRunDetails.tabFirst, 0, 0, 0, 0.25)
+    -- self.windowRun.tabFirst = CreateFrame("Frame", nil, self.windowRun)
+    -- self.windowRun.tabFirst:SetSize(280 / 3, 26)
+    -- self.windowRun.tabFirst:SetPoint("BOTTOMLEFT", self.windowRun.tabBody, "TOPLEFT", 0, 0)
+    -- self.windowRun.tabFirst.text = self.windowRun.tabFirst:CreateFontString()
+    -- self.windowRun.tabFirst.text:SetFontObject("GameFontHighlight")
+    -- self.windowRun.tabFirst.text:SetPoint("LEFT", self.windowRun.tabFirst, "LEFT", 10, 0)
+    -- self.windowRun.tabFirst.text:SetPoint("RIGHT", self.windowRun.tabFirst, "RIGHT", -10, 0)
+    -- self.windowRun.tabFirst.text:SetText("Events")
+    -- self.windowRun.tabFirst.text:SetJustifyH("CENTER")
+    -- self.windowRun.tabFirst.text:SetJustifyV("MIDDLE")
+    -- addon.Utils:SetBackgroundColor(self.windowRun.tabFirst, 0, 0, 0, 0.25)
 
-    -- self.windowRunDetails.tabSecond = CreateFrame("Frame", nil, self.windowRunDetails)
-    -- self.windowRunDetails.tabSecond:SetSize(280 / 3, 26)
-    -- self.windowRunDetails.tabSecond:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabFirst, "BOTTOMRIGHT", 0, 0)
-    -- self.windowRunDetails.tabSecond.text = self.windowRunDetails.tabSecond:CreateFontString()
-    -- self.windowRunDetails.tabSecond.text:SetFontObject("GameFontHighlight")
-    -- self.windowRunDetails.tabSecond.text:SetPoint("LEFT", self.windowRunDetails.tabSecond, "LEFT", 10, 0)
-    -- self.windowRunDetails.tabSecond.text:SetPoint("RIGHT", self.windowRunDetails.tabSecond, "RIGHT", -10, 0)
-    -- self.windowRunDetails.tabSecond.text:SetText("Loot")
-    -- self.windowRunDetails.tabSecond.text:SetJustifyH("CENTER")
-    -- self.windowRunDetails.tabSecond.text:SetJustifyV("MIDDLE")
-    -- addon.Utils:SetBackgroundColor(self.windowRunDetails.tabSecond, 0, 0, 0, 0.1)
+    -- self.windowRun.tabSecond = CreateFrame("Frame", nil, self.windowRun)
+    -- self.windowRun.tabSecond:SetSize(280 / 3, 26)
+    -- self.windowRun.tabSecond:SetPoint("BOTTOMLEFT", self.windowRun.tabFirst, "BOTTOMRIGHT", 0, 0)
+    -- self.windowRun.tabSecond.text = self.windowRun.tabSecond:CreateFontString()
+    -- self.windowRun.tabSecond.text:SetFontObject("GameFontHighlight")
+    -- self.windowRun.tabSecond.text:SetPoint("LEFT", self.windowRun.tabSecond, "LEFT", 10, 0)
+    -- self.windowRun.tabSecond.text:SetPoint("RIGHT", self.windowRun.tabSecond, "RIGHT", -10, 0)
+    -- self.windowRun.tabSecond.text:SetText("Loot")
+    -- self.windowRun.tabSecond.text:SetJustifyH("CENTER")
+    -- self.windowRun.tabSecond.text:SetJustifyV("MIDDLE")
+    -- addon.Utils:SetBackgroundColor(self.windowRun.tabSecond, 0, 0, 0, 0.1)
 
-    -- self.windowRunDetails.tabThird = CreateFrame("Frame", nil, self.windowRunDetails)
-    -- self.windowRunDetails.tabThird:SetSize(280 / 3, 26)
-    -- self.windowRunDetails.tabThird:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabSecond, "BOTTOMRIGHT", 0, 0)
-    -- self.windowRunDetails.tabThird.text = self.windowRunDetails.tabThird:CreateFontString()
-    -- self.windowRunDetails.tabThird.text:SetFontObject("GameFontHighlight")
-    -- self.windowRunDetails.tabThird.text:SetPoint("LEFT", self.windowRunDetails.tabThird, "LEFT", 10, 0)
-    -- self.windowRunDetails.tabThird.text:SetPoint("RIGHT", self.windowRunDetails.tabThird, "RIGHT", -10, 0)
-    -- self.windowRunDetails.tabThird.text:SetText("Raw Data")
-    -- self.windowRunDetails.tabThird.text:SetJustifyH("CENTER")
-    -- self.windowRunDetails.tabThird.text:SetJustifyV("MIDDLE")
-    -- addon.Utils:SetBackgroundColor(self.windowRunDetails.tabThird, 0, 0, 0, 0.1)
+    -- self.windowRun.tabThird = CreateFrame("Frame", nil, self.windowRun)
+    -- self.windowRun.tabThird:SetSize(280 / 3, 26)
+    -- self.windowRun.tabThird:SetPoint("BOTTOMLEFT", self.windowRun.tabSecond, "BOTTOMRIGHT", 0, 0)
+    -- self.windowRun.tabThird.text = self.windowRun.tabThird:CreateFontString()
+    -- self.windowRun.tabThird.text:SetFontObject("GameFontHighlight")
+    -- self.windowRun.tabThird.text:SetPoint("LEFT", self.windowRun.tabThird, "LEFT", 10, 0)
+    -- self.windowRun.tabThird.text:SetPoint("RIGHT", self.windowRun.tabThird, "RIGHT", -10, 0)
+    -- self.windowRun.tabThird.text:SetText("Raw Data")
+    -- self.windowRun.tabThird.text:SetJustifyH("CENTER")
+    -- self.windowRun.tabThird.text:SetJustifyV("MIDDLE")
+    -- addon.Utils:SetBackgroundColor(self.windowRun.tabThird, 0, 0, 0, 0.1)
 
-    self.windowRunDetails.tabBody.text = self.windowRunDetails.tabBody:CreateFontString()
-    self.windowRunDetails.tabBody.text:SetPoint("TOPLEFT", self.windowRunDetails.tabBody, "TOPLEFT", 10, -10)
-    self.windowRunDetails.tabBody.text:SetPoint("BOTTOMRIGHT", self.windowRunDetails.tabBody, "BOTTOMRIGHT", -10, 10)
-    self.windowRunDetails.tabBody.text:SetFontObject("GameFontHighlight")
-    self.windowRunDetails.tabBody.text:SetText("|cffaaaaaa00:01:20  |r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:05:11  |r Ingra Maloch pulled.\n|cffaaaaaa00:07:56  |r Ingra Maloch killed (2m45s).\n|cffaaaaaa00:22:01  |r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:31:21  |r |cffC69B6DLiquidora|r has died.\n")
-    self.windowRunDetails.tabBody.text:SetJustifyH("LEFT")
-    self.windowRunDetails.tabBody.text:SetJustifyV("TOP")
-    self.windowRunDetails.tabBody.text:SetTextHeight(11)
-    self.windowRunDetails.tabBody.text:SetSpacing(3)
+    self.windowRun.tabBody.text = self.windowRun.tabBody:CreateFontString()
+    self.windowRun.tabBody.text:SetPoint("TOPLEFT", self.windowRun.tabBody, "TOPLEFT", 10, -10)
+    self.windowRun.tabBody.text:SetPoint("BOTTOMRIGHT", self.windowRun.tabBody, "BOTTOMRIGHT", -10, 10)
+    self.windowRun.tabBody.text:SetFontObject("GameFontHighlight")
+    self.windowRun.tabBody.text:SetText("|cffaaaaaa00:01:20  |r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:05:11  |r Ingra Maloch pulled.\n|cffaaaaaa00:07:56  |r Ingra Maloch killed (2m45s).\n|cffaaaaaa00:22:01  |r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:31:21  |r |cffC69B6DLiquidora|r has died.\n")
+    self.windowRun.tabBody.text:SetJustifyH("LEFT")
+    self.windowRun.tabBody.text:SetJustifyV("TOP")
+    self.windowRun.tabBody.text:SetTextHeight(11)
+    self.windowRun.tabBody.text:SetSpacing(3)
 
-    self.windowRunDetails.playerBody = CreateFrame("Frame", nil, self.windowRunDetails)
-    self.windowRunDetails.playerBody:SetPoint("TOPRIGHT", self.windowRunDetails, "TOPRIGHT", 0, -26 - 30)
-    self.windowRunDetails.playerBody:SetPoint("BOTTOMRIGHT", self.windowRunDetails, "BOTTOMRIGHT", 0, 0)
-    self.windowRunDetails.playerBody:SetWidth(300)
-    addon.Utils:SetBackgroundColor(self.windowRunDetails.playerBody, 0, 0, 0, 0.2)
+    self.windowRun.playerBody = CreateFrame("Frame", nil, self.windowRun)
+    self.windowRun.playerBody:SetPoint("TOPRIGHT", self.windowRun, "TOPRIGHT", 0, -26 - 30)
+    self.windowRun.playerBody:SetPoint("BOTTOMRIGHT", self.windowRun, "BOTTOMRIGHT", 0, 0)
+    self.windowRun.playerBody:SetWidth(300)
+    addon.Utils:SetBackgroundColor(self.windowRun.playerBody, 0, 0, 0, 0.2)
 
     for i = 1, 5 do
-      local playerTab = CreateFrame("Frame", nil, self.windowRunDetails)
+      local playerTab = CreateFrame("Frame", nil, self.windowRun)
       playerTab:SetSize(60, 26)
-      playerTab:SetPoint("BOTTOMLEFT", self.windowRunDetails.playerBody, "TOPLEFT", (i - 1) * 60, 0)
+      playerTab:SetPoint("BOTTOMLEFT", self.windowRun.playerBody, "TOPLEFT", (i - 1) * 60, 0)
       playerTab.text = playerTab:CreateFontString()
       playerTab.text:SetFontObject("GameFontHighlight")
       playerTab.text:SetPoint("LEFT", playerTab, "LEFT", 10, 0)
@@ -807,10 +812,15 @@ function Module:RenderRunDetails()
     end
   end
 
-  ---@type AE_RH_Run
-  local run = self.runDetails
-  -- self.windowRunDetails.textLeft:SetText("|cffaaaaaaDungeon:|r\n" .. (run and "|T" .. run.mapTexture .. ":14|t  " .. run.mapName or "?") .. "\n\n|cffaaaaaaLevel:|r\n2\n\n|cffaaaaaaAffixes:|r\n- - - -\n\n")
+  if not self.windowRun:IsVisible() then
+    return
+  end
 
+  local run = self.selectedRun
+  if not run then
+    self.windowRun:Hide()
+    return
+  end
 
   local affixes = {}
   for a = 13, 13 + math.random(1, 4) do
@@ -818,126 +828,39 @@ function Module:RenderRunDetails()
     table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
   end
 
-  local leftColor = {r = 0, g = 0, b = 0, a = 0.2}
+  local info = {
+    ["Dungeon"]   = (run.mapTexture and "|T" .. run.mapTexture .. ":14|t  " or "") .. (run.mapName or "-"),
+    ["Level"]     = run.challengeModeLevel,
+    ["Affixes"]   = table.concat(affixes, ""),
+    ["Time"]      = run.keystoneTimerElapsedTime and SecondsToClock(run.keystoneTimerElapsedTime),
+    ["Result"]    = run.state,
+    ["Score"]     = run.challengeModeNewOverallDungeonScore and format("%d (+%d)", run.challengeModeNewOverallDungeonScore, run.challengeModeNewOverallDungeonScore - run.challengeModeOldOverallDungeonScore) or 0,
+    ["Avg. iLvl"] = 0,
+    ["Deaths"]    = run.deathCount,
+    ["Date"]      = run.startTimestamp and date("%c", run.startTimestamp),
+  }
+
   ---@type AE_TableData
-  local data = {
+  local infoTableData = {
     columns = {
       {width = 110},
-      {width = 190},
+      {width = 190, align = "right"},
     },
-    rows = {
-      {
-        columns = {
-          {
-            text = "|cffddddddDungeon:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = run and (run.mapTexture and "|T" .. run.mapTexture .. ":14|t  " or "") .. (run.mapName and run.mapName or "-") or "-",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddLevel:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = run and run.challengeModeLevel or "-",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddAffixes:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = table.concat(affixes, ""),
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddTime:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = run and run.keystoneTimerElapsedTime and SecondsToClock(run.keystoneTimerElapsedTime) or "-",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddResult:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = run and run.state or "-",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddScore:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            -- text = run and run.challengeModeNewOverallDungeonScore and tostring(run.challengeModeNewOverallDungeonScore) or "-",
-            text = "240 (+30)",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddAvg. iLvl:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = "634.2",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddDeaths:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            -- text = run and run.deathCount and tostring(run.deathCount) or "-",
-            text = "3",
-          },
-        },
-      },
-      {
-        columns = {
-          {
-            text = "|cffddddddDate:|r",
-            backgroundColor = leftColor,
-          },
-          {
-            text = run and tostring(date("%c", run.startTimestamp)) or "-",
-          },
-        },
-      },
-    },
+    rows = {},
   }
-  self.windowRunDetails.infoTable:SetData(data)
 
-  if not self.windowRunDetails:IsVisible() then
-    return
-  end
-
-  self.windowRunDetails:SetScript("OnShow", function()
-    self:RenderRunDetails()
+  addon.Utils:TableForEach(info, function(val, key)
+    ---@type AE_TableDataRow
+    local row = {
+      columns = {
+        {text = WrapTextInColorCode(tostring(key) .. ":", "dddddd"), backgroundColor = {r = 0, g = 0, b = 0, a = 0.2}},
+        {text = val and tostring(val) or "-"},
+      },
+    }
+    table.insert(infoTableData.rows, row)
   end)
+
+  self.windowRun.infoTable:SetData(infoTableData)
 end
 
 function Module:RenderRunHistory()
@@ -1045,7 +968,7 @@ function Module:RenderRunHistory()
     ---@type AE_TableDataRow
     local row = {
       onClick = function()
-        self:ShowRunDetails(run)
+        self:ShowRun(run)
       end,
       columns = {
         {text = dungeonName},
