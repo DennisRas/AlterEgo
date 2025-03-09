@@ -1045,7 +1045,7 @@ function Data:UpdateEquipment()
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if not inventoryItemLink then return end
 
-    local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax = "", 0, 0
+    local itemUpgradeTrack, itemUpgradeLevel, itemUpgradeMax, itemUpgradeColor = "", 0, 0, ""
     local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,
     itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType,
     expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(inventoryItemLink)
@@ -1064,6 +1064,9 @@ function Data:UpdateEquipment()
       end
       if uMax then
         itemUpgradeMax = tonumber(uMax) or itemUpgradeMax
+      end
+      if line.leftColor then
+        itemUpgradeColor = line.leftColor:GenerateHexColor()
       end
     end)
 
@@ -1089,6 +1092,7 @@ function Data:UpdateEquipment()
       itemUpgradeTrack = itemUpgradeTrack,
       itemUpgradeLevel = itemUpgradeLevel,
       itemUpgradeMax = itemUpgradeMax,
+      itemUpgradeColor = itemUpgradeColor,
       itemSlotID = slot.id,
       itemSlotName = slot.name,
     }

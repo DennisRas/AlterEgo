@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.4 - 2025-03-09
+
+### Added
+
+- Items in the equipment window will now be greyed out if from previous season (requires relog on characters to update)
+
 ## v1.2.3 - 2025-02-26
 
 ### Added

@@ -233,6 +233,7 @@
 ---@field itemUpgradeTrack string|nil
 ---@field itemUpgradeLevel number|nil
 ---@field itemUpgradeMax number|nil
+---@field itemUpgradeColor string|nil
 ---@field itemSlotID number
 ---@field itemSlotName string
 

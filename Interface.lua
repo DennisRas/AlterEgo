@@ -2274,7 +2274,9 @@ function UI:RenderEquipmentWindow()
     local upgradeLevel = ""
     if item.itemUpgradeTrack ~= "" then
       upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
-      if item.itemUpgradeLevel == item.itemUpgradeMax then
+      if item.itemUpgradeColor and item.itemUpgradeColor == DISABLED_FONT_COLOR:GenerateHexColor() then
+        upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
+      elseif item.itemUpgradeLevel == item.itemUpgradeMax then
         upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
       end
     end
