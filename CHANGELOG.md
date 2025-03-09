@@ -4,7 +4,11 @@
 
 ### Added
 
-- Items in the equipment window will now be greyed out if from previous season (requires relog on characters to update)
+- Items in the Equipment window will now be greyed out if they are from a previous season (requires relogging on characters to update)
+
+### Fixed
+
+- The One-Armed Bandit now correctly appears as killed in the Raid Progress section
 
 ## v1.2.3 - 2025-02-26
 

@@ -1492,11 +1492,9 @@ function UI:RenderMainWindow()
                     local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                       return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                     end)
-                    if savedInstance ~= nil then
-                      local savedEncounter = addon.Utils:TableFind(savedInstance.encounters, function(enc)
-                        return enc.instanceEncounterID == encounter.instanceEncounterID and enc.isKilled == true
-                      end)
-                      if savedEncounter ~= nil then
+                    if savedInstance then
+                      local savedEncounter = savedInstance.encounters[encounterIndex]
+                      if savedEncounter and savedEncounter.isKilled then
                         color = GREEN_FONT_COLOR
                       end
                     end
@@ -1541,10 +1539,8 @@ function UI:RenderMainWindow()
                     return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                   end)
                   if savedInstance then
-                    local savedEncounter = addon.Utils:TableFind(savedInstance.encounters, function(savedEncounter)
-                      return savedEncounter.instanceEncounterID == encounter.instanceEncounterID and savedEncounter.isKilled == true
-                    end)
-                    if savedEncounter then
+                    local savedEncounter = savedInstance.encounters[encounterIndex]
+                    if savedEncounter and savedEncounter.isKilled then
                       color = UNCOMMON_GREEN_COLOR
                       if addon.Data.db.global.raids.colors then
                         color = difficulty.color
