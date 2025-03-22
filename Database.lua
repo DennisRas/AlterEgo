@@ -313,7 +313,7 @@ Data.dungeons = {
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 382, mapId = 2293, journalInstanceID = 1187, encounters = {}, loot = {}, teleports = {354467},         time = 0, abbr = "TOP",   name = "Theater of Pain"},
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 499, mapId = 2649, journalInstanceID = 1267, encounters = {}, loot = {}, teleports = {445444},         time = 0, abbr = "PSF",   name = "Priory of the Sacred Flame"},
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 500, mapId = 2648, journalInstanceID = 1268, encounters = {}, loot = {}, teleports = {445443},         time = 0, abbr = "ROOK",  name = "The Rookery"},
-  {seasonID = 14, seasonDisplayID = 2, challengeModeID = 504, mapId = 2651, journalInstanceID = 1210, encounters = {}, loot = {}, teleports = {445441},         time = 0, abbr = "DCF",   name = "Darkflame Cleft"},
+  {seasonID = 14, seasonDisplayID = 2, challengeModeID = 504, mapId = 2651, journalInstanceID = 1210, encounters = {}, loot = {}, teleports = {445441},         time = 0, abbr = "DFC",   name = "Darkflame Cleft"},
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 506, mapId = 2661, journalInstanceID = 1272, encounters = {}, loot = {}, teleports = {445440},         time = 0, abbr = "BREW",  name = "Cinderbrew Meadery"},
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 525, mapId = 2773, journalInstanceID = 1298, encounters = {}, loot = {}, teleports = {1216786},        time = 0, abbr = "FLOOD", name = "Operation: Floodgate"},
 }
