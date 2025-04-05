@@ -2217,11 +2217,12 @@ function UI:RenderAffixWindow()
 end
 
 function UI:RenderEquipmentWindow()
-  local tableWidth = 610
+  local tableWidth = 890
   local tableHeight = 0
   local rowHeight = 22
 
-  if not self.equipmentWindow then
+  local equipmentWindow = self.equipmentWindow
+  if not equipmentWindow then
     self.equipmentWindow = addon.Window:New({
       name = "Equipment",
       title = "Character",
@@ -2233,6 +2234,8 @@ function UI:RenderEquipmentWindow()
     self.equipmentWindow:SetScript("OnShow", function()
       self:RenderEquipmentWindow()
     end)
+
+    equipmentWindow = self.equipmentWindow
   end
 
   if not self.equipmentWindow:IsVisible() then
@@ -2252,6 +2255,7 @@ function UI:RenderEquipmentWindow()
       {width = 280},
       {width = 80, align = "CENTER"},
       {width = 150},
+      {width = 280},
     },
     rows = {
       {
@@ -2260,7 +2264,8 @@ function UI:RenderEquipmentWindow()
           {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-        },
+          {text = "Best In Slot",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+        }
       },
     },
   }
@@ -2277,6 +2282,7 @@ function UI:RenderEquipmentWindow()
       end
     end
 
+    
     ---@type AE_TableDataRow
     local row = {
       columns = {
@@ -2303,6 +2309,37 @@ function UI:RenderEquipmentWindow()
         },
         {text = WrapTextInColorCode(tostring(item.itemLevel), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
+        {
+          text = "Click to select item",
+          onClick = function(columnFrame)
+            print('--------------------------------')
+            local bisItemDropdown = addon.Utils:CreateBisItemDropdown(columnFrame, character, item.itemSlotID)
+
+            if not bisItemDropdown then
+              return
+            end
+
+            print("bisItemDropdown", bisItemDropdown:GetName())
+
+            local openedDropdown = self.equipmentWindow.bisItemDropdown
+            print("openedDropdown", openedDropdown)
+            if openedDropdown ~= nil then
+              print("openedDropdown", openedDropdown:GetName())
+              openedDropdown:Hide()
+
+              if openedDropdown:GetName() == bisItemDropdown:GetName() then
+                print("openedDropdown == bisItemDropdown")
+                self.equipmentWindow.bisItemDropdown = nil
+                return
+              end
+            end
+
+            print("Show bisItemDropdown")
+            
+            bisItemDropdown:Show()
+            self.equipmentWindow.bisItemDropdown = bisItemDropdown
+          end,
+        },
       },
     }
     table.insert(data.rows, row)

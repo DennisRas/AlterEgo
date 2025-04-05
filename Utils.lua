@@ -442,3 +442,26 @@ end
 --   frame:RenderScrollFrame()
 --   return frame
 -- end
+
+function Utils:CreateBisItemDropdown(columnFrame, character, slotID)
+  local frame = CreateFrame("Frame", "AlterEgoBisItem" .. character.info.name .. "Slot" .. slotID, columnFrame)
+  --local frame = addon.Utils:CreateScrollFrame({
+  --  name = "AlterEgoBisItem" .. character.info.name .. "Slot" .. slotID,
+  --  scrollSpeedVertical = 10,
+  --  height = 100,
+  --})
+  if frame ~= nil then
+    --frame:SetAllPoints()
+    --frame:SetMinResize(200, 200
+    frame:SetFrameStrata("TOOLTIP")
+    print("strata", frame:GetFrameStrata())
+    frame:SetHeight(20)
+    frame:SetPoint("TOPLEFT", columnFrame, "BOTTOMLEFT", 0, 0)
+    frame:SetPoint("TOPRIGHT", columnFrame, "BOTTOMRIGHT", 0, 0)
+    addon.Utils:SetBackgroundColor(frame, 1, 0, 0, 0.5)
+    frame:Hide()
+  else
+    print("Error nil frame !")
+  end
+  return frame
+end
