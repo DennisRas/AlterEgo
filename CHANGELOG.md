@@ -5,6 +5,7 @@
 ### Fixed
 
 - Fixed a typo with DCF -> DFC
+- Fixed an issue with Weekly Affixes window not showing the rotation
 
 ## v1.2.4 - 2025-03-09
 
