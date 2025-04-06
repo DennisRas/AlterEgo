@@ -4,8 +4,8 @@
 
 ### Fixed
 
-- Fixed a typo with DCF -> DFC
-- Fixed an issue with Weekly Affixes window not showing the rotation
+- Corrected a typo: DCF is now properly labeled as DFC
+- Fixed an issue where the Weekly Affixes window wasn't displaying the rotation
 
 ## v1.2.4 - 2025-03-09
 
