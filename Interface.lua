@@ -447,7 +447,7 @@ function UI:GetCharacterInfo(unfiltered)
                   currencyValue = "No limit"
                 end
               elseif characterCurrency.maxQuantity > 0 then
-                currencyValue = characterCurrency.maxQuantity
+                currencyValue = tostring(characterCurrency.maxQuantity)
               end
               table.insert(characterCurrencies, {
                 currencyLabel,
