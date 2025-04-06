@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.5 - 2025-04-06
+
+### Fixed
+
+- Fixed a typo with DCF -> DFC
+
 ## v1.2.4 - 2025-03-09
 
 ### Added
