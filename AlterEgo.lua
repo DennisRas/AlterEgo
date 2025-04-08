@@ -178,6 +178,10 @@ function Core:OnEnable()
       addon.Data:UpdateDB()
     end
   )
+
+  self:RegisterEvent("GET_ITEM_INFO_RECEIVED", function(event, itemId)
+    addon.Items:RegisterItem(itemId)
+  end)
   self:CheckGameData()
 end
 

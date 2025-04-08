@@ -2294,7 +2294,6 @@ function UI:RenderEquipmentWindow()
       end
     end
 
-    
     ---@type AE_TableDataRow
     local row = {
       columns = {
@@ -2389,7 +2388,6 @@ function UI:RenderBisItemDropdown(columnFrame, character, slotID)
       rows = {},
     }
 
-    print("showAllItems", addon.Items.showAllItems)
     local classId = nil
     if false == addon.Items.showAllItems then
       classId = character.info.class.id
@@ -2409,6 +2407,9 @@ function UI:RenderBisItemDropdown(columnFrame, character, slotID)
           onLeave = function()
             GameTooltip:Hide()
           end,
+          onClick = function()
+            addon.Items:GetItemLevelFromTooltip(item.link)
+          end
       }}})
     end
 
