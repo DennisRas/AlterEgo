@@ -2235,6 +2235,13 @@ function UI:RenderEquipmentWindow()
       self:RenderEquipmentWindow()
     end)
 
+    self.equipmentWindow:SetScript("OnHide", function()
+      if self.equipmentWindow.bisItemDropdown then
+        self.equipmentWindow.bisItemDropdown:Hide()
+        self.equipmentWindow.bisItemDropdown = nil
+      end
+    end)
+
     equipmentWindow = self.equipmentWindow
   end
 
@@ -2246,6 +2253,11 @@ function UI:RenderEquipmentWindow()
   if not character or type(character.equipment) ~= "table" then
     self.equipmentWindow:Hide()
     return
+  end
+
+  if self.equipmentWindow.bisItemDropdown then
+    self.equipmentWindow.bisItemDropdown:Hide()
+    self.equipmentWindow.bisItemDropdown = nil
   end
 
   ---@type AE_TableData
@@ -2312,29 +2324,20 @@ function UI:RenderEquipmentWindow()
         {
           text = "Click to select item",
           onClick = function(columnFrame)
-            print('--------------------------------')
-            local bisItemDropdown = addon.Utils:CreateBisItemDropdown(columnFrame, character, item.itemSlotID)
+            local bisItemDropdown = self:RenderBisItemDropdown(columnFrame, character, item.itemSlotID)
 
             if not bisItemDropdown then
               return
             end
 
-            print("bisItemDropdown", bisItemDropdown:GetName())
-
             local openedDropdown = self.equipmentWindow.bisItemDropdown
-            print("openedDropdown", openedDropdown)
             if openedDropdown ~= nil then
-              print("openedDropdown", openedDropdown:GetName())
               openedDropdown:Hide()
-
-              if openedDropdown:GetName() == bisItemDropdown:GetName() then
-                print("openedDropdown == bisItemDropdown")
+              if openedDropdown.slotId == item.itemSlotID then
                 self.equipmentWindow.bisItemDropdown = nil
                 return
               end
             end
-
-            print("Show bisItemDropdown")
             
             bisItemDropdown:Show()
             self.equipmentWindow.bisItemDropdown = bisItemDropdown
@@ -2358,4 +2361,73 @@ function UI:RenderEquipmentWindow()
   self.equipmentWindow:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
   self.equipmentTable:SetData(data)
   self.equipmentWindow:SetBodySize(tableWidth, tableHeight)
+end
+
+function UI:RenderBisItemDropdown(columnFrame, character, slotID)
+  local frame = CreateFrame("Frame", "AlterEgoBisItem" .. character.info.name .. "Slot" .. slotID, UIParent)
+
+  if frame ~= nil then
+    frame.slotId = slotID
+    frame:SetFrameStrata("TOOLTIP")
+    frame:SetToplevel(true)
+    frame:SetHeight(columnFrame:GetHeight()*6)
+    frame:SetPoint("TOPLEFT", columnFrame, "BOTTOMLEFT", 0, 0)
+    frame:SetPoint("TOPRIGHT", columnFrame, "BOTTOMRIGHT", 0, 0)
+
+    -- R: 4/255 = 0.0157, G: 9/255 = 0.0353, B: 12/255 = 0.0471
+    addon.Utils:SetBackgroundColor(frame, 0.0157, 0.0353, 0.0471, 1)
+
+    local bisItemTable = addon.Table:New({header = { enabled = false },
+      rows = {height = columnFrame:GetHeight(), striped = false, highlight = true}
+    })
+    
+    bisItemTable:SetParent(frame)
+    bisItemTable:SetAllPoints()
+
+    local data = {
+      columns = {{width = columnFrame:GetWidth()}},
+      rows = {},
+    }
+
+    print("showAllItems", addon.Items.showAllItems)
+    local classId = nil
+    if false == addon.Items.showAllItems then
+      classId = character.info.class.id
+    end
+
+    local itemForSlot = addon.Items:GetItemsBySlot(slotID, classId)
+    for _, item in pairs(itemForSlot) do
+      table.insert(data.rows, {columns = {{
+        text = "|T" .. item.texture .. ":0|t " .. item.link,
+          onEnter = function(f)
+            GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(item.link)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
+          end,
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+      }}})
+    end
+
+    table.insert(data.rows, {columns = {{
+      text = addon.Items.showAllItems and "Show only class items" or "Show all items",
+      onClick = function(f)
+        addon.Items.showAllItems = not addon.Items.showAllItems
+        self.equipmentWindow.bisItemDropdown:Hide()
+        self.equipmentWindow.bisItemDropdown = self:RenderBisItemDropdown(columnFrame, character, slotID)
+        self.equipmentWindow.bisItemDropdown:Show()
+      end
+      
+    }}})
+    table.insert(data.rows, {columns = {{text = "Unselect current item"}}})
+    bisItemTable:SetData(data)
+
+    frame:Hide()
+  else
+    print("Error nil frame !")
+  end
+  return frame
 end
