@@ -43,6 +43,7 @@
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field currencyType AE_CurrencyType
+---@field capQuests number[]?
 
 ---@class AE_CharacterCurrency : CurrencyInfo
 ---@field id number

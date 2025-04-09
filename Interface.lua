@@ -440,9 +440,13 @@ function UI:GetCharacterInfo(unfiltered)
               local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
               local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
               local currencyValue = ""
+							local currencyColor = WHITE_FONT_COLOR
               if characterCurrency.useTotalEarnedForMaxQty then
                 if characterCurrency.maxQuantity > 0 then
                   currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
+									if characterCurrency.totalEarned >= characterCurrency.maxQuantity then
+										currencyColor = GREEN_FONT_COLOR
+									end
                 else
                   currencyValue = "No limit"
                 end
@@ -452,6 +456,8 @@ function UI:GetCharacterInfo(unfiltered)
               table.insert(characterCurrencies, {
                 currencyLabel,
                 currencyValue,
+								WHITE_FONT_COLOR,
+								currencyColor
               })
             end
           end)
@@ -460,7 +466,12 @@ function UI:GetCharacterInfo(unfiltered)
           GameTooltip:AddLine(" ")
           GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
           addon.Utils:TableForEach(characterCurrencies, function(characterCurrency)
-            GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
+            GameTooltip:AddDoubleLine(
+							characterCurrency[1],
+							characterCurrency[2],
+							characterCurrency[3].r, characterCurrency[3].g, characterCurrency[3].b,
+							characterCurrency[4].r, characterCurrency[4].g, characterCurrency[4].b
+						)
           end)
         end
         if character.lastUpdate ~= nil then
