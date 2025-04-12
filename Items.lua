@@ -55,7 +55,6 @@ end
 function Items:RegisterBossLoots(bossLoots)
     local instance = self.instanceData[bossLoots.instanceId]
     if not instance then
-        DevTools_Dump(bossLoots)
         assert(false, "Instance " .. (bossLoots.instanceId or "nil") .. " not found")
         return
     end
@@ -71,9 +70,6 @@ function Items:RegisterBossLoots(bossLoots)
         if not self.itemData[itemId] then
             local itemData = self:GetItemData(itemId, instance, bossName)
             if itemData then
-                if itemId == 221122 then
-                    DevTools_Dump(itemData)
-                end
                 self.itemData[itemId] = itemData
             else
                 self.unsavedItemData[itemId] = {
