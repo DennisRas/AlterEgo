@@ -5,8 +5,6 @@ if tocVersion <= "11.0.2" then
     return
 end
 
-print("TwwS2 loaded")
-
 ---@class AE_Addon
 local addon = select(2, ...)
 
@@ -18,7 +16,6 @@ local bonusesTwwS2a = {3170,11996,9639,6646}
 local bonusesTwwS2b = {5900,11996,9639,6646}
 
 function TwwS2:OnEnable()
-    print("TwwS2:OnEnable")
     self:TheaterOfPain()
     self:OperationMechagon()
     self:TheMOTHERLODE()
@@ -263,7 +260,6 @@ function TwwS2:TheMOTHERLODE()
 end
 
 function TwwS2:TheRookery()
-    print("Registering The Rookery 2316")
     local instance = addon.Items:RegisterInstance(2316, 8, bonusesTwwS2a)
 
     ----- Kyrioss

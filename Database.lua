@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 22
+Data.dbVersion = 23
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -86,6 +86,8 @@ Data.defaultCharacter = {
     },
   },
   equipment = {},
+  bis = {},
+  bisProgress = 0,
   money = 0,
   currencies = {},
   raids = {
@@ -646,6 +648,7 @@ end
 function Data:UpdateDB()
   self:UpdateCharacterInfo()
   self:UpdateEquipment()
+  self:UpdateBisProgressForCharacter()
   self:UpdateMoney()
   self:UpdateCurrencies()
   self:UpdateKeystoneItem()
@@ -710,6 +713,17 @@ function Data:MigrateDB()
               end
             end
           end
+        end
+      end
+    end
+    -- Add bis to characters
+    if self.db.global.dbVersion == 22 then
+      for _, character in pairs(self.db.global.characters) do
+        if not character.bis then
+          character.bis = {}
+        end
+        if not character.bisProgress then
+          character.bisProgress = 0
         end
       end
     end
@@ -1277,6 +1291,60 @@ function Data:UpdateMythicPlus()
   addon.UI:Render()
 end
 
+function Data:UpdateBisItem(characterGuid, slotId, item)
+  local character = self.db.global.characters[characterGuid]
+  if not character then return end
+
+  if item == nil then
+    character.bis[slotId] = nil
+  else
+    character.bis[slotId] = {
+      item = item,
+      progress = 0,
+    }
+  end
+
+  self:UpdateBisProgressForCharacter(character)
+  addon.UI:Render()
+end
+
+function Data:UpdateBisProgressForCharacter(character)
+
+  if not character then
+    character = self:GetCharacter()
+  end
+
+  if not character then return end
+
+  local bisProgress = 0
+  local nbBisItems = 0
+  addon.Utils:TableForEach(character.equipment, function(equipment)
+    local bis = character.bis[equipment.itemSlotID]
+    if not bis then return end
+
+    local itemId = addon.Items:ParseIdFromLink(equipment.itemLink)
+
+    if bis.item.id ~= itemId then
+      bis.progress = 0
+    else
+      local itemRange = bis.item.maxLevel - addon.Items.minItemLevel
+      local itemProgress = equipment.itemLevel - addon.Items.minItemLevel
+
+      bis.progress = tonumber(string.format("%.0f",math.min(100, math.max(0, (itemProgress / itemRange) * 100))))
+      bisProgress = bisProgress + bis.progress
+    end
+
+    nbBisItems = nbBisItems + 1
+  end)
+
+  character.bisProgress = 0 < nbBisItems and bisProgress / nbBisItems or 0
+end
+
+function Data:UpdateBisProgress()
+  addon.Utils:TableForEach(self.db.global.characters, function(character)
+    self:UpdateBisProgressForCharacter(character)
+  end)
+end
 -- function Data:GetClasses()
 --   if addon.Utils:TableCount(Data.cache.classes) > 0 then
 --     return Data.cache.classes

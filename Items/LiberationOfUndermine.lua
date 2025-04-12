@@ -10,7 +10,6 @@ local addon = select(2, ...)
 
 function LiberationOfUndermine:OnEnable()
 
-    print("LiberationOfUndermine:OnEnable")
     local instance = addon.Items:RegisterInstance(2406, 6, {3524})
 
     ----- Strolch and the Gang Keepers
@@ -343,5 +342,4 @@ function LiberationOfUndermine:OnEnable()
     };
     addon.Items:RegisterBossLoots(bossLoot)
 
-    print("LiberationOfUndermine:OnEnable end")
 end

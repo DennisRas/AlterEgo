@@ -162,6 +162,22 @@ function Utils:TableForEach(tbl, callback)
   return tbl
 end
 
+---Check if a table contains a value
+---@generic T
+---@param tbl T[]
+---@param val T
+---@return boolean
+function Utils:TableContains(tbl, val)
+  assert(type(tbl) == "table", "TableContains: Must be a table!")
+  for _, v in pairs(tbl) do
+    if v == val then
+      return true
+    end
+  end
+
+  return false
+end
+
 ---Get character activity progress
 ---@param character AE_Character
 ---@return AE_CharacterVault|nil, AE_CharacterVault|nil

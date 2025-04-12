@@ -83,6 +83,7 @@ function Core:OnEnable()
     }, 3, function()
       addon.Data:UpdateCharacterInfo()
       addon.Data:UpdateEquipment()
+      addon.Data:UpdateBisProgressForCharacter()
     end
   )
   self:RegisterBucketEvent(

@@ -508,6 +508,7 @@ function UI:GetCharacterInfo(unfiltered)
       value = function(character)
         local itemLevel = "-"
         local itemLevelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+        local bisProgress = ""
         if character.info.ilvl ~= nil then
           if character.info.ilvl.level ~= nil then
             itemLevel = tostring(floor(character.info.ilvl.level))
@@ -517,8 +518,12 @@ function UI:GetCharacterInfo(unfiltered)
           else
             itemLevelColor = WHITE_FONT_COLOR:GenerateHexColor()
           end
+
+          if #character.bis > 0 and character.bisProgress ~= nil then
+            bisProgress = "(" .. string.format("%.0f", character.bisProgress) .. "%)"
+          end
         end
-        return WrapTextInColorCode(itemLevel, itemLevelColor)
+        return WrapTextInColorCode(itemLevel, itemLevelColor) .. " " .. bisProgress
       end,
       onEnter = function(infoFrame, character)
         local itemLevelTooltip = ""
@@ -2217,7 +2222,7 @@ function UI:RenderAffixWindow()
 end
 
 function UI:RenderEquipmentWindow()
-  local tableWidth = 890
+  local tableWidth = 910
   local tableHeight = 0
   local rowHeight = 22
 
@@ -2267,7 +2272,7 @@ function UI:RenderEquipmentWindow()
       {width = 280},
       {width = 80, align = "CENTER"},
       {width = 150},
-      {width = 280},
+      {width = 300},
     },
     rows = {
       {
@@ -2292,6 +2297,12 @@ function UI:RenderEquipmentWindow()
       elseif item.itemUpgradeLevel == item.itemUpgradeMax then
         upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
       end
+    end
+
+    local bisText = "Click to select item"
+    local bis = character.bis[item.itemSlotID]
+    if bis then
+      bisText = "|T" .. bis.item.texture .. ":0|t " .. bis.item.link .. " (" .. bis.progress .. "%)"
     end
 
     ---@type AE_TableDataRow
@@ -2321,10 +2332,23 @@ function UI:RenderEquipmentWindow()
         {text = WrapTextInColorCode(tostring(item.itemLevel), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
         {
-          text = "Click to select item",
+          text = bisText,
+          onEnter = function(columnFrame)
+            if bis then
+              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetHyperlink(bis.item.link)
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("To loot on: " .. bis.item.bossName .. " - " .. bis.item.instanceName)
+              GameTooltip:Show()
+            end
+          end,
+          onLeave = function()
+            if bis then
+              GameTooltip:Hide()
+            end
+          end,
           onClick = function(columnFrame)
             local bisItemDropdown = self:RenderBisItemDropdown(columnFrame, character, item.itemSlotID)
-
             if not bisItemDropdown then
               return
             end
@@ -2394,7 +2418,7 @@ function UI:RenderBisItemDropdown(columnFrame, character, slotID)
     end
 
     local itemForSlot = addon.Items:GetItemsBySlot(slotID, classId)
-    for _, item in pairs(itemForSlot) do
+    addon.Utils:TableForEach(itemForSlot, function(item)
       table.insert(data.rows, {columns = {{
         text = "|T" .. item.texture .. ":0|t " .. item.link,
           onEnter = function(f)
@@ -2408,10 +2432,11 @@ function UI:RenderBisItemDropdown(columnFrame, character, slotID)
             GameTooltip:Hide()
           end,
           onClick = function()
-            addon.Items:GetItemLevelFromTooltip(item.link)
+            addon.Data:UpdateBisItem(character.GUID, slotID, item)
+            frame:Hide()
           end
       }}})
-    end
+    end)
 
     table.insert(data.rows, {columns = {{
       text = addon.Items.showAllItems and "Show only class items" or "Show all items",
@@ -2423,7 +2448,13 @@ function UI:RenderBisItemDropdown(columnFrame, character, slotID)
       end
       
     }}})
-    table.insert(data.rows, {columns = {{text = "Unselect current item"}}})
+    table.insert(data.rows, {columns = {{
+      text = "Unselect current item",
+      onClick = function()
+        addon.Data:UpdateBisItem(character.GUID, slotID, nil)
+        frame:Hide()
+      end
+    }}})
     bisItemTable:SetData(data)
 
     frame:Hide()

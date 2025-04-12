@@ -9,10 +9,7 @@ end
 local addon = select(2, ...)
 
 
-print("Loading NerubArPalace")
-
 function NerubArPalace:OnEnable()
-    print("NerubArPalace:OnEnable")
     local instance = addon.Items:RegisterInstance(2292, 6, {3524})
     ----- Ulgrax the Devourer
     local bossLoot = {

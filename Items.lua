@@ -6,7 +6,8 @@ local Items = {
     unsavedItemData = {},
     instanceData = {},
     showAllItems = false,
-    maxItemLevel = 678, -- TWW S2
+    minItemLevel = 623, -- TWW S2 : veteran 1/8
+    maxItemLevel = 678, -- TWW S2 : mythic 6/6
     invTypes = {
         [1] = "INVTYPE_HEAD",
         [2] = "INVTYPE_NECK",
@@ -44,8 +45,6 @@ function Items:RegisterInstance(instanceId, difficulty, bonuses)
         bonuses = bonuses
     }
 
-    print("Instance " .. info.name .. " registered")
-
     return self.instanceData[info.mapID]
 end
 
@@ -72,6 +71,9 @@ function Items:RegisterBossLoots(bossLoots)
         if not self.itemData[itemId] then
             local itemData = self:GetItemData(itemId, instance, bossName)
             if itemData then
+                if itemId == 221122 then
+                    DevTools_Dump(itemData)
+                end
                 self.itemData[itemId] = itemData
             else
                 self.unsavedItemData[itemId] = {
@@ -85,13 +87,15 @@ end
 
 function Items:GetItemData(itemId, instance, bossName)
     local itemString = self:GetItemString(itemId, instance.difficulty, instance.bonuses)
-    local _, link, _, _, _, _, _, _, invType, texture = C_Item.GetItemInfo(itemString)
+    local name, link, _, _, _, _, _, _, invType, texture = C_Item.GetItemInfo(itemString)
     if link then
         -- TODO: use the new GetDetailedItemLevelInfo after 11.1.5
         local actualLevel = C_Item.GetDetailedItemLevelInfo(link)
         local maxLevel = self:GetItemLevelFromTooltip(link, actualLevel)
 
         self.itemData[itemId] = {
+            id = itemId,
+            name = name,
             link = link,
             invType = invType,
             texture = texture,
@@ -104,6 +108,17 @@ function Items:GetItemData(itemId, instance, bossName)
     end
 
     return nil
+end
+
+function Items:ParseIdFromLink(link)
+    local itemId = 0
+    local _, _, id = link:find("item:(%d+)")
+    if id then
+      local toNumber = tonumber(id)
+      itemId = toNumber or 0
+    end
+
+    return itemId
 end
 
 function Items:RegisterItem(itemId)
@@ -127,7 +142,6 @@ end
 local upgradePattern = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
 upgradePattern = upgradePattern:gsub("%%d", "%%s")
 upgradePattern = upgradePattern:format("(.*)", "(%d+)", "(%d+)")
-print(upgradePattern)
 
 function Items:GetItemLevelFromTooltip(link, actualLevel)
     local scanTooltip = CreateFrame("GameTooltip", "AlterEgoScanTooltip", UIParent, "GameTooltipTemplate")
@@ -151,18 +165,31 @@ end
 
 function Items:GetItemsBySlot(slotId, classId)
     local items = {}
+    local invType = self.invTypes[slotId]
     for item, data in pairs(self.itemData) do
-        if data.invType == self.invTypes[slotId] then
+        local isItemForSlot = false
+        if type(invType) == "table" then
+            isItemForSlot = addon.Utils:TableContains(invType, data.invType)
+        else
+            isItemForSlot = data.invType == invType
+        end
+
+        if isItemForSlot then
             if classId == nil then
-                items[item] = data
+                table.insert(items, data)
             else
                 local doesItemContainClass = C_Item.DoesItemContainSpec(item, classId)
                 if doesItemContainClass then
-                    items[item] = data
+                    table.insert(items, data)
                 end
             end
         end
     end
+
+    table.sort(items, function(a, b)
+        return strcmputf8i(a.name, b.name) < 0
+    end)
+
     return items
 end
 
