@@ -7,11 +7,17 @@ local addon = select(2, ...)
 local Module = addon.Core:NewModule("RunHistory", "AceEvent-3.0")
 addon.RunHistory = Module
 
+local function Debug(data)
+  DevTools_Dump(data)
+end
+
 function Module:OnInitialize()
+  Debug("OnInitialize()")
   self:Render()
 end
 
 function Module:OnEnable()
+  Debug("OnEnable()")
   -- self:RegisterEvent("PLAYER_DEAD") -- MDT: Current Pull
   -- self:RegisterEvent("PLAYER_REGEN_ENABLED") -- MDT: Current Pull
   -- self:RegisterEvent("SCENARIO_POI_UPDATE")
@@ -19,7 +25,7 @@ function Module:OnEnable()
   -- self:RegisterEvent("UNIT_THREAT_LIST_UPDATE") -- MDT: Current Pull
 
   -- TODO
-  self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- MDT: Current Pull & Death logs
+  -- self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- MDT: Current Pull & Death logs
   -- self:RegisterEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
   -- self:RegisterEvent("CHALLENGE_MODE_LEADERS_UPDATE")
   -- self:RegisterEvent("CHALLENGE_MODE_MEMBER_INFO_UPDATED")
@@ -43,6 +49,7 @@ function Module:OnEnable()
 end
 
 function Module:OnDisable()
+  Debug("OnDisable()")
   self:UnregisterAllEvents()
 end
 
@@ -50,6 +57,7 @@ end
 ---@param stopTimerID? number
 ---@return number? timerID, number? elapsedTime, boolean? isActive
 local function GetKeystoneTimer(stopTimer, stopTimerID)
+  Debug("GetKeystoneTimer()")
   local timerIDs = {GetWorldElapsedTimers()} ---@type number[]
   for _, timerID in ipairs(timerIDs) do
     local _, elapsedTime, timerType = GetWorldElapsedTime(timerID)
@@ -60,6 +68,7 @@ local function GetKeystoneTimer(stopTimer, stopTimerID)
 end
 
 function Module:GetChallengeData()
+  Debug("GetChallengeData()")
   local data = {
     isChallengeModeActive = nil,
 
@@ -229,6 +238,7 @@ function Module:GetChallengeData()
 end
 
 function Module:StartRun()
+  Debug("StartRun()")
   -- TODO: Start a new session if already in a run?
   local activeRun = self:GetActiveRun()
   if activeRun then
@@ -246,6 +256,7 @@ function Module:StartRun()
   local mapName, mapID, mapTimeLimit, mapTexture, mapBackgroundTexture = C_ChallengeMode.GetMapUIInfo(challengeModeID)
 
   local startTimestamp = GetServerTime()
+  -- Detect to see if the run has already been going for a bit
   local keystoneTimerID, keystoneTimerElapsedTime, keystoneTimerIsActive = GetKeystoneTimer()
   if keystoneTimerIsActive then
     startTimestamp = startTimestamp - keystoneTimerElapsedTime
@@ -253,9 +264,9 @@ function Module:StartRun()
 
   ---@type AE_RH_Run
   local run = {
-    id = format("%s:%d:%d:%d", instanceType, instanceID, instanceDifficultyID, GetServerTime()),
+    id = format("%s:%d:%d:%d", instanceType, instanceID, instanceDifficultyID, startTimestamp),
     seasonID = seasonID,
-    startTimestamp = GetServerTime(),
+    startTimestamp = startTimestamp,
     updateTimestamp = GetServerTime(),
     endTimestamp = nil,
     state = "RUNNING",
@@ -323,23 +334,39 @@ function Module:StartRun()
   table.insert(addon.Data.db.global.runHistory.runs, run)
 
   self:SetActiveRun(run.id)
-  self:UpdateRun()
+  self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  self:UpdateActiveRun()
 
   return run
 end
 
-function Module:EndRun()
+function Module:EndActiveRun(isCompleted)
+  Debug("EndActiveRun()")
+  self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+
   local run = self:GetActiveRun()
   if not run then return end
+
+  -- self:UpdateActiveRun()
 
   -- TODO: Set more data after a run is complete
   run.endTimestamp = GetServerTime()
 
-  self:UpdateRun()
+  if isCompleted then
+    if run.challengeModeOnTime then
+      run.state = "TIMED"
+    else
+      run.state = "OVERTIME"
+    end
+  else
+    run.state = "ABANDONED"
+  end
+
   self:SetActiveRun(nil)
 end
 
-function Module:UpdateRun()
+function Module:UpdateActiveRun()
+  Debug("UpdateActiveRun()")
   -- local data = self:GetChallengeData()
   local run = self:GetActiveRun()
   if not run then return end
@@ -410,11 +437,9 @@ function Module:UpdateRun()
   run.objectives = {}
   if run.stepCount and run.stepCount > 0 then
     for stepIndex = 1, run.stepCount do
-      table.insert(run.objectives, C_ScenarioInfo.GetCriteriaInfo(stepIndex))
+      -- table.insert(run.objectives, C_ScenarioInfo.GetCriteriaInfo(stepIndex))
     end
   end
-
-
 
   self:Render()
   -- if stepCount and stepCount > 1 then
@@ -531,6 +556,7 @@ end
 ---Get the active run
 ---@return AE_RH_Run|nil
 function Module:GetActiveRun()
+  Debug("GetActiveRun()")
   if not addon.Data.db.global.runHistory.activeRun then return nil end
   return addon.Utils:TableGet(addon.Data.db.global.runHistory.runs, "id", addon.Data.db.global.runHistory.activeRun)
 end
@@ -538,20 +564,48 @@ end
 ---Set the active run
 ---@param runID string|nil
 function Module:SetActiveRun(runID)
+  Debug("SetActiveRun()")
   addon.Data.db.global.runHistory.activeRun = runID
 end
 
 function Module:ClearActiveRun()
+  Debug("ClearActiveRun()")
   self:SetActiveRun(nil)
 end
 
 -- Todo: This is gonna suck
-function Module:DetectAbandon()
+function Module:DetectActiveRun()
+  Debug("DetectActiveRun()")
+
+  local isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
+  local challengeModeID = C_ChallengeMode.GetActiveChallengeMapID()
+  local run = self:GetActiveRun()
+
+  if run then
+    if isChallengeModeActive then
+      Debug("DetectActiveRun: isChallengeModeActive")
+      return
+    else
+      -- if not IsInGroup() then
+      --   Debug("DetectActiveRun: not IsInGroup()")
+      --   return self:EndActiveRun()
+      -- end
+    end
+  else
+    if isChallengeModeActive then
+      Debug("DetectActiveRun: isChallengeModeActive")
+      return self:StartRun()
+    end
+  end
 end
 
 function Module:COMBAT_LOG_EVENT_UNFILTERED(...)
+  Debug("COMBAT_LOG_EVENT_UNFILTERED()")
   local run = self:GetActiveRun()
-  if not run then return end
+  if not run then
+    self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    return
+  end
 
   local timestamp, subEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags = CombatLogGetCurrentEventInfo()
   if subEvent == "UNIT_DIED" and destGUID and string.find(destGUID, "Player") and not UnitIsFeignDeath(destGUID) then
@@ -575,44 +629,45 @@ function Module:COMBAT_LOG_EVENT_UNFILTERED(...)
     table.insert(run.events, event)
   end
 
-  self:UpdateRun()
+  self:UpdateActiveRun()
 end
 
 function Module:GROUP_ROSTER_UPDATE(...)
+  Debug("GROUP_ROSTER_UPDATE()")
   if not self:GetActiveRun() then return end
   -- TODO: Check if the run is over
-  self:UpdateRun()
+  self:UpdateActiveRun()
 end
 
 function Module:CHALLENGE_MODE_START(...)
+  Debug("CHALLENGE_MODE_START()")
   self:StartRun()
 end
 
 function Module:CHALLENGE_MODE_COMPLETED(...)
-  self:EndRun()
+  Debug("CHALLENGE_MODE_COMPLETED()")
+  self:EndActiveRun()
 end
 
 function Module:PLAYER_ENTERING_WORLD()
+  Debug("PLAYER_ENTERING_WORLD()")
   self.window:Show() -- DEV
 
-  local run = self:GetActiveRun()
-  if not run then
-    if C_ChallengeMode.IsChallengeModeActive() then
-      self:StartRun()
-    end
-  end
-  self:UpdateRun()
+  self:DetectActiveRun()
+  self:UpdateActiveRun()
 end
 
 function Module:ENCOUNTER_START(...)
+  Debug("ENCOUNTER_START()")
   local _, encounterID = ...
   addon.Data.db.global.runHistory.activeEncounter = encounterID
-  self:UpdateRun()
+  self:UpdateActiveRun()
 end
 
 function Module:ENCOUNTER_END(...)
+  Debug("ENCOUNTER_END()")
   addon.Data.db.global.runHistory.activeEncounter = nil
-  self:UpdateRun()
+  self:UpdateActiveRun()
 end
 
 function Module:ToggleWindow()
@@ -657,33 +712,31 @@ local function random_player(isTank, isHealer)
   return color:WrapTextInColorCode(name)
 end
 
----Open run details
----@param run AE_RH_Run
-function Module:ShowRun(run)
+function Module:ShowRunDetails(run)
+  Debug("ShowRunDetails()")
   self.selectedRun = run
-  if not self.windowRun then return end
-  self.windowRun:Show()
-  self:RenderRunHistory()
+  if not self.windowRunDetails then return end
+  self.windowRunDetails:Show()
+  self:RenderRunDetails()
 end
 
 function Module:Render()
-  self:RenderRun()
+  Debug("Render()")
+  self:RenderRunDetails()
   self:RenderRunHistory()
 end
 
-function Module:RenderRun()
-  if not self.windowRun then
-    self.windowRun = addon.Window:New({
+function Module:RenderRunDetails()
+  Debug("RenderRunDetails()")
+  if not self.windowRunDetails then
+    self.windowRunDetails = addon.Window:New({
       name = "RunDetails",
       title = "Run Details",
     })
-    self.windowRun:SetBodySize(600, 400)
-    self.windowRun:SetScript("OnShow", function()
-      self:RenderRun()
-    end)
+    self.windowRunDetails:SetBodySize(600, 400)
 
     local rowHeight = 26
-    self.windowRun.infoTable = addon.Table:New({
+    self.windowRunDetails.infoTable = addon.Table:New({
       header = {
         enabled = false,
       },
@@ -697,45 +750,24 @@ function Module:RenderRun()
         highlight = false,
       },
     })
-    self.windowRun.infoTable:SetParent(self.windowRun)
-    self.windowRun.infoTable:SetPoint("TOPLEFT", self.windowRun, "TOPLEFT", 0, -30)
-    self.windowRun.infoTable:SetSize(300, 240)
-
-    -- self.windowRun.textLeft = self.windowRun:CreateFontString()
-    -- self.windowRun.textLeft:SetPoint("TOPLEFT", self.windowRun, "TOPLEFT", 10, -40)
-    -- self.windowRun.textLeft:SetSize(150, 300)
-    -- self.windowRun.textLeft:SetFontObject("GameFontHighlight")
-    -- self.windowRun.textLeft:SetText("")
-    -- self.windowRun.textLeft:SetJustifyH("LEFT")
-    -- self.windowRun.textLeft:SetJustifyV("TOP")
-    -- self.windowRun.textLeft:SetTextHeight(11)
-    -- self.windowRun.textLeft:SetSpacing(3)
-
-    -- self.windowRun.textRight = self.windowRun:CreateFontString()
-    -- self.windowRun.textRight:SetPoint("TOPLEFT", self.windowRun, "TOPLEFT", 170, -40)
-    -- self.windowRun.textRight:SetSize(150, 300)
-    -- self.windowRun.textRight:SetFontObject("GameFontHighlight")
-    -- self.windowRun.textRight:SetText("")
-    -- self.windowRun.textRight:SetJustifyH("LEFT")
-    -- self.windowRun.textRight:SetJustifyV("TOP")
-    -- self.windowRun.textRight:SetTextHeight(11)
-    -- self.windowRun.textRight:SetSpacing(3)
-
-    self.windowRun.tabBody = CreateFrame("Frame", nil, self.windowRun)
-    self.windowRun.tabBody:SetPoint("BOTTOMLEFT", self.windowRun, "BOTTOMLEFT", 10, 10)
-    self.windowRun.tabBody:SetSize(280, 120)
-    addon.Utils:SetBackgroundColor(self.windowRun.tabBody, 0, 0, 0, 0.25)
-    -- self.windowRun.tabBody.content = addon.Utils:CreateScrollFrame({
-    --   parent = self.windowRun.tabBody,
+    self.windowRunDetails.infoTable:SetParent(self.windowRunDetails)
+    self.windowRunDetails.infoTable:SetPoint("TOPLEFT", self.windowRunDetails, "TOPLEFT", 0, -30)
+    self.windowRunDetails.infoTable:SetSize(300, 240)
+    self.windowRunDetails.tabBody = CreateFrame("Frame", nil, self.windowRunDetails)
+    self.windowRunDetails.tabBody:SetPoint("BOTTOMLEFT", self.windowRunDetails, "BOTTOMLEFT", 10, 10)
+    self.windowRunDetails.tabBody:SetSize(280, 120)
+    addon.Utils:SetBackgroundColor(self.windowRunDetails.tabBody, 0, 0, 0, 0.25)
+    -- self.windowRunDetails.tabBody.content = addon.Utils:CreateScrollFrame({
+    --   parent = self.windowRunDetails.tabBody,
     -- })
-    -- self.windowRun.tabBody.content:SetAllPoints()
+    -- self.windowRunDetails.tabBody.content:SetAllPoints()
 
     local tabs = {"Events", "Note", "Loot", "Data"}
     addon.Utils:TableForEach(tabs, function(tab, tabIndex)
-      local tabFrame = CreateFrame("Frame", nil, self.windowRun)
-      local width = self.windowRun.tabBody:GetWidth() / #tabs
+      local tabFrame = CreateFrame("Frame", nil, self.windowRunDetails)
+      local width = self.windowRunDetails.tabBody:GetWidth() / #tabs
       tabFrame:SetSize(width, 26)
-      tabFrame:SetPoint("BOTTOMLEFT", self.windowRun.tabBody, "TOPLEFT", width * (tabIndex - 1), 0)
+      tabFrame:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabBody, "TOPLEFT", width * (tabIndex - 1), 0)
       tabFrame.text = tabFrame:CreateFontString()
       tabFrame.text:SetFontObject("GameFontHighlight")
       tabFrame.text:SetPoint("LEFT", tabFrame, "LEFT", 10, 0)
@@ -745,62 +777,62 @@ function Module:RenderRun()
       tabFrame.text:SetJustifyV("MIDDLE")
       addon.Utils:SetBackgroundColor(tabFrame, 0, 0, 0, tabIndex == 1 and 0.25 or 0.1)
     end)
-    -- self.windowRun.tabFirst = CreateFrame("Frame", nil, self.windowRun)
-    -- self.windowRun.tabFirst:SetSize(280 / 3, 26)
-    -- self.windowRun.tabFirst:SetPoint("BOTTOMLEFT", self.windowRun.tabBody, "TOPLEFT", 0, 0)
-    -- self.windowRun.tabFirst.text = self.windowRun.tabFirst:CreateFontString()
-    -- self.windowRun.tabFirst.text:SetFontObject("GameFontHighlight")
-    -- self.windowRun.tabFirst.text:SetPoint("LEFT", self.windowRun.tabFirst, "LEFT", 10, 0)
-    -- self.windowRun.tabFirst.text:SetPoint("RIGHT", self.windowRun.tabFirst, "RIGHT", -10, 0)
-    -- self.windowRun.tabFirst.text:SetText("Events")
-    -- self.windowRun.tabFirst.text:SetJustifyH("CENTER")
-    -- self.windowRun.tabFirst.text:SetJustifyV("MIDDLE")
-    -- addon.Utils:SetBackgroundColor(self.windowRun.tabFirst, 0, 0, 0, 0.25)
+    -- self.windowRunDetails.tabFirst = CreateFrame("Frame", nil, self.windowRunDetails)
+    -- self.windowRunDetails.tabFirst:SetSize(280 / 3, 26)
+    -- self.windowRunDetails.tabFirst:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabBody, "TOPLEFT", 0, 0)
+    -- self.windowRunDetails.tabFirst.text = self.windowRunDetails.tabFirst:CreateFontString()
+    -- self.windowRunDetails.tabFirst.text:SetFontObject("GameFontHighlight")
+    -- self.windowRunDetails.tabFirst.text:SetPoint("LEFT", self.windowRunDetails.tabFirst, "LEFT", 10, 0)
+    -- self.windowRunDetails.tabFirst.text:SetPoint("RIGHT", self.windowRunDetails.tabFirst, "RIGHT", -10, 0)
+    -- self.windowRunDetails.tabFirst.text:SetText("Events")
+    -- self.windowRunDetails.tabFirst.text:SetJustifyH("CENTER")
+    -- self.windowRunDetails.tabFirst.text:SetJustifyV("MIDDLE")
+    -- addon.Utils:SetBackgroundColor(self.windowRunDetails.tabFirst, 0, 0, 0, 0.25)
 
-    -- self.windowRun.tabSecond = CreateFrame("Frame", nil, self.windowRun)
-    -- self.windowRun.tabSecond:SetSize(280 / 3, 26)
-    -- self.windowRun.tabSecond:SetPoint("BOTTOMLEFT", self.windowRun.tabFirst, "BOTTOMRIGHT", 0, 0)
-    -- self.windowRun.tabSecond.text = self.windowRun.tabSecond:CreateFontString()
-    -- self.windowRun.tabSecond.text:SetFontObject("GameFontHighlight")
-    -- self.windowRun.tabSecond.text:SetPoint("LEFT", self.windowRun.tabSecond, "LEFT", 10, 0)
-    -- self.windowRun.tabSecond.text:SetPoint("RIGHT", self.windowRun.tabSecond, "RIGHT", -10, 0)
-    -- self.windowRun.tabSecond.text:SetText("Loot")
-    -- self.windowRun.tabSecond.text:SetJustifyH("CENTER")
-    -- self.windowRun.tabSecond.text:SetJustifyV("MIDDLE")
-    -- addon.Utils:SetBackgroundColor(self.windowRun.tabSecond, 0, 0, 0, 0.1)
+    -- self.windowRunDetails.tabSecond = CreateFrame("Frame", nil, self.windowRunDetails)
+    -- self.windowRunDetails.tabSecond:SetSize(280 / 3, 26)
+    -- self.windowRunDetails.tabSecond:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabFirst, "BOTTOMRIGHT", 0, 0)
+    -- self.windowRunDetails.tabSecond.text = self.windowRunDetails.tabSecond:CreateFontString()
+    -- self.windowRunDetails.tabSecond.text:SetFontObject("GameFontHighlight")
+    -- self.windowRunDetails.tabSecond.text:SetPoint("LEFT", self.windowRunDetails.tabSecond, "LEFT", 10, 0)
+    -- self.windowRunDetails.tabSecond.text:SetPoint("RIGHT", self.windowRunDetails.tabSecond, "RIGHT", -10, 0)
+    -- self.windowRunDetails.tabSecond.text:SetText("Loot")
+    -- self.windowRunDetails.tabSecond.text:SetJustifyH("CENTER")
+    -- self.windowRunDetails.tabSecond.text:SetJustifyV("MIDDLE")
+    -- addon.Utils:SetBackgroundColor(self.windowRunDetails.tabSecond, 0, 0, 0, 0.1)
 
-    -- self.windowRun.tabThird = CreateFrame("Frame", nil, self.windowRun)
-    -- self.windowRun.tabThird:SetSize(280 / 3, 26)
-    -- self.windowRun.tabThird:SetPoint("BOTTOMLEFT", self.windowRun.tabSecond, "BOTTOMRIGHT", 0, 0)
-    -- self.windowRun.tabThird.text = self.windowRun.tabThird:CreateFontString()
-    -- self.windowRun.tabThird.text:SetFontObject("GameFontHighlight")
-    -- self.windowRun.tabThird.text:SetPoint("LEFT", self.windowRun.tabThird, "LEFT", 10, 0)
-    -- self.windowRun.tabThird.text:SetPoint("RIGHT", self.windowRun.tabThird, "RIGHT", -10, 0)
-    -- self.windowRun.tabThird.text:SetText("Raw Data")
-    -- self.windowRun.tabThird.text:SetJustifyH("CENTER")
-    -- self.windowRun.tabThird.text:SetJustifyV("MIDDLE")
-    -- addon.Utils:SetBackgroundColor(self.windowRun.tabThird, 0, 0, 0, 0.1)
+    -- self.windowRunDetails.tabThird = CreateFrame("Frame", nil, self.windowRunDetails)
+    -- self.windowRunDetails.tabThird:SetSize(280 / 3, 26)
+    -- self.windowRunDetails.tabThird:SetPoint("BOTTOMLEFT", self.windowRunDetails.tabSecond, "BOTTOMRIGHT", 0, 0)
+    -- self.windowRunDetails.tabThird.text = self.windowRunDetails.tabThird:CreateFontString()
+    -- self.windowRunDetails.tabThird.text:SetFontObject("GameFontHighlight")
+    -- self.windowRunDetails.tabThird.text:SetPoint("LEFT", self.windowRunDetails.tabThird, "LEFT", 10, 0)
+    -- self.windowRunDetails.tabThird.text:SetPoint("RIGHT", self.windowRunDetails.tabThird, "RIGHT", -10, 0)
+    -- self.windowRunDetails.tabThird.text:SetText("Raw Data")
+    -- self.windowRunDetails.tabThird.text:SetJustifyH("CENTER")
+    -- self.windowRunDetails.tabThird.text:SetJustifyV("MIDDLE")
+    -- addon.Utils:SetBackgroundColor(self.windowRunDetails.tabThird, 0, 0, 0, 0.1)
 
-    self.windowRun.tabBody.text = self.windowRun.tabBody:CreateFontString()
-    self.windowRun.tabBody.text:SetPoint("TOPLEFT", self.windowRun.tabBody, "TOPLEFT", 10, -10)
-    self.windowRun.tabBody.text:SetPoint("BOTTOMRIGHT", self.windowRun.tabBody, "BOTTOMRIGHT", -10, 10)
-    self.windowRun.tabBody.text:SetFontObject("GameFontHighlight")
-    self.windowRun.tabBody.text:SetText("|cffaaaaaa00:01:20  |r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:05:11  |r Ingra Maloch pulled.\n|cffaaaaaa00:07:56  |r Ingra Maloch killed (2m45s).\n|cffaaaaaa00:22:01  |r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:31:21  |r |cffC69B6DLiquidora|r has died.\n")
-    self.windowRun.tabBody.text:SetJustifyH("LEFT")
-    self.windowRun.tabBody.text:SetJustifyV("TOP")
-    self.windowRun.tabBody.text:SetTextHeight(11)
-    self.windowRun.tabBody.text:SetSpacing(3)
+    self.windowRunDetails.tabBody.text = self.windowRunDetails.tabBody:CreateFontString()
+    self.windowRunDetails.tabBody.text:SetPoint("TOPLEFT", self.windowRunDetails.tabBody, "TOPLEFT", 10, -10)
+    self.windowRunDetails.tabBody.text:SetPoint("BOTTOMRIGHT", self.windowRunDetails.tabBody, "BOTTOMRIGHT", -10, 10)
+    self.windowRunDetails.tabBody.text:SetFontObject("GameFontHighlight")
+    self.windowRunDetails.tabBody.text:SetText("|cffaaaaaa00:01:20|r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:05:11|r Ingra Maloch pulled.\n|cffaaaaaa00:07:56|r Ingra Maloch killed (2m45s).\n|cffaaaaaa00:22:01|r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:31:21|r |cffC69B6DLiquidora|r has died.\n")
+    self.windowRunDetails.tabBody.text:SetJustifyH("LEFT")
+    self.windowRunDetails.tabBody.text:SetJustifyV("TOP")
+    self.windowRunDetails.tabBody.text:SetTextHeight(11)
+    self.windowRunDetails.tabBody.text:SetSpacing(3)
 
-    self.windowRun.playerBody = CreateFrame("Frame", nil, self.windowRun)
-    self.windowRun.playerBody:SetPoint("TOPRIGHT", self.windowRun, "TOPRIGHT", 0, -26 - 30)
-    self.windowRun.playerBody:SetPoint("BOTTOMRIGHT", self.windowRun, "BOTTOMRIGHT", 0, 0)
-    self.windowRun.playerBody:SetWidth(300)
-    addon.Utils:SetBackgroundColor(self.windowRun.playerBody, 0, 0, 0, 0.2)
+    self.windowRunDetails.playerBody = CreateFrame("Frame", nil, self.windowRunDetails)
+    self.windowRunDetails.playerBody:SetPoint("TOPRIGHT", self.windowRunDetails, "TOPRIGHT", 0, -26 - 30)
+    self.windowRunDetails.playerBody:SetPoint("BOTTOMRIGHT", self.windowRunDetails, "BOTTOMRIGHT", 0, 0)
+    self.windowRunDetails.playerBody:SetWidth(300)
+    addon.Utils:SetBackgroundColor(self.windowRunDetails.playerBody, 0, 0, 0, 0.2)
 
     for i = 1, 5 do
-      local playerTab = CreateFrame("Frame", nil, self.windowRun)
+      local playerTab = CreateFrame("Frame", nil, self.windowRunDetails)
       playerTab:SetSize(60, 26)
-      playerTab:SetPoint("BOTTOMLEFT", self.windowRun.playerBody, "TOPLEFT", (i - 1) * 60, 0)
+      playerTab:SetPoint("BOTTOMLEFT", self.windowRunDetails.playerBody, "TOPLEFT", (i - 1) * 60, 0)
       playerTab.text = playerTab:CreateFontString()
       playerTab.text:SetFontObject("GameFontHighlight")
       playerTab.text:SetPoint("LEFT", playerTab, "LEFT", 10, 0)
@@ -812,13 +844,15 @@ function Module:RenderRun()
     end
   end
 
-  if not self.windowRun:IsVisible() then
+  if not self.windowRunDetails:IsVisible() then
     return
   end
 
-  local run = self.selectedRun
-  if not run then
-    self.windowRun:Hide()
+  ---@type AE_RH_Run
+  local selectedRun = self.selectedRun
+
+  if not selectedRun then
+    self.windowRunDetails:Hide()
     return
   end
 
@@ -828,42 +862,126 @@ function Module:RenderRun()
     table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
   end
 
-  local info = {
-    ["Dungeon"]   = (run.mapTexture and "|T" .. run.mapTexture .. ":14|t  " or "") .. (run.mapName or "-"),
-    ["Level"]     = run.challengeModeLevel,
-    ["Affixes"]   = table.concat(affixes, ""),
-    ["Time"]      = run.keystoneTimerElapsedTime and SecondsToClock(run.keystoneTimerElapsedTime),
-    ["Result"]    = run.state,
-    ["Score"]     = run.challengeModeNewOverallDungeonScore and format("%d (+%d)", run.challengeModeNewOverallDungeonScore, run.challengeModeNewOverallDungeonScore - run.challengeModeOldOverallDungeonScore) or 0,
-    ["Avg. iLvl"] = 0,
-    ["Deaths"]    = run.deathCount,
-    ["Date"]      = run.startTimestamp and date("%c", run.startTimestamp),
-  }
-
+  local leftColor = {r = 0, g = 0, b = 0, a = 0.2}
   ---@type AE_TableData
-  local infoTableData = {
+  local data = {
     columns = {
       {width = 110},
-      {width = 190, align = "right"},
+      {width = 190},
     },
-    rows = {},
-  }
-
-  addon.Utils:TableForEach(info, function(val, key)
-    ---@type AE_TableDataRow
-    local row = {
-      columns = {
-        {text = WrapTextInColorCode(tostring(key) .. ":", "dddddd"), backgroundColor = {r = 0, g = 0, b = 0, a = 0.2}},
-        {text = val and tostring(val) or "-"},
+    rows = {
+      {
+        columns = {
+          {
+            text = "|cffddddddDungeon:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = selectedRun and (selectedRun.mapTexture and "|T" .. selectedRun.mapTexture .. ":14|t  " or "") .. (selectedRun.mapName and selectedRun.mapName or "-") or "-",
+          },
+        },
       },
-    }
-    table.insert(infoTableData.rows, row)
-  end)
+      {
+        columns = {
+          {
+            text = "|cffddddddLevel:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = selectedRun and selectedRun.challengeModeLevel or "-",
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddAffixes:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = table.concat(affixes, ""),
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddTime:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = selectedRun and selectedRun.keystoneTimerElapsedTime and SecondsToClock(selectedRun.keystoneTimerElapsedTime) or "-",
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddResult:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = selectedRun and selectedRun.state or "-",
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddScore:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            -- text = run and run.challengeModeNewOverallDungeonScore and tostring(run.challengeModeNewOverallDungeonScore) or "-",
+            text = "240 (+30)",
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddAvg. iLvl:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = "634.2",
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddDeaths:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            -- text = run and run.deathCount and tostring(run.deathCount) or "-",
+            text = "3",
+          },
+        },
+      },
+      {
+        columns = {
+          {
+            text = "|cffddddddDate:|r",
+            backgroundColor = leftColor,
+          },
+          {
+            text = selectedRun and tostring(date("%c", selectedRun.startTimestamp)) or "-",
+          },
+        },
+      },
+    },
+  }
+  self.windowRunDetails.infoTable:SetData(data)
 
-  self.windowRun.infoTable:SetData(infoTableData)
+  self.windowRunDetails:SetScript("OnShow", function()
+    self:RenderRunDetails()
+  end)
 end
 
 function Module:RenderRunHistory()
+  Debug("RenderRunHistory()")
   local tableWidth = 0
   local tableHeight = 0
   local rowHeight = 24
@@ -890,7 +1008,13 @@ function Module:RenderRunHistory()
     self.window.sidebar.inputStatus = addon.Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputStatus:SetPoint("TOPLEFT", self.window.sidebar.inputInstances, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputStatus:SetPoint("TOPRIGHT", self.window.sidebar.inputInstances, "BOTTOMRIGHT", 0, -10)
-    self.window.sidebar.inputStatus:SetItems({{value = "", text = "All Results"}})
+    self.window.sidebar.inputStatus:SetItems({
+      {value = "",          text = "All Results"},
+      {value = "RUNNING",   text = "Running"},
+      {value = "TIMED",     text = "Timed"},
+      {value = "OVERTIME",  text = "Overtime"},
+      {value = "ABANDONED", text = "Abandoned"},
+    })
     self.window.sidebar.inputAffixes = addon.Input:CreateDropdown({parent = self.window.sidebar, value = "", items = {}})
     self.window.sidebar.inputAffixes:SetPoint("TOPLEFT", self.window.sidebar.inputStatus, "BOTTOMLEFT", 0, -10)
     self.window.sidebar.inputAffixes:SetPoint("TOPRIGHT", self.window.sidebar.inputStatus, "BOTTOMRIGHT", 0, -10)
@@ -904,6 +1028,7 @@ function Module:RenderRunHistory()
       },
       rows = {
         height = rowHeight,
+        highlight = true,
         striped = true,
       },
     })
@@ -922,16 +1047,16 @@ function Module:RenderRunHistory()
   local data = {
     columns = {
       {width = 80},
-      {width = 50,  align = "center"},
-      {width = 60,  align = "center"},
-      {width = 90},
+      {width = 50, align = "center"},
+      {width = 60, align = "center"},
+      {width = 80},
       {width = 100},
-      {width = 120},
+      {width = 110},
       {width = 120},
       {width = 120},
       {width = 300},
-      {width = 180, align = "right"},
-      {width = 45,  align = "center"},
+      {width = 180},
+      {width = 50, align = "center"},
     },
     rows = {
       {
@@ -945,7 +1070,7 @@ function Module:RenderRunHistory()
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Tank")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Healer")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("DPS")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("")},
+          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Date")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Note")},
         },
       },
@@ -953,9 +1078,16 @@ function Module:RenderRunHistory()
   }
   tableHeight = tableHeight + 30
 
-
+  --- TODO: Add search filters
   ---@type AE_RH_Run[]
-  local runs = addon.Data.db.global.runHistory.runs
+  local runs = addon.Utils:TableFilter(addon.Data.db.global.runHistory.runs, function(run)
+    return true
+  end)
+
+  table.sort(runs, function(a, b)
+    return (a.startTimestamp or 0) > (b.startTimestamp or 0)
+  end)
+
   addon.Utils:TableForEach(runs, function(run, runIndex)
     local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.challengeModeID)
     local dungeonName = "-"
@@ -968,7 +1100,7 @@ function Module:RenderRunHistory()
     ---@type AE_TableDataRow
     local row = {
       onClick = function()
-        self:ShowRun(run)
+        self:ShowRunDetails(run)
       end,
       columns = {
         {text = dungeonName},
@@ -989,92 +1121,92 @@ function Module:RenderRunHistory()
   end)
 
   local lastWhen = GetServerTime()
-  for i = 1, 2 do
-    local when = date("%c", lastWhen)
-    lastWhen = lastWhen - math.random(5000, 15000)
+  -- for i = 1, 20 do
+  --   local when = date("%c", lastWhen)
+  --   lastWhen = lastWhen - math.random(5000, 15000)
 
-    local level = math.random(2, 12)
-    local levelText = tostring(level)
+  --   local level = math.random(2, 12)
+  --   local levelText = tostring(level)
 
-    local score = 80 + level * 30
-    local scoreText = tostring(score)
-    local scoreColor = WHITE_FONT_COLOR
+  --   local score = 80 + level * 30
+  --   local scoreText = tostring(score)
+  --   local scoreColor = WHITE_FONT_COLOR
 
-    local time = math.random(500, 2000)
-    local timeText = SecondsToClock(time)
-    local timeColor = WHITE_FONT_COLOR
+  --   local time = math.random(500, 2000)
+  --   local timeText = SecondsToClock(time)
+  --   local timeColor = WHITE_FONT_COLOR
 
-    local status = math.random(1, 10)
-    local statusText = GREEN_FONT_COLOR:WrapTextInColorCode("Timed")
-    local statusColor = WHITE_FONT_COLOR
+  --   local status = math.random(1, 10)
+  --   local statusText = GREEN_FONT_COLOR:WrapTextInColorCode("Timed")
+  --   local statusColor = WHITE_FONT_COLOR
 
-    local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(score)
-    if rarityColor ~= nil then
-      scoreColor = rarityColor
-    end
+  --   local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(score)
+  --   if rarityColor ~= nil then
+  --     scoreColor = rarityColor
+  --   end
 
-    local affixes = {}
-    for a = 13, 13 + math.random(1, 4) do
-      local affix = addon.Data.affixes[a]
-      table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
-    end
+  --   local affixes = {}
+  --   for a = 13, 13 + math.random(1, 4) do
+  --     local affix = addon.Data.affixes[a]
+  --     table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
+  --   end
 
-    local dungeon = dungeons[math.random(#dungeons)]
-    local dungeonName = "ARAK"
-    if dungeon then
-      dungeonName = dungeon.texture and "|T" .. dungeon.texture .. ":16|t  " or ""
-      dungeonName = dungeonName .. (dungeon.abbr and dungeon.abbr or dungeon.name)
-    end
+  --   local dungeon = dungeons[math.random(#dungeons)]
+  --   local dungeonName = "ARAK"
+  --   if dungeon then
+  --     dungeonName = dungeon.texture and "|T" .. dungeon.texture .. ":16|t  " or ""
+  --     dungeonName = dungeonName .. (dungeon.abbr and dungeon.abbr or dungeon.name)
+  --   end
 
-    if status > 9 then
-      statusText = "Abandoned"
-      scoreText = ""
-      timeText = ""
-      scoreColor = DIM_RED_FONT_COLOR
-      timeColor = DIM_RED_FONT_COLOR
-      statusColor = DIM_RED_FONT_COLOR
-    elseif status > 7 then
-      statusText = "Overtime"
-      scoreColor = DISABLED_FONT_COLOR
-      timeColor = DISABLED_FONT_COLOR
-      statusColor = DISABLED_FONT_COLOR
-    else
-      statusText = "Timed"
-      statusColor = DIM_GREEN_FONT_COLOR
+  --   if status > 9 then
+  --     statusText = "Abandoned"
+  --     scoreText = ""
+  --     timeText = ""
+  --     scoreColor = DIM_RED_FONT_COLOR
+  --     timeColor = DIM_RED_FONT_COLOR
+  --     statusColor = DIM_RED_FONT_COLOR
+  --   elseif status > 7 then
+  --     statusText = "Overtime"
+  --     scoreColor = DISABLED_FONT_COLOR
+  --     timeColor = DISABLED_FONT_COLOR
+  --     statusColor = DISABLED_FONT_COLOR
+  --   else
+  --     statusText = "Timed"
+  --     statusColor = DIM_GREEN_FONT_COLOR
 
-      if time < 800 then
-        timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
-      elseif time < 1200 then
-        timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
-      else
-        timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier1:16:16:0:0|a"
-      end
-    end
+  --     if time < 800 then
+  --       timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
+  --     elseif time < 1200 then
+  --       timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
+  --     else
+  --       timeText = timeText .. "  |A:Professions-ChatIcon-Quality-Tier1:16:16:0:0|a"
+  --     end
+  --   end
 
-    ---@type AE_TableDataRow
-    local row = {
-      columns = {
-        {text = dungeonName},
-        {text = scoreColor:WrapTextInColorCode(levelText)},
-        {text = scoreColor:WrapTextInColorCode(scoreText)},
-        {text = timeColor:WrapTextInColorCode(timeText)},
-        {text = statusColor:WrapTextInColorCode(statusText)},
-        {text = table.concat(affixes, "")},
-        {text = random_player(true)},
-        {text = random_player(false, true)},
-        {text = format("%s  %s  %s", random_player(), random_player(), random_player())},
-        -- {text = random_player()},
-        -- {text = random_player()},
-        -- {text = random_player()},
-        {text = tostring(when)},
-        -- {text = tostring(when) .. "  " .. CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 30) .. "  "},
-        {text = CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 24 * 1.25)},
-        -- UI-HUD-MicroMenu-AdventureGuide-Up
-      },
-    }
-    table.insert(data.rows, row)
-    tableHeight = tableHeight + rowHeight
-  end
+  --   ---@type AE_TableDataRow
+  --   local row = {
+  --     columns = {
+  --       {text = dungeonName},
+  --       {text = scoreColor:WrapTextInColorCode(levelText)},
+  --       {text = scoreColor:WrapTextInColorCode(scoreText)},
+  --       {text = timeColor:WrapTextInColorCode(timeText)},
+  --       {text = statusColor:WrapTextInColorCode(statusText)},
+  --       {text = table.concat(affixes, "")},
+  --       {text = random_player(true)},
+  --       {text = random_player(false, true)},
+  --       {text = format("%s  %s  %s", random_player(), random_player(), random_player())},
+  --       -- {text = random_player()},
+  --       -- {text = random_player()},
+  --       -- {text = random_player()},
+  --       {text = tostring(when)},
+  --       -- {text = tostring(when) .. "  " .. CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 30) .. "  "},
+  --       {text = CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 24 * 1.25)},
+  --       -- UI-HUD-MicroMenu-AdventureGuide-Up
+  --     },
+  --   }
+  --   table.insert(data.rows, row)
+  --   tableHeight = tableHeight + rowHeight
+  -- end
 
   addon.Utils:TableForEach(data.columns, function(col)
     tableWidth = tableWidth + (col.width or 0)
