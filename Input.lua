@@ -308,7 +308,8 @@ function Input:CreateDropdown(options)
       items = {}, -- {value = "", text = "", icon = ""}
       value = nil,
       maxHeight = 200,
-      size = 200,
+      width = 200,
+      height = 30,
       sizeIcon = 11,
       placeholder = "Select option",
     }, options or {})
@@ -316,7 +317,7 @@ function Input:CreateDropdown(options)
   input.items = {}
   input.value = input.config.value
   input.expanded = false
-  input:SetSize(input.config.size, 30)
+  input:SetSize(input.config.width, input.config.height)
   input:RegisterEvent("GLOBAL_MOUSE_DOWN")
   input:SetScript("OnEvent", function()
     if not MouseIsOver(input) and not MouseIsOver(input.list) then
@@ -441,7 +442,7 @@ function Input:CreateDropdown(options)
     addon.Utils:SetBackgroundColor(input, addon.Constants.colors.titlebar.r, addon.Constants.colors.titlebar.g, addon.Constants.colors.titlebar.b, 1)
     addon.Utils:SetBackgroundColor(input.list, addon.Constants.colors.titlebar.r, addon.Constants.colors.titlebar.g, addon.Constants.colors.titlebar.b, 1)
     addon.Utils:SetBackgroundColor(input.list.border, 0.5, 0.5, 0.5, 0.3)
-    input.button:SetSize(input:GetWidth(), 30)
+    input.button:SetSize(input:GetWidth(), input.config.height)
 
     local value = input:GetValue()
     local valueText = input:GetValueText()

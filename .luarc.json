@@ -215,6 +215,7 @@
         "INVSLOT_MAINHAND",
         "INVSLOT_OFFHAND",
         "INVSLOT_WAIST",
-        "INVSLOT_FINGER2"
+        "INVSLOT_FINGER2",
+        "MouseIsOver"
     ]
 }

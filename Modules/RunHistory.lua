@@ -16,6 +16,38 @@ function Module:OnInitialize()
   self:Render()
 end
 
+local RUN_DATE_FORMAT = "%b %d %Y - %H:%M:%S"
+local function human_date(timestamp)
+  local now = time()
+  local diff = now - timestamp
+
+  if diff < 60 then
+    return "just now"
+    -- Less than an hour
+  elseif diff < 3600 then
+    local minutes = math.floor(diff / 60)
+    return minutes .. " minute" .. (minutes ~= 1 and "s" or "") .. " ago"
+    -- Less than a day
+  elseif diff < 86400 then
+    local hours = math.floor(diff / 3600)
+    return hours .. " hour" .. (hours ~= 1 and "s" or "") .. " ago"
+    -- Less than a week
+  elseif diff < 604800 then
+    local days = math.floor(diff / 86400)
+    return days .. " day" .. (days ~= 1 and "s" or "") .. " ago"
+    -- Less than a month (approximately 30 days)
+  elseif diff < 2592000 then
+    local weeks = math.floor(diff / 604800) -- Weeks
+    return weeks .. " week" .. (weeks ~= 1 and "s" or "") .. " ago"
+    -- Less than a year
+  elseif diff < 31536000 then
+    local months = math.floor(diff / 2592000) -- Months
+    return months .. " month" .. (months ~= 1 and "s" or "") .. " ago"
+  else
+    return date(RUN_DATE_FORMAT, timestamp)
+  end
+end
+
 function Module:OnEnable()
   Debug("OnEnable()")
   -- self:RegisterEvent("PLAYER_DEAD") -- MDT: Current Pull
@@ -720,8 +752,17 @@ function Module:ShowRunDetails(run)
   self:RenderRunDetails()
 end
 
+function Module:ShowRunBoard(run)
+  Debug("ShowRunBoard()")
+  self.selectedRun = run
+  if not self.windowRunBoard then return end
+  self.windowRunBoard:Show()
+  self:RenderRunBoard()
+end
+
 function Module:Render()
   Debug("Render()")
+  self:RenderRunBoard()
   self:RenderRunDetails()
   self:RenderRunHistory()
 end
@@ -967,7 +1008,7 @@ function Module:RenderRunDetails()
             backgroundColor = leftColor,
           },
           {
-            text = selectedRun and tostring(date("%c", selectedRun.startTimestamp)) or "-",
+            text = selectedRun and tostring(human_date(selectedRun.startTimestamp)) or "-",
           },
         },
       },
@@ -1046,30 +1087,30 @@ function Module:RenderRunHistory()
   ---@type AE_TableData
   local data = {
     columns = {
-      {width = 80},
-      {width = 50, align = "center"},
-      {width = 60, align = "center"},
-      {width = 80},
-      {width = 100},
-      {width = 110},
-      {width = 120},
-      {width = 120},
-      {width = 300},
-      {width = 180},
-      {width = 50, align = "center"},
+      {width = 80},                   -- Dungeon
+      {width = 60, align = "center"}, -- Level
+      {width = 80},                   -- Time
+      {width = 110},                  -- Affixes
+      {width = 110},                  -- Tank
+      {width = 110},                  -- Healer
+      {width = 300},                  -- DPS
+      {width = 60, align = "center"}, -- Score
+      {width = 110},                  -- Result
+      {width = 80},                   -- Date
+      {width = 60, align = "center"}, -- Note
     },
     rows = {
       {
         columns = {
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Dungeon")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Level")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Score")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Time")},
-          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Result")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Affixes")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Tank")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Healer")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("DPS")},
+          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Score")},
+          {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Result")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Date")},
           {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Note")},
         },
@@ -1089,6 +1130,12 @@ function Module:RenderRunHistory()
   end)
 
   addon.Utils:TableForEach(runs, function(run, runIndex)
+    local affixes = {}
+    for a = 13, 13 + math.random(1, 4) do
+      local affix = addon.Data.affixes[a]
+      table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
+    end
+
     local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.challengeModeID)
     local dungeonName = "-"
     if dungeon then
@@ -1101,18 +1148,33 @@ function Module:RenderRunHistory()
     local row = {
       onClick = function()
         self:ShowRunDetails(run)
+        self:ShowRunBoard(run)
       end,
       columns = {
         {text = dungeonName},
-        {text = tostring(run.challengeModeLevel)},
-        {text = tostring(run.challengeModeNewOverallDungeonScore or 0)},
+        {text = "+" .. tostring(run.challengeModeLevel)},
         {text = SecondsToClock(run.challengeModeTime or run.keystoneTimerElapsedTime or 0)},
+        {text = table.concat(affixes, "")},
+        -- {text = table.concat(run.affixes, "")},
+        -- {text = ""},
+        -- {text = ""},
+        -- {text = ""},
+        {text = random_player(true)},
+        {text = random_player(false, true)},
+        {text = format("%s  %s  %s", random_player(), random_player(), random_player())},
+        {text = tostring(run.challengeModeNewOverallDungeonScore or 0)},
         {text = run.state},
-        {text = table.concat(run.affixes, "")},
-        {text = ""},
-        {text = ""},
-        {text = ""},
-        {text = tostring(date("%c", run.startTimestamp))},
+        {
+          text = tostring(human_date(run.startTimestamp)),
+          onEnter = function(f)
+            GameTooltip:SetOwner(f, "ANCHOR_TOP")
+            GameTooltip:SetText(date(RUN_DATE_FORMAT, run.startTimestamp), 1, 1, 1)
+            GameTooltip:Show()
+          end,
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+        },
         {text = CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 24, 24 * 1.25)},
       },
     }
@@ -1265,4 +1327,298 @@ function Module:RenderRunHistory()
   -- end)
 
   -- self.window.body.table:SetData(tableData)
+end
+
+function Module:RenderRunBoard()
+  Debug("RenderRunBoard()")
+  if not self.windowRunBoard then
+    self.windowRunBoard = addon.Window:New({
+      name = "RunBoard",
+      title = "Run Details (v2)",
+    })
+
+    local bodyWidth = 880
+    local bodyHeight = 420
+
+    self.windowRunBoard:SetBodySize(bodyWidth, bodyHeight)
+
+    local topHeight = 240
+    local rowHeight = 26
+    self.windowRunBoard.infoTable = addon.Table:New({
+      header = {
+        enabled = false,
+      },
+      rows = {
+        height = rowHeight,
+        striped = true,
+        highlight = false,
+      },
+      cells = {
+        padding = 10,
+        highlight = false,
+      },
+    })
+    self.windowRunBoard.infoTable:SetParent(self.windowRunBoard)
+    self.windowRunBoard.infoTable:SetPoint("TOPLEFT", self.windowRunBoard, "TOPLEFT", 0, -30)
+    self.windowRunBoard.infoTable:SetSize(bodyWidth / 2, topHeight)
+
+    self.windowRunBoard.tabBody = CreateFrame("Frame", nil, self.windowRunBoard)
+    self.windowRunBoard.tabBody:SetPoint("TOPLEFT", self.windowRunBoard, "TOPLEFT", bodyWidth / 2, -30)
+    self.windowRunBoard.tabBody:SetSize(bodyWidth / 2, topHeight)
+    addon.Utils:SetBackgroundColor(self.windowRunBoard.tabBody, 0, 0, 0, 0.25)
+
+    local tabs = {"Events", "Note", "Loot", "Data"}
+    addon.Utils:TableForEach(tabs, function(tab, tabIndex)
+      local tabFrame = CreateFrame("Frame", nil, self.windowRunBoard)
+      local width = self.windowRunBoard.tabBody:GetWidth() / #tabs
+      tabFrame:SetSize(width, 26)
+      tabFrame:SetPoint("TOPLEFT", self.windowRunBoard.tabBody, "TOPLEFT", width * (tabIndex - 1), 0)
+      tabFrame.text = tabFrame:CreateFontString()
+      tabFrame.text:SetFontObject("GameFontHighlight")
+      tabFrame.text:SetPoint("LEFT", tabFrame, "LEFT", 10, 0)
+      tabFrame.text:SetPoint("RIGHT", tabFrame, "RIGHT", -10, 0)
+      tabFrame.text:SetText(tab)
+      tabFrame.text:SetJustifyH("CENTER")
+      tabFrame.text:SetJustifyV("MIDDLE")
+      addon.Utils:SetBackgroundColor(tabFrame, 0, 0, 0, tabIndex == 1 and 0.25 or 0.1)
+    end)
+
+    self.windowRunBoard.tabBody.text = self.windowRunBoard.tabBody:CreateFontString()
+    self.windowRunBoard.tabBody.text:SetPoint("TOPLEFT", self.windowRunBoard.tabBody, "TOPLEFT", 10, -36)
+    self.windowRunBoard.tabBody.text:SetPoint("BOTTOMRIGHT", self.windowRunBoard.tabBody, "BOTTOMRIGHT", -10, 10)
+    self.windowRunBoard.tabBody.text:SetFontObject("GameFontHighlight")
+    self.windowRunBoard.tabBody.text:SetText("|cffaaaaaa00:01:20|r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:05:11|r Ingra Maloch pulled.\n|cffaaaaaa00:07:56|r Ingra Maloch killed (2m45s).\n|cffaaaaaa00:22:01|r |cffC69B6DLiquidora|r has died.\n|cffaaaaaa00:31:21|r |cffC69B6DLiquidora|r has died.\n")
+    self.windowRunBoard.tabBody.text:SetJustifyH("LEFT")
+    self.windowRunBoard.tabBody.text:SetJustifyV("TOP")
+    self.windowRunBoard.tabBody.text:SetTextHeight(11)
+    self.windowRunBoard.tabBody.text:SetSpacing(3)
+
+    self.windowRunBoard.memberTable = addon.Table:New({
+      -- header = {
+      --   enabled = false,
+      -- },
+      rows = {
+        height = 30,
+        striped = true,
+        highlight = true,
+      },
+      cells = {
+        padding = 10,
+        highlight = false,
+      },
+    })
+    self.windowRunBoard.memberTable:SetParent(self.windowRunBoard)
+    self.windowRunBoard.memberTable:SetPoint("BOTTOMLEFT", self.windowRunBoard, "BOTTOMLEFT", 0, 0)
+    self.windowRunBoard.memberTable:SetSize(bodyWidth, 180)
+  end
+
+  if not self.windowRunBoard:IsVisible() then
+    return
+  end
+
+  ---@type AE_RH_Run
+  local selectedRun = self.selectedRun
+
+  if not selectedRun then
+    self.windowRunBoard:Hide()
+    return
+  end
+
+  do
+    local affixes = {}
+    for a = 13, 13 + math.random(1, 4) do
+      local affix = addon.Data.affixes[a]
+      table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
+    end
+
+    local leftColor = {r = 0, g = 0, b = 0, a = 0.2}
+    ---@type AE_TableData
+    local data = {
+      columns = {
+        {width = 150},
+        {width = 250},
+      },
+      rows = {
+        {
+          columns = {
+            {
+              text = "|cffddddddDungeon:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and (selectedRun.mapTexture and "|T" .. selectedRun.mapTexture .. ":14|t  " or "") .. (selectedRun.mapName and selectedRun.mapName or "-") or "-",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddLevel:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and selectedRun.challengeModeLevel or "-",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddTime:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and selectedRun.keystoneTimerElapsedTime and SecondsToClock(selectedRun.keystoneTimerElapsedTime) or "-",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddAffixes:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = table.concat(affixes, ""),
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddResult:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and selectedRun.state or "-",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddScore:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              -- text = run and run.challengeModeNewOverallDungeonScore and tostring(run.challengeModeNewOverallDungeonScore) or "-",
+              text = "240 (+30)",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddAvg. iLvl:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = "634.2",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddDeaths:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              -- text = run and run.deathCount and tostring(run.deathCount) or "-",
+              text = "3",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddDate:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and tostring(human_date(selectedRun.startTimestamp)) or "-",
+            },
+          },
+        },
+      },
+    }
+    self.windowRunBoard.infoTable:SetData(data)
+  end
+
+  do -- Member table
+    local memberTableHeaderBackgroundColor = {r = 0, g = 0, b = 0, a = 0.5}
+    ---@type AE_TableData
+    local data = {
+      columns = {
+        {width = 150},                               -- Player
+        {width = 110},                               -- Score
+        {width = 60, align = "center"},              -- Ilvl
+        {width = 70, align = "center"},              -- DPS
+        {width = 70, align = "center"},              -- HPS
+        {width = 90, align = "center"},              -- Dmg Taken
+        {width = 80, align = "center"},              -- Deaths
+        {width = 80, align = "center"},              -- Interrupts
+        {width = 80, align = "center"},              -- Dispels
+        {width = 20, align = "left",  padding = 0},  -- Show Gear
+        {width = 20, align = "left",  padding = 0},  -- Show Talents
+        {width = 24, align = "left",  padding = 0},  -- Show Note
+        {width = 26, align = "left",  padding = 0},  -- Search Player
+      },
+      rows = {
+        {
+          columns = {
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Player"),     backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Score"),      backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Ilvl"),       backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("DPS"),        backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("HPS"),        backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Dmg Taken"),  backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Deaths"),     backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Interrupts"), backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode("Dispels"),    backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode(""),           backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode(""),           backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode(""),           backgroundColor = memberTableHeaderBackgroundColor},
+            {text = HIGHLIGHT_FONT_COLOR:WrapTextInColorCode(""),           backgroundColor = memberTableHeaderBackgroundColor},
+          },
+        },
+      },
+    }
+
+    for i = 1, 5 do
+      local playerName = random_player(i == 1, i == 2)
+      local playerIcon = CreateAtlasMarkup("groupfinder-icon-role-large-tank", 18, 18, -3, 0)
+      if i == 2 then
+        playerIcon = CreateAtlasMarkup("groupfinder-icon-role-large-heal", 18, 18, -3, 0)
+      elseif i > 2 then
+        playerIcon = CreateAtlasMarkup("groupfinder-icon-role-large-dps", 18, 18, -3, 0)
+      end
+      ---@type AE_TableDataRow
+      local row = {
+        onClick = function()
+        end,
+        columns = {
+          {text = playerIcon .. " " .. playerName},                                                                                      -- Player
+          {text = "1200 (+150)"},                                                                                                        -- Score
+          {text = "662.2"},                                                                                                              -- Ilvl
+          {text = "0.00U"},                                                                                                              -- DPS
+          {text = "0.00U"},                                                                                                              -- HPS
+          {text = "0.00U"},                                                                                                              -- Dmg Taken
+          {text = "0"},                                                                                                                  -- Deaths
+          {text = "0"},                                                                                                                  -- Interrupts
+          {text = "0"},                                                                                                                  -- Dispels
+          {text = CreateAtlasMarkup("lootroll-icon-transmog", 16, 16)},                                                                  -- Show Gear
+          {text = CreateAtlasMarkup("Front-Tree-Icon", 16, 16)},                                                                         -- Show Talents
+          {text = CreateAtlasMarkup("UI-HUD-MicroMenu-AdventureGuide-" .. (math.random() > 0.8 and "Up" or "Disabled"), 20, 20 * 1.25)}, -- Show Note
+          {text = CreateAtlasMarkup("talents-search-suggestion-magnifyingglass", 14, 14)},                                               -- Search Player
+        },
+      }
+      table.insert(data.rows, row)
+    end
+    self.windowRunBoard.memberTable:SetData(data)
+  end
+
+  self.windowRunBoard:SetScript("OnShow", function()
+    self:RenderRunBoard()
+  end)
 end
