@@ -266,58 +266,63 @@
 
 ---@alias AE_RH_State "RUNNING" | "TIMED" | "OVERTIME" | "ABANDONED"
 
+---@class ActiveKeystoneInfo
+---@field level number
+---@field affixIDs number[]
+---@field wasCharged boolean
+
+---@class KeystoneTimer
+---@field timerID number?
+---@field elapsedTime number?
+---@field isActive boolean?
+
+---@class MapInfo
+---@field name string
+---@field id number
+---@field timeLimit number
+---@field texture number?
+---@field backgroundTexture number
+
+---@class DeathCount
+---@field numDeaths number
+---@field timeLost number
+
+---@class ScenarioCriteriaEncounter
+---@field index number
+---@field isInCombat boolean
+---@field numPulls number
+---@field isCompleted boolean
+---@field encounterID number?
+---@field combatStartTime number
+---@field combatEndTime number
+---@field completedStartTime number
+---@field completedEndTime number
+
+---@class AE_RH_ChallengeModeData
+---@field challengeModeID number?
+---@field challengeModeActive boolean
+---@field completionInfo ChallengeCompletionInfo
+---@field keystoneInfo ActiveKeystoneInfo
+---@field mapInfo MapInfo
+---@field instanceInfo InstanceInfo
+---@field deathCount DeathCount
+---@field numCriteria number?
+---@field keystoneTimer KeystoneTimer
+---@field criterias ScenarioCriteriaInfo[]
+---@field encounters ScenarioCriteriaEncounter[]
+---@field trashCount number
+
 ---@class AE_RH_Run
 ---@field id string
 ---@field seasonID number
 ---@field startTimestamp number
----@field endTimestamp number?
+---@field endTimestamp number
 ---@field updateTimestamp number
 ---@field state AE_RH_State
----@field affixes number[]
 ---@field members AE_RH_Member[]
 ---@field events AE_RH_Event[]
 ---@field loot AE_RH_Loot[]
----@field challengeModeTimers number[]
----@field challengeModeID nil
----@field challengeModeLevel nil
----@field challengeModeTime nil
----@field challengeModeOnTime nil
----@field challengeModeKeystoneUpgradeLevels nil
----@field challengeModePracticeRun nil
----@field challengeModeOldOverallDungeonScore nil
----@field challengeModeNewOverallDungeonScore nil
----@field challengeModeIsMapRecord nil
----@field challengeModeIsAffixRecord nil
----@field challengeModePrimaryAffix nil
----@field challengeModeisEligibleForScore nil
----@field challengeModeUpgradeMembers nil
----@field instanceName string?
----@field instanceType string?
----@field instanceDifficultyID number?
----@field instanceDifficultyName string?
----@field instanceMaxPlayers number?
----@field instanceDynamicDifficulty number?
----@field instanceIsDynamic boolean?
----@field instanceID number?
----@field instanceGroupSize number?
----@field instanceLFGDungeonID number?
----@field mapID number?
----@field mapName string?
----@field mapTimeLimit number?
----@field mapTexture number?
----@field mapBackgroundTexture number?
----@field stepCount number?
----@field deathCount number?
----@field deathTimeLost number?
----@field keystoneTimerID number?
----@field keystoneTimerElapsedTime number?
----@field keystoneTimerIsActive boolean?
----@field bosses table
----@field trashCount number?
------@field isChallengeModeActive boolean
------@field activeKeystoneLevel number
------@field activeKeystoneAffixIDs number[]
------@field activeChallengeModeID number?
+---@field data AE_RH_ChallengeModeData
 
 ---@alias AE_RH_EventType "PLAYER_DEATH" | "ENCOUNTER_START" | "ENCOUNTER_KILL" | "ENCOUNTER_WIPE"
 

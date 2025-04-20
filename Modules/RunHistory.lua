@@ -4,48 +4,64 @@ local addonName = select(1, ...)
 local addon = select(2, ...)
 
 ---@class AE_RunHistory : AceModule
-local Module = addon.Core:NewModule("RunHistory", "AceEvent-3.0")
+local Module = addon.Core:NewModule("RunHistory", "AceEvent-3.0", "AceTimer-3.0")
 addon.RunHistory = Module
 
+local RUN_DATE_FORMAT = "%b %d %Y - %H:%M:%S"
+
+---Temp debug print function
+---@param data any
 local function Debug(data)
   DevTools_Dump(data)
+end
+
+---Convert timestamp to human readable text
+---@param timestamp number
+---@return string
+local function human_date(timestamp)
+  local diff = time() - timestamp
+
+  if diff < 60 then
+    return "Just now"
+  elseif diff < 3600 then
+    return math.floor(diff / 60) .. " |4minute:minutes; ago"
+  elseif diff < 86400 then
+    return math.floor(diff / 3600) .. " |4hour:hours; ago"
+  elseif diff < 604800 then
+    return math.floor(diff / 86400) .. " |4day:days; ago"
+  elseif diff < 2592000 then
+    return math.floor(diff / 604800) .. " |4week:weeks; ago"
+  elseif diff < 31536000 then
+    return math.floor(diff / 2592000) .. " |4month:months; ago"
+  end
+
+  return tostring(date(RUN_DATE_FORMAT, timestamp))
+end
+
+---@param stopTimer? boolean
+---@param stopTimerID? number
+---@return KeystoneTimer
+local function GetKeystoneTimer(stopTimer, stopTimerID)
+  Debug("GetKeystoneTimer()")
+  local timerIDs = {GetWorldElapsedTimers()} ---@type number[]
+  for _, timerID in ipairs(timerIDs) do
+    local _, elapsedTime, timerType = GetWorldElapsedTime(timerID)
+    if timerType == LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE and elapsedTime then
+      local isActive = not stopTimer or stopTimerID ~= timerID
+      return {timerID = timerID, elapsedTime = elapsedTime, isActive = isActive}
+    end
+  end
+
+  return {
+    timerID = nil,
+    elapsedTime = nil,
+    isActive = nil,
+  }
 end
 
 function Module:OnInitialize()
   Debug("OnInitialize()")
   self:Render()
-end
-
-local RUN_DATE_FORMAT = "%b %d %Y - %H:%M:%S"
-local function human_date(timestamp)
-  local now = time()
-  local diff = now - timestamp
-
-  if diff < 60 then
-    return "just now"
-    -- Less than an hour
-  elseif diff < 3600 then
-    local minutes = math.floor(diff / 60)
-    return minutes .. " minute" .. (minutes ~= 1 and "s" or "") .. " ago"
-    -- Less than a day
-  elseif diff < 86400 then
-    local hours = math.floor(diff / 3600)
-    return hours .. " hour" .. (hours ~= 1 and "s" or "") .. " ago"
-    -- Less than a week
-  elseif diff < 604800 then
-    local days = math.floor(diff / 86400)
-    return days .. " day" .. (days ~= 1 and "s" or "") .. " ago"
-    -- Less than a month (approximately 30 days)
-  elseif diff < 2592000 then
-    local weeks = math.floor(diff / 604800) -- Weeks
-    return weeks .. " week" .. (weeks ~= 1 and "s" or "") .. " ago"
-    -- Less than a year
-  elseif diff < 31536000 then
-    local months = math.floor(diff / 2592000) -- Months
-    return months .. " month" .. (months ~= 1 and "s" or "") .. " ago"
-  else
-    return date(RUN_DATE_FORMAT, timestamp)
-  end
 end
 
 function Module:OnEnable()
@@ -55,8 +71,6 @@ function Module:OnEnable()
   -- self:RegisterEvent("SCENARIO_POI_UPDATE")
   -- self:RegisterEvent("CRITERIA_COMPLETE")
   -- self:RegisterEvent("UNIT_THREAT_LIST_UPDATE") -- MDT: Current Pull
-
-  -- TODO
   -- self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- MDT: Current Pull & Death logs
   -- self:RegisterEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
   -- self:RegisterEvent("CHALLENGE_MODE_LEADERS_UPDATE")
@@ -83,157 +97,49 @@ end
 function Module:OnDisable()
   Debug("OnDisable()")
   self:UnregisterAllEvents()
-end
-
----@param stopTimer? boolean
----@param stopTimerID? number
----@return number? timerID, number? elapsedTime, boolean? isActive
-local function GetKeystoneTimer(stopTimer, stopTimerID)
-  Debug("GetKeystoneTimer()")
-  local timerIDs = {GetWorldElapsedTimers()} ---@type number[]
-  for _, timerID in ipairs(timerIDs) do
-    local _, elapsedTime, timerType = GetWorldElapsedTime(timerID)
-    if timerType == LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE and elapsedTime then
-      return timerID, elapsedTime, not stopTimer or stopTimerID ~= timerID
-    end
-  end
+  self:Render()
 end
 
 function Module:GetChallengeData()
   Debug("GetChallengeData()")
-  local data = {
-    isChallengeModeActive = nil,
 
-    activeKeystoneLevel = nil,
-    activeKeystoneAffixIDs = nil,
+  local challengeModeID = C_ChallengeMode.GetActiveChallengeMapID()
+  local challengeModeActive = C_ChallengeMode.IsChallengeModeActive()
+  local challengeCompletionInfo = C_ChallengeMode.GetChallengeCompletionInfo()
+  local activeKeystoneInfo_level, activeKeystoneInfo_affixIDs, activeKeystoneInfo_wasCharged = C_ChallengeMode.GetActiveKeystoneInfo()
+  local mapInfo_name, mapInfo_ID, mapInfo_timeLimit, mapInfo_texture, mapInfo_backgroundTexture = C_ChallengeMode.GetMapUIInfo(challengeModeID or 0)
+  local instanceInfo_name, instanceInfo_instanceType, instanceInfo_difficultyID, instanceInfo_difficultyName, instanceInfo_maxPlayers, instanceInfo_dynamicDifficulty, instanceInfo_isDynamic, instanceInfo_instanceID, instanceInfo_instanceGroupSize, instanceInfo_LFGDungeonID = GetInstanceInfo()
+  local deathCount_numDeaths, deathCount_timeLost = C_ChallengeMode.GetDeathCount()
+  local keystoneTimer = GetKeystoneTimer()
+  local _, _, numCriteria = C_ScenarioInfo.GetScenarioStepInfo()
+  -- ---@type string?, string?, number?
+  -- local _, _, stepCount = C_Scenario.GetStepInfo()
 
-    activeChallengeModeID = nil,
+  ---@type ScenarioCriteriaInfo[]
+  local criterias = {}
+  ---@type ScenarioCriteriaEncounter[]
+  local encounters = {}
+  local trashCount = 0
 
-    challengeModeID = nil,
-    challengeModeLevel = nil,
-    challengeModeTime = nil,
-    challengeModeOnTime = nil,
-    challengeModeKeystoneUpgradeLevels = nil,
-    challengeModePracticeRun = nil,
-    challengeModeOldOverallDungeonScore = nil,
-    challengeModeNewOverallDungeonScore = nil,
-    challengeModeIsMapRecord = nil,
-    challengeModeIsAffixRecord = nil,
-    challengeModePrimaryAffix = nil,
-    challengeModeisEligibleForScore = nil,
-    challengeModeUpgradeMembers = nil,
-
-    instanceName = nil,
-    instanceType = nil,
-    instanceDifficultyID = nil,
-    instanceDifficultyName = nil,
-    instanceMaxPlayers = nil,
-    instanceDynamicDifficulty = nil,
-    instanceIsDynamic = nil,
-    instanceID = nil,
-    instanceGroupSize = nil,
-    instanceLFGDungeonID = nil,
-
-    mapName = nil,
-    mapID = nil,
-    mapTimeLimit = nil,
-    mapTexture = nil,
-    mapBackgroundTexture = nil,
-
-    stepCount = nil,
-
-    deathCount = nil,
-    deathTimeLost = nil,
-
-    keystoneTimerID = nil,
-    keystoneTimerElapsedTime = nil,
-
-    bosses = {},
-    trashCount = 0,
-  }
-
-  -- TODO: Get Party Members data
-
-  data.isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
-
-  local activeKeystoneLevel, activeKeystoneAffixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-  data.activeKeystoneLevel = activeKeystoneLevel
-  data.activeKeystoneAffixIDs = activeKeystoneAffixIDs
-
-  local activeChallengeModeID = C_ChallengeMode.GetActiveChallengeMapID() -- Note: Not MapChallengeMode.MapID, but MapChallengeMode.ID
-  data.activeChallengeModeID = activeChallengeModeID
-
-  local challengeModeID, challengeModeLevel, challengeModeTime, challengeModeOnTime, challengeModeKeystoneUpgradeLevels, challengeModePracticeRun, challengeModeOldOverallDungeonScore, challengeModeNewOverallDungeonScore, challengeModeIsMapRecord, challengeModeIsAffixRecord, challengeModePrimaryAffix, challengeModeisEligibleForScore, challengeModeUpgradeMembers = C_ChallengeMode.GetCompletionInfo()
-  data.challengeModeID = challengeModeID
-  data.challengeModeLevel = challengeModeLevel
-  data.challengeModeTime = challengeModeTime
-  data.challengeModeOnTime = challengeModeOnTime
-  data.challengeModeKeystoneUpgradeLevels = challengeModeKeystoneUpgradeLevels
-  data.challengeModePracticeRun = challengeModePracticeRun
-  data.challengeModeOldOverallDungeonScore = challengeModeOldOverallDungeonScore
-  data.challengeModeNewOverallDungeonScore = challengeModeNewOverallDungeonScore
-  data.challengeModeIsMapRecord = challengeModeIsMapRecord
-  data.challengeModeIsAffixRecord = challengeModeIsAffixRecord
-  data.challengeModePrimaryAffix = challengeModePrimaryAffix
-  data.challengeModeisEligibleForScore = challengeModeisEligibleForScore
-  data.challengeModeUpgradeMembers = challengeModeUpgradeMembers
-
-  local instanceName, instanceType, instanceDifficultyID, instanceDifficultyName, instanceMaxPlayers, instanceDynamicDifficulty, instanceIsDynamic, instanceID, instanceGroupSize, instanceLFGDungeonID = GetInstanceInfo()
-  data.instanceName = instanceName
-  data.instanceType = instanceType
-  data.instanceDifficultyID = instanceDifficultyID
-  data.instanceDifficultyName = instanceDifficultyName
-  data.instanceMaxPlayers = instanceMaxPlayers
-  data.instanceDynamicDifficulty = instanceDynamicDifficulty
-  data.instanceIsDynamic = instanceIsDynamic
-  data.instanceID = instanceID
-  data.instanceGroupSize = instanceGroupSize
-  data.instanceLFGDungeonID = instanceLFGDungeonID
-
-  if data.activeChallengeModeID then
-    local mapName, mapID, mapTimeLimit, mapTexture, mapBackgroundTexture = C_ChallengeMode.GetMapUIInfo(data.activeChallengeModeID)
-    if mapName then
-      data.mapID = mapID
-      data.mapName = mapName
-      data.mapTimeLimit = mapTimeLimit
-      data.mapTexture = mapTexture
-      data.mapBackgroundTexture = mapBackgroundTexture
-    end
-  end
-
-  local _, _, stepCount = C_Scenario.GetStepInfo()
-  data.stepCount = stepCount
-
-  local keystoneTimerID, keystoneTimerElapsedTime, keystoneTimerIsActive = GetKeystoneTimer()
-  data.keystoneTimerID = keystoneTimerID
-  data.keystoneTimerElapsedTime = keystoneTimerElapsedTime
-  data.keystoneTimerIsActive = keystoneTimerIsActive
-
-  local deathCount, deathTimeLost = C_ChallengeMode.GetDeathCount()
-  data.deathCount = deathCount
-  data.deathTimeLost = deathTimeLost
-
-  data.bosses = {}
-  data.trashCount = 0
-  if stepCount and stepCount > 1 then
-    for stepIndex = 1, stepCount do
-      local criteriaString, criteriaType, criteriaCompleted, criteriaQuantity, criteriaTotalQuantity, criteriaFlags, criteriaAssetID, criteriaQuantityString, criteriaID, criteriaDuration, criteriaElapsed, criteriaFailed, criteriaIsWeightedProgress = C_Scenario.GetCriteriaInfo(stepIndex)
-      if criteriaString then
-        -- DevTools_Dump({criteriaString, criteriaType, completed, quantity, totalQuantity, flags, assetID, quantityString, criteriaID, duration, elapsed, criteriaFailed, isWeightedProgress})
-        if stepIndex == stepCount then -- Last step: Trash
-          local trashCount = criteriaQuantityString and tonumber(strsub(criteriaQuantityString, 1, strlen(criteriaQuantityString) - 1)) or 0
-          if trashCount > 0 then
-            data.trashCount = trashCount
+  if numCriteria and numCriteria > 1 then
+    for stepIndex = 1, numCriteria do
+      local criteriaInfo = C_ScenarioInfo.GetCriteriaInfo(stepIndex)
+      if criteriaInfo and criteriaInfo.description then
+        -- Last step: Trash
+        if stepIndex == numCriteria then
+          local trashCountCriteria = criteriaInfo.quantityString and tonumber(strsub(criteriaInfo.quantityString, 1, strlen(criteriaInfo.quantityString) - 1)) or 0
+          if trashCountCriteria and trashCountCriteria > 0 then
+            trashCount = trashCountCriteria
           end
         else
-          local boss = data.bosses[stepIndex]
-          if not boss then
-            boss = {
+          local encounter = encounters[stepIndex]
+          if not encounter then
+            encounter = {
               index = stepIndex,
               isInCombat = false,
               numPulls = 0,
               isCompleted = false,
-              encounterID = criteriaAssetID,
+              encounterID = criteriaInfo.assetID,
               combatStartTime = 0,
               combatEndTime = 0,
               completedStartTime = 0,
@@ -241,348 +147,250 @@ function Module:GetChallengeData()
             }
           end
           -- TODO: Check criteriaDuration/elapsed for accurate numbers and potential time offsets
-          if not boss.isCompleted then
-            if not criteriaCompleted then
-              if not boss.isInCombat and self.db.global.runHistory.activeEncounter then
-                boss.isInCombat = true
-                boss.combatStartTime = challengeModeTime
-                boss.numPulls = boss.numPulls + 1
-              elseif boss.isInCombat and not self.db.global.runHistory.activeEncounter then
-                boss.isInCombat = false
-                boss.combatEndTime = challengeModeTime
+          if not encounter.isCompleted then
+            if not criteriaInfo.completed then
+              if not encounter.isInCombat and self.db.global.runHistory.activeEncounter then
+                encounter.isInCombat = true
+                encounter.combatStartTime = keystoneTimer.elapsedTime
+                encounter.numPulls = encounter.numPulls + 1
+              elseif encounter.isInCombat and not self.db.global.runHistory.activeEncounter then
+                encounter.isInCombat = false
+                encounter.combatEndTime = keystoneTimer.elapsedTime
               end
             else
-              boss.isInCombat = false
-              boss.numPulls = max(1, boss.numPulls)
-              boss.isCompleted = true
-              boss.completedStartTime = boss.combatStartTime or challengeModeTime
-              boss.completedEndTime = boss.combatEndTime or challengeModeTime
+              encounter.isInCombat = false
+              encounter.numPulls = max(1, encounter.numPulls)
+              encounter.isCompleted = true
+              encounter.completedStartTime = encounter.combatStartTime or keystoneTimer.elapsedTime
+              encounter.completedEndTime = encounter.combatEndTime or keystoneTimer.elapsedTime
             end
           end
 
-          data.bosses[stepIndex] = boss
+          encounters[stepIndex] = encounter
         end
       end
+      criterias[stepIndex] = criteriaInfo
     end
   end
+
+  ---@type AE_RH_ChallengeModeData
+  local data = {
+    challengeModeID = challengeModeID,
+    challengeModeActive = challengeModeActive,
+    completionInfo = challengeCompletionInfo,
+    keystoneInfo = {
+      level = activeKeystoneInfo_level,
+      affixIDs = activeKeystoneInfo_affixIDs,
+      wasCharged = activeKeystoneInfo_wasCharged,
+    },
+    mapInfo = {
+      name = mapInfo_name,
+      id = mapInfo_ID,
+      timeLimit = mapInfo_timeLimit,
+      texture = mapInfo_texture,
+      backgroundTexture = mapInfo_backgroundTexture,
+    },
+    instanceInfo = {
+      name = instanceInfo_name,
+      instanceType = instanceInfo_instanceType,
+      difficultyID = instanceInfo_difficultyID,
+      difficultyName = instanceInfo_difficultyName,
+      maxPlayers = instanceInfo_maxPlayers,
+      dynamicDifficulty = instanceInfo_dynamicDifficulty,
+      isDynamic = instanceInfo_isDynamic,
+      instanceID = instanceInfo_instanceID,
+      instanceGroupSize = instanceInfo_instanceGroupSize,
+      LFGDungeonID = instanceInfo_LFGDungeonID,
+    },
+    deathCount = {
+      numDeaths = deathCount_numDeaths,
+      timeLost = deathCount_timeLost,
+    },
+    numCriteria = numCriteria,
+    keystoneTimer = keystoneTimer,
+    criterias = criterias,
+    encounters = encounters,
+    trashCount = trashCount,
+  }
 
   return data
 end
 
+---Start a new record
+---@return AE_RH_Run?
 function Module:StartRun()
   Debug("StartRun()")
-  -- TODO: Start a new session if already in a run?
   local activeRun = self:GetActiveRun()
   if activeRun then
     self:ClearActiveRun()
   end
 
   local seasonID = addon.Data:GetCurrentSeason()
-  -- local data = self:GetChallengeData()
-  local instanceName, instanceType, instanceDifficultyID, instanceDifficultyName, instanceMaxPlayers, instanceDynamicDifficulty, instanceIsDynamic, instanceID, instanceGroupSize, instanceLFGDungeonID = GetInstanceInfo()
-  local activeKeystoneLevel, activeKeystoneAffixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-  local isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
-  local challengeModeID = C_ChallengeMode.GetActiveChallengeMapID()
-
-  if not challengeModeID or not isChallengeModeActive then return end -- Bug
-  local mapName, mapID, mapTimeLimit, mapTexture, mapBackgroundTexture = C_ChallengeMode.GetMapUIInfo(challengeModeID)
-
+  local data = self:GetChallengeData()
   local startTimestamp = GetServerTime()
+
+  if not data.challengeModeID or not data.challengeModeActive then return nil end -- Bug
+
   -- Detect to see if the run has already been going for a bit
-  local keystoneTimerID, keystoneTimerElapsedTime, keystoneTimerIsActive = GetKeystoneTimer()
-  if keystoneTimerIsActive then
-    startTimestamp = startTimestamp - keystoneTimerElapsedTime
+  if data.keystoneTimer.timerID and data.keystoneTimer.isActive and data.keystoneTimer.elapsedTime then
+    startTimestamp = startTimestamp - data.keystoneTimer.elapsedTime
   end
 
   ---@type AE_RH_Run
   local run = {
-    id = format("%s:%d:%d:%d", instanceType, instanceID, instanceDifficultyID, startTimestamp),
+    id = format("%s:%d:%d:%d", data.instanceInfo.instanceType, data.instanceInfo.instanceID, data.instanceInfo.instanceDifficultyID, startTimestamp),
     seasonID = seasonID,
     startTimestamp = startTimestamp,
     updateTimestamp = GetServerTime(),
-    endTimestamp = nil,
+    endTimestamp = 0,
     state = "RUNNING",
-    affixes = activeKeystoneAffixIDs,
     members = {},
     events = {},
     loot = {},
-
-    -- isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive(),
-
-    -- activeKeystoneLevel = activeKeystoneLevel,
-    -- activeKeystoneAffixIDs = activeKeystoneAffixIDs,
-    -- activeChallengeModeID = C_ChallengeMode.GetActiveChallengeMapID(),
-
-    challengeModeTimers = {0, 0, 0},
-
-    challengeModeID = challengeModeID,
-    challengeModeLevel = activeKeystoneLevel,
-    challengeModeTime = nil,
-    challengeModeOnTime = nil,
-    challengeModeKeystoneUpgradeLevels = nil,
-    challengeModePracticeRun = nil,
-    challengeModeOldOverallDungeonScore = nil,
-    challengeModeNewOverallDungeonScore = nil,
-    challengeModeIsMapRecord = nil,
-    challengeModeIsAffixRecord = nil,
-    challengeModePrimaryAffix = nil,
-    challengeModeisEligibleForScore = nil,
-    challengeModeUpgradeMembers = nil,
-
-    instanceName = instanceName,
-    instanceType = instanceType,
-    instanceDifficultyID = instanceDifficultyID,
-    instanceDifficultyName = instanceDifficultyName,
-    instanceMaxPlayers = instanceMaxPlayers,
-    instanceDynamicDifficulty = instanceDynamicDifficulty,
-    instanceIsDynamic = instanceIsDynamic,
-    instanceID = instanceID,
-    instanceGroupSize = instanceGroupSize,
-    instanceLFGDungeonID = instanceLFGDungeonID,
-
-    mapID = mapID,
-    mapName = mapName,
-    mapTimeLimit = mapTimeLimit,
-    mapTexture = mapTexture,
-    mapBackgroundTexture = mapBackgroundTexture,
-
-    stepCount = nil,
-
-    deathCount = nil,
-    deathTimeLost = nil,
-
-    keystoneTimerID = keystoneTimerID,
-    keystoneTimerElapsedTime = keystoneTimerElapsedTime,
-    keystoneTimerIsActive = keystoneTimerIsActive,
-
-    bosses = {},
-    trashCount = 0,
-    objectives = {},
+    data = data,
   }
 
-  local _, _, stepCount = C_Scenario.GetStepInfo()
-  run.stepCount = stepCount
+  -- TODO: Get member info
+  -- TODO: Make use of Open-Raid-library to get spec, talents, gear etc.
+  if IsInGroup() then
+    for p = 0, GetNumGroupMembers() do
+      local unitid = p == 0 and "player" or "party" .. p
+      local guid = UnitGUID(unitid)
+      local name, server = UnitName(unitid)
+      local _, _, classID = UnitClass(unitid)
+      local role = UnitGroupRolesAssigned(unitid)
+
+      ---@type AE_RH_Member
+      local member = {
+        guid = guid or "",
+        name = name,
+        realm = server,
+        classID = classID,
+        role = role,
+      }
+      table.insert(run.members, member)
+    end
+  else
+    -- Solo, really?
+    local unitid = "player"
+    local guid = UnitGUID(unitid)
+    local name, server = UnitName(unitid)
+    local _, _, classID = UnitClass(unitid)
+    local role = UnitGroupRolesAssigned(unitid)
+
+    ---@type AE_RH_Member
+    local member = {
+      guid = guid or "",
+      name = name,
+      realm = server,
+      classID = classID,
+      role = role,
+    }
+    table.insert(run.members, member)
+  end
 
   table.insert(addon.Data.db.global.runHistory.runs, run)
-
   self:SetActiveRun(run.id)
-  self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-  self:UpdateActiveRun()
+  self:StartRecording()
 
   return run
 end
 
+---End the current run
+---@param isCompleted boolean
+---@return AE_RH_Run?
 function Module:EndActiveRun(isCompleted)
   Debug("EndActiveRun()")
-  self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  self:StopRecording()
 
-  local run = self:GetActiveRun()
-  if not run then return end
+  local activeRun = self:GetActiveRun()
+  if not activeRun then return nil end
 
-  -- self:UpdateActiveRun()
+  local data = self:GetChallengeData()
+  activeRun.updateTimestamp = GetServerTime()
+  activeRun.endTimestamp = GetServerTime()
 
-  -- TODO: Set more data after a run is complete
-  run.endTimestamp = GetServerTime()
+  -- local completionMapChallengeModeID, completionLevel, completionTime, completionOnTime, completionKeystoneUpgradeLevels, completionPracticeRun,
+  -- completionOldOverallDungeonScore, completionNewOverallDungeonScore, completionIsMapRecord,
+  -- completionIsAffixRecord, completionPrimaryAffix, completionisEligibleForScore, completionUpgradeMembers = C_ChallengeMode.GetCompletionInfo()
+
+  -- if completionTime and completionTime > 0 then
+  --   run.completionMapChallengeModeID = completionMapChallengeModeID
+  --   run.completionLevel = completionLevel
+  --   run.completionTime = completionTime
+  --   run.completionOnTime = completionOnTime
+  --   run.completionKeystoneUpgradeLevels = completionKeystoneUpgradeLevels
+  --   run.completionPracticeRun = completionPracticeRun
+  --   run.completionOldOverallDungeonScore = completionOldOverallDungeonScore
+  --   run.completionNewOverallDungeonScore = completionNewOverallDungeonScore
+  --   run.completionIsMapRecord = completionIsMapRecord
+  --   run.completionIsAffixRecord = completionIsAffixRecord
+  --   run.completionPrimaryAffix = completionPrimaryAffix
+  --   run.completionisEligibleForScore = completionisEligibleForScore
+  --   run.completionUpgradeMembers = completionUpgradeMembers
+  -- end
 
   if isCompleted then
-    if run.challengeModeOnTime then
-      run.state = "TIMED"
+    activeRun.data = data
+    if activeRun.challengeModeOnTime then
+      activeRun.state = "TIMED"
     else
-      run.state = "OVERTIME"
+      activeRun.state = "OVERTIME"
     end
   else
-    run.state = "ABANDONED"
+    activeRun.state = "ABANDONED"
   end
 
   self:SetActiveRun(nil)
+  return activeRun
+end
+
+function Module:PLAYER_ENTERING_WORLD()
+  Debug("PLAYER_ENTERING_WORLD()")
+  self.window:Show() -- DEV
+  self:DetectActiveRun()
+end
+
+-- Todo: This is gonna suck
+function Module:DetectActiveRun()
+  Debug("DetectActiveRun()")
+
+  local data = self:GetChallengeData()
+  local activeRun = self:GetActiveRun()
+
+  if activeRun then
+    if data.challengeModeActive then
+      Debug("DetectActiveRun: isChallengeModeActive")
+      self:StartRecording()
+      return
+    else
+      -- if not IsInGroup() then
+      --   Debug("DetectActiveRun: not IsInGroup()")
+      --   return self:EndActiveRun()
+      -- end
+    end
+  else
+    Debug("DetectActiveRun: activeRun = nil")
+    if data.challengeModeActive then
+      Debug("DetectActiveRun: challengeModeActive = true")
+      self:StartRun()
+      return
+    end
+  end
 end
 
 function Module:UpdateActiveRun()
   Debug("UpdateActiveRun()")
-  -- local data = self:GetChallengeData()
-  local run = self:GetActiveRun()
-  if not run then return end
+  local activeRun = self:GetActiveRun()
+  if not activeRun then return end
 
-  run.isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
+  local data = self:GetChallengeData()
+  if not data.challengeModeActive then return end
 
-  local activeKeystoneLevel, activeKeystoneAffixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-  run.activeKeystoneLevel = activeKeystoneLevel
-  run.activeKeystoneAffixIDs = activeKeystoneAffixIDs
-
-  local activeChallengeModeID = C_ChallengeMode.GetActiveChallengeMapID() -- Note: Not MapChallengeMode.MapID, but MapChallengeMode.ID
-  run.activeChallengeModeID = activeChallengeModeID
-
-  local challengeModeID, challengeModeLevel, challengeModeTime, challengeModeOnTime, challengeModeKeystoneUpgradeLevels, challengeModePracticeRun, challengeModeOldOverallDungeonScore, challengeModeNewOverallDungeonScore, challengeModeIsMapRecord, challengeModeIsAffixRecord, challengeModePrimaryAffix, challengeModeisEligibleForScore, challengeModeUpgradeMembers = C_ChallengeMode.GetCompletionInfo()
-  if challengeModeTime and challengeModeTime > 0 then
-    run.challengeModeID = challengeModeID
-    run.challengeModeLevel = challengeModeLevel
-    run.challengeModeTime = challengeModeTime
-    run.challengeModeOnTime = challengeModeOnTime
-    run.challengeModeKeystoneUpgradeLevels = challengeModeKeystoneUpgradeLevels
-    run.challengeModePracticeRun = challengeModePracticeRun
-    run.challengeModeOldOverallDungeonScore = challengeModeOldOverallDungeonScore
-    run.challengeModeNewOverallDungeonScore = challengeModeNewOverallDungeonScore
-    run.challengeModeIsMapRecord = challengeModeIsMapRecord
-    run.challengeModeIsAffixRecord = challengeModeIsAffixRecord
-    run.challengeModePrimaryAffix = challengeModePrimaryAffix
-    run.challengeModeisEligibleForScore = challengeModeisEligibleForScore
-    run.challengeModeUpgradeMembers = challengeModeUpgradeMembers
-  end
-
-  -- local instanceName, instanceType, instanceDifficultyID, instanceDifficultyName, instanceMaxPlayers, instanceDynamicDifficulty, instanceIsDynamic, instanceID, instanceGroupSize, instanceLFGDungeonID = GetInstanceInfo()
-  -- run.instanceName = instanceName
-  -- run.instanceType = instanceType
-  -- run.instanceDifficultyID = instanceDifficultyID
-  -- run.instanceDifficultyName = instanceDifficultyName
-  -- run.instanceMaxPlayers = instanceMaxPlayers
-  -- run.instanceDynamicDifficulty = instanceDynamicDifficulty
-  -- run.instanceIsDynamic = instanceIsDynamic
-  -- run.instanceID = instanceID
-  -- run.instanceGroupSize = instanceGroupSize
-  -- run.instanceLFGDungeonID = instanceLFGDungeonID
-
-  -- if run.activeChallengeModeID then
-  --   local mapName, mapID, mapTimeLimit, mapTexture, mapBackgroundTexture = C_ChallengeMode.GetMapUIInfo(run.activeChallengeModeID)
-  --   if mapName then
-  --     run.mapID = mapID
-  --     run.mapName = mapName
-  --     run.mapTimeLimit = mapTimeLimit
-  --     run.mapTexture = mapTexture
-  --     run.mapBackgroundTexture = mapBackgroundTexture
-  --   end
-  -- end
-
-  -- local _, _, stepCount = C_Scenario.GetStepInfo()
-  -- run.stepCount = stepCount
-
-  local keystoneTimerID, keystoneTimerElapsedTime, keystoneTimerIsActive = GetKeystoneTimer()
-  run.keystoneTimerID = keystoneTimerID
-  run.keystoneTimerElapsedTime = keystoneTimerElapsedTime
-  run.keystoneTimerIsActive = keystoneTimerIsActive
-
-  local deathCount, deathTimeLost = C_ChallengeMode.GetDeathCount()
-  run.deathCount = deathCount
-  run.deathTimeLost = deathTimeLost
-
-  run.bosses = {}
-  run.trashCount = 0
-  run.objectives = {}
-  if run.stepCount and run.stepCount > 0 then
-    for stepIndex = 1, run.stepCount do
-      -- table.insert(run.objectives, C_ScenarioInfo.GetCriteriaInfo(stepIndex))
-    end
-  end
+  activeRun.data = data
+  activeRun.updateTimestamp = GetServerTime()
 
   self:Render()
-  -- if stepCount and stepCount > 1 then
-  --   for stepIndex = 1, stepCount do
-  --     local criteriaString, criteriaType, criteriaCompleted, criteriaQuantity, criteriaTotalQuantity, criteriaFlags, criteriaAssetID, criteriaQuantityString, criteriaID, criteriaDuration, criteriaElapsed, criteriaFailed, criteriaIsWeightedProgress = C_Scenario.GetCriteriaInfo(stepIndex)
-  --     if criteriaString then
-  --       if stepIndex == stepCount then -- Last step: Trash
-  --         local trashCount = criteriaQuantityString and tonumber(strsub(criteriaQuantityString, 1, strlen(criteriaQuantityString) - 1)) or 0
-  --         if trashCount > 0 then
-  --           run.trashCount = trashCount
-  --         end
-  --       else
-  --         local boss = run.bosses[stepIndex]
-  --         if not boss then
-  --           boss = {
-  --             index = stepIndex,
-  --             isInCombat = false,
-  --             numPulls = 0,
-  --             isCompleted = false,
-  --             encounterID = criteriaAssetID,
-  --             combatStartTime = 0,
-  --             combatEndTime = 0,
-  --             completedStartTime = 0,
-  --             completedEndTime = 0,
-  --           }
-  --         end
-  --         -- TODO: Check criteriaDuration/elapsed for accurate numbers and potential time offsets
-  --         if not boss.isCompleted then
-  --           if not criteriaCompleted then
-  --             if not boss.isInCombat and self.db.global.runHistory.activeEncounter then
-  --               boss.isInCombat = true
-  --               boss.combatStartTime = challengeModeTime
-  --               boss.numPulls = boss.numPulls + 1
-  --             elseif boss.isInCombat and not self.db.global.runHistory.activeEncounter then
-  --               boss.isInCombat = false
-  --               boss.combatEndTime = challengeModeTime
-  --             end
-  --           else
-  --             boss.isInCombat = false
-  --             boss.numPulls = max(1, boss.numPulls)
-  --             boss.isCompleted = true
-  --             boss.completedStartTime = boss.combatStartTime or challengeModeTime
-  --             boss.completedEndTime = boss.combatEndTime or challengeModeTime
-  --           end
-  --         end
-
-  --         run.bosses[stepIndex] = boss
-  --       end
-  --     end
-  --   end
-  -- end
-
-
-
-
-  -- if not run then
-  --   if data.isChallengeModeActive then
-  --     self:StartRun()
-  --     return
-  --   end
-  -- end
-
-
-  -- local runData = self:GetChallengeData()
-  -- if not addon.Data.db.global.runHistory.activeRun then
-  --   if runData.isChallengeModeActive then
-  --     return self:StartRun()
-  --   end
-  -- end
-
-
-  -- if data.isChallengeModeActive then
-  --   run.startTimestamp = run.startTimestamp - data.time
-  --   run.challengeModeID = data.activeChallengeModeID
-  --   run.affixes = data.activeKeystoneAffixIDs
-  --   run.challengeModeLevel = data.activeKeystoneLevel
-  -- end
-
-  -- -- TODO: Make use of Open-Raid-library to get spec, talents, gear etc.
-  -- if IsInGroup() then
-  --   for p = 0, GetNumGroupMembers() do
-  --     local unitid = p == 0 and "player" or "party" .. p
-  --     local name, server = UnitName(unitid)
-  --     local _, _, classID = UnitClass(unitid)
-  --     local role = UnitGroupRolesAssigned(unitid)
-
-  --     ---@type AE_RH_RunMember
-  --     local member = {
-  --       name = name,
-  --       realm = server,
-  --       classID = classID,
-  --       role = role,
-  --     }
-  --     table.insert(run.members, member)
-  --   end
-  -- else
-  --   -- Solo, really?
-  --   local unitid = "player"
-  --   local name, server = UnitName(unitid)
-  --   local _, _, classID = UnitClass(unitid)
-  --   local role = UnitGroupRolesAssigned(unitid)
-
-  --   ---@type AE_RH_RunMember
-  --   local member = {
-  --     name = name,
-  --     realm = server,
-  --     classID = classID,
-  --     role = role,
-  --   }
-  --   table.insert(run.members, member)
-  -- end
 end
 
 ---Get the active run
@@ -605,37 +413,25 @@ function Module:ClearActiveRun()
   self:SetActiveRun(nil)
 end
 
--- Todo: This is gonna suck
-function Module:DetectActiveRun()
-  Debug("DetectActiveRun()")
+function Module:StartRecording()
+  Debug("StartRecording()")
+  self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  self.recording = self:ScheduleRepeatingTimer("UpdateActiveRun", 1)
+end
 
-  local isChallengeModeActive = C_ChallengeMode.IsChallengeModeActive()
-  local challengeModeID = C_ChallengeMode.GetActiveChallengeMapID()
-  local run = self:GetActiveRun()
-
-  if run then
-    if isChallengeModeActive then
-      Debug("DetectActiveRun: isChallengeModeActive")
-      return
-    else
-      -- if not IsInGroup() then
-      --   Debug("DetectActiveRun: not IsInGroup()")
-      --   return self:EndActiveRun()
-      -- end
-    end
-  else
-    if isChallengeModeActive then
-      Debug("DetectActiveRun: isChallengeModeActive")
-      return self:StartRun()
-    end
+function Module:StopRecording()
+  Debug("StopRecording()")
+  self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  if self.recording then
+    self:CancelTimer(self.recording)
   end
 end
 
 function Module:COMBAT_LOG_EVENT_UNFILTERED(...)
   Debug("COMBAT_LOG_EVENT_UNFILTERED()")
-  local run = self:GetActiveRun()
-  if not run then
-    self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  local activeRun = self:GetActiveRun()
+  if not activeRun or not C_ChallengeMode.IsChallengeModeActive() then
+    self:StopRecording()
     return
   end
 
@@ -658,10 +454,8 @@ function Module:COMBAT_LOG_EVENT_UNFILTERED(...)
     }
     -- activeRun.numDeaths = activeRun.numDeaths + 1
     -- activeRun.timeLost = activeRun.timeLost + timeLost
-    table.insert(run.events, event)
+    table.insert(activeRun.events, event)
   end
-
-  self:UpdateActiveRun()
 end
 
 function Module:GROUP_ROSTER_UPDATE(...)
@@ -673,20 +467,12 @@ end
 
 function Module:CHALLENGE_MODE_START(...)
   Debug("CHALLENGE_MODE_START()")
-  self:StartRun()
+  self:DetectActiveRun()
 end
 
 function Module:CHALLENGE_MODE_COMPLETED(...)
   Debug("CHALLENGE_MODE_COMPLETED()")
-  self:EndActiveRun()
-end
-
-function Module:PLAYER_ENTERING_WORLD()
-  Debug("PLAYER_ENTERING_WORLD()")
-  self.window:Show() -- DEV
-
-  self:DetectActiveRun()
-  self:UpdateActiveRun()
+  self:EndActiveRun(true)
 end
 
 function Module:ENCOUNTER_START(...)
@@ -764,7 +550,7 @@ function Module:Render()
   Debug("Render()")
   self:RenderRunBoard()
   self:RenderRunDetails()
-  self:RenderRunHistory()
+  self:RenderIndex()
 end
 
 function Module:RenderRunDetails()
@@ -1021,8 +807,8 @@ function Module:RenderRunDetails()
   end)
 end
 
-function Module:RenderRunHistory()
-  Debug("RenderRunHistory()")
+function Module:RenderIndex()
+  Debug("RenderIndex()")
   local tableWidth = 0
   local tableHeight = 0
   local rowHeight = 24
@@ -1096,7 +882,7 @@ function Module:RenderRunHistory()
       {width = 300},                  -- DPS
       {width = 60, align = "center"}, -- Score
       {width = 110},                  -- Result
-      {width = 80},                   -- Date
+      {width = 120},                  -- Date
       {width = 60, align = "center"}, -- Note
     },
     rows = {
@@ -1136,7 +922,7 @@ function Module:RenderRunHistory()
       table.insert(affixes, affix.fileDataID and "|T" .. affix.fileDataID .. ":16|t " or "")
     end
 
-    local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.challengeModeID)
+    local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.data.challengeModeID)
     local dungeonName = "-"
     if dungeon then
       dungeonName = dungeon.abbr and dungeon.abbr or dungeon.name
@@ -1152,8 +938,8 @@ function Module:RenderRunHistory()
       end,
       columns = {
         {text = dungeonName},
-        {text = "+" .. tostring(run.challengeModeLevel)},
-        {text = SecondsToClock(run.challengeModeTime or run.keystoneTimerElapsedTime or 0)},
+        {text = "+" .. tostring(run.data.keystoneInfo.level)},
+        {text = SecondsToClock(run.data.keystoneTimer.elapsedTime or 0)},
         {text = table.concat(affixes, "")},
         -- {text = table.concat(run.affixes, "")},
         -- {text = ""},
@@ -1162,7 +948,7 @@ function Module:RenderRunHistory()
         {text = random_player(true)},
         {text = random_player(false, true)},
         {text = format("%s  %s  %s", random_player(), random_player(), random_player())},
-        {text = tostring(run.challengeModeNewOverallDungeonScore or 0)},
+        {text = tostring(run.data.completionInfo.newOverallDungeonScore or 0)},
         {text = run.state},
         {
           text = tostring(human_date(run.startTimestamp)),
@@ -1182,7 +968,7 @@ function Module:RenderRunHistory()
     tableHeight = tableHeight + rowHeight
   end)
 
-  local lastWhen = GetServerTime()
+  -- local lastWhen = GetServerTime()
   -- for i = 1, 20 do
   --   local when = date("%c", lastWhen)
   --   lastWhen = lastWhen - math.random(5000, 15000)
@@ -1446,7 +1232,7 @@ function Module:RenderRunBoard()
               backgroundColor = leftColor,
             },
             {
-              text = selectedRun and (selectedRun.mapTexture and "|T" .. selectedRun.mapTexture .. ":14|t  " or "") .. (selectedRun.mapName and selectedRun.mapName or "-") or "-",
+              text = selectedRun and (selectedRun.data.mapInfo.texture and "|T" .. selectedRun.data.mapInfo.texture .. ":14|t  " or "") .. (selectedRun.data.mapInfo.name and selectedRun.data.mapInfo.name or "-") or "-",
             },
           },
         },
@@ -1457,7 +1243,7 @@ function Module:RenderRunBoard()
               backgroundColor = leftColor,
             },
             {
-              text = selectedRun and selectedRun.challengeModeLevel or "-",
+              text = selectedRun and tostring(selectedRun.data.keystoneInfo.level) or "-",
             },
           },
         },
@@ -1468,7 +1254,7 @@ function Module:RenderRunBoard()
               backgroundColor = leftColor,
             },
             {
-              text = selectedRun and selectedRun.keystoneTimerElapsedTime and SecondsToClock(selectedRun.keystoneTimerElapsedTime) or "-",
+              text = selectedRun and selectedRun.data.keystoneTimer.elapsedTime and SecondsToClock(selectedRun.data.keystoneTimer.elapsedTime) or "-",
             },
           },
         },
@@ -1501,8 +1287,9 @@ function Module:RenderRunBoard()
               backgroundColor = leftColor,
             },
             {
+              text = selectedRun and selectedRun.data.completionInfo and selectedRun.data.completionInfo.newOverallDungeonScore and tostring(selectedRun.data.completionInfo.newOverallDungeonScore) or "-",
               -- text = run and run.challengeModeNewOverallDungeonScore and tostring(run.challengeModeNewOverallDungeonScore) or "-",
-              text = "240 (+30)",
+              -- text = "240 (+30)",
             },
           },
         },
@@ -1525,18 +1312,40 @@ function Module:RenderRunBoard()
             },
             {
               -- text = run and run.deathCount and tostring(run.deathCount) or "-",
-              text = "3",
+              text = selectedRun and tostring(selectedRun.data.deathCount.numDeaths) or "-",
             },
           },
         },
         {
           columns = {
             {
-              text = "|cffddddddDate:|r",
+              text = "|cffddddddStart time:|r",
               backgroundColor = leftColor,
             },
             {
-              text = selectedRun and tostring(human_date(selectedRun.startTimestamp)) or "-",
+              text = selectedRun and selectedRun.startTimestamp and selectedRun.startTimestamp > 0 and tostring(date(RUN_DATE_FORMAT, selectedRun.startTimestamp)) or "-",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddLast update:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and selectedRun.updateTimestamp and selectedRun.updateTimestamp > 0 and tostring(date(RUN_DATE_FORMAT, selectedRun.updateTimestamp)) or "-",
+            },
+          },
+        },
+        {
+          columns = {
+            {
+              text = "|cffddddddEnd time:|r",
+              backgroundColor = leftColor,
+            },
+            {
+              text = selectedRun and selectedRun.endTimestamp and selectedRun.endTimestamp > 0 and tostring(date(RUN_DATE_FORMAT, selectedRun.endTimestamp)) or "-",
             },
           },
         },
@@ -1550,19 +1359,19 @@ function Module:RenderRunBoard()
     ---@type AE_TableData
     local data = {
       columns = {
-        {width = 150},                               -- Player
-        {width = 110},                               -- Score
-        {width = 60, align = "center"},              -- Ilvl
-        {width = 70, align = "center"},              -- DPS
-        {width = 70, align = "center"},              -- HPS
-        {width = 90, align = "center"},              -- Dmg Taken
-        {width = 80, align = "center"},              -- Deaths
-        {width = 80, align = "center"},              -- Interrupts
-        {width = 80, align = "center"},              -- Dispels
-        {width = 20, align = "left",  padding = 0},  -- Show Gear
-        {width = 20, align = "left",  padding = 0},  -- Show Talents
-        {width = 24, align = "left",  padding = 0},  -- Show Note
-        {width = 26, align = "left",  padding = 0},  -- Search Player
+        {width = 150},                              -- Player
+        {width = 110},                              -- Score
+        {width = 60, align = "center"},             -- Ilvl
+        {width = 70, align = "center"},             -- DPS
+        {width = 70, align = "center"},             -- HPS
+        {width = 90, align = "center"},             -- Dmg Taken
+        {width = 80, align = "center"},             -- Deaths
+        {width = 80, align = "center"},             -- Interrupts
+        {width = 80, align = "center"},             -- Dispels
+        {width = 20, align = "left",  padding = 0}, -- Show Gear
+        {width = 20, align = "left",  padding = 0}, -- Show Talents
+        {width = 24, align = "left",  padding = 0}, -- Show Note
+        {width = 26, align = "left",  padding = 0}, -- Search Player
       },
       rows = {
         {
@@ -1587,11 +1396,11 @@ function Module:RenderRunBoard()
 
     for i = 1, 5 do
       local playerName = random_player(i == 1, i == 2)
-      local playerIcon = CreateAtlasMarkup("groupfinder-icon-role-large-tank", 18, 18, -3, 0)
+      local playerIcon = CreateAtlasMarkup("UI-LFG-RoleIcon-Tank", 18, 18, -3, 0)
       if i == 2 then
-        playerIcon = CreateAtlasMarkup("groupfinder-icon-role-large-heal", 18, 18, -3, 0)
+        playerIcon = CreateAtlasMarkup("UI-LFG-RoleIcon-Healer", 18, 18, -3, 0)
       elseif i > 2 then
-        playerIcon = CreateAtlasMarkup("groupfinder-icon-role-large-dps", 18, 18, -3, 0)
+        playerIcon = CreateAtlasMarkup("UI-LFG-RoleIcon-DPS", 18, 18, -3, 0)
       end
       ---@type AE_TableDataRow
       local row = {
