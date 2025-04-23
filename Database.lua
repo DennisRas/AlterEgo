@@ -1105,61 +1105,68 @@ function Data:UpdateKeystoneItem()
   if not character then return end
   local dungeons = self:GetDungeons()
   local keystoneItemID = self:GetKeystoneItemID()
-  local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-  local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-  if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) or 0 end
-  if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) or 0 end
+  local characterKeystoneMapID = character.mythicplus.keystone.mapId
+  local characterKeystoneLevel = character.mythicplus.keystone.level
+
+  do -- Base keystone data
+    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) or 0 end
+    if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) or 0 end
+  end
+
+  if not keystoneItemID then return addon.UI:Render() end
 
   local keystoneItemLink = nil
-  if keystoneItemID ~= nil then
-    for bagID = 0, NUM_BAG_SLOTS do
-      for slotID = 1, C_Container.GetContainerNumSlots(bagID) do
-        local itemId = C_Container.GetContainerItemID(bagID, slotID)
-        if itemId and itemId == keystoneItemID then
-          keystoneItemLink = C_Container.GetContainerItemLink(bagID, slotID)
-          break
-        end
-      end
-      if keystoneItemLink then
+  for bagID = 0, NUM_BAG_SLOTS do
+    for slotID = 1, C_Container.GetContainerNumSlots(bagID) do
+      local containerItemId = C_Container.GetContainerItemID(bagID, slotID)
+      if containerItemId and containerItemId == keystoneItemID then
+        keystoneItemLink = C_Container.GetContainerItemLink(bagID, slotID)
         break
       end
     end
+    if keystoneItemLink then
+      break
+    end
   end
 
-  if not keystoneItemLink then
-    return
-  end
+  if not keystoneItemLink then return addon.UI:Render() end
+  if not LinkUtil.IsLinkType(keystoneItemLink, "keystone") then return addon.UI:Render() end
 
-  local _, _, challengeModeID, level = strsplit(":", keystoneItemLink)
-  if not challengeModeID then return end
+  local _, linkOptions = LinkUtil.ExtractLink(keystoneItemLink)
+  if not linkOptions then return addon.UI:Render() end
 
-  local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", tonumber(challengeModeID))
-  if not dungeon then return end
+  local _, linkChallengeModeID, linkLevel = LinkUtil.SplitLinkOptions(linkOptions)
+  if not linkChallengeModeID or not linkLevel then return addon.UI:Render() end
+  local keystoneChallengeModeID = tonumber(linkChallengeModeID) or 0
+  local keystoneLevel = tonumber(linkLevel) or 0
+
+  local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", keystoneChallengeModeID)
+  if not dungeon then return addon.UI:Render() end
+  local dungeonMapId = tonumber(dungeon.mapId) or 0
 
   local newKeystone = false
-  if character.mythicplus.keystone.mapId and character.mythicplus.keystone.level then
-    if character.mythicplus.keystone.mapId ~= tonumber(dungeon.mapId) or character.mythicplus.keystone.level < tonumber(level) then
+  if characterKeystoneMapID and characterKeystoneLevel then
+    if characterKeystoneMapID ~= dungeonMapId or characterKeystoneLevel < keystoneLevel then
       newKeystone = true
     end
-  elseif tonumber(dungeon.mapId) and tonumber(level) then
+  elseif dungeonMapId and keystoneLevel then
     newKeystone = true
   end
 
-  local color = "ffffffff"
-  local levelNumber = tonumber(level)
-  if levelNumber then
-    local keystoneColor = C_ChallengeMode.GetKeystoneLevelRarityColor(levelNumber)
-    if keystoneColor ~= nil then
-      color = keystoneColor:GenerateHexColor()
-    end
+  local keystoneColor = "ffffffff"
+  local color = C_ChallengeMode.GetKeystoneLevelRarityColor(keystoneLevel)
+  if color then
+    keystoneColor = color:GenerateHexColor()
   end
 
   character.mythicplus.keystone = {
-    challengeModeID = tonumber(dungeon.challengeModeID) or 0,
-    mapId = tonumber(dungeon.mapId) or 0,
-    level = tonumber(level) or 0,
-    color = color,
-    itemId = tonumber(keystoneItemID) or 0,
+    challengeModeID = keystoneChallengeModeID,
+    mapId = dungeonMapId,
+    level = keystoneLevel,
+    color = keystoneColor,
+    itemId = keystoneItemID,
     itemLink = keystoneItemLink,
   }
 

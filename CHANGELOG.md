@@ -6,6 +6,10 @@
 
 - Updated the TOC number to support patch 11.1.5
 
+### Fixed
+
+- Fixed an issue with keystones not showing because of the new item quality color accessibility options (requires relogging characters to update)
+
 ## v1.2.5 - 2025-04-06
 
 ### Fixed
