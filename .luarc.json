@@ -199,6 +199,17 @@
         "DASH_WITH_TEXT",
         "MINIMAP_LABEL",
         "INTERFACE_OPTIONS",
-        "MenuResponse"
+        "MenuResponse",
+        "INVSLOT_WRIST",
+        "INVSLOT_HAND",
+        "INVSLOT_WAIST",
+        "INVSLOT_LEGS",
+        "INVSLOT_FEET",
+        "INVSLOT_FINGER1",
+        "INVSLOT_FINGER2",
+        "INVSLOT_TRINKET1",
+        "INVSLOT_TRINKET2",
+        "INVSLOT_MAINHAND",
+        "INVSLOT_OFFHAND",
     ]
 }
