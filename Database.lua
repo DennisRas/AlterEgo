@@ -1105,6 +1105,10 @@ function Data:UpdateKeystoneItem()
   if not character then return end
   local dungeons = self:GetDungeons()
   local keystoneItemID = self:GetKeystoneItemID()
+  local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
+  local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+  if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) or 0 end
+  if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) or 0 end
 
   local keystoneItemLink = nil
   if keystoneItemID ~= nil then
@@ -1123,10 +1127,6 @@ function Data:UpdateKeystoneItem()
   end
 
   if not keystoneItemLink then
-    local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
-    local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-    if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) or 0 end
-    if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) or 0 end
     return
   end
 
