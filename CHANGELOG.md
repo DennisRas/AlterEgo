@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.6 - 2025-04-23
+
+### Updated
+
+- Updated the TOC number to support patch 11.1.5
+
 ## v1.2.5 - 2025-04-06
 
 ### Fixed
