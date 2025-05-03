@@ -1299,7 +1299,7 @@ function Data:UpdateBisItem(characterGuid, slotId, item)
     character.bis[slotId] = nil
   else
     character.bis[slotId] = {
-      item = item,
+      itemId = item.id,
       progress = 0,
     }
   end
@@ -1309,7 +1309,6 @@ function Data:UpdateBisItem(characterGuid, slotId, item)
 end
 
 function Data:UpdateBisProgressForCharacter(character)
-
   if not character then
     character = self:GetCharacter()
   end
@@ -1324,10 +1323,11 @@ function Data:UpdateBisProgressForCharacter(character)
 
     local itemId = addon.Items:ParseIdFromLink(equipment.itemLink)
 
-    if bis.item.id ~= itemId then
+    if bis.itemId ~= itemId then
       bis.progress = 0
     else
-      local itemRange = bis.item.maxLevel - addon.Items.minItemLevel
+      local item = addon.Items:GetItemData(bis.itemId)
+      local itemRange = item.maxLevel - addon.Items.minItemLevel
       local itemProgress = equipment.itemLevel - addon.Items.minItemLevel
 
       bis.progress = tonumber(string.format("%.0f",math.min(100, math.max(0, (itemProgress / itemRange) * 100))))

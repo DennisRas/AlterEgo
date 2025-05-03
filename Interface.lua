@@ -2300,9 +2300,14 @@ function UI:RenderEquipmentWindow()
     end
 
     local bisText = "Click to select item"
-    local bis = character.bis[item.itemSlotID]
-    if bis then
-      bisText = "|T" .. bis.item.texture .. ":0|t " .. bis.item.link .. " (" .. bis.progress .. "%)"
+    local hasBis = character.bis[item.itemSlotID]
+    local bisItem = nil
+
+    if hasBis then
+      bisItem = addon.Items:GetItemData(hasBis.itemId)
+      if bisItem then
+        bisText = "|T" .. bisItem.texture .. ":0|t " .. bisItem.link .. " (" .. hasBis.progress .. "%)"
+      end
     end
 
     ---@type AE_TableDataRow
@@ -2334,16 +2339,16 @@ function UI:RenderEquipmentWindow()
         {
           text = bisText,
           onEnter = function(columnFrame)
-            if bis then
+            if bisItem then
               GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetHyperlink(bis.item.link)
+              GameTooltip:SetHyperlink(bisItem.link)
               GameTooltip:AddLine(" ")
-              GameTooltip:AddLine("To loot on: " .. bis.item.bossName .. " - " .. bis.item.instanceName)
+              GameTooltip:AddLine(bisItem.bossName .. " - " .. bisItem.instanceName)
               GameTooltip:Show()
             end
           end,
           onLeave = function()
-            if bis then
+            if bisItem then
               GameTooltip:Hide()
             end
           end,

@@ -8,6 +8,7 @@ local Items = {
     showAllItems = false,
     minItemLevel = 623, -- TWW S2 : veteran 1/8
     maxItemLevel = 678, -- TWW S2 : mythic 6/6
+    maxCraftItemLevel = 675, -- TWW S2 : max craft item level
     invTypes = {
         [1] = "INVTYPE_HEAD",
         [2] = "INVTYPE_NECK",
@@ -68,7 +69,7 @@ function Items:RegisterBossLoots(bossLoots)
 
     for _, itemId in ipairs(bossLoots.items) do
         if not self.itemData[itemId] then
-            local itemData = self:GetItemData(itemId, instance, bossName)
+            local itemData = self:ComputeItemData(itemId, instance, bossName)
             if itemData then
                 self.itemData[itemId] = itemData
             else
@@ -81,7 +82,7 @@ function Items:RegisterBossLoots(bossLoots)
     end
 end
 
-function Items:GetItemData(itemId, instance, bossName)
+function Items:ComputeItemData(itemId, instance, bossName)
     local itemString = self:GetItemString(itemId, instance.difficulty, instance.bonuses)
     local name, link, _, _, _, _, _, _, invType, texture = C_Item.GetItemInfo(itemString)
     if link then
@@ -106,6 +107,10 @@ function Items:GetItemData(itemId, instance, bossName)
     return nil
 end
 
+function Items:GetItemData(itemId)
+    return self.itemData[itemId]
+end
+
 function Items:ParseIdFromLink(link)
     local itemId = 0
     local _, _, id = link:find("item:(%d+)")
@@ -121,12 +126,14 @@ function Items:RegisterItem(itemId)
     local item = self.unsavedItemData[itemId]
     if item then
         local instance = self.instanceData[item.instanceId]
+
+        ---@diagnostic disable-next-line: undefined-global
         local bossName = EJ_GetEncounterInfo(item.infoId)
         if instance == nil or bossName == nil then
             return
         end
 
-        local itemData = self:GetItemData(itemId, instance, bossName)
+        local itemData = self:ComputeItemData(itemId, instance, bossName)
 
         if itemData then
             self.itemData[itemId] = itemData
