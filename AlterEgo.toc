@@ -40,3 +40,4 @@ Table.lua
 Database.lua
 Interface.lua
 AlterEgo.lua
+Items.lua
