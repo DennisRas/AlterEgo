@@ -40,3 +40,7 @@ Table.lua
 Database.lua
 Interface.lua
 AlterEgo.lua
+Items.lua
+Items\LiberationOfUndermine.lua
+Items\NerubArPalace.lua
+Items\TwwS2.lua

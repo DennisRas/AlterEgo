@@ -508,6 +508,7 @@ function UI:GetCharacterInfo(unfiltered)
       value = function(character)
         local itemLevel = "-"
         local itemLevelColor = LIGHTGRAY_FONT_COLOR:GenerateHexColor()
+        local bisProgress = ""
         if character.info.ilvl ~= nil then
           if character.info.ilvl.level ~= nil then
             itemLevel = tostring(floor(character.info.ilvl.level))
@@ -517,8 +518,12 @@ function UI:GetCharacterInfo(unfiltered)
           else
             itemLevelColor = WHITE_FONT_COLOR:GenerateHexColor()
           end
+
+          if #character.bis > 0 and character.bisProgress ~= nil then
+            bisProgress = "(" .. string.format("%.0f", character.bisProgress) .. "%)"
+          end
         end
-        return WrapTextInColorCode(itemLevel, itemLevelColor)
+        return WrapTextInColorCode(itemLevel, itemLevelColor) .. " " .. bisProgress
       end,
       onEnter = function(infoFrame, character)
         local itemLevelTooltip = ""
@@ -2217,11 +2222,12 @@ function UI:RenderAffixWindow()
 end
 
 function UI:RenderEquipmentWindow()
-  local tableWidth = 610
+  local tableWidth = 910
   local tableHeight = 0
   local rowHeight = 22
 
-  if not self.equipmentWindow then
+  local equipmentWindow = self.equipmentWindow
+  if not equipmentWindow then
     self.equipmentWindow = addon.Window:New({
       name = "Equipment",
       title = "Character",
@@ -2233,6 +2239,15 @@ function UI:RenderEquipmentWindow()
     self.equipmentWindow:SetScript("OnShow", function()
       self:RenderEquipmentWindow()
     end)
+
+    self.equipmentWindow:SetScript("OnHide", function()
+      if self.equipmentWindow.bisItemDropdown then
+        self.equipmentWindow.bisItemDropdown:Hide()
+        self.equipmentWindow.bisItemDropdown = nil
+      end
+    end)
+
+    equipmentWindow = self.equipmentWindow
   end
 
   if not self.equipmentWindow:IsVisible() then
@@ -2245,6 +2260,11 @@ function UI:RenderEquipmentWindow()
     return
   end
 
+  if self.equipmentWindow.bisItemDropdown then
+    self.equipmentWindow.bisItemDropdown:Hide()
+    self.equipmentWindow.bisItemDropdown = nil
+  end
+
   ---@type AE_TableData
   local data = {
     columns = {
@@ -2252,6 +2272,7 @@ function UI:RenderEquipmentWindow()
       {width = 280},
       {width = 80, align = "CENTER"},
       {width = 150},
+      {width = 300},
     },
     rows = {
       {
@@ -2260,7 +2281,8 @@ function UI:RenderEquipmentWindow()
           {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-        },
+          {text = "Best In Slot",  backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+        }
       },
     },
   }
@@ -2274,6 +2296,17 @@ function UI:RenderEquipmentWindow()
         upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
       elseif item.itemUpgradeLevel == item.itemUpgradeMax then
         upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
+      end
+    end
+
+    local bisText = "Click to select item"
+    local hasBis = character.bis[item.itemSlotID]
+    local bisItem = nil
+
+    if hasBis then
+      bisItem = addon.Items:GetItemData(hasBis.itemId)
+      if bisItem then
+        bisText = "|T" .. bisItem.texture .. ":0|t " .. bisItem.link .. " (" .. hasBis.progress .. "%)"
       end
     end
 
@@ -2303,6 +2336,41 @@ function UI:RenderEquipmentWindow()
         },
         {text = WrapTextInColorCode(tostring(item.itemLevel), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
+        {
+          text = bisText,
+          onEnter = function(columnFrame)
+            if bisItem then
+              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetHyperlink(bisItem.link)
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine(bisItem.bossName .. " - " .. bisItem.instanceName)
+              GameTooltip:Show()
+            end
+          end,
+          onLeave = function()
+            if bisItem then
+              GameTooltip:Hide()
+            end
+          end,
+          onClick = function(columnFrame)
+            local bisItemDropdown = self:RenderBisItemDropdown(columnFrame, character, item.itemSlotID)
+            if not bisItemDropdown then
+              return
+            end
+
+            local openedDropdown = self.equipmentWindow.bisItemDropdown
+            if openedDropdown ~= nil then
+              openedDropdown:Hide()
+              if openedDropdown.slotId == item.itemSlotID then
+                self.equipmentWindow.bisItemDropdown = nil
+                return
+              end
+            end
+            
+            bisItemDropdown:Show()
+            self.equipmentWindow.bisItemDropdown = bisItemDropdown
+          end,
+        },
       },
     }
     table.insert(data.rows, row)
@@ -2321,4 +2389,82 @@ function UI:RenderEquipmentWindow()
   self.equipmentWindow:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
   self.equipmentTable:SetData(data)
   self.equipmentWindow:SetBodySize(tableWidth, tableHeight)
+end
+
+function UI:RenderBisItemDropdown(columnFrame, character, slotID)
+  local frame = CreateFrame("Frame", "AlterEgoBisItem" .. character.info.name .. "Slot" .. slotID, UIParent)
+
+  if frame ~= nil then
+    frame.slotId = slotID
+    frame:SetFrameStrata("TOOLTIP")
+    frame:SetToplevel(true)
+    frame:SetHeight(columnFrame:GetHeight()*6)
+    frame:SetPoint("TOPLEFT", columnFrame, "BOTTOMLEFT", 0, 0)
+    frame:SetPoint("TOPRIGHT", columnFrame, "BOTTOMRIGHT", 0, 0)
+
+    -- R: 4/255 = 0.0157, G: 9/255 = 0.0353, B: 12/255 = 0.0471
+    addon.Utils:SetBackgroundColor(frame, 0.0157, 0.0353, 0.0471, 1)
+
+    local bisItemTable = addon.Table:New({header = { enabled = false },
+      rows = {height = columnFrame:GetHeight(), striped = false, highlight = true}
+    })
+    
+    bisItemTable:SetParent(frame)
+    bisItemTable:SetAllPoints()
+
+    local data = {
+      columns = {{width = columnFrame:GetWidth()}},
+      rows = {},
+    }
+
+    local classId = nil
+    if false == addon.Items.showAllItems then
+      classId = character.info.class.id
+    end
+
+    local itemForSlot = addon.Items:GetItemsBySlot(slotID, classId)
+    addon.Utils:TableForEach(itemForSlot, function(item)
+      table.insert(data.rows, {columns = {{
+        text = "|T" .. item.texture .. ":0|t " .. item.link,
+          onEnter = function(f)
+            GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(item.link)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+            GameTooltip:Show()
+          end,
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+          onClick = function()
+            addon.Data:UpdateBisItem(character.GUID, slotID, item)
+            frame:Hide()
+          end
+      }}})
+    end)
+
+    table.insert(data.rows, {columns = {{
+      text = addon.Items.showAllItems and "Show only class items" or "Show all items",
+      onClick = function(f)
+        addon.Items.showAllItems = not addon.Items.showAllItems
+        self.equipmentWindow.bisItemDropdown:Hide()
+        self.equipmentWindow.bisItemDropdown = self:RenderBisItemDropdown(columnFrame, character, slotID)
+        self.equipmentWindow.bisItemDropdown:Show()
+      end
+      
+    }}})
+    table.insert(data.rows, {columns = {{
+      text = "Unselect current item",
+      onClick = function()
+        addon.Data:UpdateBisItem(character.GUID, slotID, nil)
+        frame:Hide()
+      end
+    }}})
+    bisItemTable:SetData(data)
+
+    frame:Hide()
+  else
+    print("Error nil frame !")
+  end
+  return frame
 end

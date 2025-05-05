@@ -83,6 +83,7 @@ function Core:OnEnable()
     }, 3, function()
       addon.Data:UpdateCharacterInfo()
       addon.Data:UpdateEquipment()
+      addon.Data:UpdateBisProgressForCharacter()
     end
   )
   self:RegisterBucketEvent(
@@ -178,6 +179,10 @@ function Core:OnEnable()
       addon.Data:UpdateDB()
     end
   )
+
+  self:RegisterEvent("GET_ITEM_INFO_RECEIVED", function(event, itemId)
+    addon.Items:RegisterItem(itemId)
+  end)
   self:CheckGameData()
 end
 

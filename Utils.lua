@@ -64,7 +64,7 @@ end
 ---@param callback fun(value: T, index: number): boolean
 ---@return T|nil, number|nil
 function Utils:TableFind(tbl, callback)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableFind: Must be a table!")
   for i, v in ipairs(tbl) do
     if callback(v, i) then
       return v, i
@@ -80,7 +80,7 @@ end
 ---@param val any
 ---@return T|nil
 function Utils:TableGet(tbl, key, val)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableGet: Must be a table!")
   return self:TableFind(tbl, function(elm)
     return elm[key] and elm[key] == val
   end)
@@ -92,7 +92,7 @@ end
 ---@param callback fun(value: T, index: number): boolean
 ---@return T[]
 function Utils:TableFilter(tbl, callback)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableFilter: Must be a table!")
   local t = {}
   for i, v in pairs(tbl) do
     if callback(v, i) then
@@ -106,7 +106,7 @@ end
 ---@param tbl table
 ---@return number
 function Utils:TableCount(tbl)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableCount: Must be a table!")
   local n = 0
   for _ in pairs(tbl) do
     n = n + 1
@@ -120,7 +120,7 @@ end
 ---@param cache table?
 ---@return T[]
 function Utils:TableCopy(tbl, cache)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableCopy: Must be a table!")
   local t = {}
   cache = cache or {}
   cache[tbl] = t
@@ -140,7 +140,7 @@ end
 ---@param callback fun(value: T, index: number): any
 ---@return T[]
 function Utils:TableMap(tbl, callback)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableMap: Must be a table!")
   local t = {}
   self:TableForEach(tbl, function(v, k)
     local newv, newk = callback(v, k)
@@ -155,11 +155,27 @@ end
 ---@param callback fun(value: T, index: number)
 ---@return T[]
 function Utils:TableForEach(tbl, callback)
-  assert(type(tbl) == "table", "Must be a table!")
+  assert(type(tbl) == "table", "TableForEach: Must be a table!")
   for ik, iv in pairs(tbl) do
     callback(iv, ik)
   end
   return tbl
+end
+
+---Check if a table contains a value
+---@generic T
+---@param tbl T[]
+---@param val T
+---@return boolean
+function Utils:TableContains(tbl, val)
+  assert(type(tbl) == "table", "TableContains: Must be a table!")
+  for _, v in pairs(tbl) do
+    if v == val then
+      return true
+    end
+  end
+
+  return false
 end
 
 ---Get character activity progress

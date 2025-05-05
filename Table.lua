@@ -191,7 +191,7 @@ function Table:New(config)
         function columnFrame:onClickHandler(f)
           rowFrame:onClickHandler(f)
           if column.onClick then
-            column:onClick(f)
+            column.onClick(f)
           end
         end
 
