@@ -761,6 +761,111 @@ function UI:GetCharacterInfo(unfiltered)
     },
   }
 
+  if addon.Data.db.global.showCurrencies then
+    table.insert(rows, {
+      label = "Currencies",
+      value = function()
+        return ""
+      end,
+      backgroundColor = {r = 0, g = 0, b = 0, a = 0.3},
+      enabled = true,
+    })
+    local dataCurrencies = addon.Data:GetCurrencies()
+    addon.Utils:TableForEach(dataCurrencies, function(dataCurrency)
+      local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+      if not currencyInfo then return end
+      local currencyIcon = CreateSimpleTextureMarkup(currencyInfo.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]], 16, 16, 0, dataCurrency.id == 3008 and 0 or -6)
+      local currencyLabel = format("%s  %s", currencyIcon, currencyInfo.name)
+      local currencyLimit = ""
+      -- if currencyInfo.useTotalEarnedForMaxQty then
+      --   if currencyInfo.maxQuantity > 0 then
+      --     currencyLimit = format("%d/%d", currencyInfo.totalEarned, currencyInfo.maxQuantity)
+      --   else
+      --     currencyLimit = "∞"
+      --   end
+      -- elseif currencyInfo.maxQuantity > 0 then
+      --   currencyLimit = tostring(currencyInfo.maxQuantity)
+      -- end
+
+      table.insert(rows, {
+        label = WHITE_FONT_COLOR:WrapTextInColorCode(currencyLabel),
+        value = function(character)
+          local text = "-"
+          local color = GRAY_FONT_COLOR
+          local characterCurrency = addon.Utils:TableGet(character.currencies, "id", dataCurrency.id)
+          if characterCurrency then
+            -- local currencyValue = ""
+            -- if characterCurrency.useTotalEarnedForMaxQty then
+            --   if characterCurrency.maxQuantity > 0 then
+            --     currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
+            --   else
+            --     currencyValue = "∞"
+            --   end
+            -- elseif characterCurrency.maxQuantity > 0 then
+            --   currencyValue = tostring(characterCurrency.maxQuantity)
+            -- end
+            -- return string.format("%s / %s", currencyLabel, currencyValue)
+            -- table.insert(characterCurrencies, {
+            --   currencyLabel,
+            --   currencyValue,
+            -- })
+
+            text = characterCurrency.quantity
+            color = WHITE_FONT_COLOR
+            if characterCurrency.maxQuantity and characterCurrency.maxQuantity > 0 then
+              text = format("%s / %s", characterCurrency.quantity, characterCurrency.maxQuantity)
+              if characterCurrency.quantity >= characterCurrency.maxQuantity then
+                color = DIM_GREEN_FONT_COLOR
+              end
+            end
+            if characterCurrency.quantity == 0 then
+              color = GRAY_FONT_COLOR
+            end
+          end
+
+          return color:WrapTextInColorCode(text)
+        end,
+        onEnter = function(infoFrame, character)
+          local characterCurrency = addon.Utils:TableGet(character.currencies, "id", dataCurrency.id)
+          if not characterCurrency then return end
+
+          local maxQuantity = characterCurrency.maxQuantity and tostring(characterCurrency.maxQuantity) or "∞"
+
+          GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
+          GameTooltip:AddLine(format("%s %s", CreateSimpleTextureMarkup(currencyInfo.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]]), currencyInfo.name), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true)
+          GameTooltip:AddDoubleLine("Owned:", characterCurrency.quantity and tostring(characterCurrency.quantity) or "-", 1, 1, 1, 1, 1, 1)
+          GameTooltip:AddDoubleLine("Max Quantity:", maxQuantity, 1, 1, 1, 1, 1, 1)
+          GameTooltip:AddDoubleLine("Total Earned:", characterCurrency.totalEarned and tostring(characterCurrency.totalEarned) or "-", 1, 1, 1, 1, 1, 1)
+          GameTooltip:AddDoubleLine("UseTotalEarnedForMaxQty:", characterCurrency.useTotalEarnedForMaxQty and "yes" or "no", 1, 1, 1, 1, 1, 1)
+          GameTooltip:Show()
+        end,
+        onLeave = function()
+          GameTooltip:Hide()
+        end,
+        enabled = true,
+      })
+    end)
+
+
+
+
+
+    -- if character.money ~= nil then
+    --   GameTooltip:AddLine(" ")
+    --   GameTooltip:AddLine(GetMoneyString(character.money, true), 1, 1, 1)
+    -- end
+    -- if character.currencies ~= nil and addon.Utils:TableCount(character.currencies) > 0 then
+
+    -- end
+    -- if addon.Utils:TableCount(characterCurrencies) > 0 then
+    --   GameTooltip:AddLine(" ")
+    --   GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
+    --   addon.Utils:TableForEach(characterCurrencies, function(characterCurrency)
+    --     GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
+    --   end)
+    -- end
+  end
+
   if unfiltered then
     return rows
   end
@@ -920,8 +1025,10 @@ function UI:RenderMainWindow()
         if not infoFrame then
           infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
           infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-          infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", addon.Constants.sizes.padding, 0)
-          infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
+          -- infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", addon.Constants.sizes.padding, 0)
+          -- infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
+          infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+          infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
           infoFrame.text:SetJustifyH("LEFT")
           infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           infoFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1662,6 +1769,17 @@ function UI:SetupButtons()
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
       tooltip:AddLine("One big party!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Show currencies in the grid",
+      function() return addon.Data.db.global.showCurrencies end,
+      function()
+        addon.Data.db.global.showCurrencies = not addon.Data.db.global.showCurrencies
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Let's go farm!", nil, nil, nil, true)
     end)
     local rioColors = menu:CreateCheckbox(
       "Use Raider.IO rating colors",
