@@ -11,6 +11,32 @@ function Module:OnInitialize()
   self:Render()
 end
 
+function Module:OnEnable()
+  self:RegisterBucketEvent(
+    {
+      "PLAYER_EQUIPMENT_CHANGED",
+      "UNIT_INVENTORY_CHANGED",
+    }, 3, function()
+      -- addon.Data:UpdateCharacterInfo()
+      addon.Data:UpdateEquipment()
+      self:Render()
+    end
+  )
+end
+
+---Opens a new equipment window
+---@param character AE_Character
+function Module:OpenCharacter(character)
+  if not self.window then return end
+  if self.equipmentCharacter and self.equipmentCharacter == character and self.window:IsVisible() then
+    self.window:Hide()
+    return
+  end
+  self.equipmentCharacter = character
+  self:Render()
+  self.window:Show()
+end
+
 function Module:Render()
   local tableWidth = 610
   local tableHeight = 0

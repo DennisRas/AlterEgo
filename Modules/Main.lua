@@ -361,6 +361,8 @@ function Module:GetCharacterInfo(unfiltered)
   local dungeons = addon.Data:GetDungeons()
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local _, seasonDisplayID = addon.Data:GetCurrentSeason()
+  ---@class AE_Module_Equipment
+  local equipmentModule = addon.Core:GetModule("Equipment", true)
 
   ---@type AE_CharacterRows[]
   local rows = {
@@ -442,7 +444,7 @@ function Module:GetCharacterInfo(unfiltered)
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
         end
-        if type(character.equipment) == "table" then
+        if type(character.equipment) == "table" and equipmentModule then
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine("<Click to View Equipment>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
         end
@@ -452,15 +454,8 @@ function Module:GetCharacterInfo(unfiltered)
         GameTooltip:Hide()
       end,
       onClick = function(infoFrame, character)
-        local window = addon.Window:GetWindow("Equipment")
-        if not window then return end
-        if self.equipmentCharacter and self.equipmentCharacter == character and window:IsVisible() then
-          window:Hide()
-          return
-        end
-        self.equipmentCharacter = character
-        self:RenderEquipmentWindow()
-        window:Show()
+        if not equipmentModule then return end
+        equipmentModule:OpenCharacter(character)
       end,
       enabled = true,
     },
@@ -1269,6 +1264,7 @@ function Module:Render()
   local affixes = addon.Data:GetAffixes(true)
   local windowWidthMax = addon.Window:GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
+  local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
   if not self.window then
     self.window = addon.Window:New({
@@ -1369,14 +1365,17 @@ function Module:Render()
           GameTooltip:SetOwner(affixFrame, "ANCHOR_TOP")
           GameTooltip:SetText(name, 1, 1, 1)
           GameTooltip:AddLine(desc, nil, nil, nil, true)
-          GameTooltip:AddLine(" ")
-          GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+          if weeklyAffixesModule then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Click to View Weekly Affixes>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+          end
           GameTooltip:Show()
         end)
         affixFrame:SetScript("OnLeave", function()
           GameTooltip:Hide()
         end)
         affixFrame:SetScript("OnClick", function()
+          if not weeklyAffixesModule then return end
           addon.Window:ToggleWindow("Affixes")
         end)
 
