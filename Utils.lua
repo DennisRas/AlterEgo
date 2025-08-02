@@ -9,6 +9,27 @@ addon.Utils = Utils
 
 Utils.ScrollCollection = {}
 
+---Calculate the dungeon timer
+---@param time number
+---@param level number
+---@param tier number
+---@return number
+function Utils:calculateDungeonTimer(time, level, tier)
+  if tier == 3 then
+    time = time * 0.6
+  elseif tier == 2 then
+    time = time * 0.8
+  end
+
+  --- This was such a dumb thing to do by Blizzard
+  local seasonID = addon.Data:GetCurrentSeason()
+  if seasonID == 13 and level >= 7 then
+    time = time + 90
+  end
+
+  return time
+end
+
 ---Set the background color for a parent frame
 ---@param parent Frame
 ---@param r number

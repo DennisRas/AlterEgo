@@ -962,7 +962,7 @@ function Data:UpdateRaidInstances()
     end
     character.raids.savedInstances[savedInstanceIndex] = savedInstance
   end
-  addon.UI:Render()
+  addon.Core:Render()
 end
 
 function Data:UpdateCharacterInfo()
@@ -998,7 +998,7 @@ function Data:UpdateCharacterInfo()
   if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
 
   character.lastUpdate = GetServerTime()
-  addon.UI:Render()
+  addon.Core:Render()
 end
 
 ---Store the character money
@@ -1115,7 +1115,7 @@ function Data:UpdateKeystoneItem()
     if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) or 0 end
   end
 
-  if not keystoneItemID then return addon.UI:Render() end
+  if not keystoneItemID then return addon.Core:Render() end
 
   local keystoneItemLink = nil
   for bagID = 0, NUM_BAG_SLOTS do
@@ -1131,19 +1131,19 @@ function Data:UpdateKeystoneItem()
     end
   end
 
-  if not keystoneItemLink then return addon.UI:Render() end
-  if not LinkUtil.IsLinkType(keystoneItemLink, "keystone") then return addon.UI:Render() end
+  if not keystoneItemLink then return addon.Core:Render() end
+  if not LinkUtil.IsLinkType(keystoneItemLink, "keystone") then return addon.Core:Render() end
 
   local _, linkOptions = LinkUtil.ExtractLink(keystoneItemLink)
-  if not linkOptions then return addon.UI:Render() end
+  if not linkOptions then return addon.Core:Render() end
 
   local _, linkChallengeModeID, linkLevel = LinkUtil.SplitLinkOptions(linkOptions)
-  if not linkChallengeModeID or not linkLevel then return addon.UI:Render() end
+  if not linkChallengeModeID or not linkLevel then return addon.Core:Render() end
   local keystoneChallengeModeID = tonumber(linkChallengeModeID) or 0
   local keystoneLevel = tonumber(linkLevel) or 0
 
   local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", keystoneChallengeModeID)
-  if not dungeon then return addon.UI:Render() end
+  if not dungeon then return addon.Core:Render() end
   local dungeonMapId = tonumber(dungeon.mapId) or 0
 
   local newKeystone = false
@@ -1179,7 +1179,7 @@ function Data:UpdateKeystoneItem()
     end
   end
 
-  addon.UI:Render()
+  addon.Core:Render()
 end
 
 function Data:UpdateVault()
@@ -1216,7 +1216,7 @@ function Data:UpdateVault()
   end)
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
-  addon.UI:Render()
+  addon.Core:Render()
 end
 
 function Data:UpdateMythicPlus()
@@ -1281,7 +1281,7 @@ function Data:UpdateMythicPlus()
     end
     table.insert(character.mythicplus.dungeons, dungeon)
   end
-  addon.UI:Render()
+  addon.Core:Render()
 end
 
 -- function Data:GetClasses()

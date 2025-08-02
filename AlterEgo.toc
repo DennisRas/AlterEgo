@@ -38,5 +38,8 @@ Utils.lua
 Window.lua
 Table.lua
 Database.lua
-Interface.lua
-AlterEgo.lua
+
+Core.lua
+Modules/Main.lua
+# Modules/WeeklyAffixes.lua
+Modules/Equipment.lua

@@ -3,9 +3,6 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
-local LibDataBroker = LibStub("LibDataBroker-1.1")
-local LibDBIcon = LibStub("LibDBIcon-1.0")
-
 --@debug@
 _G[addonName] = addon
 --@end-debug@
@@ -13,6 +10,12 @@ _G[addonName] = addon
 ---@class AE_Core : AceAddon
 local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 addon.Core = Core
+
+---@class AE_Libs
+addon.Libs = {
+  LibDBIcon = LibStub("LibDBIcon-1.0"),
+  LibDataBroker = LibStub("LibDataBroker-1.1"),
+}
 
 function Core:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Toggle AlterEgo window"
@@ -51,14 +54,14 @@ function Core:OnInitialize()
     end,
   }
 
-  LibDataBroker:NewDataObject(addonName, libDataObject)
-  LibDBIcon:Register(addonName, libDataObject, addon.Data.db.global.minimap)
-  LibDBIcon:AddButtonToCompartment(addonName)
+  addon.Libs.LibDataBroker:NewDataObject(addonName, libDataObject)
+  addon.Libs.LibDBIcon:Register(addonName, libDataObject, addon.Data.db.global.minimap)
+  addon.Libs.LibDBIcon:AddButtonToCompartment(addonName)
 
   hooksecurefunc("ResetInstances", function()
     self:OnInstanceReset()
   end)
-  addon.UI:Render()
+  self:Render()
 end
 
 function Core:ToggleWindow()
@@ -73,6 +76,13 @@ function Core:ToggleVault()
   else
     WeeklyRewards_ShowUI()
   end
+end
+
+---Temp
+function Core:Render()
+  -- addon.Main:Render()
+  -- addon.Equipment:Render()
+  -- addon.WeeklyAffixes:Render()
 end
 
 function Core:OnEnable()
@@ -163,7 +173,7 @@ function Core:OnEnable()
   self:RegisterEvent(
     "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
     function()
-      addon.UI:Render()
+      self:Render()
     end
   )
   self:RegisterEvent(
@@ -200,7 +210,7 @@ function Core:CheckGameData()
   addon.Data:TaskWeeklyReset()
   addon.Data:TaskSeasonReset()
   addon.Data:UpdateDB()
-  addon.UI:Render()
+  self:Render()
 end
 
 function Core:OnInstanceReset()
