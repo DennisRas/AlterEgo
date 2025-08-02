@@ -98,6 +98,21 @@ function Module:Render()
       end
     end
 
+    ---TWW Season 2 Item: D.I.S.C.
+    local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
+    if itemID == 245966 or itemID == 245964 or itemID == 245965 or itemID == 242664 then
+      local DISCLevels = {691, 694, 697, 701}
+      local numDISCLevels = addon.Utils:TableCount(DISCLevels)
+      addon.Utils:TableForEach(DISCLevels, function(DISCLevel, i)
+        if item.itemLevel == DISCLevel then
+          upgradeLevel = format("D.I.S.C. %d/%d", i, numDISCLevels)
+          if i == numDISCLevels then
+            upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
+          end
+        end
+      end)
+    end
+
     ---@type AE_TableDataRow
     local row = {
       columns = {
