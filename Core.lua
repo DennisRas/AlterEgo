@@ -80,9 +80,11 @@ end
 
 ---Temp
 function Core:Render()
-  -- addon.Main:Render()
-  -- addon.Equipment:Render()
-  -- addon.WeeklyAffixes:Render()
+  for _, module in addon.Core:IterateModules() do
+    if module.Render ~= nil then
+      module:Render()
+    end
+  end
 end
 
 function Core:OnEnable()
