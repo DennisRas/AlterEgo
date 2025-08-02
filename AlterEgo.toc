@@ -41,5 +41,5 @@ Database.lua
 
 Core.lua
 Modules/Main.lua
-# Modules/WeeklyAffixes.lua
+Modules/WeeklyAffixes.lua
 Modules/Equipment.lua

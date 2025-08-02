@@ -4,7 +4,7 @@ local addonName = select(1, ...)
 local addon = select(2, ...)
 
 ---@class AE_Module_Main : AceModule
-local Module = addon.Core:NewModule("Main123", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
+local Module = addon.Core:NewModule("Main", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
 addon.Module_Main = Module
 
 function Module:OnInitialize()
