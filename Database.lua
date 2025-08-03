@@ -264,6 +264,21 @@ Data.affixRotations = {
       {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
     },
   },
+  {
+    seasonID = 15,
+    seasonDisplayID = 3,
+    activation = {4, 7, 10, 12},
+    affixes = {
+      {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_PULSAR,    AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_PULSAR,    AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_ASCENDANT, AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_DEVOUR,    AFFIX_TYRANNICAL, AFFIX_FORTIFIED,  AFFIX_XALATAHS_GUILE},
+      {AFFIX_XALATAHS_BARGAIN_VOIDBOUND, AFFIX_FORTIFIED,  AFFIX_TYRANNICAL, AFFIX_XALATAHS_GUILE},
+    },
+  },
 }
 
 ---@type AE_Keystone[]
@@ -271,7 +286,8 @@ Data.keystones = {
   {seasonID = 11, seasonDisplayID = 3, itemID = 151086},
   {seasonID = 12, seasonDisplayID = 4, itemID = 180653},
   {seasonID = 13, seasonDisplayID = 1, itemID = 180653},
-  {seasonID = 14, seasonDisplayID = 2, itemID = 180653}, -- This could be 151086 unless that's just on the PTR
+  {seasonID = 14, seasonDisplayID = 2, itemID = 180653},
+  {seasonID = 15, seasonDisplayID = 3, itemID = 180653},
 }
 
 ---@type AE_Dungeon[]
@@ -316,6 +332,14 @@ Data.dungeons = {
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 504, mapId = 2651, journalInstanceID = 1210, encounters = {}, loot = {}, teleports = {445441},         time = 0, abbr = "DFC",   name = "Darkflame Cleft"},
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 506, mapId = 2661, journalInstanceID = 1272, encounters = {}, loot = {}, teleports = {445440},         time = 0, abbr = "BREW",  name = "Cinderbrew Meadery"},
   {seasonID = 14, seasonDisplayID = 2, challengeModeID = 525, mapId = 2773, journalInstanceID = 1298, encounters = {}, loot = {}, teleports = {1216786},        time = 0, abbr = "FLOOD", name = "Operation: Floodgate"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 503, mapId = 2660, journalInstanceID = 1271, encounters = {}, loot = {}, teleports = {445417},         time = 0, abbr = "ARAK",  name = "Ara-Kara, City of Echoes"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 505, mapId = 2662, journalInstanceID = 1270, encounters = {}, loot = {}, teleports = {445414},         time = 0, abbr = "DAWN",  name = "The Dawnbreaker"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 499, mapId = 2649, journalInstanceID = 1267, encounters = {}, loot = {}, teleports = {445444},         time = 0, abbr = "PSF",   name = "Priory of the Sacred Flame"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 525, mapId = 2773, journalInstanceID = 1298, encounters = {}, loot = {}, teleports = {1216786},        time = 0, abbr = "FLOOD", name = "Operation: Floodgate"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 392, mapId = 2441, journalInstanceID = 1194, encounters = {}, loot = {}, teleports = {367416},         time = 0, abbr = "GMBT",  name = "Tazavesh: So'leah's Gambit"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 391, mapId = 2441, journalInstanceID = 1194, encounters = {}, loot = {}, teleports = {367416},         time = 0, abbr = "STRT",  name = "Tazavesh: Streets of Wonder"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 378, mapId = 2287, journalInstanceID = 1185, encounters = {}, loot = {}, teleports = {354465},         time = 0, abbr = "HOA",   name = "Halls of Atonement"},
+  {seasonID = 15, seasonDisplayID = 3, challengeModeID = 542, mapId = 2830, journalInstanceID = 1303, encounters = {}, loot = {}, teleports = {1237215},        time = 0, abbr = "EDA",   name = "Eco-Dome Al'dani"},
 }
 
 ---@type AE_Raid[]
@@ -328,6 +352,7 @@ Data.raids = {
   {seasonID = 12, seasonDisplayID = 4, instanceID = 2549, journalInstanceID = 1207, order = 3, numEncounters = 9, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "ATDH", name = "Amirdrassil, the Dream's Hope"},
   {seasonID = 13, seasonDisplayID = 1, instanceID = 2657, journalInstanceID = 1273, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP",  name = "Nerub-ar Palace"},
   {seasonID = 14, seasonDisplayID = 2, instanceID = 2769, journalInstanceID = 1296, order = 2, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "LOU",  name = "Liberation of Undermine"},
+  {seasonID = 15, seasonDisplayID = 3, instanceID = 2810, journalInstanceID = 1302, order = 3, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MO",   name = "Manaforge Omega"},
 }
 
 ---@type AE_Currency[]
@@ -359,6 +384,13 @@ Data.currencies = {
   {seasonID = 14, seasonDisplayID = 2, id = 3008, currencyType = "upgrade"},                  -- Valorstones
   {seasonID = 14, seasonDisplayID = 2, id = 3116, currencyType = "catalyst"},                 -- Catalyst
   {seasonID = 14, seasonDisplayID = 2, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 15, seasonDisplayID = 3, id = 3290, currencyType = "crest"},                    -- Gilded
+  {seasonID = 15, seasonDisplayID = 3, id = 3289, currencyType = "crest"},                    -- Runed
+  {seasonID = 15, seasonDisplayID = 3, id = 3287, currencyType = "crest"},                    -- Carved
+  {seasonID = 15, seasonDisplayID = 3, id = 3285, currencyType = "crest"},                    -- Weathered
+  {seasonID = 15, seasonDisplayID = 3, id = 3008, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 15, seasonDisplayID = 3, id = 3269, currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 15, seasonDisplayID = 3, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
 }
 
 Data.cache = {
