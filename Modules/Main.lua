@@ -842,17 +842,17 @@ function Module:SetupButtons()
       tooltip:AddLine("Just one more!", nil, nil, nil, true)
     end)
     menu:CreateTitle(DUNGEONS)
-    menu:CreateCheckbox(
-      "Enable Dungeons",
-      function() return addon.Data.db.global.dungeons.enabled end,
-      function()
-        addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
-    end)
+    -- menu:CreateCheckbox(
+    --   "Enable Dungeons",
+    --   function() return addon.Data.db.global.dungeons.enabled end,
+    --   function()
+    --     addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
+    --     self:Render()
+    --   end
+    -- ):SetTooltip(function(tooltip, elm)
+    --   tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+    --   tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
+    -- end)
     menu:CreateCheckbox(
       "Show icons",
       function() return addon.Data.db.global.showTiers end,
