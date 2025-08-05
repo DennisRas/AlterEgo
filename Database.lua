@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 23
+Data.dbVersion = 30
 
 Data.defaultDB = {
   ---@type AE_Global

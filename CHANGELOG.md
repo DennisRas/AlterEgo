@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.3.0 - 2025-08-05
+
+### Added
+
+- Added TWW Season 3 data
+- Introduced several new settings
+- Added a new Currency section - can be disabled in the settings
+
+### Updated
+
+- Reorganized some settings and combined all announcement options into one section
+- Optimized large portions of code to improve performance and prepare for future features
+
+### Fixed
+
+- Corrected a few typos and text errors
+
 ## v1.2.6 - 2025-04-23
 
 ### Updated
