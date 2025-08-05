@@ -687,7 +687,7 @@ function Module:GetCharacterInfo(unfiltered)
       enabled = true,
     },
     {
-      label = "Vault",
+      label = DELVES_GREAT_VAULT_LABEL,
       value = function(character)
         if character.vault.hasAvailableRewards == true then
           return GREEN_FONT_COLOR:WrapTextInColorCode(QUEST_REWARDS)
@@ -706,28 +706,28 @@ function Module:GetCharacterInfo(unfiltered)
         GameTooltip:Hide()
       end,
       backgroundColor = {r = 0, g = 0, b = 0, a = 0.3},
-      enabled = true,
+      enabled = addon.Data.db.global.vault.raids or addon.Data.db.global.vault.dungeons or addon.Data.db.global.vault.world,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(RAIDS),
       value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.Raid) end,
       onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.Raid) end,
       onLeave = function() GameTooltip:Hide() end,
-      enabled = addon.Data.db.global.raids.enabled,
+      enabled = addon.Data.db.global.vault.raids,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(DUNGEONS),
       value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.Activities) end,
       onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.Activities) end,
       onLeave = function() GameTooltip:Hide() end,
-      enabled = true,
+      enabled = addon.Data.db.global.vault.dungeons,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(WORLD),
       value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.World) end,
       onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.World) end,
       onLeave = function() GameTooltip:Hide() end,
-      enabled = addon.Data.db.global.world and addon.Data.db.global.world.enabled == true,
+      enabled = addon.Data.db.global.vault.world,
     },
   }
 
@@ -767,18 +767,7 @@ function Module:SetupButtons()
   settingsButton.Icon:SetTexture(addon.Constants.media.IconSettings)
   settingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
   settingsButton:SetupMenu(function(_, menu)
-    menu:CreateTitle("General")
-    menu:CreateCheckbox(
-      "Show the weekly affixes",
-      function() return addon.Data.db.global.showAffixHeader end,
-      function()
-        addon.Data.db.global.showAffixHeader = not addon.Data.db.global.showAffixHeader
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("The affixes will be shown at the top.", nil, nil, nil, true)
-    end)
+    menu:CreateTitle(CHARACTER)
     menu:CreateCheckbox(
       "Show characters with zero rating",
       function() return addon.Data.db.global.showZeroRatedCharacters end,
@@ -799,7 +788,7 @@ function Module:SetupButtons()
       end
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("One big party!", nil, nil, nil, true)
+      tooltip:AddLine("They're everywhere!", nil, nil, nil, true)
     end)
     local rioColors = menu:CreateCheckbox(
       "Use Raider.IO rating colors",
@@ -818,95 +807,52 @@ function Module:SetupButtons()
       end
     end)
     rioColors:SetEnabled(type(_G.RaiderIO) ~= "nil")
-    menu:CreateTitle("Automatic Announcements")
+    menu:CreateTitle(DELVES_GREAT_VAULT_LABEL)
     menu:CreateCheckbox(
-      "Announce instance resets",
-      function() return addon.Data.db.global.announceResets end,
+      "Show Raids",
+      function() return addon.Data.db.global.vault.raids end,
       function()
-        addon.Data.db.global.announceResets = not addon.Data.db.global.announceResets
+        addon.Data.db.global.vault.raids = not addon.Data.db.global.vault.raids
         self:Render()
       end
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Let others in your group know when you've reset the instances.", nil, nil, nil, true)
+      tooltip:AddLine("Just one more!", nil, nil, nil, true)
     end)
     menu:CreateCheckbox(
-      "Announce new keystones (Party)",
-      function() return addon.Data.db.global.announceKeystones.autoParty end,
+      "Show Dungeons",
+      function() return addon.Data.db.global.vault.dungeons end,
       function()
-        addon.Data.db.global.announceKeystones.autoParty = not addon.Data.db.global.announceKeystones.autoParty
+        addon.Data.db.global.vault.dungeons = not addon.Data.db.global.vault.dungeons
         self:Render()
       end
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Announce to your party when you loot a new keystone.", nil, nil, nil, true)
+      tooltip:AddLine("Just one more!", nil, nil, nil, true)
     end)
     menu:CreateCheckbox(
-      "Announce new keystones (Guild)",
-      function() return addon.Data.db.global.announceKeystones.autoGuild end,
+      "Show World",
+      function() return addon.Data.db.global.vault.world end,
       function()
-        addon.Data.db.global.announceKeystones.autoGuild = not addon.Data.db.global.announceKeystones.autoGuild
+        addon.Data.db.global.vault.world = not addon.Data.db.global.vault.world
         self:Render()
       end
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Announce to your guild when you loot a new keystone.", nil, nil, nil, true)
+      tooltip:AddLine("Just one more!", nil, nil, nil, true)
     end)
-    menu:CreateTitle(RAIDS)
+    menu:CreateTitle(DUNGEONS)
     menu:CreateCheckbox(
-      "Show raid progress",
-      function() return addon.Data.db.global.raids.enabled end,
+      "Enable Dungeons",
+      function() return addon.Data.db.global.dungeons.enabled end,
       function()
-        addon.Data.db.global.raids.enabled = not addon.Data.db.global.raids.enabled
+        addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
         self:Render()
       end
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
       tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
     end)
-    menu:CreateCheckbox(
-      "Use difficulty colors",
-      function() return addon.Data.db.global.raids.colors end,
-      function()
-        addon.Data.db.global.raids.colors = not addon.Data.db.global.raids.colors
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Argharhggh! So much greeeen!", nil, nil, nil, true)
-    end)
-    local raidDifficultiesSetting = menu:CreateButton(
-      "Enabled raid difficulties"
-    )
-    addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
-      local hiddenDifficulties = addon.Data.db.global.raids.hiddenDifficulties or {}
-      raidDifficultiesSetting:CreateCheckbox(
-        difficulty.name,
-        function(id) return not hiddenDifficulties[id] end,
-        function(id)
-          addon.Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
-          self:Render()
-        end,
-        difficulty.id
-      )
-    end)
-    -- TODO: Refactor to auto-detect if the season has awwakened raids
-    --       if seasonID == 12 then
-    --         UIDropDownMenu_AddButton({
-    --           text = "Show |cFF00FFFFAwakened|r raids only",
-    --           checked = addon.Data.db.global.raids and addon.Data.db.global.raids.modifiedInstanceOnly,
-    --           keepShownOnClick = true,
-    --           isNotRadio = true,
-    --           tooltipTitle = "Show |cFF00FFFFAwakened|r raids only",
-    --           tooltipText = "It's time to move on!",
-    --           tooltipOnButton = true,
-    --           func = function(button, arg1, arg2, checked)
-    --             addon.Data.db.global.raids.modifiedInstanceOnly = checked
-    --             self:Render()
-    --           end,
-    --         })
-    --       end
-    menu:CreateTitle(DUNGEONS)
     menu:CreateCheckbox(
       "Show icons",
       function() return addon.Data.db.global.showTiers end,
@@ -940,19 +886,117 @@ function Module:SetupButtons()
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
       tooltip:AddLine("Show some colors!", nil, nil, nil, true)
     end)
-    menu:CreateTitle(WORLD)
+    menu:CreateTitle(RAIDS)
     menu:CreateCheckbox(
-      "Show world progress",
-      function() return addon.Data.db.global.world.enabled end,
+      "Enable Raids",
+      function() return addon.Data.db.global.raids.enabled end,
       function()
-        addon.Data.db.global.world.enabled = not addon.Data.db.global.world.enabled
+        addon.Data.db.global.raids.enabled = not addon.Data.db.global.raids.enabled
         self:Render()
       end
     ):SetTooltip(function(tooltip, elm)
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Is Brann helping you out?", nil, nil, nil, true)
+      tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
     end)
-    menu:CreateTitle(MINIMAP_LABEL)
+    menu:CreateCheckbox(
+      "Use difficulty colors",
+      function() return addon.Data.db.global.raids.colors end,
+      function()
+        addon.Data.db.global.raids.colors = not addon.Data.db.global.raids.colors
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Argharhggh! So much greeeen!", nil, nil, nil, true)
+    end)
+    local raidDifficultiesSetting = menu:CreateButton(
+      "Difficulties"
+    )
+    addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
+      local hiddenDifficulties = addon.Data.db.global.raids.hiddenDifficulties or {}
+      raidDifficultiesSetting:CreateCheckbox(
+        difficulty.name,
+        function(id) return not hiddenDifficulties[id] end,
+        function(id)
+          addon.Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
+          self:Render()
+        end,
+        difficulty.id
+      )
+    end)
+    menu:CreateTitle(CURRENCY)
+    menu:CreateCheckbox(
+      "Enable Currencies",
+      function() return addon.Data.db.global.currencies.enabled end,
+      function()
+        addon.Data.db.global.currencies.enabled = not addon.Data.db.global.currencies.enabled
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Time to farm!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Show icons",
+      function() return addon.Data.db.global.currencies.showIcons end,
+      function()
+        addon.Data.db.global.currencies.showIcons = not addon.Data.db.global.currencies.showIcons
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("So fancy!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Align text center",
+      function() return addon.Data.db.global.currencies.alignCenter end,
+      function()
+        addon.Data.db.global.currencies.alignCenter = not addon.Data.db.global.currencies.alignCenter
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Left or right? Center it is!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Highlight max earned",
+      function() return addon.Data.db.global.currencies.showMaxEarned end,
+      function()
+        addon.Data.db.global.currencies.showMaxEarned = not addon.Data.db.global.currencies.showMaxEarned
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("They really do this, huh?", nil, nil, nil, true)
+    end)
+    local enabledCurrenciesOption = menu:CreateButton(
+      "Currencies"
+    )
+    addon.Utils:TableForEach(addon.Data:GetCurrencies(), function(currency)
+      local hiddenCurrencies = addon.Data.db.global.currencies.hiddenCurrencies or {}
+      enabledCurrenciesOption:CreateCheckbox(
+        currency.name,
+        function(id) return not hiddenCurrencies[id] end,
+        function(id)
+          addon.Data.db.global.currencies.hiddenCurrencies[id] = not hiddenCurrencies[id]
+          self:Render()
+        end,
+        currency.id
+      )
+    end)
+    menu:CreateDivider()
+    menu:CreateTitle(INTERFACE_OPTIONS)
+    menu:CreateCheckbox(
+      "Show Weekly Affixes",
+      function() return addon.Data.db.global.showAffixHeader end,
+      function()
+        addon.Data.db.global.showAffixHeader = not addon.Data.db.global.showAffixHeader
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("The affixes will be shown at the top.", nil, nil, nil, true)
+    end)
     menu:CreateCheckbox(
       "Show the minimap button",
       function() return not addon.Data.db.global.minimap.hide end,
@@ -975,7 +1019,6 @@ function Module:SetupButtons()
       tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
       tooltip:AddLine("No more moving the button around accidentally!", nil, nil, nil, true)
     end)
-    menu:CreateTitle(INTERFACE_OPTIONS)
     -- TODO: Make this a slider with a different button template
     local windowScaleButton = menu:CreateButton("Window scale")
     for i = 80, 200, 10 do
@@ -1133,7 +1176,7 @@ function Module:SetupButtons()
     addon.Utils:SetBackgroundColor(announceButton, 1, 1, 1, 0.05)
     ---@diagnostic disable-next-line: param-type-mismatch
     GameTooltip:SetOwner(announceButton, "ANCHOR_TOP")
-    GameTooltip:SetText("Announce Keystones", 1, 1, 1, 1, true)
+    GameTooltip:SetText("Announcements", 1, 1, 1, 1, true)
     GameTooltip:AddLine("Sharing is caring.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     GameTooltip:Show()
   end)
@@ -1148,9 +1191,9 @@ function Module:SetupButtons()
   announceButton.Icon:SetSize(12, 12)
   announceButton.Icon:SetTexture(addon.Constants.media.IconAnnounce)
   announceButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-  announceButton:SetupMenu(function(_, rootMenu)
-    rootMenu:CreateTitle("Announce Keystones")
-    local sendToParty = rootMenu:CreateButton(
+  announceButton:SetupMenu(function(_, menu)
+    menu:CreateTitle("Announce Current Keystones")
+    local sendToParty = menu:CreateButton(
       "Send to Party Chat",
       function()
         if not IsInGroup() then
@@ -1169,7 +1212,7 @@ function Module:SetupButtons()
         tooltip:AddLine("You are not in a party.", 1, 0, 0, true)
       end
     end)
-    local sendToGuild = rootMenu:CreateButton(
+    local sendToGuild = menu:CreateButton(
       "Send to Guild Chat",
       function()
         if not IsInGuild() then
@@ -1188,9 +1231,9 @@ function Module:SetupButtons()
         tooltip:AddLine("You are not in a guild.", 1, 0, 0, true)
       end
     end)
-    rootMenu:CreateTitle("Settings")
+    menu:CreateTitle(OPTIONS)
     local withCharacterNames
-    local withMultipleMessages = rootMenu:CreateCheckbox(
+    local withMultipleMessages = menu:CreateCheckbox(
       "Multiple chat messages",
       function() return addon.Data.db.global.announceKeystones.multiline end,
       function()
@@ -1198,7 +1241,7 @@ function Module:SetupButtons()
         withCharacterNames:SetEnabled(addon.Data.db.global.announceKeystones.multiline)
       end
     )
-    withCharacterNames = rootMenu:CreateCheckbox(
+    withCharacterNames = menu:CreateCheckbox(
       "Include character names",
       function() return addon.Data.db.global.announceKeystones.multilineNames end,
       function() addon.Data.db.global.announceKeystones.multilineNames = not addon.Data.db.global.announceKeystones.multilineNames end
@@ -1218,6 +1261,41 @@ function Module:SetupButtons()
       end
     end)
     withCharacterNames:SetEnabled(addon.Data.db.global.announceKeystones.multiline)
+    menu:CreateDivider()
+    menu:CreateTitle("Automatic Announcements")
+    menu:CreateCheckbox(
+      "Announce instance resets",
+      function() return addon.Data.db.global.announceResets end,
+      function()
+        addon.Data.db.global.announceResets = not addon.Data.db.global.announceResets
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Let others in your group know when you've reset the instances.", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Announce new keystones (Party)",
+      function() return addon.Data.db.global.announceKeystones.autoParty end,
+      function()
+        addon.Data.db.global.announceKeystones.autoParty = not addon.Data.db.global.announceKeystones.autoParty
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce to your party when you loot a new keystone.", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
+      "Announce new keystones (Guild)",
+      function() return addon.Data.db.global.announceKeystones.autoGuild end,
+      function()
+        addon.Data.db.global.announceKeystones.autoGuild = not addon.Data.db.global.announceKeystones.autoGuild
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Announce to your guild when you loot a new keystone.", nil, nil, nil, true)
+    end)
   end)
 
   self.window.titlebar.GreatVaultButton = CreateFrame("Button", "$parentGreatVaultButton", self.window.titlebar)
@@ -1255,6 +1333,7 @@ function Module:Render()
   local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
   local seasonID = addon.Data:GetCurrentSeason()
   local dungeons = addon.Data:GetDungeons()
+  local currencies = addon.Data:GetCurrencies()
   local affixRotation = addon.Data:GetAffixRotation()
   local raidDifficulties = addon.Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
@@ -1404,8 +1483,8 @@ function Module:Render()
         if not infoFrame then
           infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
           infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-          infoFrame.text:SetPoint("LEFT", infoFrame, "LEFT", addon.Constants.sizes.padding, 0)
-          infoFrame.text:SetPoint("RIGHT", infoFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
+          infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+          infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
           infoFrame.text:SetJustifyH("LEFT")
           infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           infoFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1430,7 +1509,7 @@ function Module:Render()
         label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
         label.text:SetFontObject("GameFontHighlight_NoShadow")
         label.text:SetJustifyH("LEFT")
-        label.text:SetText("Mythic Plus")
+        label.text:SetText(DUNGEONS)
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
         self.window.sidebar.mpluslabel = label
       end
@@ -1502,97 +1581,170 @@ function Module:Render()
         dungeonFrame:Show()
         rowCount = rowCount + 1
       end)
+    end
 
-      do -- Raid Labels
-        self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
-        -- self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
-        addon.Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
-        -- addon.Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
-        if addon.Data.db.global.raids.enabled then
-          addon.Utils:TableForEach(raids, function(raid, raidIndex)
-            local raidFrame = self.window.sidebar.raidFrames[raidIndex]
-            if not raidFrame then
-              raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
-              raidFrame.difficultyFrames = {}
-              raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
-              raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", addon.Constants.sizes.padding, 0)
-              raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-              raidFrame.text:SetJustifyH("LEFT")
-              raidFrame.text:SetWordWrap(false)
-              raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-              raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
-              raidFrame.ModifiedIcon:SetSize(18, 18)
-              raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(addon.Constants.sizes.padding / 2), 0)
-              self.window.sidebar.raidFrames[raidIndex] = raidFrame
+    do -- Raid Labels
+      self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
+      -- self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
+      addon.Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
+      -- addon.Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
+      if addon.Data.db.global.raids.enabled then
+        addon.Utils:TableForEach(raids, function(raid, raidIndex)
+          local raidFrame = self.window.sidebar.raidFrames[raidIndex]
+          if not raidFrame then
+            raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
+            raidFrame.difficultyFrames = {}
+            raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
+            raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", addon.Constants.sizes.padding, 0)
+            raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+            raidFrame.text:SetJustifyH("LEFT")
+            raidFrame.text:SetWordWrap(false)
+            raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+            raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
+            raidFrame.ModifiedIcon:SetSize(18, 18)
+            raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(addon.Constants.sizes.padding / 2), 0)
+            self.window.sidebar.raidFrames[raidIndex] = raidFrame
+          end
+
+          raidFrame:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(raid.name, 1, 1, 1)
+            if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
+            end
+            GameTooltip:Show()
+          end)
+          raidFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+          end)
+
+          if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
+            raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
+            raidFrame.ModifiedIcon:Show()
+            raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(addon.Constants.sizes.padding / 2), 0)
+          else
+            raidFrame.ModifiedIcon:Hide()
+            raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
+          end
+
+          raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          raidFrame:SetHeight(addon.Constants.sizes.row)
+          raidFrame.text:SetText(raid.short and raid.short or raid.name)
+          raidFrame:Show()
+          rowCount = rowCount + 1
+
+          -- Difficulties
+          addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
+          addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
+            local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
+            if not difficultyFrame then
+              difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
+              difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+              difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+              difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+              difficultyFrame.text:SetJustifyH("LEFT")
+              difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+              raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
             end
 
-            raidFrame:SetScript("OnEnter", function()
-              GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText(raid.name, 1, 1, 1)
-              if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
-              end
+            difficultyFrame:SetScript("OnEnter", function()
+              GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetText(difficulty.name, 1, 1, 1)
               GameTooltip:Show()
             end)
-            raidFrame:SetScript("OnLeave", function()
+            difficultyFrame:SetScript("OnLeave", function()
               GameTooltip:Hide()
             end)
 
-            if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
-              raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
-              raidFrame.ModifiedIcon:Show()
-              raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(addon.Constants.sizes.padding / 2), 0)
-            else
-              raidFrame.ModifiedIcon:Hide()
-              raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
-            end
-
-            raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-            raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-            raidFrame:SetHeight(addon.Constants.sizes.row)
-            raidFrame.text:SetText(raid.short and raid.short or raid.name)
-            raidFrame:Show()
+            difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+            difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+            difficultyFrame:SetHeight(addon.Constants.sizes.row)
+            difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
+            difficultyFrame:Show()
             rowCount = rowCount + 1
-
-            -- Difficulties
-            addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-            addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
-              local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
-              if not difficultyFrame then
-                difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
-                difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-                difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
-                difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
-                difficultyFrame.text:SetJustifyH("LEFT")
-                difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-                raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
-              end
-
-              difficultyFrame:SetScript("OnEnter", function()
-                GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(difficulty.name, 1, 1, 1)
-                GameTooltip:Show()
-              end)
-              difficultyFrame:SetScript("OnLeave", function()
-                GameTooltip:Hide()
-              end)
-
-              difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-              difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-              difficultyFrame:SetHeight(addon.Constants.sizes.row)
-              difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
-              difficultyFrame:Show()
-              rowCount = rowCount + 1
-            end)
           end)
-        end
+        end)
       end
     end
+
+    do -- Currencies Header
+      local label = self.window.sidebar.currencyLabel
+      if not label then
+        label = CreateFrame("Frame", "$parentCurrencyLabel", self.window.sidebar)
+        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetFontObject("GameFontHighlight_NoShadow")
+        label.text:SetJustifyH("LEFT")
+        label.text:SetText(CURRENCY)
+        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.window.sidebar.currencyLabel = label
+      end
+
+      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+      label:SetHeight(addon.Constants.sizes.row)
+
+      if addon.Data.db.global.currencies.enabled then
+        label:Show()
+        rowCount = rowCount + 1
+      else
+        label:Hide()
+      end
+    end
+
+    do -- Currency Labels
+      self.window.sidebar.currencyLabels = self.window.sidebar.currencyLabels or {}
+      addon.Utils:TableForEach(self.window.sidebar.currencyLabels, function(f) f:Hide() end)
+      if addon.Data.db.global.currencies.enabled then
+        addon.Utils:TableForEach(currencies, function(currency, currencyIndex)
+          if addon.Data.db.global.currencies.hiddenCurrencies and addon.Data.db.global.currencies.hiddenCurrencies[currency.id] then
+            return
+          end
+          local label = self.window.sidebar.currencyLabels[currencyIndex]
+          if not label then
+            label = CreateFrame("Frame", "$parentCurrency" .. currencyIndex, self.window.sidebar)
+            label.icon = label:CreateTexture(label:GetName() .. "Icon", "ARTWORK")
+            label.icon:SetSize(16, 16)
+            label.icon:SetPoint("LEFT", label, "LEFT", addon.Constants.sizes.padding, 0)
+            label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+            label.text:SetPoint("TOPLEFT", label, "TOPLEFT", 16 + addon.Constants.sizes.padding * 2, -3)
+            label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            label.text:SetJustifyH("LEFT")
+            label.text:SetFontObject("GameFontHighlight_NoShadow")
+            self.window.sidebar.currencyLabels[currencyIndex] = label
+          end
+
+          local color = ITEM_QUALITY_COLORS[currency.quality]
+
+          label:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
+            GameTooltip:SetText(currency.name, color.r, color.g, color.b)
+            GameTooltip:AddLine(currency.description, nil, nil, nil, true)
+            GameTooltip:Show()
+          end)
+          label:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+          end)
+
+          label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          label:SetHeight(addon.Constants.sizes.row)
+          label.icon:SetTexture(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+          label.text:SetText(currency.short and currency.short or currency.name)
+          label.text:SetTextColor(color.r, color.g, color.b)
+          label:Show()
+          rowCount = rowCount + 1
+        end)
+      end
+    end
+
     windowHeight = windowHeight + rowCount * addon.Constants.sizes.row
   end
 
-  do -- Characrer Columns
+  do -- Character Columns
     self.window.characterFrames = self.window.characterFrames or {}
     addon.Utils:TableForEach(self.window.characterFrames, function(f) f:Hide() end)
     addon.Utils:TableForEach(characters, function(character, characterIndex)
@@ -1604,6 +1756,7 @@ function Module:Render()
         characterFrame.dungeonFrames = {}
         characterFrame.raidFrames = {}
         characterFrame.affixHeaderFrame = CreateFrame("Frame", "$parentAffixes", characterFrame)
+        characterFrame.currencyHeaderFrame = CreateFrame("Frame", "$parentCurrencies", characterFrame)
         self.window.characterFrames[characterIndex] = characterFrame
       end
 
@@ -1774,6 +1927,7 @@ function Module:Render()
       end
 
       do -- Dungeons
+        characterFrame.dungeonFrames = characterFrame.dungeonFrames or {}
         addon.Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
         addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
           local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
@@ -2048,6 +2202,94 @@ function Module:Render()
           end)
         end
       end
+
+      do -- Currency Header
+        characterFrame.currencyHeaderFrame:Hide()
+        if addon.Data.db.global.currencies.enabled then
+          characterFrame.currencyHeaderFrame:Show()
+          characterFrame.currencyHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          characterFrame.currencyHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          characterFrame.currencyHeaderFrame:SetHeight(addon.Constants.sizes.row)
+          addon.Utils:SetBackgroundColor(characterFrame.currencyHeaderFrame, 0, 0, 0, 0.3)
+          rowCount = rowCount + 1
+        end
+      end
+
+      do -- Currencies
+        characterFrame.currencyFrames = characterFrame.currencyFrames or {}
+        addon.Utils:TableForEach(characterFrame.currencyFrames, function(f) f:Hide() end)
+        addon.Utils:TableForEach(currencies, function(currency, currencyIndex)
+          if not addon.Data.db.global.currencies.enabled then return end
+          if addon.Data.db.global.currencies.hiddenCurrencies and addon.Data.db.global.currencies.hiddenCurrencies[currency.id] then return end
+
+          local currencyFrame = characterFrame.currencyFrames[currencyIndex]
+          if not currencyFrame then
+            currencyFrame = CreateFrame("Frame", "$parentCurrencies" .. currencyIndex, characterFrame)
+            currencyFrame.Text = currencyFrame:CreateFontString(currencyFrame:GetName() .. "TextLeft", "OVERLAY")
+            currencyFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
+            currencyFrame.Text:SetPoint("TOPLEFT", currencyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+            currencyFrame.Text:SetPoint("BOTTOMRIGHT", currencyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            currencyFrame.Text:SetJustifyH("LEFT")
+            characterFrame.currencyFrames[currencyIndex] = currencyFrame
+          end
+
+          local quantity = 0
+          local totalEarned = 0
+          local maxQuantity = currency.maxQuantity or 0
+          local maxEarned = false
+          local color = CAMPAIGN_COMPLETE_COLOR
+          local icon = CreateSimpleTextureMarkup(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+
+          local characterCurrency = addon.Utils:TableGet(character.currencies, "id", currency.id)
+          if characterCurrency then
+            quantity = characterCurrency.quantity
+            totalEarned = characterCurrency.totalEarned
+          end
+
+          local textLeft = tostring(maxQuantity > 0 and math.min(quantity, maxQuantity) or quantity)
+          if currency.useTotalEarnedForMaxQty then
+            if maxQuantity > 0 then
+              maxEarned = totalEarned >= maxQuantity
+            end
+          elseif maxQuantity > 0 then
+            maxEarned = quantity >= maxQuantity
+          end
+
+          if addon.Data.db.global.currencies.showIcons then
+            textLeft = format("%s %s", icon, quantity)
+          end
+
+          if addon.Data.db.global.currencies.showMaxEarned and maxEarned then
+            color = DULL_RED_FONT_COLOR
+          end
+
+          currencyFrame.Text:SetText(color:WrapTextInColorCode(textLeft))
+          currencyFrame.Text:SetJustifyH(addon.Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
+          currencyFrame:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Currency Progress", 1, 1, 1)
+            GameTooltip:AddDoubleLine("Total:", quantity, nil, nil, nil, 1, 1, 1)
+            GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or maxQuantity, nil, nil, nil, 1, 1, 1)
+            if totalEarned > 0 then
+              GameTooltip:AddDoubleLine("Season Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
+            end
+            GameTooltip:Show()
+            addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
+          end)
+          currencyFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+            addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0)
+          end)
+
+          addon.Utils:SetBackgroundColor(currencyFrame, 1, 1, 1, currencyIndex % 2 == 0 and 0.01 or 0)
+          currencyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          currencyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          currencyFrame:SetHeight(addon.Constants.sizes.row)
+          currencyFrame:Show()
+          rowCount = rowCount + 1
+        end)
+      end
+
       windowWidth = windowWidth + CHARACTER_WIDTH
     end)
   end

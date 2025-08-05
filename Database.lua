@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 22
+Data.dbVersion = 23
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -33,8 +33,10 @@ Data.defaultDB = {
       multilineNames = false,
     },
     announceResets = true,
-    world = {
-      enabled = true,
+    vault = {
+      raids = true,
+      dungeons = true,
+      world = true,
     },
     raids = {
       enabled = true,
@@ -43,6 +45,19 @@ Data.defaultDB = {
       hiddenDifficulties = {},
       boxes = false,
       modifiedInstanceOnly = true,
+    },
+    dungeons = {
+      enabled = true,
+    },
+    world = {
+      enabled = true,
+    },
+    currencies = {
+      enabled = true,
+      hiddenCurrencies = {},
+      showIcons = true,
+      showMaxEarned = true,
+      alignCenter = true,
     },
     interface = {
       -- fontSize = 12,
@@ -429,6 +444,18 @@ end
 ---@return AE_Currency[]
 function Data:GetCurrencies()
   local seasonID = self:GetCurrentSeason()
+  addon.Utils:TableForEach(self.currencies, function(currency)
+    if currency.name == nil then
+      local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
+      if currencyInfo then
+        currency.name = currencyInfo.name
+        currency.description = currencyInfo.description
+        currency.iconFileID = currencyInfo.iconFileID
+        currency.maxQuantity = currencyInfo.maxQuantity or 0
+        currency.quality = currencyInfo.quality or 1
+      end
+    end
+  end)
   return addon.Utils:TableFilter(self.currencies, function(dataCurrency)
     return dataCurrency.seasonID == seasonID
   end)

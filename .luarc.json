@@ -211,5 +211,8 @@
         "INVSLOT_TRINKET2",
         "INVSLOT_MAINHAND",
         "INVSLOT_OFFHAND",
+        "CURRENCY",
+        "OPTIONS",
+        "ITEM_QUALITY_COLORS",
     ]
 }
