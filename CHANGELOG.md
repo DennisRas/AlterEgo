@@ -16,12 +16,12 @@ If you encounter any issues or have suggestions, feel free to open a ticket at [
 
 ### Updated
 
-- Rewritten currency tooltip texts for better clarity and consistency
+- Rewritten currency tooltip texts for improved clarity and consistency
 
 ### Fixed
 
 - Fixed an issue where currency tooltips displayed incorrect season data after logging in for the first time
-- Added a small workaround to display Upgrade Levels on old Season 2 items, since they no longer appear in tooltips
+- Added a small workaround to show Upgrade Levels on old Season 2 items, since they no longer appear in item tooltips
 
 ## v1.3.1 - 2025-08-06
 
