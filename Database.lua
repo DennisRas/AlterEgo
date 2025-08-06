@@ -814,7 +814,10 @@ function Data:TaskSeasonReset()
       if character.currentSeason == nil or character.currentSeason < seasonID then
         wipe(character.mythicplus.runHistory or {})
         wipe(character.mythicplus.dungeons or {})
-        wipe(character.currencies or {})
+        ---Keep Valorstones as they no longer reset
+        character.currencies = addon.Utils:TableFilter(character.currencies, function(currency)
+          return currency.id == 3008
+        end)
         character.mythicplus.rating = 0
         character.currentSeason = seasonID
       end

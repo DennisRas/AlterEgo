@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.1 - 2025-08-06
+
+### Fixed
+
+- Valorstones no longer reset between seasons. This has been fixed. If you've already logged into the new season before this update, you'll have to log onto your characters again to see the Valorstone currencies. Sorry about that and enjoy the new season!
+
 ## v1.3.0 - 2025-08-05
 
 ### Added
