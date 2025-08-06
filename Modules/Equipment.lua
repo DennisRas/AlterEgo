@@ -88,6 +88,8 @@ function Module:Render()
   tableHeight = tableHeight + 30
 
   addon.Utils:TableForEach(character.equipment, function(item)
+    local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
+
     local upgradeLevel = ""
     if item.itemUpgradeTrack ~= "" then
       upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
@@ -122,7 +124,6 @@ function Module:Render()
     end
 
     ---TWW Season 2 Item: D.I.S.C.
-    local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
     if itemID == 245966 or itemID == 245964 or itemID == 245965 or itemID == 242664 then
       local DISCLevels = {691, 694, 697, 701}
       local numDISCLevels = addon.Utils:TableCount(DISCLevels)
@@ -130,6 +131,20 @@ function Module:Render()
         if item.itemLevel == DISCLevel then
           upgradeLevel = format("D.I.S.C. %d/%d", i, numDISCLevels)
           if i == numDISCLevels then
+            upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
+          end
+        end
+      end)
+    end
+
+    ---TWW Season 3 Item: Reshii Wraps
+    if itemID == 235499 then
+      local ItemLevels = {694, 701, 707, 714, 720, 730}
+      local numItemLevels = addon.Utils:TableCount(ItemLevels)
+      addon.Utils:TableForEach(ItemLevels, function(ItemLevel, i)
+        if item.itemLevel == ItemLevel then
+          upgradeLevel = format("%s %d/%d", RANK, i, numItemLevels)
+          if i == numItemLevels then
             upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
           end
         end

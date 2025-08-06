@@ -10,9 +10,9 @@ If you encounter any issues or have suggestions, feel free to open a ticket at [
 
 ### Added
 
+- Added Reshii Wraps ranks to the Equipment window
 - Added Fractured Sparks to the Currencies section
 - Added Ethreal Strands to the Currencies section
-- Added a small workaround to display Upgrade Levels on old Season 2 items, since they no longer appear in tooltips
 
 ### Updated
 
@@ -21,6 +21,7 @@ If you encounter any issues or have suggestions, feel free to open a ticket at [
 ### Fixed
 
 - Fixed an issue where currency tooltips displayed incorrect season data after logging in for the first time
+- Added a small workaround to display Upgrade Levels on old Season 2 items, since they no longer appear in tooltips
 
 ## v1.3.1 - 2025-08-06
 

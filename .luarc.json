@@ -214,5 +214,6 @@
         "CURRENCY",
         "OPTIONS",
         "ITEM_QUALITY_COLORS",
+        "RANK",
     ]
 }
