@@ -407,6 +407,7 @@ Data.currencies = {
   {seasonID = 15, seasonDisplayID = 3, id = 3269, currencyType = "catalyst"},                 -- Catalyst
   {seasonID = 15, seasonDisplayID = 3, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
   {seasonID = 15, seasonDisplayID = 3, id = 3141, currencyType = "spark"},                    -- Fractured Spark
+  {seasonID = 15, seasonDisplayID = 3, id = 3278, currencyType = "cloak"},                    -- Ethereal Strands
 }
 
 Data.oldUpgradeLevels = {

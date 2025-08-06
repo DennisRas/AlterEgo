@@ -11,6 +11,7 @@ If you encounter any issues or have suggestions, feel free to open a ticket at [
 ### Added
 
 - Added Fractured Sparks to the Currencies section
+- Added Ethreal Strands to the Currencies section
 - Added a small workaround to display Upgrade Levels on old Season 2 items, since they no longer appear in tooltips
 
 ### Updated

@@ -36,7 +36,7 @@
 ---@field exampleRewardLink string
 ---@field exampleRewardUpgradeLink string
 
----@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark"
+---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark" | "cloak"
 
 ---@class AE_Currency
 ---@field id number
