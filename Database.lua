@@ -453,6 +453,7 @@ function Data:GetCurrencies()
         currency.iconFileID = currencyInfo.iconFileID
         currency.maxQuantity = currencyInfo.maxQuantity or 0
         currency.quality = currencyInfo.quality or 1
+        currency.useTotalEarnedForMaxQty = currencyInfo.useTotalEarnedForMaxQty
       end
     end
   end)

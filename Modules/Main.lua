@@ -2246,7 +2246,7 @@ function Module:Render()
             totalEarned = characterCurrency.totalEarned
           end
 
-          local textLeft = tostring(maxQuantity > 0 and math.min(quantity, maxQuantity) or quantity)
+          local text = tostring(maxQuantity > 0 and math.min(quantity, maxQuantity) or quantity)
           if currency.useTotalEarnedForMaxQty then
             if maxQuantity > 0 then
               maxEarned = totalEarned >= maxQuantity
@@ -2256,20 +2256,31 @@ function Module:Render()
           end
 
           if addon.Data.db.global.currencies.showIcons then
-            textLeft = format("%s %s", icon, quantity)
+            text = format("%s %s", icon, quantity)
           end
 
           if addon.Data.db.global.currencies.showMaxEarned and maxEarned then
             color = DULL_RED_FONT_COLOR
           end
 
-          currencyFrame.Text:SetText(color:WrapTextInColorCode(textLeft))
+          if quantity == 0 then
+            color = GRAY_FONT_COLOR
+          end
+          if totalEarned == 0 and quantity == 0 and currency.currencyType == "crest" then
+            text = "-"
+          end
+
+          currencyFrame.Text:SetText(color:WrapTextInColorCode(text))
           currencyFrame.Text:SetJustifyH(addon.Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
           currencyFrame:SetScript("OnEnter", function()
             GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Currency Progress", 1, 1, 1)
             GameTooltip:AddDoubleLine("Total:", quantity, nil, nil, nil, 1, 1, 1)
-            GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or maxQuantity, nil, nil, nil, 1, 1, 1)
+            if currency.useTotalEarnedForMaxQty then
+              GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", totalEarned, maxQuantity), nil, nil, nil, 1, 1, 1)
+            else
+              GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or maxQuantity, nil, nil, nil, 1, 1, 1)
+            end
             if totalEarned > 0 then
               GameTooltip:AddDoubleLine("Season Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
             end

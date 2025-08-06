@@ -2,6 +2,11 @@
 
 ## v1.3.1 - 2025-08-06
 
+### Updated
+
+- Currencies that haven't been earned yet will now show as blank ("-").
+- Currency tooltips have been updated to show season maximum as well. This will unlock for all crests as they are obtained.
+
 ### Fixed
 
 - Valorstones no longer reset between seasons. This has been fixed. If you've already logged into the new season before this update, you'll have to log onto your characters again to see the Valorstone currencies. Sorry about that and enjoy the new season!
