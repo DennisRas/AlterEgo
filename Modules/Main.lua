@@ -1345,6 +1345,8 @@ function Module:Render()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
+  DevTools_Dump("Render()")
+
   if not self.window then
     self.window = addon.Window:New({
       name = "Main",
@@ -2247,12 +2249,12 @@ function Module:Render()
           end
 
           local text = tostring(maxQuantity > 0 and math.min(quantity, maxQuantity) or quantity)
-          if currency.useTotalEarnedForMaxQty then
-            if maxQuantity > 0 then
+
+          if maxQuantity > 0 then
+            maxEarned = quantity >= maxQuantity
+            if currency.useTotalEarnedForMaxQty then
               maxEarned = totalEarned >= maxQuantity
             end
-          elseif maxQuantity > 0 then
-            maxEarned = quantity >= maxQuantity
           end
 
           if addon.Data.db.global.currencies.showIcons then
@@ -2266,6 +2268,7 @@ function Module:Render()
           if quantity == 0 then
             color = GRAY_FONT_COLOR
           end
+
           if totalEarned == 0 and quantity == 0 and currency.currencyType == "crest" then
             text = "-"
           end
@@ -2277,12 +2280,19 @@ function Module:Render()
             GameTooltip:SetText("Currency Progress", 1, 1, 1)
             GameTooltip:AddDoubleLine("Total:", quantity, nil, nil, nil, 1, 1, 1)
             if currency.useTotalEarnedForMaxQty then
-              GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", totalEarned, maxQuantity), nil, nil, nil, 1, 1, 1)
+              if maxQuantity > 0 then
+                GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", totalEarned, maxQuantity), nil, nil, nil, 1, 1, 1)
+              else
+                if totalEarned > 0 then
+                  GameTooltip:AddDoubleLine("Season Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
+                end
+                GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
+              end
             else
-              GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or maxQuantity, nil, nil, nil, 1, 1, 1)
-            end
-            if totalEarned > 0 then
-              GameTooltip:AddDoubleLine("Season Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
+              if totalEarned > 0 then
+                GameTooltip:AddDoubleLine("Total Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
+              end
+              GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or tostring(maxQuantity), nil, nil, nil, 1, 1, 1)
             end
             GameTooltip:Show()
             addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)

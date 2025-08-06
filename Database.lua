@@ -444,22 +444,23 @@ end
 ---@return AE_Currency[]
 function Data:GetCurrencies()
   local seasonID = self:GetCurrentSeason()
-  addon.Utils:TableForEach(self.currencies, function(currency)
-    if currency.name == nil then
-      local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
-      if currencyInfo then
-        currency.name = currencyInfo.name
-        currency.description = currencyInfo.description
-        currency.iconFileID = currencyInfo.iconFileID
-        currency.maxQuantity = currencyInfo.maxQuantity or 0
-        currency.quality = currencyInfo.quality or 1
-        currency.useTotalEarnedForMaxQty = currencyInfo.useTotalEarnedForMaxQty
-      end
-    end
-  end)
-  return addon.Utils:TableFilter(self.currencies, function(dataCurrency)
+  local currencies = addon.Utils:TableFilter(self.currencies, function(dataCurrency)
     return dataCurrency.seasonID == seasonID
   end)
+  addon.Utils:TableForEach(currencies, function(currency)
+    -- if currency.name == nil then
+    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
+    if currencyInfo then
+      currency.name = currencyInfo.name
+      currency.description = currencyInfo.description
+      currency.iconFileID = currencyInfo.iconFileID
+      currency.maxQuantity = currencyInfo.maxQuantity or 0
+      currency.quality = currencyInfo.quality or 1
+      currency.useTotalEarnedForMaxQty = currencyInfo.useTotalEarnedForMaxQty
+      -- end
+    end
+  end)
+  return currencies
 end
 
 ---Get stored character by GUID

@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.3.2 - 2025-08-06
+
+Please note: This pre-season week is a bit unusual, as Blizzard only provides partial data until the season officially begins.
+As a result, Vault rewards (e.g. item levels) may be incorrect for the third Delve slot, and currencies might be missing data or display incorrect maximum limits.  
+Most of these issues should resolve automatically next week once the season starts and Blizzard finalizes the backend data.
+
+If you encounter any issues or have any suggestions, please visit [https://github.com/DennisRas/AlterEgo/issues](https://github.com/DennisRas/AlterEgo/issues) - Thank you!
+
+### Updated
+
+- Rewritten currency tooltip texts for improved consistency
+
+### Fixed
+
+- Fixed an issue where currency tooltips showed incorrect season data after logging in for the first time
+
 ## v1.3.1 - 2025-08-06
 
 ### Updated
