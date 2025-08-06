@@ -5,6 +5,7 @@
 ### Fixed
 
 - Valorstones no longer reset between seasons. This has been fixed. If you've already logged into the new season before this update, you'll have to log onto your characters again to see the Valorstone currencies. Sorry about that and enjoy the new season!
+- Fixed an issue with the maxQuantity of some currencies. Runed and Gilded Ethereal Crests will show "No limit" until the season begins as they can't be obtained yet (maxQuantity=0 by Blizzard) and report as "unlimited" until then.
 
 ## v1.3.0 - 2025-08-05
 
