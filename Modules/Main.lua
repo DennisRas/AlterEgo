@@ -1345,8 +1345,6 @@ function Module:Render()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
-  DevTools_Dump("Render()")
-
   if not self.window then
     self.window = addon.Window:New({
       name = "Main",

@@ -6,19 +6,20 @@ Please note: This pre-season week is a bit unusual, as Blizzard only provides pa
 As a result, Vault rewards (e.g. item levels) may be incorrect for the third Delve slot, and currencies might be missing data or display incorrect maximum limits.  
 Most of these issues should resolve automatically next week once the season starts and Blizzard finalizes the backend data.
 
-If you encounter any issues or have any suggestions, please visit [https://github.com/DennisRas/AlterEgo/issues](https://github.com/DennisRas/AlterEgo/issues) - Thank you!
+If you encounter any issues or have suggestions, feel free to open a ticket at [https://github.com/DennisRas/AlterEgo/issues](https://github.com/DennisRas/AlterEgo/issues) - Thank you!
 
 ### Added
 
-- Added Fractured Sparks to Currencies
+- Added Fractured Sparks to the Currencies section
+- Added a small workaround to display Upgrade Levels on old Season 2 items, since they no longer appear in tooltips
 
 ### Updated
 
-- Rewritten currency tooltip texts for improved consistency
+- Rewritten currency tooltip texts for better clarity and consistency
 
 ### Fixed
 
-- Fixed an issue where currency tooltips showed incorrect season data after logging in for the first time
+- Fixed an issue where currency tooltips displayed incorrect season data after logging in for the first time
 
 ## v1.3.1 - 2025-08-06
 

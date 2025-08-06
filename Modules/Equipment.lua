@@ -98,6 +98,29 @@ function Module:Render()
       end
     end
 
+    ---Detect old season items as Blizz no longer adds old Upgrade Levels to the tooltip
+    local itemPayload = string.match(item.itemLink, "item:([%-?%d:]+)")
+    if itemPayload then
+      local itemPayloadSplit = {strsplit(":", itemPayload)}
+      local numBonuses = tonumber(itemPayloadSplit[13])
+      if numBonuses ~= nil and numBonuses > 0 then
+        for i = 14, 13 + numBonuses do
+          local bonusId = tonumber(itemPayloadSplit[i])
+          if bonusId ~= nil then
+            for _, tracks in pairs(addon.Data.oldUpgradeLevels) do
+              for trackName, ids in pairs(tracks) do
+                for idx, id in pairs(ids) do
+                  if id == bonusId then
+                    upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(format("%s %d/%d", trackName, idx, #ids))
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
     ---TWW Season 2 Item: D.I.S.C.
     local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
     if itemID == 245966 or itemID == 245964 or itemID == 245965 or itemID == 242664 then

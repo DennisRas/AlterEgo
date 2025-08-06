@@ -409,6 +409,18 @@ Data.currencies = {
   {seasonID = 15, seasonDisplayID = 3, id = 3141, currencyType = "spark"},                    -- Fractured Spark
 }
 
+Data.oldUpgradeLevels = {
+  [14] = {
+    ["Explorer"] = {11942, 11943, 11944, 11945, 11946, 11947, 11948, 11949},   -- Explorer
+    ["Adventurer"] = {11951, 11952, 11953, 11954, 11955, 11956, 11957, 11950}, -- Adventurer
+    ["Veteran"] = {11969, 11970, 11971, 11972, 11973, 11974, 11975, 11976},    -- Veteran
+    ["Champion"] = {11977, 11978, 11979, 11980, 11981, 11982, 11983, 11984},   -- Champion
+    ["Hero"] = {11985, 11986, 11987, 11988, 11989, 11990, 12371, 12372},       -- Hero
+    ["Myth"] = {11991, 11992, 11993, 11994, 11995, 11996, 12375, 12376},       -- Myth
+    -- ["Crafted"] = {9401, 9402, 9403, 9404, 9405, 9623, 9624, 9625, 9626, 9627}, -- Crafted Qualities
+  },
+}
+
 Data.cache = {
   seasonID = nil,
   seasonDisplayID = nil,
