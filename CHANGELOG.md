@@ -8,6 +8,10 @@ Most of these issues should resolve automatically next week once the season star
 
 If you encounter any issues or have any suggestions, please visit [https://github.com/DennisRas/AlterEgo/issues](https://github.com/DennisRas/AlterEgo/issues) - Thank you!
 
+### Added
+
+- Added Fractured Sparks to Currencies
+
 ### Updated
 
 - Rewritten currency tooltip texts for improved consistency
