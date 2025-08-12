@@ -372,42 +372,42 @@ Data.raids = {
 
 ---@type AE_Currency[]
 Data.currencies = {
-  {seasonID = 11, seasonDisplayID = 3, id = 2709, currencyType = "crest"},                    -- Aspect
-  {seasonID = 11, seasonDisplayID = 3, id = 2708, currencyType = "crest"},                    -- Wyrm
-  {seasonID = 11, seasonDisplayID = 3, id = 2707, currencyType = "crest"},                    -- Drake
-  {seasonID = 11, seasonDisplayID = 3, id = 2706, currencyType = "crest"},                    -- Whelpling
-  {seasonID = 11, seasonDisplayID = 3, id = 2245, currencyType = "upgrade"},                  -- Flightstones
-  {seasonID = 11, seasonDisplayID = 3, id = 2796, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 2812, currencyType = "crest"},                    -- Aspect
-  {seasonID = 12, seasonDisplayID = 4, id = 2809, currencyType = "crest"},                    -- Wyrm
-  {seasonID = 12, seasonDisplayID = 4, id = 2807, currencyType = "crest"},                    -- Drake
-  {seasonID = 12, seasonDisplayID = 4, id = 2806, currencyType = "crest"},                    -- Whelpling
-  {seasonID = 12, seasonDisplayID = 4, id = 2245, currencyType = "upgrade"},                  -- Flightstones
-  {seasonID = 12, seasonDisplayID = 4, id = 2912, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 12, seasonDisplayID = 4, id = 3010, currencyType = "dinar",   itemID = 213089}, -- Dinar
-  {seasonID = 13, seasonDisplayID = 1, id = 2914, currencyType = "crest"},                    -- Weathered
-  {seasonID = 13, seasonDisplayID = 1, id = 2915, currencyType = "crest"},                    -- Carved
-  {seasonID = 13, seasonDisplayID = 1, id = 2916, currencyType = "crest"},                    -- Runed
-  {seasonID = 13, seasonDisplayID = 1, id = 2917, currencyType = "crest"},                    -- Gilded
-  {seasonID = 13, seasonDisplayID = 1, id = 3008, currencyType = "upgrade"},                  -- Valorstones
-  {seasonID = 13, seasonDisplayID = 1, id = 2813, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 13, seasonDisplayID = 1, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
-  {seasonID = 14, seasonDisplayID = 2, id = 3110, currencyType = "crest"},                    -- Gilded
-  {seasonID = 14, seasonDisplayID = 2, id = 3109, currencyType = "crest"},                    -- Runed
-  {seasonID = 14, seasonDisplayID = 2, id = 3108, currencyType = "crest"},                    -- Carved
-  {seasonID = 14, seasonDisplayID = 2, id = 3107, currencyType = "crest"},                    -- Weathered
-  {seasonID = 14, seasonDisplayID = 2, id = 3008, currencyType = "upgrade"},                  -- Valorstones
-  {seasonID = 14, seasonDisplayID = 2, id = 3116, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 14, seasonDisplayID = 2, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
-  {seasonID = 15, seasonDisplayID = 3, id = 3290, currencyType = "crest"},                    -- Gilded
-  {seasonID = 15, seasonDisplayID = 3, id = 3288, currencyType = "crest"},                    -- Runed
-  {seasonID = 15, seasonDisplayID = 3, id = 3286, currencyType = "crest"},                    -- Carved
-  {seasonID = 15, seasonDisplayID = 3, id = 3284, currencyType = "crest"},                    -- Weathered
-  {seasonID = 15, seasonDisplayID = 3, id = 3008, currencyType = "upgrade"},                  -- Valorstones
-  {seasonID = 15, seasonDisplayID = 3, id = 3269, currencyType = "catalyst"},                 -- Catalyst
-  {seasonID = 15, seasonDisplayID = 3, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
-  {seasonID = 15, seasonDisplayID = 3, id = 3141, currencyType = "spark"},                    -- Fractured Spark
-  {seasonID = 15, seasonDisplayID = 3, id = 3278, currencyType = "cloak"},                    -- Ethereal Strands
+  {seasonID = 11, seasonDisplayID = 3, id = 2709, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Aspect
+  {seasonID = 11, seasonDisplayID = 3, id = 2708, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Wyrm
+  {seasonID = 11, seasonDisplayID = 3, id = 2707, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Drake
+  {seasonID = 11, seasonDisplayID = 3, id = 2706, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Whelpling
+  {seasonID = 11, seasonDisplayID = 3, id = 2245, useTotalEarnedForMaxQty = false, currencyType = "upgrade"},                  -- Flightstones
+  {seasonID = 11, seasonDisplayID = 3, id = 2796, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 2812, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Aspect
+  {seasonID = 12, seasonDisplayID = 4, id = 2809, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Wyrm
+  {seasonID = 12, seasonDisplayID = 4, id = 2807, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Drake
+  {seasonID = 12, seasonDisplayID = 4, id = 2806, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Whelpling
+  {seasonID = 12, seasonDisplayID = 4, id = 2245, useTotalEarnedForMaxQty = false, currencyType = "upgrade"},                  -- Flightstones
+  {seasonID = 12, seasonDisplayID = 4, id = 2912, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 12, seasonDisplayID = 4, id = 3010, useTotalEarnedForMaxQty = false, currencyType = "dinar",   itemID = 213089}, -- Dinar
+  {seasonID = 13, seasonDisplayID = 1, id = 2914, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Weathered
+  {seasonID = 13, seasonDisplayID = 1, id = 2915, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Carved
+  {seasonID = 13, seasonDisplayID = 1, id = 2916, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Runed
+  {seasonID = 13, seasonDisplayID = 1, id = 2917, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Gilded
+  {seasonID = 13, seasonDisplayID = 1, id = 3008, useTotalEarnedForMaxQty = false, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 13, seasonDisplayID = 1, id = 2813, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 13, seasonDisplayID = 1, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 14, seasonDisplayID = 2, id = 3110, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Gilded
+  {seasonID = 14, seasonDisplayID = 2, id = 3109, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Runed
+  {seasonID = 14, seasonDisplayID = 2, id = 3108, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Carved
+  {seasonID = 14, seasonDisplayID = 2, id = 3107, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Weathered
+  {seasonID = 14, seasonDisplayID = 2, id = 3008, useTotalEarnedForMaxQty = false, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 14, seasonDisplayID = 2, id = 3116, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 14, seasonDisplayID = 2, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 15, seasonDisplayID = 3, id = 3290, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Gilded
+  {seasonID = 15, seasonDisplayID = 3, id = 3288, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Runed
+  {seasonID = 15, seasonDisplayID = 3, id = 3286, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Carved
+  {seasonID = 15, seasonDisplayID = 3, id = 3284, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Weathered
+  {seasonID = 15, seasonDisplayID = 3, id = 3008, useTotalEarnedForMaxQty = false, currencyType = "upgrade"},                  -- Valorstones
+  {seasonID = 15, seasonDisplayID = 3, id = 3269, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Catalyst
+  {seasonID = 15, seasonDisplayID = 3, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 15, seasonDisplayID = 3, id = 3141, useTotalEarnedForMaxQty = true,  currencyType = "spark"},                    -- Fractured Spark
+  {seasonID = 15, seasonDisplayID = 3, id = 3278, useTotalEarnedForMaxQty = true,  currencyType = "cloak"},                    -- Ethereal Strands
 }
 
 Data.oldUpgradeLevels = {
@@ -470,7 +470,6 @@ function Data:GetCurrencies()
       currency.iconFileID = currencyInfo.iconFileID
       currency.maxQuantity = currencyInfo.maxQuantity or 0
       currency.quality = currencyInfo.quality or 1
-      currency.useTotalEarnedForMaxQty = currencyInfo.useTotalEarnedForMaxQty
       -- end
     end
   end)

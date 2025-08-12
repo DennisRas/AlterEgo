@@ -42,6 +42,7 @@
 ---@field id number
 ---@field seasonID number
 ---@field seasonDisplayID number
+---@field useTotalEarnedForMaxQty boolean
 ---@field currencyType AE_CurrencyType
 
 ---@class AE_CharacterCurrency : CurrencyInfo
