@@ -1,0 +1,47 @@
+---
+description: Project-wide AI rules for AlterEgo (WoW addon)
+alwaysApply: true
+---
+
+# AlterEgo – Global Project Rules
+
+## Repository boundaries
+- Do not modify `README.md` unless explicitly instructed (player-facing addon description).
+- Do not modify files under `Libs/` (managed by developers only).
+- Documentation for developers lives in `.docs/`. Update after major changes.
+
+## Types and annotations
+- All addon-specific type definitions must be declared in `Types.lua`.
+- Prefer `AE_` types over inline `@param` table shapes.
+- For nested shapes, create parent-prefixed subtypes (e.g., `AE_TableConfigHeader`).
+- Use custom frame types where appropriate (e.g., `AE_Window`, `AE_TableFrame`).
+
+## Module/file headers and class structure
+- Every Lua file should start with:
+  - `---@type string` then `local addonName = select(1, ...)`
+  - `---@class AE_Addon` then `local addon = select(2, ...)`
+- Above each main table object, add a class annotation (modules use `AE_Module_<Name> : AceModule`).
+- Keep full class shapes (fields/methods) in `Types.lua`; per-file class lines are for identification.
+
+## Documentation
+- `README.md` is for players (addon description/features) - confirm changes with developer.
+- `.docs/README.md` is for developers (navigation/context) - update automatically.
+- Update docs after major changes; docs are for developers, not players.
+
+## Data and errors
+- Most data uses `self.db.global`.
+- Add clear English error messages for invalid arguments and validation failures.
+
+## Player-facing changes
+- When a new user feature is added, propose concise README.md updates for confirmation before editing.
+- Only update README.md for significant features (new modules, major UI changes).
+- Update .docs/README.md automatically when adding new functionality that needs explanation.
+
+## Scope of help
+- Optimize for readability and maintainability. Follow existing code style.
+- Avoid adding dev-only/internal implementation details to player docs.
+
+## Common patterns (for quick reference)
+- Window creation: `addon.Window:New(options)` with options typed by `AE_WindowOptions` in `Types.lua`.
+- Database access: prefer `self.db.global` for shared data.
+- Avoid inline complex `@param` table shapes; define `AE_` types in `Types.lua` and reference them.
