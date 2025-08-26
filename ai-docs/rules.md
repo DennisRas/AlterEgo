@@ -33,8 +33,9 @@ AlterEgo is a World of Warcraft addon that provides character management and uti
 ### 4. File Organization
 - Keep modules in the `Modules/` directory
 - Store media assets in the `Media/` directory
-- Place documentation in the `docs/` directory
+- Place documentation in the `ai-docs/` directory
 - Maintain the existing library structure in `Libs/`
+- Do NOT modify files under `Libs/` (locked down; only developers add/remove/update)
 
 ### 4.1. Documentation Structure
 - Update documentation files after every major change
