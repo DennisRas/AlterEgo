@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.3 - 2025-08-26
+
+### Added
+
+- Added a new setting to toggle the dungeon section on/off
+  - When disabled, hides all Mythic+ dungeon related content
+  - Can be found in Settings under the "Dungeons" section
+
 ## v1.3.2 - 2025-08-06
 
 Please note: This pre-season week is a bit unusual, as Blizzard only provides partial data until the season officially begins.

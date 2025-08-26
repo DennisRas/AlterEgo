@@ -1840,6 +1840,7 @@ function Module:Render()
           characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
           characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
           addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
+          characterFrame.affixHeaderFrame:Show()
           rowCount = rowCount + 1
         else
           characterFrame.affixHeaderFrame:Hide()
