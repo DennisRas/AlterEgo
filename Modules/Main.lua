@@ -1434,7 +1434,7 @@ function Module:Render()
         end
 
         local knownTeleportSpellID = addon.Utils:TableFind(dungeon.teleports or {}, function(spellID)
-          return IsSpellKnown(spellID)
+          return IsSpellKnown(spellID, false)
         end)
 
         if knownTeleportSpellID then

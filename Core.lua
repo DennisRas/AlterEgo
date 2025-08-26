@@ -64,12 +64,14 @@ function Core:OnInitialize()
   self:Render()
 end
 
+---Toggle the main AlterEgo window
 function Core:ToggleWindow()
   local window = addon.Window:GetWindow("Main")
   if not window then return end
   window:Toggle()
 end
 
+---Toggle the Great Vault UI
 function Core:ToggleVault()
   if WeeklyRewardsFrame and ToggleFrame then
     ToggleFrame(WeeklyRewardsFrame)
@@ -78,7 +80,7 @@ function Core:ToggleVault()
   end
 end
 
----Temp
+---Render all modules that implement Render
 function Core:Render()
   for _, module in addon.Core:IterateModules() do
     if module.Render ~= nil then
@@ -193,6 +195,7 @@ function Core:OnEnable()
   self:CheckGameData()
 end
 
+---Request game data updates (affixes, maps, rewards, raid info)
 function Core:RequestGameData()
   C_MythicPlus.RequestCurrentAffixes()
   C_MythicPlus.RequestMapInfo()
@@ -200,6 +203,7 @@ function Core:RequestGameData()
   RequestRaidInfo()
 end
 
+---Ensure required game data is ready; retries until available
 function Core:CheckGameData()
   local seasonID, seasonDisplayID = addon.Data:GetCurrentSeason()
   if seasonID < 0 or seasonDisplayID < 0 then
@@ -215,6 +219,7 @@ function Core:CheckGameData()
   self:Render()
 end
 
+---Announce instance reset to the active group channel when enabled
 function Core:OnInstanceReset()
   local groupChannel = addon.Utils:GetGroupChannel()
   if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
@@ -223,6 +228,9 @@ function Core:OnInstanceReset()
   SendChatMessage(addon.Constants.prefix .. "Resetting instances...", groupChannel)
 end
 
+---Handle system messages related to instance resets
+---@param _ any
+---@param msg string
 function Core:OnChatMessageSystem(_, msg)
   local groupChannel = addon.Utils:GetGroupChannel()
   if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
@@ -236,6 +244,8 @@ function Core:OnChatMessageSystem(_, msg)
   end)
 end
 
+---Announce saved keystones to a chat channel
+---@param chatType string
 function Core:AnnounceKeystones(chatType)
   local characters = addon.Data:GetCharacters()
   local dungeons = addon.Data:GetDungeons()

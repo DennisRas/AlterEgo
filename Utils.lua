@@ -82,7 +82,7 @@ end
 ---Find a table item by callback
 ---@generic T
 ---@param tbl T[]
----@param callback fun(value: T, index: number): boolean
+---@param callback fun(value: T, index?: number): boolean
 ---@return T|nil, number|nil
 function Utils:TableFind(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
@@ -110,7 +110,7 @@ end
 ---Create a new table containing all elements that pass truth test
 ---@generic T
 ---@param tbl T[]
----@param callback fun(value: T, index: number): boolean
+---@param callback fun(value: T, index?: number): boolean
 ---@return T[]
 function Utils:TableFilter(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
@@ -158,7 +158,7 @@ end
 ---Map each item in a table
 ---@generic T
 ---@param tbl T[]
----@param callback fun(value: T, index: number): any
+---@param callback fun(value: T, index?: number): any
 ---@return T[]
 function Utils:TableMap(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
@@ -173,7 +173,7 @@ end
 ---Run a callback on each table item
 ---@generic T
 ---@param tbl T[]
----@param callback fun(value: T, index: number)
+---@param callback fun(value: T, index?: number)
 ---@return T[]
 function Utils:TableForEach(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")

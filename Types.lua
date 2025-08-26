@@ -346,7 +346,7 @@
 ---@field icon string The icon texture path
 ---@field tooltipTitle string The tooltip title
 ---@field tooltipDescription string The tooltip description
----@field onClick function The click handler function
+---@field onClick function? The click handler function
 ---@field size number? The button size (defaults to titlebar height)
 ---@field iconSize number? The icon size (defaults to 12)
 ---@field enabled boolean? Whether the button is enabled (defaults to true)

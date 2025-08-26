@@ -646,9 +646,6 @@ function Data:SortCharacter(character, direction)
   end
 end
 
----Get user characters
----@param unfiltered boolean?
----@return AE_Character[]
 ---Get characters, optionally unfiltered by enabled flag
 ---@param unfiltered boolean?
 ---@return AE_Character[]
