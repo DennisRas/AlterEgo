@@ -197,19 +197,16 @@ function Window:New(options)
       end
     end
 
-    -- Position the button (to the left of the close button, or to the left of the previous button)
-    local anchorFrame = self.titlebar.CloseButton
-    if self.titlebarButtons then
-      -- Find the rightmost button to anchor to
-      for _, existingButton in pairs(self.titlebarButtons) do
-        if existingButton:GetPoint(2) == self.titlebar.CloseButton then
-          anchorFrame = existingButton
-          break
-        end
-      end
+    -- Always anchor to the close button initially
+    button:SetPoint("RIGHT", self.titlebar.CloseButton, "LEFT", 0, 0)
+    
+    -- Now reposition all existing buttons to maintain the chain
+    local currentAnchor = button
+    for _, existingButton in pairs(self.titlebarButtons) do
+      existingButton:ClearAllPoints()
+      existingButton:SetPoint("RIGHT", currentAnchor, "LEFT", 0, 0)
+      currentAnchor = existingButton
     end
-
-    button:SetPoint("RIGHT", anchorFrame, "LEFT", 0, 0)
     button:SetSize(buttonSize, buttonSize)
     button:SetEnabled(isEnabled)
 
