@@ -164,6 +164,130 @@ function Window:New(options)
   -- Initialize titlebar buttons table
   window.titlebarButtons = {}
 
+  -- Add titlebar button methods to window instance
+  ---Add a button to the titlebar
+  ---@param buttonConfig AE_TitlebarButton
+  ---@return Frame
+  function window:AddTitlebarButton(buttonConfig)
+    if not self.titlebar then
+      error("Cannot add titlebar button: window has no titlebar")
+    end
+
+    local buttonName = buttonConfig.name
+    if self.titlebarButtons[buttonName] then
+      error("Button with name '" .. buttonName .. "' already exists")
+    end
+
+    local buttonSize = buttonConfig.size or TITLEBAR_HEIGHT
+    local iconSize = buttonConfig.iconSize or 12
+    local isEnabled = buttonConfig.enabled ~= false
+
+    -- Create the button frame
+    local button
+    if buttonConfig.setupMenu then
+      -- Create dropdown button
+      button = CreateFrame("DropdownButton", "$parent" .. buttonName, self.titlebar)
+      button:SetupMenu(buttonConfig.setupMenu)
+    else
+      -- Create regular button
+      button = CreateFrame("Button", "$parent" .. buttonName, self.titlebar)
+      button:RegisterForClicks("AnyUp")
+      if buttonConfig.onClick then
+        button:SetScript("OnClick", buttonConfig.onClick)
+      end
+    end
+
+    -- Position the button (to the left of the close button, or to the left of the previous button)
+    local anchorFrame = self.titlebar.CloseButton
+    if self.titlebarButtons then
+      -- Find the rightmost button to anchor to
+      for _, existingButton in pairs(self.titlebarButtons) do
+        if existingButton:GetPoint(2) == self.titlebar.CloseButton then
+          anchorFrame = existingButton
+          break
+        end
+      end
+    end
+
+    button:SetPoint("RIGHT", anchorFrame, "LEFT", 0, 0)
+    button:SetSize(buttonSize, buttonSize)
+    button:SetEnabled(isEnabled)
+
+    -- Create the icon
+    button.Icon = self.titlebar:CreateTexture(button:GetName() .. "Icon", "ARTWORK")
+    button.Icon:SetPoint("CENTER", button, "CENTER")
+    button.Icon:SetSize(iconSize, iconSize)
+    button.Icon:SetTexture(buttonConfig.icon)
+    button.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+
+    -- Set up tooltip
+    if buttonConfig.tooltipTitle then
+      button:SetScript("OnEnter", function()
+        button.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        addon.Utils:SetBackgroundColor(button, 1, 1, 1, 0.05)
+        GameTooltip:SetOwner(button, "ANCHOR_TOP")
+        GameTooltip:SetText(buttonConfig.tooltipTitle, 1, 1, 1, 1, true)
+        if buttonConfig.tooltipDescription then
+          GameTooltip:AddLine(buttonConfig.tooltipDescription, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+        end
+        GameTooltip:Show()
+      end)
+
+      button:SetScript("OnLeave", function()
+        button.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        addon.Utils:SetBackgroundColor(button, 1, 1, 1, 0)
+        GameTooltip:Hide()
+      end)
+    end
+
+    -- Store the button
+    self.titlebarButtons[buttonName] = button
+
+    return button
+  end
+
+  ---Remove a button from the titlebar
+  ---@param buttonName string
+  function window:RemoveTitlebarButton(buttonName)
+    local button = self.titlebarButtons[buttonName]
+    if not button then
+      error("Button with name '" .. buttonName .. "' does not exist")
+    end
+
+    -- Reposition other buttons if needed
+    for name, otherButton in pairs(self.titlebarButtons) do
+      if name ~= buttonName then
+        local point, relativeTo = otherButton:GetPoint(2)
+        if relativeTo == button then
+          -- Find the next button to the right of the one being removed
+          local nextButton = self.titlebar.CloseButton
+          for otherName, otherBtn in pairs(self.titlebarButtons) do
+            if otherName ~= buttonName and otherName ~= name then
+              local otherPoint, otherRelativeTo = otherBtn:GetPoint(2)
+              if otherRelativeTo == button then
+                nextButton = otherBtn
+                break
+              end
+            end
+          end
+          otherButton:SetPoint("RIGHT", nextButton, "LEFT", 0, 0)
+        end
+      end
+    end
+
+    -- Remove the button
+    button:Hide()
+    button:SetParent(nil)
+    self.titlebarButtons[buttonName] = nil
+  end
+
+  ---Get a titlebar button by name
+  ---@param buttonName string
+  ---@return Frame?
+  function window:GetTitlebarButton(buttonName)
+    return self.titlebarButtons[buttonName]
+  end
+
   -- Add titlebar buttons if provided
   if window.config.titlebarButtons then
     for _, buttonConfig in ipairs(window.config.titlebarButtons) do
@@ -219,125 +343,4 @@ function Window:ToggleWindow(name)
   end
 end
 
----Add a button to the titlebar
----@param buttonConfig AE_TitlebarButton
----@return Frame
-function Window:AddTitlebarButton(buttonConfig)
-  if not self.titlebar then
-    error("Cannot add titlebar button: window has no titlebar")
-  end
 
-  local buttonName = buttonConfig.name
-  if self.titlebarButtons[buttonName] then
-    error("Button with name '" .. buttonName .. "' already exists")
-  end
-
-  local buttonSize = buttonConfig.size or TITLEBAR_HEIGHT
-  local iconSize = buttonConfig.iconSize or 12
-  local isEnabled = buttonConfig.enabled ~= false
-
-  -- Create the button frame
-  local button
-  if buttonConfig.setupMenu then
-    -- Create dropdown button
-    button = CreateFrame("DropdownButton", "$parent" .. buttonName, self.titlebar)
-    button:SetupMenu(buttonConfig.setupMenu)
-  else
-    -- Create regular button
-    button = CreateFrame("Button", "$parent" .. buttonName, self.titlebar)
-    button:RegisterForClicks("AnyUp")
-    if buttonConfig.onClick then
-      button:SetScript("OnClick", buttonConfig.onClick)
-    end
-  end
-
-  -- Position the button (to the left of the close button, or to the left of the previous button)
-  local anchorFrame = self.titlebar.CloseButton
-  if self.titlebarButtons then
-    -- Find the rightmost button to anchor to
-    for _, existingButton in pairs(self.titlebarButtons) do
-      if existingButton:GetPoint(2) == self.titlebar.CloseButton then
-        anchorFrame = existingButton
-        break
-      end
-    end
-  end
-
-  button:SetPoint("RIGHT", anchorFrame, "LEFT", 0, 0)
-  button:SetSize(buttonSize, buttonSize)
-  button:SetEnabled(isEnabled)
-
-  -- Create the icon
-  button.Icon = self.titlebar:CreateTexture(button:GetName() .. "Icon", "ARTWORK")
-  button.Icon:SetPoint("CENTER", button, "CENTER")
-  button.Icon:SetSize(iconSize, iconSize)
-  button.Icon:SetTexture(buttonConfig.icon)
-  button.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-
-  -- Set up tooltip
-  if buttonConfig.tooltipTitle then
-    button:SetScript("OnEnter", function()
-      button.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
-      addon.Utils:SetBackgroundColor(button, 1, 1, 1, 0.05)
-      GameTooltip:SetOwner(button, "ANCHOR_TOP")
-      GameTooltip:SetText(buttonConfig.tooltipTitle, 1, 1, 1, 1, true)
-      if buttonConfig.tooltipDescription then
-        GameTooltip:AddLine(buttonConfig.tooltipDescription, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-      end
-      GameTooltip:Show()
-    end)
-
-    button:SetScript("OnLeave", function()
-      button.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
-      addon.Utils:SetBackgroundColor(button, 1, 1, 1, 0)
-      GameTooltip:Hide()
-    end)
-  end
-
-  -- Store the button
-  self.titlebarButtons[buttonName] = button
-
-  return button
-end
-
----Remove a button from the titlebar
----@param buttonName string
-function Window:RemoveTitlebarButton(buttonName)
-  local button = self.titlebarButtons[buttonName]
-  if not button then
-    error("Button with name '" .. buttonName .. "' does not exist")
-  end
-
-  -- Reposition other buttons if needed
-  for name, otherButton in pairs(self.titlebarButtons) do
-    if name ~= buttonName then
-      local point, relativeTo = otherButton:GetPoint(2)
-      if relativeTo == button then
-        -- Find the next button to the right of the one being removed
-        local nextButton = self.titlebar.CloseButton
-        for otherName, otherBtn in pairs(self.titlebarButtons) do
-          if otherName ~= buttonName and otherName ~= name then
-            local otherPoint, otherRelativeTo = otherBtn:GetPoint(2)
-            if otherRelativeTo == button then
-              nextButton = otherBtn
-              break
-            end
-          end
-        end
-        otherButton:SetPoint("RIGHT", nextButton, "LEFT", 0, 0)
-      end
-    end
-  end
-
-  -- Remove the button
-  button:Hide()
-  button:SetParent(nil)
-  self.titlebarButtons[buttonName] = nil
-end
-
----Get a titlebar button by name
----@param buttonName string
----@return Frame?
-function Window:GetTitlebarButton(buttonName)
-  return self.titlebarButtons[buttonName]
-end

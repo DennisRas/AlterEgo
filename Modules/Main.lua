@@ -1034,6 +1034,17 @@ function Module:Render()
     end)
     menu:CreateTitle(DUNGEONS)
     menu:CreateCheckbox(
+      "Enable Dungeons",
+      function() return addon.Data.db.global.dungeons.enabled end,
+      function()
+        addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
+        self:Render()
+      end
+    ):SetTooltip(function(tooltip, elm)
+      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+      tooltip:AddLine("Show Mythic+ dungeon information!", nil, nil, nil, true)
+    end)
+    menu:CreateCheckbox(
       "Show icons",
       function() return addon.Data.db.global.showTiers end,
       function()
@@ -1400,30 +1411,35 @@ function Module:Render()
     end
 
     do -- MythicPlus Header
-      local label = self.window.sidebar.mpluslabel
-      if not label then
-        label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
-        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
-        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
-        label.text:SetFontObject("GameFontHighlight_NoShadow")
-        label.text:SetJustifyH("LEFT")
-        label.text:SetText(DUNGEONS)
-        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.window.sidebar.mpluslabel = label
-      end
+        local label = self.window.sidebar.mpluslabel
+        if not label then
+          label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
+          label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+          label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
+          label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+          label.text:SetFontObject("GameFontHighlight_NoShadow")
+          label.text:SetJustifyH("LEFT")
+          label.text:SetText(DUNGEONS)
+          label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+          self.window.sidebar.mpluslabel = label
+        end
 
-      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-      label:SetHeight(addon.Constants.sizes.row)
-      label:Show()
-      rowCount = rowCount + 1
+        if addon.Data.db.global.dungeons.enabled then
+          label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          label:SetHeight(addon.Constants.sizes.row)
+          label:Show()
+          rowCount = rowCount + 1
+        else
+          label:Hide()
+      end
     end
 
     do -- MythicPlus Labels
       self.window.sidebar.mpluslabels = self.window.sidebar.mpluslabels or {}
       addon.Utils:TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
-      addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
+      if addon.Data.db.global.dungeons.enabled then
+        addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
         local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
         if not dungeonFrame then
           dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
@@ -1480,6 +1496,7 @@ function Module:Render()
         dungeonFrame:Show()
         rowCount = rowCount + 1
       end)
+      end
     end
 
     do -- Raid Labels
@@ -1818,17 +1835,22 @@ function Module:Render()
       end
 
       do -- Dungeon Header
-        characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-        characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-        characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
-        addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
-        rowCount = rowCount + 1
+        if addon.Data.db.global.dungeons.enabled then
+          characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
+          addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
+          rowCount = rowCount + 1
+        else
+          characterFrame.affixHeaderFrame:Hide()
+        end
       end
 
       do -- Dungeons
         characterFrame.dungeonFrames = characterFrame.dungeonFrames or {}
         addon.Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
-        addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
+        if addon.Data.db.global.dungeons.enabled then
+          addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
           local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
           if not dungeonFrame then
             dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
@@ -1976,6 +1998,7 @@ function Module:Render()
           dungeonFrame:Show()
           rowCount = rowCount + 1
         end)
+        end
       end
 
       do -- Raids

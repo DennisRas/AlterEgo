@@ -232,6 +232,7 @@
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
 ---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
+---@field dungeons { enabled: boolean }
 ---@field interface { windowScale: number, windowColor: ColorType}
 ---@field useRIOScoreColor boolean
 
