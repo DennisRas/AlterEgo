@@ -2,6 +2,10 @@
 ---@field id number
 ---@field name string
 
+---@class AE_Addon
+
+---@class AE_WindowManager
+
 ---@class AE_Raid
 ---@field seasonID number
 ---@field seasonDisplayID number
@@ -247,6 +251,21 @@
 ---@field border number?
 ---@field windowScale number?
 ---@field windowColor table?
+---@field titlebarButtons AE_TitlebarButton[]? Array of buttons to add to the titlebar
+
+---@class AE_Window : Frame
+---@field config AE_WindowOptions
+---@field titlebar Frame?
+---@field body Frame?
+---@field sidebar Frame?
+---@field border Frame?
+---@field titlebarButtons table<string, Frame> Table of created titlebar buttons
+---@field Toggle fun(self: AE_Window, state?: boolean)
+---@field SetTitle fun(self: AE_Window, title: string)
+---@field SetBodySize fun(self: AE_Window, width: number, height: number)
+---@field AddTitlebarButton fun(self: AE_Window, buttonConfig: AE_TitlebarButton): Frame
+---@field RemoveTitlebarButton fun(self: AE_Window, buttonName: string)
+---@field GetTitlebarButton fun(self: AE_Window, buttonName: string): Frame?
 
 ---@class AE_TableData
 ---@field columns AE_TableDataColumn[]?
@@ -265,3 +284,14 @@
 ---@field onEnter function?
 ---@field onLeave function?
 ---@field onClick function?
+
+---@class AE_TitlebarButton
+---@field name string The unique name for the button
+---@field icon string The icon texture path
+---@field tooltipTitle string The tooltip title
+---@field tooltipDescription string The tooltip description
+---@field onClick function The click handler function
+---@field size number? The button size (defaults to titlebar height)
+---@field iconSize number? The icon size (defaults to 12)
+---@field enabled boolean? Whether the button is enabled (defaults to true)
+---@field setupMenu function? Optional menu setup function for dropdown buttons
