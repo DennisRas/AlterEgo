@@ -45,6 +45,7 @@ alwaysApply: true
 ## Data and errors
 - Most data uses `self.db.global`.
 - Add clear English error messages for invalid arguments and validation failures.
+- Whenever any changes are made to the database defaults, increment the dbVersion by one.
 
 ## Player-facing changes
 - When a new user feature is added, propose concise README.md updates for confirmation before editing.
