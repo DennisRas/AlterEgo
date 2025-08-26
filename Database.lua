@@ -431,7 +431,7 @@ Data.cache = {
   specs = {},
 }
 
----Initiate AceDB
+---Initiate AceDB and attach SavedVariables
 function Data:Initialize()
   ---@class AceDBObject-3.0
   ---@field global AE_Global
@@ -454,7 +454,7 @@ function Data:GetCurrentSeason()
   return self.cache.seasonID or -1, self.cache.seasonDisplayID or -1
 end
 
----Get the currencies of the current season
+---Get currencies for the current season enriched with C_CurrencyInfo
 ---@return AE_Currency[]
 function Data:GetCurrencies()
   local seasonID = self:GetCurrentSeason()
@@ -497,7 +497,7 @@ function Data:GetCharacter(playerGUID)
   return self.db.global.characters[playerGUID]
 end
 
----Get all of the raids in the current season
+---Get raid difficulties, optionally unfiltered by user settings
 ---@param unfiltered boolean?
 ---@return AE_RaidDifficulty[]
 function Data:GetRaidDifficulties(unfiltered)
@@ -524,7 +524,7 @@ function Data:GetRaidDifficulties(unfiltered)
   return filtered
 end
 
----Get the current affixes of the week
+---Get current weekly keystone affixes
 ---@return MythicPlusKeystoneAffix[]
 function Data:GetCurrentAffixes()
   if addon.Utils:TableCount(self.cache.currentAffixes) == 0 then
@@ -536,7 +536,7 @@ function Data:GetCurrentAffixes()
   return self.cache.currentAffixes
 end
 
----Get either all affixes or just the base seasonal affixes
+---Get all known affixes or only base seasonal affixes
 ---@param baseOnly boolean?
 ---@return AE_Affix[]
 function Data:GetAffixes(baseOnly)
@@ -545,14 +545,14 @@ function Data:GetAffixes(baseOnly)
   end)
 end
 
----Get affix rotation of the season
+---Get the seasonal affix rotation for the current season
 ---@return AE_AffixRotation|nil
 function Data:GetAffixRotation()
   local seasonID = self:GetCurrentSeason()
   return addon.Utils:TableGet(self.affixRotations, "seasonID", seasonID)
 end
 
----Get the index of the active affix week
+---Compute active week index from current affixes
 ---@param currentAffixes MythicPlusKeystoneAffix|nil
 ---@return number
 function Data:GetActiveAffixRotation(currentAffixes)
@@ -574,7 +574,7 @@ function Data:GetActiveAffixRotation(currentAffixes)
   return index
 end
 
----Get the Keystone ItemID of the current season
+---Get the current season's keystone itemID, if known
 ---@return number|nil
 function Data:GetKeystoneItemID()
   local seasonID = self:GetCurrentSeason()
@@ -587,7 +587,7 @@ function Data:GetKeystoneItemID()
   return nil
 end
 
----Get all of the M+ dungeons in the current season
+---Get dungeons for the current season
 ---@return AE_Dungeon[]
 function Data:GetDungeons()
   local seasonID = self:GetCurrentSeason()
@@ -602,7 +602,7 @@ function Data:GetDungeons()
   return dungeons
 end
 
----Get all of the raids in the current season
+---Get raids for the current season, optionally unfiltered
 ---@param unfiltered boolean?
 ---@return AE_Raid[]
 function Data:GetRaids(unfiltered)
@@ -647,6 +647,9 @@ function Data:SortCharacter(character, direction)
 end
 
 ---Get user characters
+---@param unfiltered boolean?
+---@return AE_Character[]
+---Get characters, optionally unfiltered by enabled flag
 ---@param unfiltered boolean?
 ---@return AE_Character[]
 function Data:GetCharacters(unfiltered)
@@ -717,6 +720,7 @@ function Data:GetCharacters(unfiltered)
   return charactersFiltered
 end
 
+---Update SavedVariables snapshots and derived caches
 function Data:UpdateDB()
   self:UpdateCharacterInfo()
   self:UpdateEquipment()
@@ -728,6 +732,7 @@ function Data:UpdateDB()
   self:UpdateMythicPlus()
 end
 
+---Run database migrations when dbVersion changes
 function Data:MigrateDB()
   if type(self.db.global.dbVersion) ~= "number" then
     self.db.global.dbVersion = self.dbVersion
@@ -792,6 +797,7 @@ function Data:MigrateDB()
   end
 end
 
+---Perform weekly reset tasks (e.g., vault)
 function Data:TaskWeeklyReset()
   if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
     addon.Utils:TableForEach(self.db.global.characters, function(character)
@@ -822,6 +828,7 @@ function Data:TaskWeeklyReset()
   self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
 end
 
+---Perform season reset tasks
 function Data:TaskSeasonReset()
   local seasonID = self:GetCurrentSeason()
   if seasonID then
@@ -840,6 +847,7 @@ function Data:TaskSeasonReset()
   end
 end
 
+---Load static game data (dungeons, raids, affix rotations)
 function Data:loadGameData()
   local seasonID = self:GetCurrentSeason()
 
@@ -980,6 +988,7 @@ function Data:loadGameData()
   end
 end
 
+---Refresh saved raid instances from the API
 function Data:UpdateRaidInstances()
   local character = self:GetCharacter()
   if not character then return end
@@ -1042,6 +1051,7 @@ function Data:UpdateRaidInstances()
   addon.Core:Render()
 end
 
+---Refresh general character info from the API
 function Data:UpdateCharacterInfo()
   local character = self:GetCharacter()
   if not character then return end
@@ -1079,6 +1089,7 @@ function Data:UpdateCharacterInfo()
 end
 
 ---Store the character money
+---Refresh character money from the API
 function Data:UpdateMoney()
   local character = self:GetCharacter()
   if not character then return end
@@ -1089,6 +1100,7 @@ function Data:UpdateMoney()
   character.money = money
 end
 
+---Refresh currencies from the API
 function Data:UpdateCurrencies()
   local character = self:GetCharacter()
   if not character then return end
@@ -1108,6 +1120,7 @@ function Data:UpdateCurrencies()
   end)
 end
 
+---Refresh equipment from the API
 function Data:UpdateEquipment()
   local character = self:GetCharacter()
   if not character then return end
@@ -1177,6 +1190,7 @@ function Data:UpdateEquipment()
   end)
 end
 
+---Refresh keystone item from bags
 function Data:UpdateKeystoneItem()
   local character = self:GetCharacter()
   if not character then return end
@@ -1259,6 +1273,7 @@ function Data:UpdateKeystoneItem()
   addon.Core:Render()
 end
 
+---Refresh Great Vault progress/info
 function Data:UpdateVault()
   local character = self:GetCharacter()
   if not character then return end
@@ -1296,6 +1311,7 @@ function Data:UpdateVault()
   addon.Core:Render()
 end
 
+---Refresh Mythic+ data from the API
 function Data:UpdateMythicPlus()
   local character = self:GetCharacter()
   if not character then return end

@@ -7,13 +7,14 @@ local addon = select(2, ...)
 local Table = {}
 addon.Table = Table
 
-Table.TableCollection = {}
+---@type AE_TableFrame[]
+local TableCollection = {}
 
 ---Create a new table frame
 ---@param config AE_TableConfig
----@return Frame
+---@return AE_TableFrame
 function Table:New(config)
-  local frame = CreateFrame("Frame", addonName .. "Table" .. (addon.Utils:TableCount(self.TableCollection) + 1))
+  local frame = CreateFrame("Frame", addonName .. "Table" .. (addon.Utils:TableCount(TableCollection) + 1))
   -- local frame = addon.Utils:CreateScrollFrame(addonName .. "Table" .. (addon.Utils:TableCount(TableCollection) + 1))
   frame.config = CreateFromMixins(
     {
@@ -214,6 +215,6 @@ function Table:New(config)
 
   frame.scrollFrame:HookScript("OnSizeChanged", function() frame:RenderTable() end)
   frame:RenderTable()
-  table.insert(self.TableCollection, frame)
+  table.insert(TableCollection, frame)
   return frame
 end

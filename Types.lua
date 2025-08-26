@@ -1,11 +1,20 @@
+-- =============================================================
+-- Types: Data Model - Inventory
+-- =============================================================
 ---@class AE_Inventory
 ---@field id number
 ---@field name string
 
+-- =============================================================
+-- Types: Core / Addon
+-- =============================================================
 ---@class AE_Addon
 
 ---@class AE_WindowManager
 
+-- =============================================================
+-- Types: Data Model - Raids / Dungeons
+-- =============================================================
 ---@class AE_Raid
 ---@field seasonID number
 ---@field seasonDisplayID number
@@ -85,6 +94,9 @@
 ---@field runHistory MythicPlusRunInfo[]
 ---@field dungeons AE_CharacterDungeon[]
 
+-- =============================================================
+-- Types: Character & Weekly Rewards
+-- =============================================================
 ---@class AE_Character
 ---@field GUID WOWGUID
 ---@field lastUpdate number
@@ -180,6 +192,9 @@
 
 ---@alias AE_CharacterSortingOption "lastUpdate" | "name.asc" | "name.desc" | "realm.asc" | "realm.desc" | "class.asc" | "class.desc" | "ilvl.asc" | "ilvl.desc" | "rating.asc" | "rating.desc" | "custom"
 
+-- =============================================================
+-- Types: Constants & Options
+-- =============================================================
 ---@class AE_ConstantsSizes
 ---@field padding number
 ---@field row number
@@ -201,6 +216,9 @@
 ---@field sizes AE_ConstantsSizes
 ---@field sortingOptions AE_ConstantsCharacterSortingOption[]
 
+-- =============================================================
+-- Types: SavedVariables (DB Schema)
+-- =============================================================
 ---@class AE_Global
 ---@field weeklyReset number
 ---@field characters AE_Character[]
@@ -242,6 +260,9 @@
 ---@field itemSlotID number
 ---@field itemSlotName string
 
+-- =============================================================
+-- UI: Window
+-- =============================================================
 ---@class AE_WindowOptions
 ---@field parent any?
 ---@field name string?
@@ -251,6 +272,7 @@
 ---@field border number?
 ---@field windowScale number?
 ---@field windowColor table?
+---@field point any[]?  -- e.g., {"CENTER"} or {"TOP", UIParent, "TOP", 0, -15}
 ---@field titlebarButtons AE_TitlebarButton[]? Array of buttons to add to the titlebar
 
 ---@class AE_Window : Frame
@@ -267,6 +289,9 @@
 ---@field RemoveTitlebarButton fun(self: AE_Window, buttonName: string)
 ---@field GetTitlebarButton fun(self: AE_Window, buttonName: string): Frame?
 
+-- =============================================================
+-- UI: Table (Data + Config)
+-- =============================================================
 ---@class AE_TableData
 ---@field columns AE_TableDataColumn[]?
 ---@field rows AE_TableDataRow[]
@@ -311,6 +336,11 @@
 ---@field onLeave function?
 ---@field onClick function?
 
+---@class AE_TableFrame : Frame
+
+-- =============================================================
+-- UI: Common Controls
+-- =============================================================
 ---@class AE_TitlebarButton
 ---@field name string The unique name for the button
 ---@field icon string The icon texture path
@@ -321,3 +351,8 @@
 ---@field iconSize number? The icon size (defaults to 12)
 ---@field enabled boolean? Whether the button is enabled (defaults to true)
 ---@field setupMenu function? Optional menu setup function for dropdown buttons
+
+---@class AE_ScrollFrameConfig
+---@field name string?
+---@field scrollSpeedHorizontal number?
+---@field scrollSpeedVertical number?

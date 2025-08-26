@@ -286,6 +286,9 @@ function Utils:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
   return color
 end
 
+---Create a scrollable frame with horizontal and vertical scrollbars
+---@param config AE_ScrollFrameConfig
+---@return ScrollFrame
 function Utils:CreateScrollFrame(config)
   local frame = CreateFrame("ScrollFrame", addonName .. "ScrollFrame" .. (Utils:TableCount(self.ScrollCollection) + 1))
   frame.config = CreateFromMixins(
