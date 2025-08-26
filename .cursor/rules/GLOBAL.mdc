@@ -15,6 +15,20 @@ alwaysApply: true
 - Prefer `AE_` types over inline `@param` table shapes.
 - For nested shapes, create parent-prefixed subtypes (e.g., `AE_TableConfigHeader`).
 - Use custom frame types where appropriate (e.g., `AE_Window`, `AE_TableFrame`).
+- Always annotate and/or add types/params/returns/descriptions to functions or similar of every file you're changing.
+
+## Compliance checking requirements
+- When making changes to any Lua file, perform a systematic compliance check:
+  1. **File header**: Verify standard header structure (`---@type string`, `---@class AE_Addon`)
+  2. **Main table object**: Check for proper `---@class` annotation above the main table
+  3. **All function definitions**: Examine EVERY function in the file (public methods, local functions, nested functions)
+  4. **Function annotations**: Ensure each function has proper `@param`, `@return`, and description
+  5. **Type usage**: Verify custom `AE_` types are used instead of inline complex table shapes
+  6. **Collection variables**: Check that collection variables use proper custom types
+  7. **Return values**: Ensure return types match the actual returned objects
+- Do not skip any function definitions during compliance checks - local functions are as important as public methods
+- If complex `@param` annotations exist, convert them to dedicated `AE_` types in `Types.lua`
+- Verify that all addon-specific types use the `AE_` prefix
 
 ## Module/file headers and class structure
 - Every Lua file should start with:

@@ -47,6 +47,9 @@ local vaultTooltipTexts = {
   },
 }
 
+---Check if activity was completed at heroic level
+---@param activityTierID number
+---@return boolean
 local function isCompletedAtHeroicLevel(activityTierID)
   local difficultyID = C_WeeklyRewards.GetDifficultyIDForActivityTier(activityTierID)
   return difficultyID == DifficultyUtil.ID.DungeonHeroic
@@ -309,6 +312,10 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
   GameTooltip:Show()
 end
 
+---Get vault progress value for display
+---@param character AE_Character
+---@param activityType Enum.WeeklyRewardChestThresholdType
+---@return string
 local function getVaultProgressValue(character, activityType)
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
