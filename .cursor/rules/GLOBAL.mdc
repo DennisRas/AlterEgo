@@ -41,6 +41,8 @@ alwaysApply: true
 ## Documentation
 - `README.md` is for players (addon description/features) - confirm changes with developer.
 - `.docs/README.md` is for developers (navigation/context) - update automatically.
+- `CHANGELOG.md` is for players only. Add new features/changes/bugfixes.
+- Developers read git logs or GitHub issues/PRs for technical changes and details.
 - Update docs after major changes; docs are for developers, not players.
 
 ## Data and errors
