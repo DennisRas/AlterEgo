@@ -16,6 +16,7 @@ alwaysApply: true
 - For nested shapes, create parent-prefixed subtypes (e.g., `AE_TableConfigHeader`).
 - Use custom frame types where appropriate (e.g., `AE_Window`, `AE_TableFrame`).
 - Always annotate and/or add types/params/returns/descriptions to functions or similar of every file you're changing.
+- Before defining a new `AE_` type, check if an equivalent type already exists in WoW API annotations or bundled libraries (e.g., Ace, LibDBIcon). If a suitable external type exists, prefer referencing it directly over creating a duplicate `AE_` type.
 
 ## Compliance checking requirements
 - When making changes to any Lua file, perform a systematic compliance check:

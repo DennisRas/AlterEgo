@@ -13,6 +13,99 @@
 ---@class AE_WindowManager
 
 -- =============================================================
+-- Types: Data Model - Character Info
+-- =============================================================
+---@class AE_CharacterInfoRace
+---@field name string
+---@field file string
+---@field id number
+
+---@class AE_CharacterInfoClass
+---@field name string
+---@field file string
+---@field id number
+
+---@class AE_CharacterInfoFactionGroup
+---@field english string
+---@field localized string
+
+---@class AE_CharacterInfoIlvl
+---@field level number
+---@field equipped number
+---@field pvp number
+---@field color string
+
+---@class AE_CharacterInfo
+---@field name string
+---@field realm string
+---@field level number
+---@field race AE_CharacterInfoRace
+---@field class AE_CharacterInfoClass
+---@field factionGroup AE_CharacterInfoFactionGroup
+---@field ilvl AE_CharacterInfoIlvl
+
+-- =============================================================
+-- Types: Data Model - Character Mythic Plus
+-- =============================================================
+---@class AE_CharacterMythicPlusNumCompletedDungeonRuns
+---@field heroic number
+---@field mythic number
+---@field mythicPlus number
+
+---@class AE_CharacterMythicPlusKeystone
+---@field challengeModeID number
+---@field mapId number
+---@field level number
+---@field color string
+---@field itemId number
+---@field itemLink string
+
+---@class AE_CharacterMythicPlus
+---@field numCompletedDungeonRuns AE_CharacterMythicPlusNumCompletedDungeonRuns
+---@field rating number
+---@field keystone AE_CharacterMythicPlusKeystone
+---@field weeklyRewardAvailable boolean
+---@field bestSeasonScore number
+---@field bestSeasonNumber number
+---@field runHistory MythicPlusRunInfo[]
+---@field dungeons AE_CharacterDungeon[]
+
+-- =============================================================
+-- Types: Data Model - Character Raids
+-- =============================================================
+---@class AE_CharacterRaids
+---@field savedInstances AE_SavedInstance[]
+
+-- =============================================================
+-- Types: Data Model - Character Vault
+-- =============================================================
+---@class AE_CharacterVault
+---@field hasAvailableRewards boolean
+---@field slots AE_CharacterVaultSlot[]
+---@field activityEncounterInfo AE_WeeklyRewardActivityEncounterInfo[]
+
+---@class AE_CharacterVaultSlot : WeeklyRewardActivityInfo
+---@field exampleRewardLink string
+---@field exampleRewardUpgradeLink string
+
+-- =============================================================
+-- Types: Data Model - Character
+-- =============================================================
+---@class AE_Character
+---@field GUID WOWGUID
+---@field lastUpdate number
+---@field currentSeason number
+---@field enabled boolean
+---@field order number
+---@field info AE_CharacterInfo
+---@field equipment AE_Equipment[]
+---@field money number
+---@field currencies AE_CharacterCurrency[]
+---@field raids AE_CharacterRaids
+---@field mythicplus AE_CharacterMythicPlus
+---@field vault AE_CharacterVault
+
+-- =============================================================
 -- Types: Data Model - Raids / Dungeons
 -- =============================================================
 ---@class AE_Raid
@@ -21,7 +114,7 @@
 ---@field journalInstanceID number
 ---@field instanceID number
 ---@field order number
--- ---@field numEncounters number
+---@field numEncounters number
 ---@field encounters AE_Encounter[]
 ---@field modifiedInstanceInfo table|nil
 ---@field abbr string
@@ -45,10 +138,6 @@
 ---@field type Enum.WeeklyRewardChestThresholdType
 ---@field index number
 
----@class AE_CharacterVault: WeeklyRewardActivityInfo
----@field exampleRewardLink string
----@field exampleRewardUpgradeLink string
-
 ---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark" | "cloak"
 
 ---@class AE_Currency
@@ -62,15 +151,6 @@
 ---@field id number
 ---@field currencyType AE_CurrencyType
 
----@class AE_CharacterInfo
----@field name string
----@field realm string
----@field level number
----@field race {name: string, file: string, id: number}
----@field class {name: string, file: string, id: number}
----@field factionGroup {english: string, localized: string}
----@field ilvl {level: number, equipped: number, pvp: number, color: string}
-
 ---@class AE_CharacterAffixScoreInfo : MythicPlusAffixScoreInfo
 ---@field id number
 
@@ -83,32 +163,6 @@
 ---@field bestNotTimedRun MapSeasonBestInfo|nil
 ---@field affixScores AE_CharacterAffixScoreInfo[]
 ---@field bestOverAllScore number
-
----@class AE_CharacterMythicPlus
----@field numCompletedDungeonRuns {heroic: number, mythic: number, mythicPlus: number}
----@field rating number
----@field keystone {challengeModeID: number, mapId: number, level: number, color: string, itemId: number, itemLink: string}
----@field weeklyRewardAvailable boolean
----@field bestSeasonScore number
----@field bestSeasonNumber number
----@field runHistory MythicPlusRunInfo[]
----@field dungeons AE_CharacterDungeon[]
-
--- =============================================================
--- Types: Character & Weekly Rewards
--- =============================================================
----@class AE_Character
----@field GUID WOWGUID
----@field lastUpdate number
----@field currentSeason number
----@field order number
----@field info AE_CharacterInfo
----@field equipment AE_Equipment[]
----@field money number
----@field currencies AE_CharacterCurrency[]
----@field raids { savedInstances: AE_SavedInstance[] }
----@field mythicplus AE_CharacterMythicPlus
----@field vault { hasAVailableRewards: boolean, slots: AE_CharacterVault[], activityEncounterInfo: AE_WeeklyRewardActivityEncounterInfo[]}
 
 ---@class AE_CharacterRows
 ---@field label string
@@ -195,14 +249,24 @@
 -- =============================================================
 -- Types: Constants & Options
 -- =============================================================
+---@class AE_ConstantsSizesTitlebar
+---@field height number
+
+---@class AE_ConstantsSizesFooter
+---@field height number
+
+---@class AE_ConstantsSizesSidebar
+---@field width number
+---@field collapsedWidth number
+
 ---@class AE_ConstantsSizes
 ---@field padding number
 ---@field row number
 ---@field column number
 ---@field border number
----@field titlebar {height: number}
----@field footer {height: number}
----@field sidebar {width: number, collapsedWidth: number}
+---@field titlebar AE_ConstantsSizesTitlebar
+---@field footer AE_ConstantsSizesFooter
+---@field sidebar AE_ConstantsSizesSidebar
 
 ---@class AE_ConstantsCharacterSortingOption
 ---@field value AE_CharacterSortingOption
@@ -219,21 +283,63 @@
 -- =============================================================
 -- Types: SavedVariables (DB Schema)
 -- =============================================================
+
+
+---@class AE_GlobalAnnounceKeystones
+---@field autoParty boolean
+---@field autoGuild boolean
+---@field multiline boolean
+---@field multilineNames boolean
+
+---@class AE_GlobalVault
+---@field raids boolean
+---@field dungeons boolean
+---@field world boolean
+
+---@class AE_GlobalRaids
+---@field enabled boolean
+---@field colors boolean
+---@field currentTierOnly boolean
+---@field hiddenDifficulties table<number, boolean>
+---@field boxes boolean
+---@field modifiedInstanceOnly boolean
+
+---@class AE_GlobalDungeons
+---@field enabled boolean
+
+---@class AE_GlobalWorld
+---@field enabled boolean
+
+---@class AE_GlobalCurrencies
+---@field enabled boolean
+---@field hiddenCurrencies table<number, boolean>
+---@field showIcons boolean
+---@field showMaxEarned boolean
+---@field alignCenter boolean
+
+---@class AE_GlobalInterface
+---@field windowScale number
+---@field windowColor ColorType
+
 ---@class AE_Global
 ---@field weeklyReset number
 ---@field characters AE_Character[]
----@field minimap { minimapPos: number, hide: boolean, lock: boolean }
+---@field minimap LibDBIcon.button.DB
 ---@field sorting AE_CharacterSortingOption
 ---@field showTiers boolean
+---@field showScores boolean
 ---@field showAffixColors boolean
 ---@field showAffixHeader boolean
 ---@field showZeroRatedCharacters boolean
 ---@field showRealms boolean
----@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
+---@field announceKeystones AE_GlobalAnnounceKeystones
 ---@field announceResets boolean
----@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
----@field dungeons { enabled: boolean }
----@field interface { windowScale: number, windowColor: ColorType}
+---@field vault AE_GlobalVault
+---@field raids AE_GlobalRaids
+---@field dungeons AE_GlobalDungeons
+---@field world AE_GlobalWorld
+---@field currencies AE_GlobalCurrencies
+---@field interface AE_GlobalInterface
 ---@field useRIOScoreColor boolean
 
 ---@class AE_Equipment
