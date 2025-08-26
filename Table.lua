@@ -9,6 +9,9 @@ addon.Table = Table
 
 Table.TableCollection = {}
 
+---Create a new table frame
+---@param config AE_TableConfig
+---@return Frame
 function Table:New(config)
   local frame = CreateFrame("Frame", addonName .. "Table" .. (addon.Utils:TableCount(self.TableCollection) + 1))
   -- local frame = addon.Utils:CreateScrollFrame(addonName .. "Table" .. (addon.Utils:TableCount(TableCollection) + 1))

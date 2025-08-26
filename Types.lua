@@ -271,6 +271,32 @@
 ---@field columns AE_TableDataColumn[]?
 ---@field rows AE_TableDataRow[]
 
+---@class AE_TableConfigHeader
+---@field enabled boolean?
+---@field sticky boolean?
+---@field height number?
+
+---@class AE_TableConfigRows
+---@field height number?
+---@field highlight boolean?
+---@field striped boolean?
+
+---@class AE_TableConfigColumns
+---@field width number?
+---@field highlight boolean?
+---@field striped boolean?
+
+---@class AE_TableConfigCells
+---@field padding number?
+---@field highlight boolean?
+
+---@class AE_TableConfig
+---@field header AE_TableConfigHeader?
+---@field rows AE_TableConfigRows?
+---@field columns AE_TableConfigColumns?
+---@field cells AE_TableConfigCells?
+---@field data AE_TableData?
+
 ---@class AE_TableDataColumn
 ---@field width number
 ---@field align string?

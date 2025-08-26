@@ -23,6 +23,9 @@ AlterEgo is a World of Warcraft addon that provides character management and uti
 - Use LuaDoc annotations (`---@class`, `---@field`, etc.)
 - Keep all type definitions centralized in one location
 - Follow the existing naming convention: `AE_` prefix for addon-specific types
+- When `@param` shapes become large or nested, create `AE_...` types instead of inline shapes
+- Prefer splitting nested shapes into multiple `AE_` subtypes with fields for readability
+- Name nested subtypes with their parent as a prefix: e.g., `AE_TableConfigHeader`, `AE_TableConfigRows` (not `AE_TableHeaderConfig`)
 
 ### 3. Code Style and Patterns
 - Follow existing Lua coding conventions in the codebase
