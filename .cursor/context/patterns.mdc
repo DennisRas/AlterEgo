@@ -1,5 +1,30 @@
 
+
 # AlterEgo Coding Patterns
+
+## Module Loading Patterns
+
+### Safe Module References
+```lua
+-- Bad - can cause nil reference errors due to loading order
+local Utils = addon.Utils
+local Table = addon.Table
+local Window = addon.Window
+
+function Module:SomeFunction()
+    Utils:SomeFunction() -- This might be nil!
+end
+
+-- Good - always use addon objects directly
+function Module:SomeFunction()
+    addon.Utils:SomeFunction() -- Always safe
+end
+
+-- Exception - self.db is safe because it's set during initialization
+function Module:OnInitialize()
+    self.db = addon.db -- This is OK
+end
+```
 
 ## Type System Patterns
 

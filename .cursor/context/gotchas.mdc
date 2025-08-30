@@ -1,6 +1,32 @@
 
 # AlterEgo Common Gotchas & Solutions
 
+## Module Loading Issues
+
+### Local Variable Hoisting
+**Problem**: Local variables referencing other addon modules can be nil due to loading order
+**Solution**: Always use addon objects directly, never create local variables for other modules
+```lua
+-- Bad - can cause nil reference errors
+local Utils = addon.Utils
+local Table = addon.Table
+local Window = addon.Window
+
+function Module:SomeFunction()
+    Utils:SomeFunction() -- This might be nil!
+end
+
+-- Good - always use addon objects directly
+function Module:SomeFunction()
+    addon.Utils:SomeFunction() -- Always safe
+end
+
+-- Exception - self.db is safe because it's set during initialization
+function Module:OnInitialize()
+    self.db = addon.db -- This is OK
+end
+```
+
 ## Database Issues
 
 ### dbVersion Not Incremented
@@ -149,3 +175,14 @@ local addon = select(2, ...)
 ---@class AE_Module_Main : AceModule
 local Module = addon:NewModule("Main", "AceEvent-3.0", "AceDB-3.0")
 ```
+
+## Development Environment Issues
+
+### Local Addon Execution
+**Problem**: Attempting to run WoW addons outside the game client
+**Solution**: 
+- **Never attempt to run the addon locally** - WoW addons can only run within the game client
+- Only perform formatting, linting, and code analysis outside the game
+- All testing and debugging must be done in-game
+- Use `/reload` or `/run` commands in-game for testing changes
+- Addon files are loaded by the WoW client, not by external Lua interpreters

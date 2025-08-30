@@ -16,6 +16,7 @@ addon.Constants = {
     IconCharacters = format("Interface/AddOns/%s/Media/Icon_Characters.blp", addonName),
     IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addonName),
     IconKeyhole = format("Interface/AddOns/%s/Media/Icon_Keyhole.blp", addonName),
+    IconProfiles = format("Interface/AddOns/%s/Media/Icon_Profiles.blp", addonName),
   },
   sizes = {
     padding = 8,

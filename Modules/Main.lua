@@ -829,6 +829,16 @@ function Module:Render()
           iconSize = 13,
         },
         {
+          name = "LootTable",
+          icon = addon.Constants.media.IconCharacters,
+          tooltipTitle = "Loot Table",
+          tooltipDescription = "Browse all loot from the encounter journal.",
+          onClick = function()
+            addon.Core:GetModule("LootTable"):ToggleWindow()
+          end,
+          iconSize = 13,
+        },
+        {
           name = "Announce",
           icon = addon.Constants.media.IconAnnounce,
           tooltipTitle = "Announcements",

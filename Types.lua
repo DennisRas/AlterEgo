@@ -342,6 +342,108 @@
 ---@field interface AE_GlobalInterface
 ---@field useRIOScoreColor boolean
 
+-- =============================================================
+-- Types: Input Components
+-- =============================================================
+
+---@class AE_InputOptionsBase
+---@field parent Frame?
+---@field onEnter function?
+---@field onLeave function?
+---@field width number
+---@field height number
+
+---@class AE_InputOptionsButton : AE_InputOptionsBase
+---@field onClick function?
+---@field text string
+
+---@class AE_InputOptionsTextbox : AE_InputOptionsBase
+---@field onChange function?
+---@field placeholder string?
+
+---@class AE_InputOptionsCheckbox : AE_InputOptionsBase
+---@field onChange function?
+---@field checked boolean
+---@field text string
+
+---@class AE_InputOptionsDropdownItem
+---@field value string
+---@field text string
+---@field icon string?
+
+---@class AE_InputOptionsDropdown : AE_InputOptionsBase
+---@field onChange function?
+---@field items AE_InputOptionsDropdownItem[]
+---@field value string?
+---@field maxHeight number
+---@field size number
+---@field sizeIcon number
+---@field placeholder string
+
+-- =============================================================
+-- Types: Input Components (Custom AE Types)
+-- =============================================================
+
+---@class AE_Button : Button
+---@field config AE_InputOptionsButton
+---@field hover boolean
+---@field text FontString
+---@field onClickHandler fun(self: AE_Button)
+---@field onEnterHandler fun(self: AE_Button)
+---@field onLeaveHandler fun(self: AE_Button)
+---@field Update fun(self: AE_Button)
+---@field updateCommon fun(self: AE_Button)
+---@field setupCommonScripts fun(self: AE_Button)
+
+---@class AE_Textbox : EditBox
+---@field config AE_InputOptionsTextbox
+---@field hover boolean
+---@field border Frame
+---@field text FontString
+---@field OnChange fun(self: AE_Textbox)
+---@field onEnterHandler fun(self: AE_Textbox)
+---@field onLeaveHandler fun(self: AE_Textbox)
+---@field Update fun(self: AE_Textbox)
+---@field updateCommon fun(self: AE_Textbox)
+---@field setupCommonScripts fun(self: AE_Textbox)
+
+---@class AE_Checkbox : Button
+---@field config AE_InputOptionsCheckbox
+---@field hover boolean
+---@field checked boolean
+---@field checkbox Button
+---@field text FontString
+---@field onClickHandler fun(self: AE_Checkbox)
+---@field onEnterHandler fun(self: AE_Checkbox)
+---@field onLeaveHandler fun(self: AE_Checkbox)
+---@field Update fun(self: AE_Checkbox)
+---@field updateCommon fun(self: AE_Checkbox)
+---@field setupCommonScripts fun(self: AE_Checkbox)
+
+---@class AE_Dropdown : Frame
+---@field config AE_InputOptionsDropdown
+---@field hover boolean
+---@field items AE_InputOptionsDropdownItem[]
+---@field value string
+---@field expanded boolean
+---@field button Button
+---@field border Frame
+---@field list Frame
+---@field ClearItems fun(self: AE_Dropdown)
+---@field SetItems fun(self: AE_Dropdown, items: AE_InputOptionsDropdownItem[])
+---@field AddItem fun(self: AE_Dropdown, item: AE_InputOptionsDropdownItem)
+---@field RemoveItem fun(self: AE_Dropdown, item: AE_InputOptionsDropdownItem)
+---@field SetExpanded fun(self: AE_Dropdown, state: boolean)
+---@field SetValue fun(self: AE_Dropdown, value: string)
+---@field GetValue fun(self: AE_Dropdown): string
+---@field onClickHandler fun(self: AE_Dropdown)
+---@field onEnterHandler fun(self: AE_Dropdown)
+---@field onLeaveHandler fun(self: AE_Dropdown)
+---@field Update fun(self: AE_Dropdown)
+---@field UpdateList fun(self: AE_Dropdown)
+---@field updateCommon fun(self: AE_Dropdown)
+---@field setupCommonScripts fun(self: AE_Dropdown)
+
 ---@class AE_Equipment
 ---@field itemName string
 ---@field itemLink string

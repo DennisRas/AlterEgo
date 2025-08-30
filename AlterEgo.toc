@@ -37,9 +37,11 @@ Constants.lua
 Utils.lua
 Window.lua
 Table.lua
+Input.lua
 Database.lua
 
 Core.lua
 Modules/Main.lua
 Modules/WeeklyAffixes.lua
 Modules/Equipment.lua
+Modules/LootTable.lua
