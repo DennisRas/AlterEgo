@@ -407,7 +407,7 @@ Data.currencies = {
   {seasonID = 15, seasonDisplayID = 3, id = 3269, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Catalyst
   {seasonID = 15, seasonDisplayID = 3, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
   {seasonID = 15, seasonDisplayID = 3, id = 3141, useTotalEarnedForMaxQty = true,  currencyType = "spark"},                    -- Fractured Spark
-  {seasonID = 15, seasonDisplayID = 3, id = 3278, useTotalEarnedForMaxQty = true,  currencyType = "cloak"},                    -- Ethereal Strands
+                      {seasonID = 15, seasonDisplayID = 3, id = addon.Constants.currencies.ETHEREAL_STRANDS, useTotalEarnedForMaxQty = true,  currencyType = "cloak"},                    -- Ethereal Strands
 }
 
 Data.oldUpgradeLevels = {

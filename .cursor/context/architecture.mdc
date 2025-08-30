@@ -1,0 +1,73 @@
+---
+description: High-level architecture and design decisions for AlterEgo
+alwaysApply: true
+---
+
+# AlterEgo Architecture Context
+
+## Core Design Philosophy
+
+### Module-Based Architecture
+- **AceAddon-3.0** foundation with custom module system
+- Each module is self-contained but can communicate through the main addon object
+- Modules register their own database namespaces for data isolation
+- Standard lifecycle: `OnInitialize()` → `OnEnable()` → `OnDisable()`
+
+### Data Management Strategy
+- **Global-first approach**: Most data uses `self.db.global` for cross-character persistence
+- **Namespace isolation**: Each module gets its own DB namespace to prevent conflicts
+- **Validation required**: All data access should validate before use
+- **Error messages**: Clear English error messages for debugging
+
+### UI System Design
+- **Factory pattern**: `Window.lua` provides consistent window creation
+- **Dynamic titlebar**: Buttons can be added/removed at runtime
+- **Type safety**: All UI components use typed configurations via `AE_` types
+- **Responsive layout**: Automatic positioning and scaling
+
+## Key Integration Points
+
+### Module Communication
+```lua
+-- Access other modules through main addon
+local otherModule = addon:GetModule("ModuleName")
+-- Direct function calls between modules
+otherModule:SomeFunction()
+```
+
+### Database Access Patterns
+```lua
+-- Module namespace registration
+self.db = addon.db:RegisterNamespace("ModuleName", defaults)
+-- Global data access (preferred)
+local data = self.db.global.someData
+-- Profile data (character-specific)
+local profileData = self.db.profile.someSetting
+```
+
+### Window Creation Pattern
+```lua
+-- Standard window creation with typed options
+local window = addon.Window:New({
+    name = "UniqueWindowName",
+    title = "Window Title",
+    -- ... other AE_WindowOptions
+})
+```
+
+## Performance Considerations
+
+### Event Handling
+- Use `AceEvent-3.0` for efficient event registration
+- Unregister events in `OnDisable()` to prevent memory leaks
+- Consider using `AceBucket-3.0` for high-frequency events
+
+### Database Operations
+- Minimize database writes during combat
+- Use `dbVersion` increments for schema migrations
+- Validate data before storage to prevent corruption
+
+### UI Performance
+- Reuse window instances when possible
+- Batch UI updates to minimize frame impact
+- Use efficient anchoring for dynamic layouts

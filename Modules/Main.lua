@@ -47,6 +47,54 @@ local vaultTooltipTexts = {
   },
 }
 
+---Check if the Reshii Wraps cloak trait tree has been fully filled out
+---@param characterGUID WOWGUID
+---@return boolean
+local function isCloakTraitTreeFullyFilled(characterGUID)
+  -- Only check for the current character since trait data is character-specific
+  if characterGUID ~= UnitGUID("player") then
+    return false
+  end
+  
+  -- Check if C_Traits API is available
+  if not C_Traits then
+    return false
+  end
+  
+  -- Load the trait UI to ensure data is available
+  if GenericTraitUI_LoadUI then
+    GenericTraitUI_LoadUI()
+  end
+  
+  -- Get the trait tree info for the Reshii Wraps system
+  local treeInfo = C_Traits.GetTraitTreeInfo and C_Traits.GetTraitTreeInfo(addon.Constants.traitUI.RESHII_WRAPS_TREE_ID)
+  if not treeInfo or not treeInfo.nodeIDs then
+    return false
+  end
+  
+  local totalPointsSpent = 0
+  local totalPointsAvailable = 0
+  
+  -- Iterate through all nodes in the tree
+  for _, nodeID in ipairs(treeInfo.nodeIDs) do
+    local nodeInfo = C_Traits.GetTraitNodeInfo and C_Traits.GetTraitNodeInfo(addon.Constants.traitUI.RESHII_WRAPS_SYSTEM_ID, nodeID)
+    if nodeInfo then
+      -- Count available points for this node
+      if nodeInfo.maxRanks then
+        totalPointsAvailable = totalPointsAvailable + nodeInfo.maxRanks
+      end
+      
+      -- Count spent points for this node
+      if nodeInfo.ranksPurchased then
+        totalPointsSpent = totalPointsSpent + nodeInfo.ranksPurchased
+      end
+    end
+  end
+  
+  -- Return true if all available points have been spent
+  return totalPointsSpent >= totalPointsAvailable
+end
+
 ---Check if activity was completed at heroic level
 ---@param activityTierID number
 ---@return boolean
@@ -958,305 +1006,305 @@ function Module:Render()
           tooltipTitle = "Settings",
           tooltipDescription = "Let's customize things a bit",
           setupMenu = function(_, menu)
-    menu:CreateTitle(CHARACTER)
-    menu:CreateCheckbox(
-      "Show characters with zero rating",
-      function() return addon.Data.db.global.showZeroRatedCharacters end,
-      function()
-        addon.Data.db.global.showZeroRatedCharacters = not addon.Data.db.global.showZeroRatedCharacters
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Too many alts?", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show realm names",
-      function() return addon.Data.db.global.showRealms end,
-      function()
-        addon.Data.db.global.showRealms = not addon.Data.db.global.showRealms
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("They're everywhere!", nil, nil, nil, true)
-    end)
-    local rioColors = menu:CreateCheckbox(
-      "Use Raider.IO rating colors",
-      function() return addon.Data.db.global.useRIOScoreColor end,
-      function()
-        addon.Data.db.global.useRIOScoreColor = not addon.Data.db.global.useRIOScoreColor
-        self:Render()
-      end
-    )
-    rioColors:SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("So many colors!", nil, nil, nil, true)
-      if type(_G.RaiderIO) == "nil" then
-        tooltip:AddLine(" ")
-        tooltip:AddLine("Requires addon: Raider.IO", 1, 0, 0, true)
-      end
-    end)
-    rioColors:SetEnabled(type(_G.RaiderIO) ~= "nil")
-    menu:CreateTitle(DELVES_GREAT_VAULT_LABEL)
-    menu:CreateCheckbox(
-      "Show Raids",
-      function() return addon.Data.db.global.vault.raids end,
-      function()
-        addon.Data.db.global.vault.raids = not addon.Data.db.global.vault.raids
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Just one more!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show Dungeons",
-      function() return addon.Data.db.global.vault.dungeons end,
-      function()
-        addon.Data.db.global.vault.dungeons = not addon.Data.db.global.vault.dungeons
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Just one more!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show World",
-      function() return addon.Data.db.global.vault.world end,
-      function()
-        addon.Data.db.global.vault.world = not addon.Data.db.global.vault.world
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Just one more!", nil, nil, nil, true)
-    end)
-    menu:CreateTitle(DUNGEONS)
-    menu:CreateCheckbox(
-      "Enable Dungeons",
-      function() return addon.Data.db.global.dungeons.enabled end,
-      function()
-        addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Show Mythic+ dungeon information!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show icons",
-      function() return addon.Data.db.global.showTiers end,
-      function()
-        addon.Data.db.global.showTiers = not addon.Data.db.global.showTiers
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show rating",
-      function() return addon.Data.db.global.showScores end,
-      function()
-        addon.Data.db.global.showScores = not addon.Data.db.global.showScores
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Show some scores!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Use rating colors",
-      function() return addon.Data.db.global.showAffixColors end,
-      function()
-        addon.Data.db.global.showAffixColors = not addon.Data.db.global.showAffixColors
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Show some colors!", nil, nil, nil, true)
-    end)
-    menu:CreateTitle(RAIDS)
-    menu:CreateCheckbox(
-      "Enable Raids",
-      function() return addon.Data.db.global.raids.enabled end,
-      function()
-        addon.Data.db.global.raids.enabled = not addon.Data.db.global.raids.enabled
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Use difficulty colors",
-      function() return addon.Data.db.global.raids.colors end,
-      function()
-        addon.Data.db.global.raids.colors = not addon.Data.db.global.raids.colors
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Argharhggh! So much greeeen!", nil, nil, nil, true)
-    end)
-    local raidDifficultiesSetting = menu:CreateButton(
-      "Difficulties"
-    )
-    addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
-      local hiddenDifficulties = addon.Data.db.global.raids.hiddenDifficulties or {}
-      raidDifficultiesSetting:CreateCheckbox(
-        difficulty.name,
-        function(id) return not hiddenDifficulties[id] end,
-        function(id)
-          addon.Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
-          self:Render()
-        end,
-        difficulty.id
-      )
-    end)
-    menu:CreateTitle(CURRENCY)
-    menu:CreateCheckbox(
-      "Enable Currencies",
-      function() return addon.Data.db.global.currencies.enabled end,
-      function()
-        addon.Data.db.global.currencies.enabled = not addon.Data.db.global.currencies.enabled
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Time to farm!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show icons",
-      function() return addon.Data.db.global.currencies.showIcons end,
-      function()
-        addon.Data.db.global.currencies.showIcons = not addon.Data.db.global.currencies.showIcons
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("So fancy!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Align text center",
-      function() return addon.Data.db.global.currencies.alignCenter end,
-      function()
-        addon.Data.db.global.currencies.alignCenter = not addon.Data.db.global.currencies.alignCenter
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("Left or right? Center it is!", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Highlight max earned",
-      function() return addon.Data.db.global.currencies.showMaxEarned end,
-      function()
-        addon.Data.db.global.currencies.showMaxEarned = not addon.Data.db.global.currencies.showMaxEarned
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("They really do this, huh?", nil, nil, nil, true)
-    end)
-    local enabledCurrenciesOption = menu:CreateButton(
-      "Currencies"
-    )
-    addon.Utils:TableForEach(addon.Data:GetCurrencies(), function(currency)
-      local hiddenCurrencies = addon.Data.db.global.currencies.hiddenCurrencies or {}
-      enabledCurrenciesOption:CreateCheckbox(
-        currency.name,
-        function(id) return not hiddenCurrencies[id] end,
-        function(id)
-          addon.Data.db.global.currencies.hiddenCurrencies[id] = not hiddenCurrencies[id]
-          self:Render()
-        end,
-        currency.id
-      )
-    end)
-    menu:CreateDivider()
-    menu:CreateTitle(INTERFACE_OPTIONS)
-    menu:CreateCheckbox(
-      "Show Weekly Affixes",
-      function() return addon.Data.db.global.showAffixHeader end,
-      function()
-        addon.Data.db.global.showAffixHeader = not addon.Data.db.global.showAffixHeader
-        self:Render()
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("The affixes will be shown at the top.", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Show the minimap button",
-      function() return not addon.Data.db.global.minimap.hide end,
-      function()
-        addon.Data.db.global.minimap.hide = not addon.Data.db.global.minimap.hide
-        addon.Libs.LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("It does get crowded around the minimap sometimes.", nil, nil, nil, true)
-    end)
-    menu:CreateCheckbox(
-      "Lock the minimap button",
-      function() return addon.Data.db.global.minimap.lock end,
-      function()
-        addon.Data.db.global.minimap.lock = not addon.Data.db.global.minimap.lock
-        addon.Libs.LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
-      end
-    ):SetTooltip(function(tooltip, elm)
-      tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-      tooltip:AddLine("No more moving the button around accidentally!", nil, nil, nil, true)
-    end)
-    local windowScaleButton = menu:CreateButton("Window scale")
-    for i = 80, 200, 10 do
-      windowScaleButton:CreateRadio(
-        i .. "%",
-        function(value) return addon.Data.db.global.interface.windowScale == value end,
-        function(value)
-          addon.Data.db.global.interface.windowScale = value
-          self:Render()
-          return MenuResponse.Refresh
-        end,
-        i
-      )
-    end
-    local function saveAndRefresh(color)
-      if color.r then
-        addon.Data.db.global.interface.windowColor.r = color.r
-        addon.Data.db.global.interface.windowColor.g = color.g
-        addon.Data.db.global.interface.windowColor.b = color.b
-      end
-      if color.a then
-        addon.Data.db.global.interface.windowColor.a = color.a
-      end
-      addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
-    end
-    local colorInfo = {
-      r = addon.Data.db.global.interface.windowColor.r,
-      g = addon.Data.db.global.interface.windowColor.g,
-      b = addon.Data.db.global.interface.windowColor.b,
-      opacity = addon.Data.db.global.interface.windowColor.a,
-      hasOpacity = 1,
-      swatchFunc = function()
-        local r, g, b = ColorPickerFrame:GetColorRGB()
-        local a = ColorPickerFrame:GetColorAlpha()
-        if r then
-          saveAndRefresh({r = r, g = g, b = b, a = a or 1})
-        end
-      end,
-      opacityFunc = function() end,
-      cancelFunc = saveAndRefresh,
-    }
-    menu:CreateColorSwatch(
-      "Window background color",
-      function()
-        ColorPickerFrame:SetupColorPickerAndShow(colorInfo)
-      end,
-      colorInfo
-    )
+            menu:CreateTitle(CHARACTER)
+            menu:CreateCheckbox(
+              "Show characters with zero rating",
+              function() return addon.Data.db.global.showZeroRatedCharacters end,
+              function()
+                addon.Data.db.global.showZeroRatedCharacters = not addon.Data.db.global.showZeroRatedCharacters
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Too many alts?", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show realm names",
+              function() return addon.Data.db.global.showRealms end,
+              function()
+                addon.Data.db.global.showRealms = not addon.Data.db.global.showRealms
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("They're everywhere!", nil, nil, nil, true)
+            end)
+            local rioColors = menu:CreateCheckbox(
+              "Use Raider.IO rating colors",
+              function() return addon.Data.db.global.useRIOScoreColor end,
+              function()
+                addon.Data.db.global.useRIOScoreColor = not addon.Data.db.global.useRIOScoreColor
+                self:Render()
+              end
+            )
+            rioColors:SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("So many colors!", nil, nil, nil, true)
+              if type(_G.RaiderIO) == "nil" then
+                tooltip:AddLine(" ")
+                tooltip:AddLine("Requires addon: Raider.IO", 1, 0, 0, true)
+              end
+            end)
+            rioColors:SetEnabled(type(_G.RaiderIO) ~= "nil")
+            menu:CreateTitle(DELVES_GREAT_VAULT_LABEL)
+            menu:CreateCheckbox(
+              "Show Raids",
+              function() return addon.Data.db.global.vault.raids end,
+              function()
+                addon.Data.db.global.vault.raids = not addon.Data.db.global.vault.raids
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Just one more!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show Dungeons",
+              function() return addon.Data.db.global.vault.dungeons end,
+              function()
+                addon.Data.db.global.vault.dungeons = not addon.Data.db.global.vault.dungeons
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Just one more!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show World",
+              function() return addon.Data.db.global.vault.world end,
+              function()
+                addon.Data.db.global.vault.world = not addon.Data.db.global.vault.world
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Just one more!", nil, nil, nil, true)
+            end)
+            menu:CreateTitle(DUNGEONS)
+            menu:CreateCheckbox(
+              "Enable Dungeons",
+              function() return addon.Data.db.global.dungeons.enabled end,
+              function()
+                addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Show Mythic+ dungeon information!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show icons",
+              function() return addon.Data.db.global.showTiers end,
+              function()
+                addon.Data.db.global.showTiers = not addon.Data.db.global.showTiers
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Show the timed icons (|A:Professions-ChatIcon-Quality-Tier1:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier2:16:16:0:-1|a |A:Professions-ChatIcon-Quality-Tier3:16:16:0:-1|a).", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show rating",
+              function() return addon.Data.db.global.showScores end,
+              function()
+                addon.Data.db.global.showScores = not addon.Data.db.global.showScores
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Show some scores!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Use rating colors",
+              function() return addon.Data.db.global.showAffixColors end,
+              function()
+                addon.Data.db.global.showAffixColors = not addon.Data.db.global.showAffixColors
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Show some colors!", nil, nil, nil, true)
+            end)
+            menu:CreateTitle(RAIDS)
+            menu:CreateCheckbox(
+              "Enable Raids",
+              function() return addon.Data.db.global.raids.enabled end,
+              function()
+                addon.Data.db.global.raids.enabled = not addon.Data.db.global.raids.enabled
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Because MythicPlus ain't enough!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Use difficulty colors",
+              function() return addon.Data.db.global.raids.colors end,
+              function()
+                addon.Data.db.global.raids.colors = not addon.Data.db.global.raids.colors
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Argharhggh! So much greeeen!", nil, nil, nil, true)
+            end)
+            local raidDifficultiesSetting = menu:CreateButton(
+              "Difficulties"
+            )
+            addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
+              local hiddenDifficulties = addon.Data.db.global.raids.hiddenDifficulties or {}
+              raidDifficultiesSetting:CreateCheckbox(
+                difficulty.name,
+                function(id) return not hiddenDifficulties[id] end,
+                function(id)
+                  addon.Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
+                  self:Render()
+                end,
+                difficulty.id
+              )
+            end)
+            menu:CreateTitle(CURRENCY)
+            menu:CreateCheckbox(
+              "Enable Currencies",
+              function() return addon.Data.db.global.currencies.enabled end,
+              function()
+                addon.Data.db.global.currencies.enabled = not addon.Data.db.global.currencies.enabled
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Time to farm!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show icons",
+              function() return addon.Data.db.global.currencies.showIcons end,
+              function()
+                addon.Data.db.global.currencies.showIcons = not addon.Data.db.global.currencies.showIcons
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("So fancy!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Align text center",
+              function() return addon.Data.db.global.currencies.alignCenter end,
+              function()
+                addon.Data.db.global.currencies.alignCenter = not addon.Data.db.global.currencies.alignCenter
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Left or right? Center it is!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Highlight max earned",
+              function() return addon.Data.db.global.currencies.showMaxEarned end,
+              function()
+                addon.Data.db.global.currencies.showMaxEarned = not addon.Data.db.global.currencies.showMaxEarned
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("They really do this, huh?", nil, nil, nil, true)
+            end)
+            local enabledCurrenciesOption = menu:CreateButton(
+              "Currencies"
+            )
+            addon.Utils:TableForEach(addon.Data:GetCurrencies(), function(currency)
+              local hiddenCurrencies = addon.Data.db.global.currencies.hiddenCurrencies or {}
+              enabledCurrenciesOption:CreateCheckbox(
+                currency.name,
+                function(id) return not hiddenCurrencies[id] end,
+                function(id)
+                  addon.Data.db.global.currencies.hiddenCurrencies[id] = not hiddenCurrencies[id]
+                  self:Render()
+                end,
+                currency.id
+              )
+            end)
+            menu:CreateDivider()
+            menu:CreateTitle(INTERFACE_OPTIONS)
+            menu:CreateCheckbox(
+              "Show Weekly Affixes",
+              function() return addon.Data.db.global.showAffixHeader end,
+              function()
+                addon.Data.db.global.showAffixHeader = not addon.Data.db.global.showAffixHeader
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("The affixes will be shown at the top.", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show the minimap button",
+              function() return not addon.Data.db.global.minimap.hide end,
+              function()
+                addon.Data.db.global.minimap.hide = not addon.Data.db.global.minimap.hide
+                addon.Libs.LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("It does get crowded around the minimap sometimes.", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Lock the minimap button",
+              function() return addon.Data.db.global.minimap.lock end,
+              function()
+                addon.Data.db.global.minimap.lock = not addon.Data.db.global.minimap.lock
+                addon.Libs.LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("No more moving the button around accidentally!", nil, nil, nil, true)
+            end)
+            local windowScaleButton = menu:CreateButton("Window scale")
+            for i = 80, 200, 10 do
+              windowScaleButton:CreateRadio(
+                i .. "%",
+                function(value) return addon.Data.db.global.interface.windowScale == value end,
+                function(value)
+                  addon.Data.db.global.interface.windowScale = value
+                  self:Render()
+                  return MenuResponse.Refresh
+                end,
+                i
+              )
+            end
+            local function saveAndRefresh(color)
+              if color.r then
+                addon.Data.db.global.interface.windowColor.r = color.r
+                addon.Data.db.global.interface.windowColor.g = color.g
+                addon.Data.db.global.interface.windowColor.b = color.b
+              end
+              if color.a then
+                addon.Data.db.global.interface.windowColor.a = color.a
+              end
+              addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
+            end
+            local colorInfo = {
+              r = addon.Data.db.global.interface.windowColor.r,
+              g = addon.Data.db.global.interface.windowColor.g,
+              b = addon.Data.db.global.interface.windowColor.b,
+              opacity = addon.Data.db.global.interface.windowColor.a,
+              hasOpacity = 1,
+              swatchFunc = function()
+                local r, g, b = ColorPickerFrame:GetColorRGB()
+                local a = ColorPickerFrame:GetColorAlpha()
+                if r then
+                  saveAndRefresh({r = r, g = g, b = b, a = a or 1})
+                end
+              end,
+              opacityFunc = function() end,
+              cancelFunc = saveAndRefresh,
+            }
+            menu:CreateColorSwatch(
+              "Window background color",
+              function()
+                ColorPickerFrame:SetupColorPickerAndShow(colorInfo)
+              end,
+              colorInfo
+            )
           end,
           iconSize = 12,
         },
@@ -1411,27 +1459,27 @@ function Module:Render()
     end
 
     do -- MythicPlus Header
-        local label = self.window.sidebar.mpluslabel
-        if not label then
-          label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
-          label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-          label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
-          label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
-          label.text:SetFontObject("GameFontHighlight_NoShadow")
-          label.text:SetJustifyH("LEFT")
-          label.text:SetText(DUNGEONS)
-          label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-          self.window.sidebar.mpluslabel = label
-        end
+      local label = self.window.sidebar.mpluslabel
+      if not label then
+        label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
+        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetFontObject("GameFontHighlight_NoShadow")
+        label.text:SetJustifyH("LEFT")
+        label.text:SetText(DUNGEONS)
+        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.window.sidebar.mpluslabel = label
+      end
 
-        if addon.Data.db.global.dungeons.enabled then
-          label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-          label:SetHeight(addon.Constants.sizes.row)
-          label:Show()
-          rowCount = rowCount + 1
-        else
-          label:Hide()
+      if addon.Data.db.global.dungeons.enabled then
+        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+        label:SetHeight(addon.Constants.sizes.row)
+        label:Show()
+        rowCount = rowCount + 1
+      else
+        label:Hide()
       end
     end
 
@@ -1440,62 +1488,62 @@ function Module:Render()
       addon.Utils:TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
       if addon.Data.db.global.dungeons.enabled then
         addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
-        local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
-        if not dungeonFrame then
-          dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
-          dungeonFrame:RegisterForClicks("AnyUp", "AnyDown")
-          dungeonFrame:EnableMouse(true)
-          dungeonFrame.icon = dungeonFrame:CreateTexture(dungeonFrame:GetName() .. "Icon", "ARTWORK")
-          dungeonFrame.icon:SetSize(16, 16)
-          dungeonFrame.icon:SetPoint("LEFT", dungeonFrame, "LEFT", addon.Constants.sizes.padding, 0)
-          dungeonFrame.text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
-          dungeonFrame.text:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT", 16 + addon.Constants.sizes.padding * 2, -3)
-          dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
-          dungeonFrame.text:SetJustifyH("LEFT")
-          dungeonFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-          self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
-        end
-
-        local knownTeleportSpellID = addon.Utils:TableFind(dungeon.teleports or {}, function(spellID)
-          return IsSpellKnown(spellID, false)
-        end)
-
-        if knownTeleportSpellID then
-          if not InCombatLockdown() then
-            dungeonFrame:SetAttribute("type", "spell")
-            dungeonFrame:SetAttribute("spell", knownTeleportSpellID)
+          local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
+          if not dungeonFrame then
+            dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
+            dungeonFrame:RegisterForClicks("AnyUp", "AnyDown")
+            dungeonFrame:EnableMouse(true)
+            dungeonFrame.icon = dungeonFrame:CreateTexture(dungeonFrame:GetName() .. "Icon", "ARTWORK")
+            dungeonFrame.icon:SetSize(16, 16)
+            dungeonFrame.icon:SetPoint("LEFT", dungeonFrame, "LEFT", addon.Constants.sizes.padding, 0)
+            dungeonFrame.text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
+            dungeonFrame.text:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT", 16 + addon.Constants.sizes.padding * 2, -3)
+            dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            dungeonFrame.text:SetJustifyH("LEFT")
+            dungeonFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+            self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
           end
-        else
-          -- TODO: Unset spell attribute? It's not like the dungeon pool changes during a session
-        end
 
-        dungeonFrame:SetScript("OnEnter", function()
-          ---@diagnostic disable-next-line: param-type-mismatch
-          GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
-          GameTooltip:SetText(dungeon.name, 1, 1, 1)
+          local knownTeleportSpellID = addon.Utils:TableFind(dungeon.teleports or {}, function(spellID)
+            return IsSpellKnown(spellID, false)
+          end)
+
           if knownTeleportSpellID then
-            GameTooltip:ClearLines()
-            GameTooltip:SetSpellByID(knownTeleportSpellID)
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
-            _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+            if not InCombatLockdown() then
+              dungeonFrame:SetAttribute("type", "spell")
+              dungeonFrame:SetAttribute("spell", knownTeleportSpellID)
+            end
           else
-            GameTooltip:AddLine(format("Time this dungeon on level %d or above to unlock teleportation.", dungeonPortalUnlockLevel), nil, nil, nil, true)
+            -- TODO: Unset spell attribute? It's not like the dungeon pool changes during a session
           end
-          GameTooltip:Show()
-        end)
-        dungeonFrame:SetScript("OnLeave", function()
-          GameTooltip:Hide()
-        end)
 
-        dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-        dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-        dungeonFrame:SetHeight(addon.Constants.sizes.row)
-        dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
-        dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
-        dungeonFrame:Show()
-        rowCount = rowCount + 1
-      end)
+          dungeonFrame:SetScript("OnEnter", function()
+            ---@diagnostic disable-next-line: param-type-mismatch
+            GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(dungeon.name, 1, 1, 1)
+            if knownTeleportSpellID then
+              GameTooltip:ClearLines()
+              GameTooltip:SetSpellByID(knownTeleportSpellID)
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("<Click to Teleport>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+              _G[GameTooltip:GetName() .. "TextLeft1"]:SetText(dungeon.name)
+            else
+              GameTooltip:AddLine(format("Time this dungeon on level %d or above to unlock teleportation.", dungeonPortalUnlockLevel), nil, nil, nil, true)
+            end
+            GameTooltip:Show()
+          end)
+          dungeonFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+          end)
+
+          dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+          dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          dungeonFrame:SetHeight(addon.Constants.sizes.row)
+          dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
+          dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
+          dungeonFrame:Show()
+          rowCount = rowCount + 1
+        end)
       end
     end
 
@@ -1852,153 +1900,153 @@ function Module:Render()
         addon.Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
         if addon.Data.db.global.dungeons.enabled then
           addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
-          local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
-          if not dungeonFrame then
-            dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
-            dungeonFrame.Text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
-            dungeonFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
-            dungeonFrame.Tier = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Tier", "OVERLAY")
-            dungeonFrame.Tier:SetPoint("LEFT", dungeonFrame.Text, "RIGHT", 3, 1)
-            dungeonFrame.Tier:SetJustifyH("LEFT")
-            dungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
-            dungeonFrame.Score = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Score", "OVERLAY")
-            dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
-            dungeonFrame.Score:SetJustifyH("RIGHT")
-            dungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
-            characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
-          end
+            local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
+            if not dungeonFrame then
+              dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
+              dungeonFrame.Text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
+              dungeonFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
+              dungeonFrame.Tier = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Tier", "OVERLAY")
+              dungeonFrame.Tier:SetPoint("LEFT", dungeonFrame.Text, "RIGHT", 3, 1)
+              dungeonFrame.Tier:SetJustifyH("LEFT")
+              dungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
+              dungeonFrame.Score = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Score", "OVERLAY")
+              dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
+              dungeonFrame.Score:SetJustifyH("RIGHT")
+              dungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
+              characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
+            end
 
-          local affixScores
-          local overallScore
-          local inTimeInfo
-          local overTimeInfo
-          local bestAffixScore
-          local level = "-"
-          local color = HIGHLIGHT_FONT_COLOR
-          local tier = ""
-          local dungeonLevel = 0
+            local affixScores
+            local overallScore
+            local inTimeInfo
+            local overTimeInfo
+            local bestAffixScore
+            local level = "-"
+            local color = HIGHLIGHT_FONT_COLOR
+            local tier = ""
+            local dungeonLevel = 0
 
-          local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
-          if characterDungeon then
-            affixScores = characterDungeon.affixScores
-            overallScore = characterDungeon.bestOverAllScore
-            inTimeInfo = characterDungeon.bestTimedRun
-            overTimeInfo = characterDungeon.bestNotTimedRun
+            local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
+            if characterDungeon then
+              affixScores = characterDungeon.affixScores
+              overallScore = characterDungeon.bestOverAllScore
+              inTimeInfo = characterDungeon.bestTimedRun
+              overTimeInfo = characterDungeon.bestNotTimedRun
 
-            if overallScore and addon.Data.db.global.showAffixColors then
-              local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
-              if rarityColor ~= nil then
-                color = rarityColor
+              if overallScore and addon.Data.db.global.showAffixColors then
+                local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
+                if rarityColor ~= nil then
+                  color = rarityColor
+                end
+              end
+
+              if affixScores then
+                ---@type AE_CharacterAffixScoreInfo
+                bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
+                  return affixScore.score
+                end)
+
+                if bestAffixScore then
+                  level = tostring(bestAffixScore.level)
+                  dungeonLevel = bestAffixScore.level or 0
+
+                  if bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
+                    tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
+                  elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
+                    tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
+                  elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
+                    tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
+                  end
+
+                  if bestAffixScore.overTime then
+                    color = LIGHTGRAY_FONT_COLOR
+                  end
+                end
               end
             end
 
-            if affixScores then
-              ---@type AE_CharacterAffixScoreInfo
-              bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
-                return affixScore.score
-              end)
-
-              if bestAffixScore then
-                level = tostring(bestAffixScore.level)
-                dungeonLevel = bestAffixScore.level or 0
-
-                if bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
-                  tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
-                elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
-                  tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
-                elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
-                  tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
-                end
-
-                if bestAffixScore.overTime then
-                  color = LIGHTGRAY_FONT_COLOR
-                end
-              end
+            if level ~= "-" and addon.Data.db.global.showTiers then
+              level = format("%s %s", level, tier)
             end
-          end
 
-          if level ~= "-" and addon.Data.db.global.showTiers then
-            level = format("%s %s", level, tier)
-          end
-
-          dungeonFrame.Text:ClearAllPoints()
-          dungeonFrame.Text:SetText(color:WrapTextInColorCode(level))
-          dungeonFrame.Text:SetPoint("LEFT", dungeonFrame, "LEFT")
-          dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
-          dungeonFrame.Text:SetJustifyH("CENTER")
-          dungeonFrame.Tier:ClearAllPoints()
-          dungeonFrame.Tier:SetText("")
-          dungeonFrame.Score:ClearAllPoints()
-          dungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore and tostring(overallScore) or "-"))
-          dungeonFrame.Score:SetPoint("LEFT", dungeonFrame, "CENTER")
-          dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT")
-          dungeonFrame.Score:SetJustifyH("CENTER")
-
-          if not addon.Data.db.global.showScores then
             dungeonFrame.Text:ClearAllPoints()
-            dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
-            dungeonFrame.Score:SetText("")
-          else
-            if not addon.Data.db.global.showTiers then
-              dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
-              dungeonFrame.Text:SetJustifyH("CENTER")
-            end
-          end
-
-          if level == "-" then
-            dungeonFrame.Text:ClearAllPoints()
-            dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
+            dungeonFrame.Text:SetText(color:WrapTextInColorCode(level))
+            dungeonFrame.Text:SetPoint("LEFT", dungeonFrame, "LEFT")
+            dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
+            dungeonFrame.Text:SetJustifyH("CENTER")
+            dungeonFrame.Tier:ClearAllPoints()
             dungeonFrame.Tier:SetText("")
-            dungeonFrame.Score:SetText("")
-          end
+            dungeonFrame.Score:ClearAllPoints()
+            dungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore and tostring(overallScore) or "-"))
+            dungeonFrame.Score:SetPoint("LEFT", dungeonFrame, "CENTER")
+            dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT")
+            dungeonFrame.Score:SetJustifyH("CENTER")
 
-          dungeonFrame:SetScript("OnEnter", function()
-            GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText(dungeon.name, 1, 1, 1)
-
-            if affixScores and addon.Utils:TableCount(affixScores) > 0 then
-              if overallScore and (inTimeInfo or overTimeInfo) then
-                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(tostring(overallScore))), GREEN_FONT_COLOR)
-              end
-
-              if bestAffixScore then
-                GameTooltip_AddBlankLineToTooltip(GameTooltip)
-                GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
-                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(bestAffixScore.level), HIGHLIGHT_FONT_COLOR)
-
-                local displayZeroHours = bestAffixScore.durationSec >= SECONDS_PER_HOUR
-                local durationText = SecondsToClock(bestAffixScore.durationSec, displayZeroHours)
-
-                if bestAffixScore.overTime then
-                  local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
-                  GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
-                else
-                  GameTooltip_AddColoredLine(GameTooltip, tier .. " " .. durationText, HIGHLIGHT_FONT_COLOR)
-                end
+            if not addon.Data.db.global.showScores then
+              dungeonFrame.Text:ClearAllPoints()
+              dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
+              dungeonFrame.Score:SetText("")
+            else
+              if not addon.Data.db.global.showTiers then
+                dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
+                dungeonFrame.Text:SetJustifyH("CENTER")
               end
             end
 
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("Dungeon Timers")
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
-            GameTooltip:Show()
+            if level == "-" then
+              dungeonFrame.Text:ClearAllPoints()
+              dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
+              dungeonFrame.Tier:SetText("")
+              dungeonFrame.Score:SetText("")
+            end
 
-            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
-          end)
-          dungeonFrame:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
-          end)
+            dungeonFrame:SetScript("OnEnter", function()
+              GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetText(dungeon.name, 1, 1, 1)
 
-          addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-          dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-          dungeonFrame:SetHeight(addon.Constants.sizes.row)
-          dungeonFrame:Show()
-          rowCount = rowCount + 1
-        end)
+              if affixScores and addon.Utils:TableCount(affixScores) > 0 then
+                if overallScore and (inTimeInfo or overTimeInfo) then
+                  GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(tostring(overallScore))), GREEN_FONT_COLOR)
+                end
+
+                if bestAffixScore then
+                  GameTooltip_AddBlankLineToTooltip(GameTooltip)
+                  GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
+                  GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(bestAffixScore.level), HIGHLIGHT_FONT_COLOR)
+
+                  local displayZeroHours = bestAffixScore.durationSec >= SECONDS_PER_HOUR
+                  local durationText = SecondsToClock(bestAffixScore.durationSec, displayZeroHours)
+
+                  if bestAffixScore.overTime then
+                    local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
+                    GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
+                  else
+                    GameTooltip_AddColoredLine(GameTooltip, tier .. " " .. durationText, HIGHLIGHT_FONT_COLOR)
+                  end
+                end
+              end
+
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("Dungeon Timers")
+              GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
+              GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
+              GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
+              GameTooltip:Show()
+
+              addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
+            end)
+            dungeonFrame:SetScript("OnLeave", function()
+              GameTooltip:Hide()
+              addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
+            end)
+
+            addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+            dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
+            dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+            dungeonFrame:SetHeight(addon.Constants.sizes.row)
+            dungeonFrame:Show()
+            rowCount = rowCount + 1
+          end)
         end
       end
 
@@ -2194,6 +2242,14 @@ function Module:Render()
             text = "-"
           end
 
+                      -- Add yellow asterisk symbol for Ethereal Strands if cloak trait tree isn't fully filled out
+            if currency.id == addon.Constants.currencies.ETHEREAL_STRANDS then -- Ethereal Strands
+              local isFullyFilled = isCloakTraitTreeFullyFilled(character.GUID)
+              if not isFullyFilled then
+                text = text .. " *"
+              end
+            end
+          
           currencyFrame.Text:SetText(color:WrapTextInColorCode(text))
           currencyFrame.Text:SetJustifyH(addon.Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
           currencyFrame:SetScript("OnEnter", function()
@@ -2215,6 +2271,24 @@ function Module:Render()
               end
               GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or tostring(maxQuantity), nil, nil, nil, 1, 1, 1)
             end
+
+            -- Add special click text for Ethereal Strands (Reshii Wraps Cloak)
+            if currency.id == addon.Constants.currencies.ETHEREAL_STRANDS then -- Ethereal Strands
+              GameTooltip:AddLine(" ")
+              local isCurrentCharacter = character.GUID == UnitGUID("player")
+              if isCurrentCharacter then
+                GameTooltip:AddLine("<Click to Open Reshii Wraps Cloak UI>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                
+                -- Add trait tree status information
+                local isFullyFilled = isCloakTraitTreeFullyFilled(character.GUID)
+                if not isFullyFilled then
+                  GameTooltip:AddLine("* Cloak trait tree has unspent points available", 1, 1, 0) -- Yellow text
+                end
+              else
+                GameTooltip:AddLine("<Log into this character to Open the Cloak UI>", GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+              end
+            end
+
             GameTooltip:Show()
             addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
           end)
@@ -2222,6 +2296,21 @@ function Module:Render()
             GameTooltip:Hide()
             addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0)
           end)
+
+          -- Add click functionality for Ethereal Strands (Reshii Wraps Cloak)
+          if currency.id == addon.Constants.currencies.ETHEREAL_STRANDS then -- Ethereal Strands
+            currencyFrame:SetScript("OnMouseDown", function()
+              local isCurrentCharacter = character.GUID == UnitGUID("player")
+              if isCurrentCharacter then
+                GenericTraitUI_LoadUI()
+                GenericTraitFrame:SetSystemID(addon.Constants.traitUI.RESHII_WRAPS_SYSTEM_ID)
+                GenericTraitFrame:SetTreeID(addon.Constants.traitUI.RESHII_WRAPS_TREE_ID)
+                ToggleFrame(GenericTraitFrame)
+              end
+            end)
+          else
+            currencyFrame:SetScript("OnMouseDown", function() end)
+          end
 
           addon.Utils:SetBackgroundColor(currencyFrame, 1, 1, 1, currencyIndex % 2 == 0 and 0.01 or 0)
           currencyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)

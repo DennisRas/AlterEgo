@@ -47,4 +47,12 @@ addon.Constants = {
     {value = "rating.desc", text = "Rating (Highest)"},
     {value = "custom",      text = "Custom Order",        tooltipTitle = "Choose your own order", tooltipText = "Place your mouse on the character name to change the order"},
   },
+  -- Currency and UI constants
+  currencies = {
+    ETHEREAL_STRANDS = 3278,
+  },
+  traitUI = {
+    RESHII_WRAPS_SYSTEM_ID = 29,
+    RESHII_WRAPS_TREE_ID = 1115,
+  },
 }

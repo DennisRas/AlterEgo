@@ -8,7 +8,7 @@ alwaysApply: true
 ## Repository boundaries
 - Do not modify `README.md` unless explicitly instructed (player-facing addon description).
 - Do not modify files under `Libs/` (managed by developers only).
-- Documentation for developers lives in `.docs/`. Update after major changes.
+- Context files live in `.cursor/context/` for AI assistance.
 
 ## Types and annotations
 - All addon-specific type definitions must be declared in `Types.lua`.
@@ -40,10 +40,10 @@ alwaysApply: true
 
 ## Documentation
 - `README.md` is for players (addon description/features) - confirm changes with developer.
-- `.docs/README.md` is for developers (navigation/context) - update automatically.
 - `CHANGELOG.md` is for players only. Add new features/changes/bugfixes.
+- `.cursor/context/` contains agent-focused context files for AI assistance.
 - Developers read git logs or GitHub issues/PRs for technical changes and details.
-- Update docs after major changes; docs are for developers, not players.
+- Context files focus on "why" not "what" - avoid duplicating code patterns.
 
 ## Data and errors
 - Most data uses `self.db.global`.
@@ -53,7 +53,7 @@ alwaysApply: true
 ## Player-facing changes
 - When a new user feature is added, propose concise README.md updates for confirmation before editing.
 - Only update README.md for significant features (new modules, major UI changes).
-- Update .docs/README.md automatically when adding new functionality that needs explanation.
+- Update context files when adding new architectural patterns or integration points.
 
 ## Scope of help
 - Optimize for readability and maintainability. Follow existing code style.

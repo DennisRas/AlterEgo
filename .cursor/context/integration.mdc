@@ -1,0 +1,191 @@
+---
+description: Module integration and communication patterns for AlterEgo
+alwaysApply: true
+---
+
+# AlterEgo Module Integration
+
+## Module Communication Patterns
+
+### Direct Module Access
+Modules can access each other through the main addon object:
+```lua
+-- Get reference to another module
+local equipmentModule = addon:GetModule("Equipment")
+local weeklyModule = addon:GetModule("WeeklyAffixes")
+
+-- Call functions directly
+equipmentModule:UpdateDisplay()
+weeklyModule:RefreshData()
+```
+
+### Shared Data Access
+Modules can access shared data through the main addon:
+```lua
+-- Access shared configuration
+local sharedConfig = addon.sharedConfig
+
+-- Access shared utilities
+local utils = addon.Utils
+```
+
+### Event-Based Communication
+Modules can communicate through custom events:
+```lua
+-- Module A: Send event
+addon:SendMessage("AlterEgo_DataUpdated", dataType, newData)
+
+-- Module B: Listen for event
+addon:RegisterMessage("AlterEgo_DataUpdated", function(event, dataType, newData)
+    if dataType == "equipment" then
+        self:HandleEquipmentUpdate(newData)
+    end
+end)
+```
+
+## Core Module Dependencies
+
+### Main Module
+- **Purpose**: Core addon functionality and coordination
+- **Dependencies**: None (base module)
+- **Provides**: Main addon object, shared utilities, core events
+- **Key Functions**: 
+  - `addon:GetModule(name)` - Module access
+  - `addon:SendMessage(event, ...)` - Event broadcasting
+
+### Equipment Module
+- **Purpose**: Equipment management and display
+- **Dependencies**: Main module
+- **Provides**: Equipment data, equipment windows
+- **Integration Points**:
+  - Uses `addon.Window` for UI creation
+  - Stores data in `self.db.global.equipment`
+  - May trigger events when equipment changes
+
+### Weekly Affixes Module
+- **Purpose**: Weekly affix tracking and display
+- **Dependencies**: Main module
+- **Provides**: Affix data, affix windows
+- **Integration Points**:
+  - Uses `addon.Window` for UI creation
+  - Stores data in `self.db.global.weeklyAffixes`
+  - May trigger events when affix data updates
+
+## Database Integration
+
+### Global Data Access
+All modules share the same global database:
+```lua
+-- All modules access the same global data
+self.db = addon.db
+
+-- Access global data
+local characters = self.db.global.characters
+local settings = self.db.global.interface
+local equipment = self.db.global.equipment
+```
+
+### Cross-Module Data Access
+Modules can access shared data through the main addon:
+```lua
+-- From any module, access shared global data
+local characters = addon.db.global.characters
+local settings = addon.db.global.interface
+local equipment = addon.db.global.equipment
+```
+
+## UI Integration
+
+### Window Factory Usage
+All modules use the shared window factory:
+```lua
+-- Standard window creation across modules
+local window = addon.Window:New({
+    name = "ModuleName_WindowType",
+    title = "Window Title",
+    -- ... other options
+})
+```
+
+### Shared UI Components
+Modules can share UI components through the main addon:
+```lua
+-- Access shared UI utilities
+local tableFrame = addon.Table:New(options)
+local utils = addon.Utils
+```
+
+## Event Integration
+
+### Core Events
+Modules can listen to core WoW events:
+```lua
+-- Register for WoW events
+self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+self:RegisterEvent("PLAYER_ENTERING_WORLD")
+```
+
+### Custom Events
+Modules can define and listen to custom events:
+```lua
+-- Define custom event
+addon:SendMessage("AlterEgo_EquipmentChanged", slotId, itemData)
+
+-- Listen to custom event
+addon:RegisterMessage("AlterEgo_EquipmentChanged", function(event, slotId, itemData)
+    self:HandleEquipmentChange(slotId, itemData)
+end)
+```
+
+## Configuration Integration
+
+### Module Configuration
+Modules can provide configuration options:
+```lua
+function Module:GetConfigOptions()
+    return {
+        name = "ModuleName",
+        handler = self,
+        type = "group",
+        args = {
+            enabled = {
+                name = "Enable Module",
+                type = "toggle",
+                get = function() return self.db.global.enabled end,
+                set = function(_, value) self.db.global.enabled = value end
+            }
+        }
+    }
+end
+```
+
+### Shared Configuration
+Modules can access shared configuration:
+```lua
+-- Access shared settings
+local sharedSettings = addon.db.global.sharedSettings
+
+-- Access other module settings
+local equipmentEnabled = addon:GetModule("Equipment").db.global.enabled
+```
+
+## Error Handling Integration
+
+### Cross-Module Error Handling
+Modules should handle errors gracefully when accessing other modules:
+```lua
+local equipmentModule = addon:GetModule("Equipment")
+if equipmentModule then
+    equipmentModule:SomeFunction()
+else
+    -- Handle missing module gracefully
+    addon:Print("Equipment module not available")
+end
+```
+
+### Shared Error Messages
+Use consistent error message patterns across modules:
+```lua
+-- Standard error format
+error("ModuleName:FunctionName: descriptive error message")
+```

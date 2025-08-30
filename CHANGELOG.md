@@ -7,6 +7,12 @@
 - Added a new setting to toggle the dungeon section on/off
   - When disabled, hides all Mythic+ dungeon related content
   - Can be found in Settings under the "Dungeons" section
+- Added click functionality to Ethereal Strands currency tooltip
+  - Click to open the Reshii Wraps Cloak trait/talent UI when logged into the character
+  - Shows appropriate tooltip text based on whether you're logged into the character or not
+- Added visual indicator for Ethereal Strands currency when cloak trait tree has unspent points
+  - Shows a yellow star (⭐) next to the currency value when the Reshii Wraps cloak trait tree isn't fully filled out
+  - Tooltip now displays whether the cloak trait tree is fully upgraded or has available points to spend
 
 ## v1.3.2 - 2025-08-06
 
