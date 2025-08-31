@@ -32,6 +32,7 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceBucket-3.0\AceBucket-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 
 Constants.lua
 Utils.lua

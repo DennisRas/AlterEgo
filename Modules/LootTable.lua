@@ -4,31 +4,178 @@ local addonName = select(1, ...)
 local addon = select(2, ...)
 
 ---@class AE_Module_LootTable : AceModule
-local Module = addon.Core:NewModule("LootTable", "AceEvent-3.0", "AceTimer-3.0")
+local Module = addon.Core:NewModule("LootTable", "AceEvent-3.0", "AceTimer-3.0", "AceSerializer-3.0")
 addon.Module_LootTable = Module
 
+---Initialize the loot table module
 function Module:OnInitialize()
-  -- Initialize module
-  -- - Set up database access ✓
-  -- - Initialize loot cache ✓
-  -- - Create window ✓
-
-  -- Access shared database through main addon
-  self.db = addon.db
-
-  -- Initialize loot cache
-  self.lootCache = {}
+  self.db = addon.Data.db
+  self.cache = {
+    loot = {},
+    classSpec = nil,
+    instances = nil,
+    encounters = {},
+  }
   self.isCacheInitialized = false
-
-  -- Create window
+  self:RegisterStaticPopups()
   self:CreateWindow()
 end
 
+---Compress loot cache data for storage
+---@return string
+function Module:CompressCache()
+  -- Convert cache to a minimal representation
+  local compressed = {}
+
+  for itemID, item in pairs(self.cache.loot) do
+    local compressedItem = {
+      id = item.itemID,
+      n = item.name,
+      l = item.link,
+      q = item.quality,
+      s = item.slot,
+      t = item.texture,
+      a = item.armorType,
+      iid = item.instanceID,
+      jid = item.journalInstanceID,
+      iname = item.instanceName,
+      itype = item.instanceType,
+      sid = item.seasonID,
+      e = {},
+      d = {},
+      c = {},
+      sp = {},
+    }
+
+    -- Compress encounters
+    for encounterID, encounter in pairs(item.encounters) do
+      compressedItem.e[encounterID] = {
+        n = encounter.name,
+        i = encounter.index,
+        jid = encounter.journalEncounterID,
+      }
+    end
+
+    -- Compress difficulties (convert to array)
+    for difficulty, _ in pairs(item.difficulties) do
+      table.insert(compressedItem.d, difficulty)
+    end
+
+    -- Compress classes (convert to array)
+    for classID, _ in pairs(item.classes) do
+      table.insert(compressedItem.c, classID)
+    end
+
+    -- Compress specs (convert to array)
+    for specID, _ in pairs(item.specs) do
+      table.insert(compressedItem.sp, specID)
+    end
+
+    compressed[itemID] = compressedItem
+  end
+
+  -- Serialize to string
+  return self:Serialize(compressed)
+end
+
+---Decompress loot cache data from storage
+---@param compressedData string
+---@return boolean success
+function Module:DecompressCache(compressedData)
+  if not compressedData or compressedData == "" then
+    return false
+  end
+
+  -- Deserialize from string
+  local success, compressed = self:Deserialize(compressedData)
+  if not success then
+    return false
+  end
+
+  -- Ensure compressed is a table
+  if type(compressed) ~= "table" then
+    return false
+  end
+
+  -- Convert back to full representation
+  self.cache.loot = {}
+
+  for itemID, compressedItem in pairs(compressed) do
+    local item = {
+      itemID = compressedItem.id,
+      name = compressedItem.n,
+      link = compressedItem.l,
+      quality = compressedItem.q,
+      slot = compressedItem.s,
+      texture = compressedItem.t,
+      armorType = compressedItem.a,
+      instanceID = compressedItem.iid,
+      journalInstanceID = compressedItem.jid,
+      instanceName = compressedItem.iname,
+      instanceType = compressedItem.itype,
+      seasonID = compressedItem.sid,
+      encounters = {},
+      difficulties = {},
+      classes = {},
+      specs = {},
+    }
+
+    -- Decompress encounters
+    for encounterID, encounter in pairs(compressedItem.e) do
+      item.encounters[encounterID] = {
+        name = encounter.n,
+        index = encounter.i,
+        journalEncounterID = encounter.jid,
+      }
+    end
+
+    -- Decompress difficulties
+    for _, difficulty in ipairs(compressedItem.d) do
+      item.difficulties[difficulty] = true
+    end
+
+    -- Decompress classes
+    for _, classID in ipairs(compressedItem.c) do
+      item.classes[classID] = true
+    end
+
+    -- Decompress specs
+    for _, specID in ipairs(compressedItem.sp) do
+      item.specs[specID] = true
+    end
+
+    self.cache.loot[itemID] = item
+  end
+
+  return true
+end
+
+---Save the current loot cache to the database
+function Module:SaveCacheToDatabase()
+  if not self.cache.loot or not next(self.cache.loot) then
+    return
+  end
+
+  local currentSeason = addon.Data:GetCurrentSeason()
+  local compressedData = self:CompressCache()
+
+  if compressedData then
+    self.db.global.lootCache = {
+      version = 1,
+      seasonID = currentSeason,
+      lastUpdate = time(),
+      compressedData = compressedData,
+    }
+  end
+end
+
+---Enable the loot table module
 function Module:OnEnable()
   -- TODO: Register events if needed
   -- - No events currently needed
 end
 
+---Disable the loot table module
 function Module:OnDisable()
   -- TODO: Cleanup if needed
   -- - No cleanup currently needed
@@ -36,12 +183,6 @@ end
 
 ---Create the loot table window
 function Module:CreateWindow()
-  -- Create main window ✓
-  -- - Use addon.Window:New() ✓
-  -- - Set up sidebar and body ✓
-  -- - Hide window initially ✓
-
-  -- Create main window with built-in sidebar
   self.window = addon.Window:New({
     title = "Loot Table",
     sidebar = 250, -- Use built-in sidebar functionality
@@ -52,16 +193,13 @@ function Module:CreateWindow()
     maximizable = true,
   })
 
-  -- Create a simple overlay frame that covers both sidebar and content (below titlebar)
   self.overlayFrame = CreateFrame("Frame", "$parentOverlay", self.window)
   self.overlayFrame:SetFrameLevel(self.window:GetFrameLevel() + 10)
-  self.overlayFrame:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -30)       -- Below titlebar
-  self.overlayFrame:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT", 0, 0) -- Cover entire window
+  self.overlayFrame:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -30)
+  self.overlayFrame:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT", 0, 0)
 
-  -- Add background to make overlay visible using Utils (use header color from constants)
   addon.Utils:SetBackgroundColor(self.overlayFrame, 0, 0, 0, 0.95)
 
-  -- Create status bar centered in the overlay
   self.statusBar = addon.Input:CreateStatusBar({
     parent = self.overlayFrame,
     text = "Ready",
@@ -72,43 +210,24 @@ function Module:CreateWindow()
     progressColor = {r = 0.1, g = 0.3, b = 0.5, a = 1.0}, -- Darker, more muted blue
   })
 
-  -- Center the status bar in the overlay
   self.statusBar:SetPoint("CENTER", self.overlayFrame, "CENTER", 0, 0)
 
-  -- Hide overlay initially (will show when loading starts)
   self.overlayFrame:Hide()
-
-  -- Create sidebar and content using the built-in sidebar
   self:CreateSidebar()
   self:CreateContent()
-
-  -- Hide window initially
+  self:AddCacheResetButton()
   self.window:Hide()
 end
 
----Create the sidebar
+---Create the sidebar area
 function Module:CreateSidebar()
-  -- Use the built-in sidebar from the window
   self.sidebar = self.window.sidebar
-
-  -- TODO: Add filter components using addon.Input
-  -- - Search textbox
-  -- - Class dropdown
-  -- - Spec dropdown
-  -- - Instance dropdown
-  -- - Clear filters button
 end
 
 ---Create the main content area
 function Module:CreateContent()
-  -- Create main content area ✓
-  -- - Add table for displaying loot items ✓
-  -- - Add status text (removed - redundant with status bar)
-
-  -- Use the existing body area directly (no need for extra content frame)
   self.content = self.window.body
 
-  -- Create table for loot items
   self.lootTable = addon.Table:New({
     rows = {
       height = 22,
@@ -122,35 +241,103 @@ function Module:CreateContent()
     },
   })
 
-  -- Set parent and position
   self.lootTable:SetParent(self.content)
   self.lootTable:SetAllPoints()
 end
 
----Calculate the total number of steps for cache initialization
-function Module:CalculateCacheSteps()
-  local totalSteps = 0
-  -- Get current season
-  local seasonID = addon.Data:GetCurrentSeason()
+---Add cache reset button to titlebar
+function Module:AddCacheResetButton()
+  self.window:AddTitlebarButton({
+    name = "CacheReset",
+    icon = addon.Constants.media.IconSettings,
+    tooltipTitle = "Reset Cache",
+    tooltipDescription = "Clear cached loot data and rebuild from scratch",
+    onClick = function()
+      self:ResetCache()
+    end,
+  })
+end
 
-  -- Get raids and dungeons for current season
-  local raids = addon.Data:GetRaids()
-  local dungeons = addon.Data:GetDungeons()
+---Reset the loot cache and rebuild
+function Module:ResetCache()
+  -- Show confirmation dialog
+  StaticPopup_Show("ALTEREGO_LOOT_CACHE_RESET")
+end
 
-  -- Prepare instance list
+---Perform the actual cache reset
+function Module:PerformCacheReset()
+  -- Clear all cache data
+  self.cache.loot = {}
+  self.cache.classSpec = nil
+  self.cache.instances = nil
+  self.cache.encounters = {}
+  self.isCacheInitialized = false
+
+  -- Clear database cache
+  self.db.global.lootCache = {
+    version = 0,
+    seasonID = 0,
+    lastUpdate = 0,
+    compressedData = "",
+  }
+
+  -- Clear any existing cache state
+  if self.cacheState then
+    self:CancelAllTimers()
+    self.cacheState = nil
+  end
+
+  -- Hide overlay and show status
+  self:HideOverlay()
+  self:ShowOverlay("Cache reset. Rebuilding...")
+
+  -- Start fresh cache building
+  self:BuildCache()
+end
+
+---Register static popup dialogs
+function Module:RegisterStaticPopups()
+  StaticPopupDialogs["ALTEREGO_LOOT_CACHE_RESET"] = {
+    text = "Reset Loot Cache?\n\nThis will clear all cached loot data and rebuild it from scratch. This may take a few moments.",
+    button1 = "Reset",
+    button2 = "Cancel",
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+    OnAccept = function()
+      self:PerformCacheReset()
+    end,
+  }
+end
+
+---Get current season instances (cached for session)
+---@return table
+function Module:GetCurrentSeasonInstances()
+  if self.cache.instances then
+    return self.cache.instances
+  end
+
   local instances = {}
-  for _, raid in ipairs(raids) do
-    if raid.seasonID == seasonID then
-      table.insert(instances, {instance = raid, type = "raid"})
-    end
+
+  for _, raid in ipairs(addon.Data:GetRaids()) do
+    table.insert(instances, {instance = raid, type = "raid"})
   end
-  for _, dungeon in ipairs(dungeons) do
-    if dungeon.seasonID == seasonID then
-      table.insert(instances, {instance = dungeon, type = "dungeon"})
-    end
+  for _, dungeon in ipairs(addon.Data:GetDungeons()) do
+    table.insert(instances, {instance = dungeon, type = "dungeon"})
   end
 
-  -- Prepare class/spec combinations
+  self.cache.instances = instances
+  return instances
+end
+
+---Get all class/spec combinations (cached for session)
+---@return table
+function Module:GetClassSpecCombinations()
+  if self.cache.classSpec then
+    return self.cache.classSpec
+  end
+
   local classSpecs = {}
   for classID = 1, GetNumClasses() do
     for specIndex = 1, GetNumSpecializationsForClassID(classID) do
@@ -161,18 +348,24 @@ function Module:CalculateCacheSteps()
     end
   end
 
-  totalSteps = #instances * #classSpecs
-  return totalSteps
+  self.cache.classSpec = classSpecs
+  return classSpecs
 end
 
----Update status display
-function Module:UpdateStatus(text, progress, maxProgress)
-  if self.statusBar and self.overlayFrame then
-    -- Show overlay when updating
-    if not self.overlayFrame:IsShown() then
-      self.overlayFrame:Show()
-    end
+---Calculate the total number of steps for cache initialization
+---@return number Total steps needed for cache building
+function Module:CalculateCacheSteps()
+  local instances = self:GetCurrentSeasonInstances()
+  local classSpecs = self:GetClassSpecCombinations()
+  return #instances * #classSpecs
+end
 
+---Update status display (UI only - no state management)
+---@param text string? Status text to display
+---@param progress number? Current progress value
+---@param maxProgress number? Maximum progress value
+function Module:UpdateStatus(text, progress, maxProgress)
+  if self.statusBar then
     self.statusBar:SetText(text or "Processing...")
     if progress and maxProgress then
       self.statusBar:SetValue(progress)
@@ -181,62 +374,81 @@ function Module:UpdateStatus(text, progress, maxProgress)
   end
 end
 
----Initialize the loot cache from encounter journal
+---Initialize cache - load from storage or build if needed
 function Module:InitializeCache()
   if self.isCacheInitialized then
     return
   end
 
-  -- Reset encounter journal filters to get all items
+  local currentSeason = addon.Data:GetCurrentSeason()
+  local cachedData = self.db.global.lootCache
+
+  if cachedData and cachedData.seasonID == currentSeason and cachedData.compressedData and cachedData.compressedData ~= "" then
+    if self:DecompressCache(cachedData.compressedData) then
+      self.isCacheInitialized = true
+      self:PopulateTable()
+      self:HideOverlay()
+      return
+    end
+  end
+
+  -- No valid cache found - start building
+  self:BuildCache()
+end
+
+---Build cache using timer-based processing
+function Module:BuildCache()
+  self:ShowOverlay("Preparing to cache loot data...")
+
   self.savedSlotFilter = C_EncounterJournal.GetSlotFilter()
   C_EncounterJournal.ResetSlotFilter()
 
-  -- Initialize tracking data
+  self.cache.loot = {}
   self.itemTypeCounts = {weapons = 0, armor = 0, other = 0}
   self.uniqueSlots = {}
-  self.lootCache = {}
 
-  -- Get current season instances
-  local seasonID = addon.Data:GetCurrentSeason()
-  local instances = {}
-
-  for _, raid in ipairs(addon.Data:GetRaids()) do
-    if raid.seasonID == seasonID then
-      table.insert(instances, {instance = raid, type = "raid"})
-    end
-  end
-
-  for _, dungeon in ipairs(addon.Data:GetDungeons()) do
-    if dungeon.seasonID == seasonID then
-      table.insert(instances, {instance = dungeon, type = "dungeon"})
-    end
-  end
-
-  -- Prepare class/spec combinations
-  local classSpecs = {}
-  for classID = 1, GetNumClasses() do
-    for specIndex = 1, GetNumSpecializationsForClassID(classID) do
-      local specID = GetSpecializationInfoForClassID(classID, specIndex)
-      if specID then
-        table.insert(classSpecs, {classID = classID, specID = specID})
-      end
-    end
-  end
-
-  -- Initialize progressive loading
+  local instances = self:GetCurrentSeasonInstances()
+  local classSpecs = self:GetClassSpecCombinations()
   local totalSteps = self:CalculateCacheSteps()
-  self:UpdateStatus("Preparing to cache loot data...", 0, totalSteps)
 
   self.cacheState = {
-    instances = instances,
-    classSpecs = classSpecs,
     currentInstanceIndex = 1,
     currentClassSpecIndex = 1,
-    totalSteps = totalSteps,
     currentStep = 0,
   }
 
   self:ProcessNextCacheStep()
+end
+
+---Show overlay and set initial status
+---@param text string
+function Module:ShowOverlay(text)
+  if self.overlayFrame then
+    self.overlayFrame:Show()
+  end
+  if self.statusBar then
+    self.statusBar:SetText(text or "Processing...")
+  end
+end
+
+---Hide overlay
+function Module:HideOverlay()
+  if self.overlayFrame then
+    self.overlayFrame:Hide()
+  end
+end
+
+---Handle cache processing completion
+function Module:OnCacheProcessingComplete()
+  self:PopulateTable()
+  self:HideOverlay()
+
+  if self.savedSlotFilter then
+    C_EncounterJournal.SetSlotFilter(self.savedSlotFilter)
+  end
+  self.savedSlotFilter = nil
+
+  self:SaveCacheToDatabase()
 end
 
 ---Process next step in cache initialization
@@ -246,71 +458,54 @@ function Module:ProcessNextCacheStep()
   end
 
   local state = self.cacheState
+  local instances = self:GetCurrentSeasonInstances()
+  local classSpecs = self:GetClassSpecCombinations()
+  local totalSteps = self:CalculateCacheSteps()
 
-  -- Check if we're done
-  if state.currentInstanceIndex > #state.instances then
-    -- Convert from lookup table to array for easier iteration
-    local itemArray = {}
-    for itemID, item in pairs(self.lootCache) do
-      table.insert(itemArray, item)
-    end
-    self.lootCache = itemArray
-
+  if state.currentInstanceIndex > #instances then
     self.isCacheInitialized = true
-
-    -- Update status
-    self:UpdateStatus("Caching complete!", state.totalSteps, state.totalSteps)
-
-    -- Populate table with cached items
-    self:PopulateTable()
-
-    -- Hide overlay after completion
-    if self.overlayFrame then
-      self.overlayFrame:Hide()
-    end
-
-    -- Restore player's encounter journal slot filter
-    -- This follows the same pattern as the official encounter journal code
-    if self.savedSlotFilter then
-      C_EncounterJournal.SetSlotFilter(self.savedSlotFilter)
-    end
-    self.savedSlotFilter = nil
-
-    -- Clear cache state
+    self:UpdateStatus("Caching complete!", totalSteps, totalSteps)
+    self:OnCacheProcessingComplete()
     self.cacheState = nil
-
     return
   end
 
-  local instanceData = state.instances[state.currentInstanceIndex]
-  local classSpecData = state.classSpecs[state.currentClassSpecIndex]
+  local instanceData = instances[state.currentInstanceIndex]
+  local classSpecData = classSpecs[state.currentClassSpecIndex]
 
-  -- Update status with percentage and instance info
-  local percentage = math.floor((state.currentStep / state.totalSteps) * 100)
+  local percentage = math.floor((state.currentStep / totalSteps) * 100)
   local statusText = string.format("Caching %s - %d%%",
                                    instanceData.instance.name,
                                    percentage)
-  self:UpdateStatus(statusText, state.currentStep, state.totalSteps)
+  self:UpdateStatus(statusText, state.currentStep, totalSteps)
 
-  -- Process this instance/class/spec combination
-  self:ProcessInstanceClassSpec(instanceData.instance, instanceData.type, classSpecData.classID, classSpecData.specID)
+  local encounters = self:GetInstanceEncounters(instanceData.instance, instanceData.type)
+  for _, encounter in pairs(encounters) do
+    self:ProcessEncounterLoot(instanceData.instance, encounter, classSpecData.classID, classSpecData.specID, instanceData.type)
+  end
 
-  -- Move to next step
   state.currentClassSpecIndex = state.currentClassSpecIndex + 1
-  if state.currentClassSpecIndex > #state.classSpecs then
+  if state.currentClassSpecIndex > #classSpecs then
     state.currentClassSpecIndex = 1
     state.currentInstanceIndex = state.currentInstanceIndex + 1
   end
   state.currentStep = state.currentStep + 1
 
-  -- Schedule next step with minimal delay for faster processing
   self:ScheduleTimer(function()
                        self:ProcessNextCacheStep()
-                     end, 0.01) -- 10ms delay - fast but still prevents freezing
+                     end, 0.01)
 end
 
----Get encounter information for an instance
+---Get encounter information for an instance (cached for session)
+---@param instance table Instance data from addon.Data
+---@param instanceType string Type of instance ("raid" or "dungeon")
+---@return table encounters
 function Module:GetInstanceEncounters(instance, instanceType)
+  local cacheKey = instance.journalInstanceID
+  if self.cache.encounters[cacheKey] then
+    return self.cache.encounters[cacheKey]
+  end
+
   local encounters = {}
 
   -- Select the instance in the encounter journal
@@ -341,150 +536,144 @@ function Module:GetInstanceEncounters(instance, instanceType)
     _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, instance.journalInstanceID)
   end
 
+  self.cache.encounters[cacheKey] = encounters
   return encounters
 end
 
----Process a single instance/class/spec combination
-function Module:ProcessInstanceClassSpec(instance, instanceType, classID, specID)
-  -- Get encounter information for this instance (only once per instance)
-  if not self.instanceEncounters then
-    self.instanceEncounters = {}
-  end
+---Process loot for a single encounter/class/spec combination
+---@param instance table Instance data from addon.Data
+---@param encounter table Encounter data
+---@param classID number Class ID
+---@param specID number Specialization ID
+---@param instanceType string Type of instance ("raid" or "dungeon")
+function Module:ProcessEncounterLoot(instance, encounter, classID, specID, instanceType)
+  -- Set up encounter journal for this specific encounter
+  EJ_ClearSearch()
+  EJ_ResetLootFilter()
+  EJ_SelectInstance(instance.journalInstanceID)
+  EJ_SelectEncounter(encounter.journalEncounterID)
+  EJ_SetLootFilter(classID, specID)
 
-  local instanceKey = instance.journalInstanceID
-  if not self.instanceEncounters[instanceKey] then
-    self.instanceEncounters[instanceKey] = self:GetInstanceEncounters(instance, instanceType)
-  end
+  -- Get loot for this encounter/class/spec combination
+  for i = 1, EJ_GetNumLoot() do
+    local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
+    if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
+      local itemID = lootInfo.itemID
 
-  local encounters = self.instanceEncounters[instanceKey]
+      -- Track unique slots for debugging
+      if lootInfo.slot then
+        self.uniqueSlots[lootInfo.slot] = (self.uniqueSlots[lootInfo.slot] or 0) + 1
+      end
 
-  -- Process each encounter to get its loot
-  for encounterIndex, encounter in pairs(encounters) do
-    -- Set up encounter journal for this specific encounter
-    EJ_ClearSearch()
-    EJ_ResetLootFilter()
-    EJ_SelectInstance(instance.journalInstanceID)
-    EJ_SelectEncounter(encounter.journalEncounterID)
-    EJ_SetLootFilter(classID, specID)
+      -- Count item types for debugging (use slot to determine type)
+      if lootInfo.slot and (lootInfo.slot == "One-Hand" or lootInfo.slot == "Two-Hand" or lootInfo.slot == "Main Hand" or lootInfo.slot == "Off Hand") then
+        self.itemTypeCounts.weapons = self.itemTypeCounts.weapons + 1
+      elseif lootInfo.slot and (lootInfo.slot == "Head" or lootInfo.slot == "Chest" or lootInfo.slot == "Shoulder" or lootInfo.slot == "Back" or lootInfo.slot == "Wrist" or lootInfo.slot == "Hands" or lootInfo.slot == "Waist" or lootInfo.slot == "Legs" or lootInfo.slot == "Feet" or lootInfo.slot == "Finger" or lootInfo.slot == "Trinket") then
+        self.itemTypeCounts.armor = self.itemTypeCounts.armor + 1
+      else
+        self.itemTypeCounts.other = self.itemTypeCounts.other + 1
+      end
 
-    -- Get loot for this encounter/class/spec combination
-    for i = 1, EJ_GetNumLoot() do
-      local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
-      if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
-        local itemID = lootInfo.itemID
+      -- Find or create item in cache
+      local item = self.cache.loot[itemID]
+      if not item then
+        item = {
+          -- Basic item info
+          itemID = itemID,
+          name = lootInfo.name,
+          link = lootInfo.link,
+          quality = lootInfo.itemQuality,
+          slot = lootInfo.slot,
+          texture = lootInfo.icon,
+          armorType = lootInfo.armorType or "Unknown",
 
-        -- Track unique slots for debugging
-        if lootInfo.slot then
-          self.uniqueSlots[lootInfo.slot] = (self.uniqueSlots[lootInfo.slot] or 0) + 1
-        end
+          -- Instance info
+          instanceID = instanceType == "raid" and instance.instanceID or instance.challengeModeID,
+          journalInstanceID = instance.journalInstanceID,
+          instanceName = instance.name,
+          instanceType = instanceType,
+          seasonID = instance.seasonID,
 
-        -- Count item types for debugging (use slot to determine type)
-        if lootInfo.slot and (lootInfo.slot == "One-Hand" or lootInfo.slot == "Two-Hand" or lootInfo.slot == "Main Hand" or lootInfo.slot == "Off Hand") then
-          self.itemTypeCounts.weapons = self.itemTypeCounts.weapons + 1
-        elseif lootInfo.slot and (lootInfo.slot == "Head" or lootInfo.slot == "Chest" or lootInfo.slot == "Shoulder" or lootInfo.slot == "Back" or lootInfo.slot == "Wrist" or lootInfo.slot == "Hands" or lootInfo.slot == "Waist" or lootInfo.slot == "Legs" or lootInfo.slot == "Feet" or lootInfo.slot == "Finger" or lootInfo.slot == "Trinket") then
-          self.itemTypeCounts.armor = self.itemTypeCounts.armor + 1
-        else
-          self.itemTypeCounts.other = self.itemTypeCounts.other + 1
-        end
+          -- Metadata
+          stats = C_Item.GetItemStats(lootInfo.link),
+          encounters = {},
+          difficulties = {},
+          classes = {},
+          specs = {},
 
-        -- Find or create item in cache
-        local item = self.lootCache[itemID]
-        if not item then
-          item = {
-            -- Basic item info
-            itemID = itemID,
-            name = lootInfo.name,
-            link = lootInfo.link,
-            quality = lootInfo.itemQuality,
-            slot = lootInfo.slot,
-            texture = lootInfo.icon,
-            armorType = lootInfo.armorType or "Unknown",
+          -- Error flags
+          handError = lootInfo.handError,
+          weaponTypeError = lootInfo.weaponTypeError,
+          filterType = lootInfo.filterType,
+        }
+        self.cache.loot[itemID] = item
+      end
 
-            -- Instance info
-            instanceID = instanceType == "raid" and instance.instanceID or instance.challengeModeID,
-            instanceName = instance.name,
-            instanceType = instanceType,
-            seasonID = instance.seasonID,
+      -- Mark this class and spec as able to use this item
+      item.classes[classID] = true
+      item.specs[specID] = true
 
-            -- Metadata
-            stats = C_Item.GetItemStats(lootInfo.link),
-            encounters = {},
-            difficulties = {},
-            classes = {},
-            specs = {},
-
-            -- Error flags
-            handError = lootInfo.handError,
-            weaponTypeError = lootInfo.weaponTypeError,
-            filterType = lootInfo.filterType,
-          }
-          self.lootCache[itemID] = item
-        end
-
-        -- Mark this class and spec as able to use this item
-        item.classes[classID] = true
-        item.specs[specID] = true
-
-        -- Track encounter source
-        local numEncounters = EJ_GetNumEncountersForLootByIndex(i)
-        if numEncounters == 1 then
+      -- Track encounter source
+      local numEncounters = EJ_GetNumEncountersForLootByIndex(i)
+      if numEncounters == 1 then
+        item.encounters[encounter.journalEncounterID] = {
+          name = encounter.name,
+          index = encounter.index,
+          journalEncounterID = encounter.journalEncounterID,
+        }
+      elseif numEncounters == 2 then
+        local itemInfoSecond = C_EncounterJournal.GetLootInfoByIndex(i, 2)
+        local secondEncounterID = itemInfoSecond and itemInfoSecond.encounterID
+        if encounter.journalEncounterID and secondEncounterID then
           item.encounters[encounter.journalEncounterID] = {
             name = encounter.name,
             index = encounter.index,
             journalEncounterID = encounter.journalEncounterID,
           }
-        elseif numEncounters == 2 then
-          local itemInfoSecond = C_EncounterJournal.GetLootInfoByIndex(i, 2)
-          local secondEncounterID = itemInfoSecond and itemInfoSecond.encounterID
-          if encounter.journalEncounterID and secondEncounterID then
-            item.encounters[encounter.journalEncounterID] = {
-              name = encounter.name,
-              index = encounter.index,
-              journalEncounterID = encounter.journalEncounterID,
+          if secondEncounterID then
+            item.encounters[secondEncounterID] = {
+              name = "Multiple Encounters",
+              index = 0,
+              journalEncounterID = secondEncounterID,
             }
-            if secondEncounterID then
-              item.encounters[secondEncounterID] = {
-                name = "Multiple Encounters",
-                index = 0,
-                journalEncounterID = secondEncounterID,
-              }
-            end
           end
-        elseif numEncounters > 2 then
-          item.encounters[encounter.journalEncounterID] = {
-            name = "Multiple Encounters",
-            index = encounter.index,
-            journalEncounterID = encounter.journalEncounterID,
-          }
         end
-
-        -- Track difficulty
-        if instanceType == "raid" then
-          local difficultyID = EJ_GetDifficulty()
-          local difficultyName = "Normal"
-
-          if difficultyID == 15 then
-            difficultyName = "Heroic"
-          elseif difficultyID == 16 then
-            difficultyName = "Mythic"
-          elseif difficultyID == 14 then
-            difficultyName = "LFR"
-          end
-
-          item.difficulties[difficultyName] = true
-        else
-          item.difficulties["Mythic+"] = true
-        end
+      elseif numEncounters > 2 then
+        item.encounters[encounter.journalEncounterID] = {
+          name = "Multiple Encounters",
+          index = encounter.index,
+          journalEncounterID = encounter.journalEncounterID,
+        }
       end
+
+      -- Track difficulty
+      if instanceType == "raid" then
+        local difficultyID = EJ_GetDifficulty()
+        local difficultyName = "Normal"
+
+        if difficultyID == 15 then
+          difficultyName = "Heroic"
+        elseif difficultyID == 16 then
+          difficultyName = "Mythic"
+        elseif difficultyID == 14 then
+          difficultyName = "LFR"
+        end
+
+        item.difficulties[difficultyName] = true
+      else
+        item.difficulties["Mythic+"] = true
+      end
+
+      -- Add class/spec info
+      item.classes[classID] = true
+      item.specs[specID] = true
     end
   end
-
-  EJ_ResetLootFilter()
 end
 
 ---Populate the table with cached items
 function Module:PopulateTable()
-  if not self.lootTable or not self.lootCache then
+  if not self.lootTable or not self.cache.loot then
     return
   end
 
@@ -524,7 +713,7 @@ function Module:PopulateTable()
   end
 
   -- Add item rows
-  for _, item in ipairs(self.lootCache) do
+  for itemID, item in pairs(self.cache.loot) do
     -- Apply quality color to item name
     local itemText = item.name or "Unknown Item"
     if item.quality then
@@ -588,9 +777,65 @@ function Module:PopulateTable()
         },
         {
           text = sourceText,
+          onClick = function()
+            -- Open encounter journal to the first encounter for this item
+            if item.encounters and next(item.encounters) then
+              for _, encounter in pairs(item.encounters) do
+                if encounter.journalEncounterID then
+                  EJ_SelectInstance(item.journalInstanceID)
+                  EJ_SelectEncounter(encounter.journalEncounterID)
+                  EncounterJournal_LoadUI()
+                  EncounterJournal_OpenJournal()
+                  break -- Open to first encounter
+                end
+              end
+            end
+          end,
+          onEnter = function(columnFrame)
+            -- Show tooltip indicating clickable
+            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Click to open Encounter Journal")
+            GameTooltip:AddLine("Opens to the encounter that drops this item", 1, 1, 1, true)
+            GameTooltip:Show()
+            -- Change cursor to indicate clickable
+            columnFrame:SetScript("OnUpdate", function()
+              if columnFrame:IsMouseOver() then
+                SetCursor("Interface\\Cursor\\Point.blp")
+              end
+            end)
+          end,
+          onLeave = function(columnFrame)
+            GameTooltip:Hide()
+            ResetCursor()
+            columnFrame:SetScript("OnUpdate", nil)
+          end,
         },
         {
           text = item.instanceName or "Unknown",
+          onClick = function()
+            -- Open encounter journal to the instance
+            EJ_SelectInstance(item.journalInstanceID)
+            EncounterJournal_LoadUI()
+            EncounterJournal_OpenJournal()
+          end,
+          onEnter = function(columnFrame)
+            -- Show tooltip indicating clickable
+            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Click to open Encounter Journal")
+            GameTooltip:AddLine("Opens to the instance overview", 1, 1, 1, true)
+            GameTooltip:Show()
+            -- Change cursor to indicate clickable
+            columnFrame:SetScript("OnUpdate", function()
+              if columnFrame:IsMouseOver() then
+                SetCursor("Interface\\Cursor\\Point.blp")
+              end
+            end)
+          end,
+          onLeave = function(columnFrame)
+            GameTooltip:Hide()
+            ResetCursor()
+            columnFrame:SetScript("OnUpdate", nil)
+          end,
         },
       },
     }
@@ -665,11 +910,14 @@ end
 
 ---Show the loot table window
 function Module:ShowWindow()
-  self:InitializeCache()
-
   if self.window then
     self.window:Show()
   end
+
+  -- Ensure overlay is hidden initially
+  self:HideOverlay()
+
+  self:InitializeCache()
 end
 
 ---Hide the loot table window
