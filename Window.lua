@@ -37,7 +37,11 @@ function Window:New(options)
   window:SetToplevel(true)
   window:SetMovable(true)
   window:SetPoint(unpack(window.config.point))
-  window:SetSize(300, 300)
+  -- Set initial size - use provided width/height or default to 300x300
+  local initialWidth = options and options.width or 300
+  local initialHeight = options and options.height or 300
+  window:SetSize(initialWidth, initialHeight)
+  
   window:EnableMouse(true) -- Disable click-throughs
   window:SetParent(window.config.parent)
   window:SetClampedToScreen(true)
@@ -76,6 +80,11 @@ function Window:New(options)
       h = h + TITLEBAR_HEIGHT
     end
     window:SetSize(w, h)
+  end
+
+  -- If width/height were provided in options, set the body size properly
+  if options and options.width and options.height then
+    window:SetBodySize(options.width, options.height)
   end
 
   -- Border

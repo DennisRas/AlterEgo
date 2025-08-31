@@ -380,6 +380,12 @@
 ---@field sizeIcon number
 ---@field placeholder string
 
+---@class AE_InputOptionsStatusBar : AE_InputOptionsBase
+---@field text string?
+---@field value number?
+---@field maxValue number?
+---@field progressColor table<string, number>?
+
 -- =============================================================
 -- Types: Input Components (Custom AE Types)
 -- =============================================================
@@ -393,7 +399,7 @@
 ---@field onLeaveHandler fun(self: AE_Button)
 ---@field Update fun(self: AE_Button)
 ---@field updateCommon fun(self: AE_Button)
----@field setupCommonScripts fun(self: AE_Button)
+---@field IsEnabled fun(self: AE_Button): boolean
 
 ---@class AE_Textbox : EditBox
 ---@field config AE_InputOptionsTextbox
@@ -401,11 +407,9 @@
 ---@field border Frame
 ---@field text FontString
 ---@field OnChange fun(self: AE_Textbox)
----@field onEnterHandler fun(self: AE_Textbox)
----@field onLeaveHandler fun(self: AE_Textbox)
 ---@field Update fun(self: AE_Textbox)
 ---@field updateCommon fun(self: AE_Textbox)
----@field setupCommonScripts fun(self: AE_Textbox)
+---@field IsEnabled fun(self: AE_Textbox): boolean
 
 ---@class AE_Checkbox : Button
 ---@field config AE_InputOptionsCheckbox
@@ -418,7 +422,7 @@
 ---@field onLeaveHandler fun(self: AE_Checkbox)
 ---@field Update fun(self: AE_Checkbox)
 ---@field updateCommon fun(self: AE_Checkbox)
----@field setupCommonScripts fun(self: AE_Checkbox)
+---@field IsEnabled fun(self: AE_Checkbox): boolean
 
 ---@class AE_Dropdown : Frame
 ---@field config AE_InputOptionsDropdown
@@ -426,23 +430,51 @@
 ---@field items AE_InputOptionsDropdownItem[]
 ---@field value string
 ---@field expanded boolean
----@field button Button
----@field border Frame
+---@field button Frame
 ---@field list Frame
----@field ClearItems fun(self: AE_Dropdown)
+---@field border Frame
 ---@field SetItems fun(self: AE_Dropdown, items: AE_InputOptionsDropdownItem[])
 ---@field AddItem fun(self: AE_Dropdown, item: AE_InputOptionsDropdownItem)
 ---@field RemoveItem fun(self: AE_Dropdown, item: AE_InputOptionsDropdownItem)
----@field SetExpanded fun(self: AE_Dropdown, state: boolean)
 ---@field SetValue fun(self: AE_Dropdown, value: string)
 ---@field GetValue fun(self: AE_Dropdown): string
+---@field SetExpanded fun(self: AE_Dropdown, state: boolean)
+---@field ClearItems fun(self: AE_Dropdown)
+---@field Update fun(self: AE_Dropdown)
+---@field UpdateList fun(self: AE_Dropdown)
 ---@field onClickHandler fun(self: AE_Dropdown)
 ---@field onEnterHandler fun(self: AE_Dropdown)
 ---@field onLeaveHandler fun(self: AE_Dropdown)
----@field Update fun(self: AE_Dropdown)
----@field UpdateList fun(self: AE_Dropdown)
 ---@field updateCommon fun(self: AE_Dropdown)
----@field setupCommonScripts fun(self: AE_Dropdown)
+---@field IsEnabled fun(self: AE_Dropdown): boolean
+
+---@class AE_StatusBar : Frame
+---@field config AE_InputOptionsStatusBar
+---@field hover boolean
+---@field value number
+---@field maxValue number
+---@field progressColor table<string, number>
+---@field background Frame
+---@field border Frame
+---@field progress Frame
+---@field text FontString
+---@field SetText fun(self: AE_StatusBar, text: string)
+---@field SetValue fun(self: AE_StatusBar, value: number)
+---@field SetMaxValue fun(self: AE_StatusBar, maxValue: number)
+---@field SetMinMaxValues fun(self: AE_StatusBar, minValue: number, maxValue: number)
+---@field GetValue fun(self: AE_StatusBar): number
+---@field GetMaxValue fun(self: AE_StatusBar): number
+---@field UpdateProgress fun(self: AE_StatusBar)
+---@field Update fun(self: AE_StatusBar)
+---@field updateCommon fun(self: AE_StatusBar)
+---@field IsEnabled fun(self: AE_StatusBar): boolean
+
+---@class AE_Input
+---@field Button fun(self: AE_Input, options: AE_InputOptionsButton): AE_Button
+---@field Textbox fun(self: AE_Input, options: AE_InputOptionsTextbox): AE_Textbox
+---@field CreateCheckbox fun(self: AE_Input, options: AE_InputOptionsCheckbox): AE_Checkbox
+---@field CreateDropdown fun(self: AE_Input, options: AE_InputOptionsDropdown): AE_Dropdown
+---@field CreateStatusBar fun(self: AE_Input, options: AE_InputOptionsStatusBar): AE_StatusBar
 
 ---@class AE_Equipment
 ---@field itemName string
@@ -483,6 +515,8 @@
 ---@field windowColor table?
 ---@field point any[]?  -- e.g., {"CENTER"} or {"TOP", UIParent, "TOP", 0, -15}
 ---@field titlebarButtons AE_TitlebarButton[]? Array of buttons to add to the titlebar
+---@field width number? Initial body width (will call SetBodySize automatically)
+---@field height number? Initial body height (will call SetBodySize automatically)
 
 ---@class AE_Window : Frame
 ---@field config AE_WindowOptions

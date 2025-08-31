@@ -3,92 +3,75 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
+-- Constants
 local DROPDOWN_ITEM_HEIGHT = 26
 
 ---@class AE_Input
 local Input = {}
 addon.Input = Input
 
--- Base input functionality mixin
-local BaseInputMixin = {
-    -- Common event handlers
-    onEnterHandler = function(self)
-        self.hover = true
-        if self.config.onEnter then
-            self.config.onEnter(self)
-        end
-        self:Update()
-    end,
-
-    onLeaveHandler = function(self)
-        self.hover = false
-        if self.config.onLeave then
-            self.config.onLeave(self)
-        end
-        self:Update()
-    end,
-
-    -- Common update logic
-    updateCommon = function(self)
+---Add common functionality to an input component
+---@param input Frame The input frame to add functionality to
+local function AddCommonFunctionality(input)
+    function input:IsEnabled()
+        return self.config.enabled ~= false
+    end
+    
+    function input:updateCommon()
         if self:IsEnabled() then
             self:SetAlpha(1)
         else
             self:SetAlpha(0.3)
         end
-    end,
-
-    -- Common script setup
-    setupCommonScripts = function(self)
-        self:SetScript("OnEnter", function() self:onEnterHandler() end)
-        self:SetScript("OnLeave", function() self:onLeaveHandler() end)
-        self:SetScript("OnDisable", function() self:Update() end)
-        self:SetScript("OnEnable", function() self:Update() end)
     end
-}
-
--- Apply mixin to a frame
-local function ApplyMixin(frame, mixin)
-    for key, value in pairs(mixin) do
-        frame[key] = value
-    end
-end
-
--- Create base input with common functionality
-local function CreateBaseInput(frameType, name, parent, config)
-    local input = CreateFrame(frameType, name, parent)
-    input.config = CreateFromMixins(config.defaults or {}, config or {})
-    input.hover = false
-    
-    ApplyMixin(input, BaseInputMixin)
-    input:setupCommonScripts()
-    
-    return input
 end
 
 ---Create a button
 ---@param options AE_InputOptionsButton
 ---@return AE_Button
 function Input:Button(options)
-    local input = CreateBaseInput("Button", 
-        options.parent and "$parentButton" or "Button", 
-        options.parent or UIParent,
-        {
-            defaults = {
-                parent = UIParent,
-                onEnter = false,
-                onLeave = false,
-                onClick = false,
-                text = "",
-                width = 200,
-                height = 26,
-            },
-            onClick = options.onClick
-        }
+    -- Set defaults
+    local config = {
+        parent = options.parent or UIParent,
+        onEnter = options.onEnter,
+        onLeave = options.onLeave,
+        onClick = options.onClick,
+        text = options.text or "",
+        width = options.width or 200,
+        height = options.height or 26,
+    }
+    
+    -- Create the main frame
+    local input = CreateFrame("Button", 
+        config.parent and "$parentButton" or "Button",
+        config.parent
     )
     
+    -- Store config and initialize state
+    input.config = config
+    input.hover = false
+    
+    -- Set size and enable mouse
+    input:SetSize(config.width, config.height)
     input:EnableMouse(true)
-    input:SetSize(input.config.width, input.config.height)
+    
+    -- Add common functionality
+    function input:IsEnabled()
+        return self.config.enabled ~= false
+    end
+    
+    function input:updateCommon()
+        if self:IsEnabled() then
+            self:SetAlpha(1)
+        else
+            self:SetAlpha(0.3)
+        end
+    end
+    
+    -- Set up event handlers
     input:SetScript("OnClick", function() input:onClickHandler() end)
+    input:SetScript("OnEnter", function() input:onEnterHandler() end)
+    input:SetScript("OnLeave", function() input:onLeaveHandler() end)
 
     input.text = input:CreateFontString()
     input.text:SetFontObject("SystemFont_Med1")
@@ -99,6 +82,22 @@ function Input:Button(options)
     input.text:SetPoint("RIGHT", input, "RIGHT", -10, 0)
     input.text:SetText(input.config.text)
 
+    function input:onEnterHandler()
+        input.hover = true
+        if input.config.onEnter then
+            input.config.onEnter(input)
+        end
+        input:Update()
+    end
+    
+    function input:onLeaveHandler()
+        input.hover = false
+        if input.config.onLeave then
+            input.config.onLeave(input)
+        end
+        input:Update()
+    end
+    
     function input:onClickHandler()
         if input.config.onClick then
             input.config.onClick(input)
@@ -123,28 +122,38 @@ end
 ---@param options AE_InputOptionsTextbox
 ---@return AE_Textbox
 function Input:Textbox(options)
-    local input = CreateBaseInput("EditBox",
-        options.parent and "$parentTextbox" or "Textbox",
-        options.parent or UIParent,
-        {
-            defaults = {
-                parent = UIParent,
-                onEnter = false,
-                onLeave = false,
-                onChange = false,
-                width = 200,
-                height = 30,
-            },
-            onChange = options.onChange,
-            placeholder = options.placeholder
-        }
+    -- Set defaults
+    local config = {
+        parent = options.parent or UIParent,
+        onEnter = options.onEnter,
+        onLeave = options.onLeave,
+        onChange = options.onChange,
+        placeholder = options.placeholder,
+        width = options.width or 200,
+        height = options.height or 30,
+    }
+    
+    -- Create the main frame
+    local input = CreateFrame("EditBox",
+        config.parent and "$parentTextbox" or "Textbox",
+        config.parent
     )
     
+    -- Store config and initialize state
+    input.config = config
+    input.hover = false
+    
+    -- Set up the edit box
     input:EnableMouse(true)
     input:SetAutoFocus(false)
     input:SetFontObject("SystemFont_Med1")
     input:SetTextInsets(10, 10, 10, 10)
-    input:SetSize(input.config.width, input.config.height)
+    input:SetSize(config.width, config.height)
+    
+    -- Add common functionality
+    AddCommonFunctionality(input)
+    
+    -- Set up event handlers
     input:SetScript("OnEditFocusGained", function() input:Update() end)
     input:SetScript("OnEditFocusLost", function() input:Update() end)
     input:SetScript("OnEscapePressed", function() input:ClearFocus() end)
@@ -205,28 +214,40 @@ end
 ---@param options AE_InputOptionsCheckbox
 ---@return AE_Checkbox
 function Input:CreateCheckbox(options)
-    local input = CreateBaseInput("Button",
-        options.parent and "$parentCheckbox" or "Checkbox",
-        options.parent or UIParent,
-        {
-            defaults = {
-                parent = UIParent,
-                onEnter = false,
-                onLeave = false,
-                onChange = false,
-                checked = false,
-                text = "",
-                width = 200,
-                height = 26,
-            },
-            onChange = options.onChange
-        }
+    -- Set defaults
+    local config = {
+        parent = options.parent or UIParent,
+        onEnter = options.onEnter,
+        onLeave = options.onLeave,
+        onChange = options.onChange,
+        checked = options.checked or false,
+        text = options.text or "",
+        width = options.width or 200,
+        height = options.height or 26,
+    }
+    
+    -- Create the main frame
+    local input = CreateFrame("Button",
+        config.parent and "$parentCheckbox" or "Checkbox",
+        config.parent
     )
     
-    input.checked = input.config.checked
+    -- Store config and initialize state
+    input.config = config
+    input.hover = false
+    input.checked = config.checked
+    
+    -- Set size and enable mouse
+    input:SetSize(config.width, config.height)
     input:EnableMouse(true)
-    input:SetSize(input.config.width, input.config.height)
+    
+    -- Add common functionality
+    AddCommonFunctionality(input)
+    
+    -- Set up event handlers
     input:SetScript("OnClick", function() input:onClickHandler() end)
+    input:SetScript("OnEnter", function() input:onEnterHandler() end)
+    input:SetScript("OnLeave", function() input:onLeaveHandler() end)
 
     input.checkbox = CreateFrame("Button", "$parentCheckbox", input)
     input.checkbox:SetSize(16, 16)
@@ -245,6 +266,22 @@ function Input:CreateCheckbox(options)
     input.text:SetPoint("RIGHT", input, "RIGHT", -5, 0)
     input.text:SetText(input.config.text)
 
+    function input:onEnterHandler()
+        input.hover = true
+        if input.config.onEnter then
+            input.config.onEnter(input)
+        end
+        input:Update()
+    end
+    
+    function input:onLeaveHandler()
+        input.hover = false
+        if input.config.onLeave then
+            input.config.onLeave(input)
+        end
+        input:Update()
+    end
+    
     function input:onClickHandler()
         input.checked = not input.checked
         if input.config.onChange then
@@ -277,33 +314,44 @@ end
 ---@param options AE_InputOptionsDropdown
 ---@return AE_Dropdown
 function Input:CreateDropdown(options)
-    local input = CreateBaseInput("Frame",
-        options.parent and "$parentInputDropdown" or "InputDropdown",
-        options.parent or UIParent,
-        {
-            defaults = {
-                parent = UIParent,
-                items = {},
-                value = nil,
-                maxHeight = 200,
-                size = 200,
-                sizeIcon = 11,
-                placeholder = "Select option"
-            },
-            onChange = options.onChange
-        }
+    -- Set defaults
+    local config = {
+        parent = options.parent or UIParent,
+        onEnter = options.onEnter,
+        onLeave = options.onLeave,
+        onChange = options.onChange,
+        items = options.items or {},
+        value = options.value,
+        maxHeight = options.maxHeight or 200,
+        size = options.size or 200,
+        sizeIcon = options.sizeIcon or 11,
+        placeholder = options.placeholder or "Select option"
+    }
+    
+    -- Create the main frame
+    local input = CreateFrame("Frame",
+        config.parent and "$parentInputDropdown" or "InputDropdown",
+        config.parent
     )
     
+    -- Store config and initialize state
+    input.config = config
+    input.hover = false
     input.items = {}
-    input.value = input.config.value
+    input.value = config.value
     input.expanded = false
-    input:SetSize(input.config.size, 30)
+    
+    -- Set size and register events
+    input:SetSize(config.size, 30)
     input:RegisterEvent("GLOBAL_MOUSE_DOWN")
     input:SetScript("OnEvent", function()
         if not MouseIsOver(input) and not MouseIsOver(input.list) then
             input:SetExpanded(false)
         end
     end)
+    
+    -- Add common functionality
+    AddCommonFunctionality(input)
 
     input.button = CreateFrame("Button", "$parentButton", input)
     input.button:SetPoint("TOPLEFT", input, "TOPLEFT")
@@ -384,6 +432,22 @@ function Input:CreateDropdown(options)
         return input.value
     end
 
+    function input:onEnterHandler()
+        input.hover = true
+        if input.config.onEnter then
+            input.config.onEnter(input)
+        end
+        input:Update()
+    end
+    
+    function input:onLeaveHandler()
+        input.hover = false
+        if input.config.onLeave then
+            input.config.onLeave(input)
+        end
+        input:Update()
+    end
+    
     function input:onClickHandler()
         input:SetExpanded(not input.expanded)
     end
@@ -474,6 +538,132 @@ function Input:CreateDropdown(options)
     input.button:SetScript("OnEnter", function() input:onEnterHandler() end)
     input.button:SetScript("OnLeave", function() input:onLeaveHandler() end)
 
+    input:Update()
+    return input
+end
+
+---Create a status bar
+---@param options AE_InputOptionsStatusBar
+---@return AE_StatusBar
+function Input:CreateStatusBar(options)
+    -- Set defaults
+    local config = {
+        parent = options.parent or UIParent,
+        text = options.text or "Ready",
+        value = options.value or 0,
+        maxValue = options.maxValue or 100,
+        width = options.width or 200,
+        height = options.height or 20,
+        progressColor = options.progressColor or {r = 0.2, g = 0.6, b = 1.0, a = 1.0},
+    }
+    
+    -- Create the main frame
+    local input = CreateFrame("Frame", 
+        config.parent and "$parentStatusBar" or "StatusBar",
+        config.parent
+    )
+    
+    -- Store config and initialize state
+    input.config = config
+    input.hover = false
+    input.value = config.value
+    input.maxValue = config.maxValue
+    input.progressColor = config.progressColor
+    
+    -- Set size
+    input:SetSize(config.width, config.height)
+    
+    -- Add common functionality
+    AddCommonFunctionality(input)
+    
+    -- Create background frame
+    input.background = CreateFrame("Frame", "$parentBackground", input)
+    input.background:SetFrameLevel(input:GetFrameLevel() - 2)
+    input.background:SetAllPoints()
+    
+    -- Create border frame with thicker border
+    input.border = CreateFrame("Frame", "$parentBorder", input)
+    input.border:SetFrameLevel(input:GetFrameLevel() - 1)
+    input.border:SetPoint("TOPLEFT", input, "TOPLEFT", -2, 2)
+    input.border:SetPoint("TOPRIGHT", input, "TOPRIGHT", 2, 2)
+    input.border:SetPoint("BOTTOMRIGHT", input, "BOTTOMRIGHT", 2, -2)
+    input.border:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", -2, -2)
+    
+    -- Create progress frame
+    input.progress = CreateFrame("Frame", "$parentProgress", input)
+    input.progress:SetFrameLevel(input:GetFrameLevel() - 1)
+    input.progress:SetPoint("TOPLEFT", input, "TOPLEFT", 2, -2)
+    input.progress:SetPoint("BOTTOMLEFT", input, "BOTTOMLEFT", 2, 2)
+    input.progress:SetWidth(0) -- Will be updated based on progress
+    
+    -- Create text with better styling for progress bar
+    input.text = input:CreateFontString("$parentText", "OVERLAY", "GameFontNormalLarge")
+    input.text:SetPoint("LEFT", input, "LEFT", 15, 0) -- More padding for taller bar
+    input.text:SetPoint("RIGHT", input, "RIGHT", -15, 0) -- Right padding to prevent overflow
+    input.text:SetText(input.config.text)
+    -- Set text color to white with shadow for better readability
+    input.text:SetTextColor(1, 1, 1, 1)
+    input.text:SetShadowColor(0, 0, 0, 1)
+    input.text:SetShadowOffset(1, -1)
+    
+    -- Set initial values
+    input.value = input.config.value or 0
+    input.maxValue = input.config.maxValue or 100
+    input.progressColor = input.config.progressColor or {r = 0.2, g = 0.6, b = 1.0, a = 1.0}
+    
+    function input:SetText(text)
+        input.text:SetText(text or "Ready")
+    end
+    
+    function input:SetValue(value)
+        input.value = value or 0
+        input:UpdateProgress()
+    end
+    
+    function input:SetMaxValue(maxValue)
+        input.maxValue = maxValue or 100
+        input:UpdateProgress()
+    end
+    
+    function input:SetMinMaxValues(minValue, maxValue)
+        input.maxValue = maxValue or 100
+        input:UpdateProgress()
+    end
+    
+    function input:GetValue()
+        return input.value
+    end
+    
+    function input:GetMaxValue()
+        return input.maxValue
+    end
+    
+    function input:UpdateProgress()
+        local progress = 0
+        if input.maxValue > 0 then
+            progress = math.min(input.value / input.maxValue, 1.0)
+        end
+        
+        local progressWidth = (input:GetWidth() - 4) * progress -- Account for thicker border
+        input.progress:SetWidth(progressWidth)
+    end
+    
+    function input:Update()
+        -- Set background color (using titlebar color like other inputs)
+        addon.Utils:SetBackgroundColor(input.background, addon.Constants.colors.titlebar.r, addon.Constants.colors.titlebar.g, addon.Constants.colors.titlebar.b, 1)
+        
+        -- Set border color (more visible for progress bar)
+        addon.Utils:SetBackgroundColor(input.border, 0.5, 0.5, 0.5, 0.3)
+        
+        -- Set progress color
+        addon.Utils:SetBackgroundColor(input.progress, input.progressColor.r, input.progressColor.g, input.progressColor.b, input.progressColor.a)
+        
+        -- Update progress width
+        input:UpdateProgress()
+        
+        input:updateCommon()
+    end
+    
     input:Update()
     return input
 end
