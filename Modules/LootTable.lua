@@ -613,38 +613,12 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
       item.classes[classID] = true
       item.specs[specID] = true
 
-      -- Track encounter source
-      local numEncounters = EJ_GetNumEncountersForLootByIndex(i)
-      if numEncounters == 1 then
-        item.encounters[encounter.journalEncounterID] = {
-          name = encounter.name,
-          index = encounter.index,
-          journalEncounterID = encounter.journalEncounterID,
-        }
-      elseif numEncounters == 2 then
-        local itemInfoSecond = C_EncounterJournal.GetLootInfoByIndex(i, 2)
-        local secondEncounterID = itemInfoSecond and itemInfoSecond.encounterID
-        if encounter.journalEncounterID and secondEncounterID then
-          item.encounters[encounter.journalEncounterID] = {
-            name = encounter.name,
-            index = encounter.index,
-            journalEncounterID = encounter.journalEncounterID,
-          }
-          if secondEncounterID then
-            item.encounters[secondEncounterID] = {
-              name = "Multiple Encounters",
-              index = 0,
-              journalEncounterID = secondEncounterID,
-            }
-          end
-        end
-      elseif numEncounters > 2 then
-        item.encounters[encounter.journalEncounterID] = {
-          name = "Multiple Encounters",
-          index = encounter.index,
-          journalEncounterID = encounter.journalEncounterID,
-        }
-      end
+      -- Track encounter source (always use the current encounter)
+      item.encounters[encounter.journalEncounterID] = {
+        name = encounter.name,
+        index = encounter.index,
+        journalEncounterID = encounter.journalEncounterID,
+      }
 
       -- Track difficulty (always Mythic for both raids and dungeons)
       item.difficulties["Mythic"] = true
@@ -707,7 +681,7 @@ function Module:PopulateTable()
 
     if aRow.itemData and aRow.itemData.encounters and next(aRow.itemData.encounters) then
       for _, encounter in pairs(aRow.itemData.encounters) do
-        if encounter.name and encounter.name ~= "Multiple Encounters" then
+        if encounter.name then
           aEncounterName = encounter.name
           break
         end
@@ -716,7 +690,7 @@ function Module:PopulateTable()
 
     if bRow.itemData and bRow.itemData.encounters and next(bRow.itemData.encounters) then
       for _, encounter in pairs(bRow.itemData.encounters) do
-        if encounter.name and encounter.name ~= "Multiple Encounters" then
+        if encounter.name then
           bEncounterName = encounter.name
           break
         end
@@ -743,21 +717,12 @@ function Module:PopulateTable()
     -- Generate source text with instance icon
     local sourceText = "Unknown"
     if item.encounters and next(item.encounters) then
-      local encounterNames = {}
+      -- Just use the first encounter name (simplified)
       for _, encounter in pairs(item.encounters) do
-        if encounter.name and encounter.name ~= "Multiple Encounters" then
-          table.insert(encounterNames, encounter.name)
+        if encounter.name then
+          sourceText = encounter.name
+          break
         end
-      end
-
-      if #encounterNames == 1 then
-        sourceText = encounterNames[1]
-      elseif #encounterNames == 2 then
-        sourceText = string.format("%s, %s", encounterNames[1], encounterNames[2])
-      elseif #encounterNames > 2 then
-        sourceText = string.format("%s +%d more", encounterNames[1], #encounterNames - 1)
-      else
-        sourceText = "Multiple Encounters"
       end
 
       -- Add instance icon prefix
@@ -855,7 +820,7 @@ function Module:PopulateTable()
             if item.encounters and next(item.encounters) then
               local encounterNames = {}
               for _, encounter in pairs(item.encounters) do
-                if encounter.name and encounter.name ~= "Multiple Encounters" then
+                if encounter.name then
                   table.insert(encounterNames, encounter.name)
                 end
               end
