@@ -41,11 +41,12 @@ function Module:CompressCache()
       iname = item.instanceName,
       itype = item.instanceType,
       sid = item.seasonID,
-      st = item.stats, -- Add stats
+      st = item.stats,         -- Add stats
+      sp = item.spellTriggers, -- Add spell triggers
       e = {},
       d = {},
       c = {},
-      sp = {},
+      spc = {},
     }
 
     -- Compress encounters
@@ -115,7 +116,8 @@ function Module:DecompressCache(compressedData)
       instanceName = compressedItem.iname,
       instanceType = compressedItem.itype,
       seasonID = compressedItem.sid,
-      stats = compressedItem.st, -- Add stats
+      stats = compressedItem.st,         -- Add stats
+      spellTriggers = compressedItem.sp, -- Add spell triggers
       encounters = {},
       difficulties = {},
       classes = {},
@@ -188,7 +190,7 @@ function Module:CreateWindow()
   self.window = addon.Window:New({
     title = "Loot Table",
     sidebar = 250, -- Use built-in sidebar functionality
-    width = 1240,  -- Body width (1190 + 250 sidebar = 1440 total)
+    width = 1360,  -- Body width (1360 + 250 sidebar = 1610 total)
     height = 570,  -- Body height (570 + 30 titlebar = 600 total)
     resizable = true,
     minimizable = true,
@@ -568,12 +570,64 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
     if lootInfo.name ~= nil and lootInfo.itemID then
       local itemID = lootInfo.itemID
 
-
-
       -- Find or create item in cache
       local item = self.cache.loot[itemID]
       if not item then
-        local itemStats = C_Item.GetItemStats(lootInfo.link)
+        -- Get stats from GetItemStats (includes secondary stats)
+        local itemStats = C_Item.GetItemStats(lootInfo.link) or {}
+
+        -- Initialize spell triggers tracking
+        local spellTriggers = {}
+
+        -- Search tooltip lines for primary stat modifiers and spell triggers
+        local tooltipData = C_TooltipInfo.GetItemByID(itemID)
+        if tooltipData and tooltipData.lines then
+          for _, line in pairs(tooltipData.lines) do
+            -- Check both left and right text
+            local texts = {}
+            if line.leftText then table.insert(texts, line.leftText) end
+            if line.rightText then table.insert(texts, line.rightText) end
+
+            for _, text in ipairs(texts) do
+              -- Look for primary stat lines using color and global stat names
+              -- Check if this line contains a primary stat name and has white/grey color
+              local isStatLine = false
+              if line.leftColor then
+                -- Check if color is white (1,1,1) or grey (around 0.5) - typical for stat lines
+                local r, g, b = line.leftColor.r, line.leftColor.g, line.leftColor.b
+                local isWhite = (r == 1 and g == 1 and b == 1)
+                local isGrey = (math.abs(r - 0.5) < 0.01 and math.abs(g - 0.5) < 0.01 and math.abs(b - 0.5) < 0.01)
+                isStatLine = isWhite or isGrey
+              end
+
+              if isStatLine and text then
+                -- Extract number from the beginning of the line (e.g., "+3,508" from "+3,508 Agility")
+                local value = text:match("^%+([%d,%.]+)")
+                if value then
+                  -- Check which primary stat this line contains using global names
+                  if text:find(ITEM_MOD_STRENGTH_SHORT) then
+                    itemStats.ITEM_MOD_STRENGTH_SHORT = tonumber(value) or 1
+                  elseif text:find(ITEM_MOD_AGILITY_SHORT) then
+                    itemStats.ITEM_MOD_AGILITY_SHORT = tonumber(value) or 1
+                  elseif text:find(ITEM_MOD_INTELLECT_SHORT) then
+                    itemStats.ITEM_MOD_INTELLECT_SHORT = tonumber(value) or 1
+                  end
+                end
+              end
+
+              -- Look for spell trigger lines (Equip, Use, Chance on hit)
+              if text then
+                if text:find(ITEM_SPELL_TRIGGER_ONEQUIP) then
+                  spellTriggers.equip = text
+                elseif text:find(ITEM_SPELL_TRIGGER_ONUSE) then
+                  spellTriggers.use = text
+                elseif text:find(ITEM_SPELL_TRIGGER_ONPROC) then
+                  spellTriggers.proc = text
+                end
+              end
+            end
+          end
+        end
 
         item = {
           -- Basic item info
@@ -594,6 +648,7 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
 
           -- Metadata
           stats = itemStats,
+          spellTriggers = spellTriggers,
           encounters = {},
           difficulties = {},
           classes = {},
@@ -641,20 +696,20 @@ function Module:PopulateTable()
     columns = {
       {width = 350, sortable = true, sortKey = "name"},        -- Item (icon + name)
       {width = 150, sortable = true, sortKey = "slot"},        -- Slot
-      {width = 120, sortable = true, sortKey = "type"},        -- Type
-      {width = 120, sortable = true, sortKey = "primary"},     -- Primary
-      {width = 200, sortable = true, sortKey = "secondaries"}, -- Secondaries
+      {width = 140, sortable = true, sortKey = "type"},        -- Type
+      {width = 220, sortable = true, sortKey = "primary"},     -- Primary
+      {width = 200, sortable = true, sortKey = "secondaries"}, -- Secondary
       {width = 300, sortable = true, sortKey = "source"},      -- Source (with instance icons)
     },
     rows = {
       {
         columns = {
-          {text = "Item",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Slot",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Type",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Primary",     backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Secondaries", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Source",      backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Item",      backgroundColor = {r = 0, g = 0, b = 0, a = 0.1}},
+          {text = "Slot",      backgroundColor = {r = 0, g = 0, b = 0, a = 0.1}},
+          {text = "Type",      backgroundColor = {r = 0, g = 0, b = 0, a = 0.1}},
+          {text = "Primary",   backgroundColor = {r = 0, g = 0, b = 0, a = 0.1}},
+          {text = "Secondary", backgroundColor = {r = 0, g = 0, b = 0, a = 0.1}},
+          {text = "Source",    backgroundColor = {r = 0, g = 0, b = 0, a = 0.1}},
         },
       },
     },
@@ -887,15 +942,19 @@ end
 function Module:GetPrimaryStat(stats)
   if not stats then return "" end
 
+  local primaries = {}
+
   if stats.ITEM_MOD_STRENGTH_SHORT and stats.ITEM_MOD_STRENGTH_SHORT > 0 then
-    return ITEM_MOD_STRENGTH_SHORT
-  elseif stats.ITEM_MOD_AGILITY_SHORT and stats.ITEM_MOD_AGILITY_SHORT > 0 then
-    return ITEM_MOD_AGILITY_SHORT
-  elseif stats.ITEM_MOD_INTELLECT_SHORT and stats.ITEM_MOD_INTELLECT_SHORT > 0 then
-    return ITEM_MOD_INTELLECT_SHORT
+    table.insert(primaries, ITEM_MOD_STRENGTH_SHORT)
+  end
+  if stats.ITEM_MOD_AGILITY_SHORT and stats.ITEM_MOD_AGILITY_SHORT > 0 then
+    table.insert(primaries, ITEM_MOD_AGILITY_SHORT)
+  end
+  if stats.ITEM_MOD_INTELLECT_SHORT and stats.ITEM_MOD_INTELLECT_SHORT > 0 then
+    table.insert(primaries, ITEM_MOD_INTELLECT_SHORT)
   end
 
-  return ""
+  return table.concat(primaries, " / ")
 end
 
 ---Get secondary stats from item stats
