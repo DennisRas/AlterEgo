@@ -22,6 +22,8 @@ function Table:New(config)
         enabled = true,
         sticky = false,
         height = 30,
+        clickable = false,
+        sortable = false,
       },
       rows = {
         height = 22,
@@ -47,6 +49,7 @@ function Table:New(config)
   )
   frame.rows = {}
   frame.data = frame.config.data
+  frame.sortState = nil
   frame.scrollFrame = addon.Utils:CreateScrollFrame({
     name = "$parentScrollFrame",
     scrollSpeedVertical = frame.config.rows.height * 2,
@@ -56,7 +59,13 @@ function Table:New(config)
   ---@param data AE_TableData
   function frame:SetData(data)
     self.data = data
-    self:RenderTable()
+
+    -- Apply current sort state to new data if it exists
+    if self.sortState and self.sortState.columnIndex then
+      self:SortByColumn(self.sortState.columnIndex, self.sortState.direction)
+    else
+      self:RenderTable()
+    end
   end
 
   ---Set the row height
@@ -64,6 +73,85 @@ function Table:New(config)
   function frame:SetRowHeight(height)
     self.config.rows.height = height
     self:Update()
+  end
+
+  ---Sort the table by a specific column
+  ---@param columnIndex number The column index to sort by (1-based)
+  ---@param direction "asc"|"desc"? The sort direction (defaults to "asc" or toggles if same column)
+  function frame:SortByColumn(columnIndex, direction)
+    if not self.config.header.sortable or not self.data or not self.data.columns or not self.data.rows then
+      return
+    end
+
+    local columnConfig = self.data.columns[columnIndex]
+    if not columnConfig or not columnConfig.sortable then
+      return
+    end
+
+    -- Determine sort direction
+    local newDirection = direction
+    if not newDirection then
+      if self.sortState and self.sortState.columnIndex == columnIndex then
+        -- Toggle direction if same column
+        newDirection = self.sortState.direction == "asc" and "desc" or "asc"
+      else
+        -- Default to ascending
+        newDirection = "asc"
+      end
+    end
+
+    -- Update sort state
+    self.sortState = {
+      columnIndex = columnIndex,
+      direction = newDirection,
+      sortKey = columnConfig.sortKey,
+      sortCallback = columnConfig.sortCallback,
+    }
+
+    -- Sort the data rows (skip header row)
+    local dataRows = {}
+    for i = 2, #self.data.rows do
+      table.insert(dataRows, self.data.rows[i])
+    end
+
+    table.sort(dataRows, function(a, b)
+      local aValue = a.columns[columnIndex] and a.columns[columnIndex].text or ""
+      local bValue = b.columns[columnIndex] and b.columns[columnIndex].text or ""
+
+      -- Use custom sort callback if provided
+      if columnConfig.sortCallback then
+        return columnConfig.sortCallback(aValue, bValue, newDirection, a, b)
+      end
+
+      -- Default string comparison
+      if newDirection == "asc" then
+        return aValue < bValue
+      else
+        return aValue > bValue
+      end
+    end)
+
+    -- Reconstruct data with header row
+    self.data.rows = {self.data.rows[1]}
+    for _, row in ipairs(dataRows) do
+      table.insert(self.data.rows, row)
+    end
+
+    -- Re-render the table
+    self:RenderTable()
+  end
+
+  ---Get the current sort state
+  ---@return AE_TableSortState?
+  function frame:GetSortState()
+    return self.sortState
+  end
+
+  ---Clear the current sort
+  function frame:ClearSort()
+    self.sortState = nil
+    -- Note: This doesn't re-sort the data, just clears the sort state
+    -- To restore original order, you'd need to store the original data separately
   end
 
   function frame:RenderTable()
@@ -88,6 +176,10 @@ function Table:New(config)
         end
         if frame.config.header.sticky then
           isStickyRow = true
+        end
+        -- Make header clickable if sorting is enabled
+        if frame.config.header.sortable and frame.config.header.clickable then
+          rowFrame:SetScript("OnClick", nil) -- Remove row click handler for header
         end
       end
 
@@ -158,14 +250,39 @@ function Table:New(config)
         columnFrame:SetPoint("TOPLEFT", rowFrame, "TOPLEFT", offsetX, 0)
         columnFrame:SetPoint("BOTTOMLEFT", rowFrame, "BOTTOMLEFT", offsetX, 0)
         columnFrame:SetWidth(columnWidth)
-        columnFrame:SetScript("OnEnter", function() columnFrame:onEnterHandler(columnFrame) end)
-        columnFrame:SetScript("OnLeave", function() columnFrame:onLeaveHandler(columnFrame) end)
-        columnFrame:SetScript("OnClick", function() columnFrame:onClickHandler(columnFrame) end)
         columnFrame.text:SetWordWrap(false)
         columnFrame.text:SetJustifyH(columnTextAlign)
         columnFrame.text:SetPoint("TOPLEFT", columnFrame, "TOPLEFT", frame.config.cells.padding, -frame.config.cells.padding)
         columnFrame.text:SetPoint("BOTTOMRIGHT", columnFrame, "BOTTOMRIGHT", -frame.config.cells.padding, frame.config.cells.padding)
-        columnFrame.text:SetText(column.text)
+
+        -- Handle header column clicks for sorting
+        if rowIndex == 1 and frame.config.header.sortable and frame.config.header.clickable then
+          local columnConfig = frame.data.columns[columnIndex]
+          if columnConfig and columnConfig.sortable then
+            columnFrame:SetScript("OnClick", function()
+              frame:SortByColumn(columnIndex)
+            end)
+            -- Add hover effect for sortable headers
+            columnFrame:SetScript("OnEnter", function()
+              addon.Utils:SetHighlightColor(columnFrame, 1, 1, 1, 0.1)
+            end)
+            columnFrame:SetScript("OnLeave", function()
+              addon.Utils:SetHighlightColor(columnFrame, 1, 1, 1, 0)
+            end)
+            columnFrame.text:SetText(column.text)
+          else
+            columnFrame:SetScript("OnClick", function() columnFrame:onClickHandler(columnFrame) end)
+            columnFrame:SetScript("OnEnter", function() columnFrame:onEnterHandler(columnFrame) end)
+            columnFrame:SetScript("OnLeave", function() columnFrame:onLeaveHandler(columnFrame) end)
+            columnFrame.text:SetText(column.text)
+          end
+        else
+          columnFrame:SetScript("OnClick", function() columnFrame:onClickHandler(columnFrame) end)
+          columnFrame:SetScript("OnEnter", function() columnFrame:onEnterHandler(columnFrame) end)
+          columnFrame:SetScript("OnLeave", function() columnFrame:onLeaveHandler(columnFrame) end)
+          columnFrame.text:SetText(column.text)
+        end
+
         columnFrame:Show()
 
         if column.backgroundColor then

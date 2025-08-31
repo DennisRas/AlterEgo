@@ -44,9 +44,9 @@ function Module:CreateWindow()
   -- Create main window with built-in sidebar
   self.window = addon.Window:New({
     title = "Loot Table",
-    sidebar = 250,     -- Use built-in sidebar functionality
-    width = 1150,      -- Body width (1150 + 250 sidebar = 1400 total)
-    height = 570,      -- Body height (570 + 30 titlebar = 600 total)
+    sidebar = 250, -- Use built-in sidebar functionality
+    width = 1150,  -- Body width (1150 + 250 sidebar = 1400 total)
+    height = 570,  -- Body height (570 + 30 titlebar = 600 total)
     resizable = true,
     minimizable = true,
     maximizable = true,
@@ -55,8 +55,8 @@ function Module:CreateWindow()
   -- Create a simple overlay frame that covers both sidebar and content (below titlebar)
   self.overlayFrame = CreateFrame("Frame", "$parentOverlay", self.window)
   self.overlayFrame:SetFrameLevel(self.window:GetFrameLevel() + 10)
-  self.overlayFrame:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -30)         -- Below titlebar
-  self.overlayFrame:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT", 0, 0)   -- Cover entire window
+  self.overlayFrame:SetPoint("TOPLEFT", self.window, "TOPLEFT", 0, -30)       -- Below titlebar
+  self.overlayFrame:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT", 0, 0) -- Cover entire window
 
   -- Add background to make overlay visible using Utils (use header color from constants)
   addon.Utils:SetBackgroundColor(self.overlayFrame, 0, 0, 0, 0.95)
@@ -67,9 +67,9 @@ function Module:CreateWindow()
     text = "Ready",
     value = 0,
     maxValue = 100,
-    width = 1000,                                            -- Much wider bar for longer text
-    height = 40,                                             -- Taller bar with more padding
-    progressColor = {r = 0.1, g = 0.3, b = 0.5, a = 1.0},    -- Darker, more muted blue
+    width = 1000,                                         -- Much wider bar for longer text
+    height = 40,                                          -- Taller bar with more padding
+    progressColor = {r = 0.1, g = 0.3, b = 0.5, a = 1.0}, -- Darker, more muted blue
   })
 
   -- Center the status bar in the overlay
@@ -117,6 +117,8 @@ function Module:CreateContent()
     header = {
       sticky = true,
       height = 30,
+      sortable = true,
+      clickable = true,
     },
   })
 
@@ -184,8 +186,6 @@ function Module:InitializeCache()
   if self.isCacheInitialized then
     return
   end
-
-  print("Initializing loot cache...")
 
   -- Reset encounter journal filters to get all items
   self.savedSlotFilter = C_EncounterJournal.GetSlotFilter()
@@ -255,16 +255,6 @@ function Module:ProcessNextCacheStep()
       table.insert(itemArray, item)
     end
     self.lootCache = itemArray
-
-    print("Loot cache initialized with " .. #self.lootCache .. " items")
-    print(string.format("Item type breakdown: Weapons: %d, Armor: %d, Other: %d",
-                        self.itemTypeCounts.weapons, self.itemTypeCounts.armor, self.itemTypeCounts.other))
-
-    -- Print unique slots found
-    print("Unique slots found:")
-    for slot, count in pairs(self.uniqueSlots) do
-      print(string.format("  %s: %d items", slot, count))
-    end
 
     self.isCacheInitialized = true
 
@@ -501,11 +491,11 @@ function Module:PopulateTable()
   ---@type AE_TableData
   local data = {
     columns = {
-      {width = 350},          -- Item (icon + name)
-      {width = 150},          -- Slot
-      {width = 150},          -- Type
-      {width = 250},          -- Source
-      {width = 250},          -- Instance
+      {width = 350, sortable = true, sortKey = "name"},     -- Item (icon + name)
+      {width = 150, sortable = true, sortKey = "slot"},     -- Slot
+      {width = 150, sortable = true, sortKey = "type"},     -- Type
+      {width = 250, sortable = true, sortKey = "source"},   -- Source
+      {width = 250, sortable = true, sortKey = "instance"}, -- Instance
     },
     rows = {
       {
@@ -519,6 +509,19 @@ function Module:PopulateTable()
       },
     },
   }
+
+  -- Add custom sorting callbacks to columns
+  data.columns[1].sortCallback = function(aValue, bValue, direction, aRow, bRow)
+    -- Sort by item name (strip color codes and icons)
+    local aName = aRow.itemData and aRow.itemData.name or ""
+    local bName = bRow.itemData and bRow.itemData.name or ""
+
+    if direction == "asc" then
+      return aName < bName
+    else
+      return aName > bName
+    end
+  end
 
   -- Add item rows
   for _, item in ipairs(self.lootCache) do
@@ -553,6 +556,7 @@ function Module:PopulateTable()
 
     ---@type AE_TableDataRow
     local row = {
+      itemData = item, -- Store item data for custom sorting
       columns = {
         {
           text = "|T" .. (item.texture or "") .. ":0|t " .. itemText,
@@ -596,8 +600,44 @@ function Module:PopulateTable()
 
   -- Update table data (keep window size fixed)
   self.lootTable:SetData(data)
+end
 
-  print("Table populated with " .. (#data.rows - 1) .. " items")
+---Custom sorting callback for item quality
+---@param aValue string
+---@param bValue string
+---@param direction "asc"|"desc"
+---@param aRow AE_TableDataRow
+---@param bRow AE_TableDataRow
+---@return boolean
+function Module:SortByQuality(aValue, bValue, direction, aRow, bRow)
+  -- Extract quality from item data (assuming it's stored in the row data)
+  local aQuality = aRow.itemData and aRow.itemData.quality or 1
+  local bQuality = bRow.itemData and bRow.itemData.quality or 1
+
+  if direction == "asc" then
+    return aQuality < bQuality
+  else
+    return aQuality > bQuality
+  end
+end
+
+---Custom sorting callback for item level
+---@param aValue string
+---@param bValue string
+---@param direction "asc"|"desc"
+---@param aRow AE_TableDataRow
+---@param bRow AE_TableDataRow
+---@return boolean
+function Module:SortByItemLevel(aValue, bValue, direction, aRow, bRow)
+  -- Extract item level from item data
+  local aIlvl = aRow.itemData and aRow.itemData.itemLevel or 0
+  local bIlvl = bRow.itemData and bRow.itemData.itemLevel or 0
+
+  if direction == "asc" then
+    return aIlvl < bIlvl
+  else
+    return aIlvl > bIlvl
+  end
 end
 
 -- =============================================================
@@ -625,9 +665,6 @@ end
 
 ---Show the loot table window
 function Module:ShowWindow()
-  -- DEVELOPMENT: Reset cache for testing
-  -- TODO: Remove in production - only initialize if not already done
-  -- self.isCacheInitialized = false
   self:InitializeCache()
 
   if self.window then

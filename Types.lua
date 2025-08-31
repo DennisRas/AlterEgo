@@ -543,6 +543,8 @@
 ---@field enabled boolean?
 ---@field sticky boolean?
 ---@field height number?
+---@field clickable boolean? Whether headers are clickable for sorting
+---@field sortable boolean? Whether the table supports sorting (enables clickable headers)
 
 ---@class AE_TableConfigRows
 ---@field height number?
@@ -568,6 +570,9 @@
 ---@class AE_TableDataColumn
 ---@field width number
 ---@field align string?
+---@field sortable boolean? Whether this column can be sorted
+---@field sortKey string? The key to use for sorting this column
+---@field sortCallback function? Custom sorting function for this column
 
 ---@class AE_TableDataRow
 ---@field columns AE_TableDataRowColumn[]
@@ -580,6 +585,37 @@
 ---@field onClick function?
 
 ---@class AE_TableFrame : Frame
+---@field config AE_TableConfig
+---@field data AE_TableData
+---@field rows AE_TableFrameRow[]
+---@field scrollFrame Frame
+---@field sortState AE_TableSortState?
+---@field SetData fun(self: AE_TableFrame, data: AE_TableData)
+---@field SetRowHeight fun(self: AE_TableFrame, height: number)
+---@field RenderTable fun(self: AE_TableFrame)
+---@field SortByColumn fun(self: AE_TableFrame, columnIndex: number, direction?: "asc"|"desc")
+---@field GetSortState fun(self: AE_TableFrame): AE_TableSortState?
+---@field ClearSort fun(self: AE_TableFrame)
+
+---@class AE_TableFrameRow : Frame
+---@field columns AE_TableFrameColumn[]
+---@field data AE_TableDataRow
+---@field onEnterHandler fun(self: AE_TableFrameRow, frame: Frame)
+---@field onLeaveHandler fun(self: AE_TableFrameRow, frame: Frame)
+---@field onClickHandler fun(self: AE_TableFrameRow, frame: Frame)
+
+---@class AE_TableFrameColumn : Button
+---@field data AE_TableDataRowColumn
+---@field text FontString
+---@field onEnterHandler fun(self: AE_TableFrameColumn, frame: Frame)
+---@field onLeaveHandler fun(self: AE_TableFrameColumn, frame: Frame)
+---@field onClickHandler fun(self: AE_TableFrameColumn, frame: Frame)
+
+---@class AE_TableSortState
+---@field columnIndex number The index of the sorted column
+---@field direction "asc"|"desc" The sort direction
+---@field sortKey string? The sort key used
+---@field sortCallback function? The custom sort callback used
 
 -- =============================================================
 -- UI: Common Controls
