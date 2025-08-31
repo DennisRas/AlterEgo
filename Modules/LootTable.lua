@@ -41,6 +41,7 @@ function Module:CompressCache()
       iname = item.instanceName,
       itype = item.instanceType,
       sid = item.seasonID,
+      st = item.stats, -- Add stats
       e = {},
       d = {},
       c = {},
@@ -114,6 +115,7 @@ function Module:DecompressCache(compressedData)
       instanceName = compressedItem.iname,
       instanceType = compressedItem.itype,
       seasonID = compressedItem.sid,
+      stats = compressedItem.st, -- Add stats
       encounters = {},
       difficulties = {},
       classes = {},
@@ -186,7 +188,7 @@ function Module:CreateWindow()
   self.window = addon.Window:New({
     title = "Loot Table",
     sidebar = 250, -- Use built-in sidebar functionality
-    width = 1150,  -- Body width (1150 + 250 sidebar = 1400 total)
+    width = 1240,  -- Body width (1190 + 250 sidebar = 1440 total)
     height = 570,  -- Body height (570 + 30 titlebar = 600 total)
     resizable = true,
     minimizable = true,
@@ -571,6 +573,8 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
       -- Find or create item in cache
       local item = self.cache.loot[itemID]
       if not item then
+        local itemStats = C_Item.GetItemStats(lootInfo.link)
+
         item = {
           -- Basic item info
           itemID = itemID,
@@ -589,7 +593,7 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
           seasonID = instance.seasonID,
 
           -- Metadata
-          stats = C_Item.GetItemStats(lootInfo.link),
+          stats = itemStats,
           encounters = {},
           difficulties = {},
           classes = {},
@@ -600,6 +604,8 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
           weaponTypeError = lootInfo.weaponTypeError,
           filterType = lootInfo.filterType,
         }
+
+
         self.cache.loot[itemID] = item
       end
 
@@ -659,20 +665,22 @@ function Module:PopulateTable()
   ---@type AE_TableData
   local data = {
     columns = {
-      {width = 350, sortable = true, sortKey = "name"},     -- Item (icon + name)
-      {width = 150, sortable = true, sortKey = "slot"},     -- Slot
-      {width = 150, sortable = true, sortKey = "type"},     -- Type
-      {width = 250, sortable = true, sortKey = "source"},   -- Source
-      {width = 250, sortable = true, sortKey = "instance"}, -- Instance
+      {width = 350, sortable = true, sortKey = "name"},        -- Item (icon + name)
+      {width = 150, sortable = true, sortKey = "slot"},        -- Slot
+      {width = 120, sortable = true, sortKey = "type"},        -- Type
+      {width = 120, sortable = true, sortKey = "primary"},     -- Primary
+      {width = 200, sortable = true, sortKey = "secondaries"}, -- Secondaries
+      {width = 300, sortable = true, sortKey = "source"},      -- Source (with instance icons)
     },
     rows = {
       {
         columns = {
-          {text = "Item",     backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Slot",     backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Type",     backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Source",   backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Instance", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Item",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Slot",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Type",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Primary",     backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Secondaries", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Source",      backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
         },
       },
     },
@@ -691,6 +699,37 @@ function Module:PopulateTable()
     end
   end
 
+  -- Add custom sorting for source column (strip icons)
+  data.columns[6].sortCallback = function(aValue, bValue, direction, aRow, bRow)
+    -- Sort by encounter name (strip icons)
+    local aEncounterName = ""
+    local bEncounterName = ""
+
+    if aRow.itemData and aRow.itemData.encounters and next(aRow.itemData.encounters) then
+      for _, encounter in pairs(aRow.itemData.encounters) do
+        if encounter.name and encounter.name ~= "Multiple Encounters" then
+          aEncounterName = encounter.name
+          break
+        end
+      end
+    end
+
+    if bRow.itemData and bRow.itemData.encounters and next(bRow.itemData.encounters) then
+      for _, encounter in pairs(bRow.itemData.encounters) do
+        if encounter.name and encounter.name ~= "Multiple Encounters" then
+          bEncounterName = encounter.name
+          break
+        end
+      end
+    end
+
+    if direction == "asc" then
+      return aEncounterName < bEncounterName
+    else
+      return aEncounterName > bEncounterName
+    end
+  end
+
   -- Add item rows
   for itemID, item in pairs(self.cache.loot) do
     -- Apply quality color to item name
@@ -701,7 +740,7 @@ function Module:PopulateTable()
       itemText = WrapTextInColorCode(itemText, WHITE_FONT_COLOR:GenerateHexColor())
     end
 
-    -- Generate source text
+    -- Generate source text with instance icon
     local sourceText = "Unknown"
     if item.encounters and next(item.encounters) then
       local encounterNames = {}
@@ -719,6 +758,12 @@ function Module:PopulateTable()
         sourceText = string.format("%s +%d more", encounterNames[1], #encounterNames - 1)
       else
         sourceText = "Multiple Encounters"
+      end
+
+      -- Add instance icon prefix
+      local instanceIcon = self:GetInstanceIcon(item)
+      if instanceIcon then
+        sourceText = instanceIcon .. " " .. sourceText
       end
     end
 
@@ -755,6 +800,12 @@ function Module:PopulateTable()
           text = item.armorType ~= "Unknown" and item.armorType or (item.slot == "No Slot" and "Special" or "Unknown"),
         },
         {
+          text = self:GetPrimaryStat(item.stats),
+        },
+        {
+          text = self:GetSecondaryStats(item.stats),
+        },
+        {
           text = sourceText,
           onClick = function()
             -- Open encounter journal to the first encounter for this item
@@ -773,10 +824,21 @@ function Module:PopulateTable()
 
                   EncounterJournal_OpenJournal(difficultyID, item.journalInstanceID, encounter.journalEncounterID, nil, item.itemID, nil, nil)
 
+                  -- Focus the journal window
+                  if EncounterJournal:IsShown() then
+                    EncounterJournal:Show()
+                    EncounterJournal:Raise()
+                  end
+
                   -- Manually select the loot tab as backup if it doesn't open automatically
                   C_Timer.After(0.1, function()
                     if EncounterJournal.encounter and EncounterJournal.encounter.info and EncounterJournal.encounter.info.lootTab then
                       EncounterJournal.encounter.info.lootTab:Click()
+                    end
+                    -- Ensure journal is focused after tab click
+                    if EncounterJournal:IsShown() then
+                      EncounterJournal:Show()
+                      EncounterJournal:Raise()
                     end
                   end)
                   break -- Open to first encounter
@@ -785,52 +847,33 @@ function Module:PopulateTable()
             end
           end,
           onEnter = function(columnFrame)
-            -- Show tooltip indicating clickable
-            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Click to open Encounter Journal")
-            GameTooltip:AddLine("Opens to the encounter loot tab", 1, 1, 1, true)
-            GameTooltip:Show()
-            -- Change cursor to indicate clickable
-            columnFrame:SetScript("OnUpdate", function()
-              if columnFrame:IsMouseOver() then
-                SetCursor("Interface\\Cursor\\Point.blp")
+            -- Show tooltip with encounter and instance info
+            GameTooltip:SetOwner(columnFrame, "ANCHOR_TOP")
+            GameTooltip:SetText("Source")
+
+            -- Add encounter info
+            if item.encounters and next(item.encounters) then
+              local encounterNames = {}
+              for _, encounter in pairs(item.encounters) do
+                if encounter.name and encounter.name ~= "Multiple Encounters" then
+                  table.insert(encounterNames, encounter.name)
+                end
               end
-            end)
-          end,
-          onLeave = function(columnFrame)
-            GameTooltip:Hide()
-            ResetCursor()
-            columnFrame:SetScript("OnUpdate", nil)
-          end,
-        },
-        {
-          text = item.instanceName or "Unknown",
-          onClick = function()
-            -- Use the direct EncounterJournal_OpenJournal function with all parameters
-            -- Set difficulty based on instance type
-            local difficultyID = item.instanceType == "raid" and 16 or 23 -- Mythic (raid) or Mythic (dungeon)
-            EncounterJournal_LoadUI()
 
-            -- Clear any existing filters and set difficulty before opening
-            EJ_ClearSearch()
-            EJ_ResetLootFilter()
-            EJ_SetDifficulty(difficultyID)
-
-            EncounterJournal_OpenJournal(difficultyID, item.journalInstanceID, nil, nil, item.itemID, nil, nil)
-
-            -- Manually select the loot tab as backup if it doesn't open automatically
-            C_Timer.After(0.1, function()
-              if EncounterJournal.encounter and EncounterJournal.encounter.info and EncounterJournal.encounter.info.lootTab then
-                EncounterJournal.encounter.info.lootTab:Click()
+              if #encounterNames > 0 then
+                GameTooltip:AddDoubleLine("Encounter:", table.concat(encounterNames, ", "), 1, 1, 1, 1, 1, 1)
               end
-            end)
-          end,
-          onEnter = function(columnFrame)
-            -- Show tooltip indicating clickable
-            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Click to open Encounter Journal")
-            GameTooltip:AddLine("Opens to the instance loot tab", 1, 1, 1, true)
+            end
+
+            -- Add instance info
+            if item.instanceName then
+              GameTooltip:AddDoubleLine("Instance:", item.instanceName, 1, 1, 1, 1, 1, 1)
+            end
+
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("<Click to open Encounter Journal>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
             GameTooltip:Show()
+
             -- Change cursor to indicate clickable
             columnFrame:SetScript("OnUpdate", function()
               if columnFrame:IsMouseOver() then
@@ -870,6 +913,90 @@ function Module:SortByQuality(aValue, bValue, direction, aRow, bRow)
     return aQuality < bQuality
   else
     return aQuality > bQuality
+  end
+end
+
+---Get primary stat from item stats
+---@param stats table Item stats from C_Item.GetItemStats
+---@return string
+function Module:GetPrimaryStat(stats)
+  if not stats then return "" end
+
+  if stats.ITEM_MOD_STRENGTH_SHORT and stats.ITEM_MOD_STRENGTH_SHORT > 0 then
+    return ITEM_MOD_STRENGTH_SHORT
+  elseif stats.ITEM_MOD_AGILITY_SHORT and stats.ITEM_MOD_AGILITY_SHORT > 0 then
+    return ITEM_MOD_AGILITY_SHORT
+  elseif stats.ITEM_MOD_INTELLECT_SHORT and stats.ITEM_MOD_INTELLECT_SHORT > 0 then
+    return ITEM_MOD_INTELLECT_SHORT
+  end
+
+  return ""
+end
+
+---Get secondary stats from item stats
+---@param stats table Item stats from C_Item.GetItemStats
+---@return string
+function Module:GetSecondaryStats(stats)
+  if not stats then return "" end
+
+  local secondaries = {}
+
+  if stats.ITEM_MOD_CRIT_RATING_SHORT and stats.ITEM_MOD_CRIT_RATING_SHORT > 0 then
+    table.insert(secondaries, ITEM_MOD_CRIT_RATING_SHORT)
+  end
+  if stats.ITEM_MOD_HASTE_RATING_SHORT and stats.ITEM_MOD_HASTE_RATING_SHORT > 0 then
+    table.insert(secondaries, ITEM_MOD_HASTE_RATING_SHORT)
+  end
+  if stats.ITEM_MOD_MASTERY_RATING_SHORT and stats.ITEM_MOD_MASTERY_RATING_SHORT > 0 then
+    table.insert(secondaries, ITEM_MOD_MASTERY_RATING_SHORT)
+  end
+  if stats.ITEM_MOD_VERSATILITY and stats.ITEM_MOD_VERSATILITY > 0 then
+    table.insert(secondaries, ITEM_MOD_VERSATILITY)
+  end
+
+  return table.concat(secondaries, " / ")
+end
+
+---Get instance icon texture
+---@param item table Item data from cache
+---@return string|nil
+function Module:GetInstanceIcon(item)
+  if not item.instanceName then
+    return nil
+  end
+
+  -- Try to find the instance in our data to get the texture
+  local instanceTexture = nil
+
+  if item.instanceType == "dungeon" then
+    -- Look for dungeon by journalInstanceID
+    for _, dungeon in pairs(addon.Data:GetDungeons()) do
+      if dungeon.journalInstanceID == item.journalInstanceID then
+        instanceTexture = dungeon.texture
+        break
+      end
+    end
+  elseif item.instanceType == "raid" then
+    -- Look for raid by journalInstanceID
+    for _, raid in pairs(addon.Data:GetRaids()) do
+      if raid.journalInstanceID == item.journalInstanceID then
+        -- Try to get the raid instance texture using EJ_GetInstanceInfo
+        local instanceName, description, bgImage, _, loreImage, buttonImage, dungeonAreaMapID, _, _, _, covenantID = EJ_GetInstanceInfo(raid.journalInstanceID)
+        if buttonImage and buttonImage > 0 then
+          instanceTexture = buttonImage
+        else
+          -- Fallback to a raid icon
+          instanceTexture = "Interface/Icons/achievement_bg_winabg"
+        end
+        break
+      end
+    end
+  end
+
+  if instanceTexture then
+    return "|T" .. instanceTexture .. ":0|t"
+  else
+    return nil
   end
 end
 

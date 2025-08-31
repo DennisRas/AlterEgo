@@ -38,6 +38,8 @@ function Core:OnInitialize()
       local _, b = ...
       if b and b == "RightButton" then
         self:ToggleVault()
+      elseif IsShiftKeyDown() then
+        self:ToggleLootTable()
       else
         self:ToggleWindow()
       end
@@ -46,6 +48,7 @@ function Core:OnInitialize()
       tooltip:SetText(addonName, 1, 1, 1)
       tooltip:AddLine("|cff00ff00Left click|r to open AlterEgo.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       tooltip:AddLine("|cff00ff00Right click|r to open the Great Vault.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+      tooltip:AddLine("|cff00ff00Shift+Click|r to open Loot Table.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       local dragText = "|cff00ff00Drag|r to move this icon"
       if addon.Data.db.global.minimap.lock then
         dragText = dragText .. " |cffff0000(locked)|r"
@@ -77,6 +80,13 @@ function Core:ToggleVault()
     ToggleFrame(WeeklyRewardsFrame)
   else
     WeeklyRewards_ShowUI()
+  end
+end
+
+---Toggle the Loot Table window
+function Core:ToggleLootTable()
+  if addon.Module_LootTable then
+    addon.Module_LootTable:ToggleWindow()
   end
 end
 
