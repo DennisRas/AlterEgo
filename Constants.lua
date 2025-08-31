@@ -22,25 +22,25 @@ addon.Constants = {
     -- Primary brand colors
     primary = {r = 0.2, g = 0.6, b = 1.0, a = 1.0},
     titlebar = {r = 0.1, g = 0.1, b = 0.1, a = 1.0},
-    
+
     -- Common UI colors
     black = {r = 0, g = 0, b = 0, a = 1.0},
     white = {r = 1, g = 1, b = 1, a = 1.0},
     gray = {r = 0.5, g = 0.5, b = 0.5, a = 1.0},
     red = {r = 1, g = 0, b = 0, a = 1.0},
-    
+
     -- Background colors with alpha
     header = {r = 0, g = 0, b = 0, a = 0.3},
     border = {r = 0.5, g = 0.5, b = 0.5, a = 0.3},
     borderLight = {r = 0.5, g = 0.5, b = 0.5, a = 0.1},
     striped = {r = 1, g = 1, b = 1, a = 0.01},
     stripedAlt = {r = 1, g = 1, b = 1, a = 0.02},
-    
+
     -- Interactive elements
     closeButton = {r = 1, g = 0, b = 0, a = 0.2},
     closeButtonHover = {r = 1, g = 0, b = 0, a = 0.4},
     buttonHover = {r = 1, g = 1, b = 1, a = 0.05},
-    
+
     -- Transparent
     transparent = {r = 0, g = 0, b = 0, a = 0},
   },

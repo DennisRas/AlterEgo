@@ -1,3 +1,195 @@
+---
+alwaysApply: true
+---
+
+
+# AlterEgo Common Gotchas & Solutions
+
+## Module Loading Issues
+
+### Local Variable Hoisting
+**Problem**: Local variables referencing other addon modules can be nil due to loading order
+**Solution**: Always use addon objects directly, never create local variables for other modules
+```lua
+-- Bad - can cause nil reference errors
+local Utils = addon.Utils
+local Table = addon.Table
+local Window = addon.Window
+
+function Module:SomeFunction()
+    Utils:SomeFunction() -- This might be nil!
+end
+
+-- Good - always use addon objects directly
+function Module:SomeFunction()
+    addon.Utils:SomeFunction() -- Always safe
+end
+
+-- Exception - self.db is safe because it's set during initialization
+function Module:OnInitialize()
+    self.db = addon.db -- This is OK
+end
+```
+
+## Database Issues
+
+### dbVersion Not Incremented
+**Problem**: Database schema changes don't migrate properly
+**Solution**: Always increment `Data.dbVersion` constant when changing database structure
+```lua
+-- Before
+Data.dbVersion = 30
+-- ... database structure changes ...
+
+-- After
+Data.dbVersion = 31 -- Increment this!
+-- ... new database structure ...
+```
+
+### Global vs Profile Data Confusion
+**Problem**: Using profile data when global is needed (or vice versa)
+**Solution**: 
+- Use `self.db.global` for all data (no profile data used)
+- All addon data is stored in global database
+- No separate namespaces - everything shares the same global data
+
+### Missing Data Validation
+**Problem**: Accessing nested properties without checking for nil
+**Solution**: Always validate before access
+```lua
+-- Bad
+local value = self.db.global.deeply.nested.property
+
+-- Good
+if self.db.global.deeply and self.db.global.deeply.nested then
+    local value = self.db.global.deeply.nested.property
+end
+```
+
+## Type System Issues
+
+### Inline Complex @param Annotations
+**Problem**: Complex table shapes defined inline
+**Solution**: Create dedicated `AE_` types in `Types.lua`
+```lua
+-- Bad
+---@param options {name: string, enabled: boolean, config: {setting: string}}
+
+-- Good
+---@param options AE_SomeOptionsType
+```
+
+### Missing Function Annotations
+**Problem**: Functions without proper type annotations
+**Solution**: Always annotate with `@param`, `@return`, and descriptions
+```lua
+-- Bad
+function Module:ProcessData(data)
+    -- implementation
+end
+
+-- Good
+---@param data AE_DataType The data to process
+---@return boolean success Whether processing succeeded
+function Module:ProcessData(data)
+    -- implementation
+end
+```
+
+## UI Issues
+
+### Window Name Conflicts
+**Problem**: Multiple windows with same name causing conflicts
+**Solution**: Use unique, descriptive names
+```lua
+-- Bad
+local window = addon.Window:New({name = "Window"})
+
+-- Good
+local window = addon.Window:New({name = "EquipmentManager"})
+```
+
+### Frame Anchoring Issues
+**Problem**: UI elements not positioned correctly
+**Solution**: Use proper anchoring patterns
+```lua
+-- Good anchoring pattern
+childFrame:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 10, -10)
+childFrame:SetPoint("BOTTOMRIGHT", parentFrame, "BOTTOMRIGHT", -10, 10)
+```
+
+## Module Issues
+
+### Event Registration in Wrong Lifecycle
+**Problem**: Events registered in `OnInitialize()` instead of `OnEnable()`
+**Solution**: 
+- `OnInitialize()`: Database setup, one-time initialization
+- `OnEnable()`: Event registration, timers, active functionality
+- `OnDisable()`: Event unregistration, cleanup
+
+### Missing Error Messages
+**Problem**: Generic error messages that don't help debugging
+**Solution**: Include context in error messages
+```lua
+-- Bad
+error("Invalid parameter")
+
+-- Good
+error("ModuleName:FunctionName: param1 must be a string, got " .. type(param1))
+```
+
+## Performance Issues
+
+### Database Writes During Combat
+**Problem**: Heavy database operations causing frame drops
+**Solution**: Defer non-critical writes
+```lua
+-- Use timers for non-critical updates
+self:ScheduleTimer(function()
+    self.db.global.someData = newValue
+end, 0.1)
+```
+
+### Unregistered Events
+**Problem**: Memory leaks from events not unregistered
+**Solution**: Always unregister in `OnDisable()`
+```lua
+function Module:OnDisable()
+    self:UnregisterEvent("EVENT_NAME")
+    self:CancelAllTimers()
+end
+```
+
+## File Structure Issues
+
+### Missing File Headers
+**Problem**: Files without standard headers
+**Solution**: Always include standard header pattern
+```lua
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+```
+
+### Wrong Class Annotations
+**Problem**: Incorrect class annotations for modules
+**Solution**: Use `AE_Module_ModuleName : AceModule` for modules
+```lua
+---@class AE_Module_Main : AceModule
+local Module = addon:NewModule("Main", "AceEvent-3.0", "AceDB-3.0")
+```
+
+## Development Environment Issues
+
+### Local Addon Execution
+**Problem**: Attempting to run WoW addons outside the game client
+**Solution**: 
+- **Never attempt to run the addon locally** - WoW addons can only run within the game client
+- Only perform formatting, linting, and code analysis outside the game
+- All testing and debugging must be done in-game
+- Use `/reload` or `/run` commands in-game for testing changes
+- Addon files are loaded by the WoW client, not by external Lua interpreters
 
 # AlterEgo Common Gotchas & Solutions
 

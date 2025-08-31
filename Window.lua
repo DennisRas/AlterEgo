@@ -41,7 +41,7 @@ function Window:New(options)
   local initialWidth = options and options.width or 300
   local initialHeight = options and options.height or 300
   window:SetSize(initialWidth, initialHeight)
-  
+
   window:EnableMouse(true) -- Disable click-throughs
   window:SetParent(window.config.parent)
   window:SetClampedToScreen(true)
@@ -208,7 +208,7 @@ function Window:New(options)
 
     -- Always anchor to the close button initially
     button:SetPoint("RIGHT", self.titlebar.CloseButton, "LEFT", 0, 0)
-    
+
     -- Now reposition all existing buttons to maintain the chain
     local currentAnchor = button
     for _, existingButton in pairs(self.titlebarButtons) do
@@ -348,5 +348,3 @@ function Window:ToggleWindow(name)
     window:Show()
   end
 end
-
-

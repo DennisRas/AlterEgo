@@ -1,3 +1,190 @@
+---
+alwaysApply: true
+---
+
+
+
+# AlterEgo Coding Patterns
+
+## Module Loading Patterns
+
+### Safe Module References
+```lua
+-- Bad - can cause nil reference errors due to loading order
+local Utils = addon.Utils
+local Table = addon.Table
+local Window = addon.Window
+
+function Module:SomeFunction()
+    Utils:SomeFunction() -- This might be nil!
+end
+
+-- Good - always use addon objects directly
+function Module:SomeFunction()
+    addon.Utils:SomeFunction() -- Always safe
+end
+
+-- Exception - self.db is safe because it's set during initialization
+function Module:OnInitialize()
+    self.db = addon.db -- This is OK
+end
+```
+
+## Type System Patterns
+
+### Custom Type Definitions
+- All addon-specific types use `AE_` prefix
+- Define complex types in `Types.lua`, not inline
+- Use parent-prefixed subtypes: `AE_TableConfigHeader` not `AE_TableHeaderConfig`
+- Prefer existing WoW API types over creating duplicates
+
+### Function Annotations
+```lua
+---@param data AE_SomeDataType The data to process
+---@param options AE_SomeOptionsType Configuration options
+---@return boolean success Whether the operation succeeded
+---@return string? errorMessage Error message if failed
+function Module:ProcessData(data, options)
+    -- Function implementation
+end
+```
+
+## Module Structure Patterns
+
+### Standard Module Template
+```lua
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+---@class AE_Module_Main : AceModule
+local Module = addon:NewModule("Main", "AceEvent-3.0", "AceDB-3.0")
+
+function Module:OnInitialize()
+    -- Access shared database through main addon
+    self.db = addon.db
+end
+
+function Module:OnEnable()
+    self:RegisterEvent("EVENT_NAME")
+end
+
+function Module:OnDisable()
+    self:UnregisterEvent("EVENT_NAME")
+end
+```
+
+## Error Handling Patterns
+
+### Parameter Validation
+```lua
+function Module:SomeFunction(param1, param2)
+    if not param1 then
+        error("ModuleName:SomeFunction: param1 is required")
+    end
+    
+    if type(param2) ~= "string" then
+        error("ModuleName:SomeFunction: param2 must be a string")
+    end
+    
+    -- Function logic
+end
+```
+
+### Data Validation
+```lua
+local function validateData(data)
+    if not data or type(data) ~= "table" then
+        error("Invalid data format: expected table")
+    end
+    
+    if not data.requiredField then
+        error("Data missing required field: requiredField")
+    end
+end
+```
+
+## Database Patterns
+
+### Global Data Access
+```lua
+-- All data is stored in global database
+self.db = addon.db
+
+-- Access global data
+local data = self.db.global.someData
+local characters = self.db.global.characters
+local settings = self.db.global.interface
+```
+
+### Schema Migration
+```lua
+-- Define dbVersion as constant in Data table
+Data.dbVersion = 30
+
+-- Migration logic compares saved version to current version
+if self.db.global.dbVersion < self.dbVersion then
+    -- Migration logic here
+    self.db.global.dbVersion = self.db.global.dbVersion + 1
+    self:MigrateDB() -- Recursive call for multiple migrations
+end
+```
+
+## UI Patterns
+
+### Window Creation
+```lua
+local window = addon.Window:New({
+    name = "UniqueWindowName",
+    title = "Window Title",
+    sidebar = 150,
+    titlebar = true,
+    border = 1,
+    windowScale = 1.0,
+    windowColor = {r=0.1, g=0.1, b=0.1, a=0.9}
+})
+```
+
+### Dynamic Button Management
+```lua
+-- Add button to existing window
+window:AddTitlebarButton({
+    name = "ButtonName",
+    icon = "Interface\\Icons\\icon_name",
+    tooltipTitle = "Button Tooltip",
+    onClick = function() 
+        -- Click handler
+    end
+})
+
+-- Remove button
+window:RemoveTitlebarButton("ButtonName")
+```
+
+## File Header Patterns
+
+### Standard File Header
+```lua
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+---@class AE_Module_ModuleName : AceModule
+local Module = addon:NewModule("ModuleName", "AceEvent-3.0", "AceDB-3.0")
+```
+
+### Utility File Header
+```lua
+---@type string
+local addonName = select(1, ...)
+---@class AE_Addon
+local addon = select(2, ...)
+
+---@class AE_UtilityName
+local Utility = {}
+```
 
 
 # AlterEgo Coding Patterns
