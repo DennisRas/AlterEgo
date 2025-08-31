@@ -404,8 +404,6 @@ function Module:BuildCache()
   C_EncounterJournal.ResetSlotFilter()
 
   self.cache.loot = {}
-  self.itemTypeCounts = {weapons = 0, armor = 0, other = 0}
-  self.uniqueSlots = {}
 
   local instances = self:GetCurrentSeasonInstances()
   local classSpecs = self:GetClassSpecCombinations()
@@ -552,27 +550,23 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
   EJ_ResetLootFilter()
   EJ_SelectInstance(instance.journalInstanceID)
   EJ_SelectEncounter(encounter.journalEncounterID)
+
+  -- Set difficulty to Mythic for raids, Mythic for dungeons
+  if instanceType == "raid" then
+    EJ_SetDifficulty(16) -- Mythic (raid)
+  else
+    EJ_SetDifficulty(23) -- Mythic (party/dungeon)
+  end
+
   EJ_SetLootFilter(classID, specID)
 
   -- Get loot for this encounter/class/spec combination
   for i = 1, EJ_GetNumLoot() do
     local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
-    if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
+    if lootInfo.name ~= nil and lootInfo.itemID then
       local itemID = lootInfo.itemID
 
-      -- Track unique slots for debugging
-      if lootInfo.slot then
-        self.uniqueSlots[lootInfo.slot] = (self.uniqueSlots[lootInfo.slot] or 0) + 1
-      end
 
-      -- Count item types for debugging (use slot to determine type)
-      if lootInfo.slot and (lootInfo.slot == "One-Hand" or lootInfo.slot == "Two-Hand" or lootInfo.slot == "Main Hand" or lootInfo.slot == "Off Hand") then
-        self.itemTypeCounts.weapons = self.itemTypeCounts.weapons + 1
-      elseif lootInfo.slot and (lootInfo.slot == "Head" or lootInfo.slot == "Chest" or lootInfo.slot == "Shoulder" or lootInfo.slot == "Back" or lootInfo.slot == "Wrist" or lootInfo.slot == "Hands" or lootInfo.slot == "Waist" or lootInfo.slot == "Legs" or lootInfo.slot == "Feet" or lootInfo.slot == "Finger" or lootInfo.slot == "Trinket") then
-        self.itemTypeCounts.armor = self.itemTypeCounts.armor + 1
-      else
-        self.itemTypeCounts.other = self.itemTypeCounts.other + 1
-      end
 
       -- Find or create item in cache
       local item = self.cache.loot[itemID]
@@ -583,7 +577,7 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
           name = lootInfo.name,
           link = lootInfo.link,
           quality = lootInfo.itemQuality,
-          slot = lootInfo.slot,
+          slot = lootInfo.slot or "No Slot",
           texture = lootInfo.icon,
           armorType = lootInfo.armorType or "Unknown",
 
@@ -646,23 +640,8 @@ function Module:ProcessEncounterLoot(instance, encounter, classID, specID, insta
         }
       end
 
-      -- Track difficulty
-      if instanceType == "raid" then
-        local difficultyID = EJ_GetDifficulty()
-        local difficultyName = "Normal"
-
-        if difficultyID == 15 then
-          difficultyName = "Heroic"
-        elseif difficultyID == 16 then
-          difficultyName = "Mythic"
-        elseif difficultyID == 14 then
-          difficultyName = "LFR"
-        end
-
-        item.difficulties[difficultyName] = true
-      else
-        item.difficulties["Mythic+"] = true
-      end
+      -- Track difficulty (always Mythic for both raids and dungeons)
+      item.difficulties["Mythic"] = true
 
       -- Add class/spec info
       item.classes[classID] = true
@@ -773,7 +752,7 @@ function Module:PopulateTable()
           text = item.slot or "Unknown",
         },
         {
-          text = item.armorType or "Unknown",
+          text = item.armorType ~= "Unknown" and item.armorType or (item.slot == "No Slot" and "Special" or "Unknown"),
         },
         {
           text = sourceText,
@@ -782,10 +761,24 @@ function Module:PopulateTable()
             if item.encounters and next(item.encounters) then
               for _, encounter in pairs(item.encounters) do
                 if encounter.journalEncounterID then
-                  EJ_SelectInstance(item.journalInstanceID)
-                  EJ_SelectEncounter(encounter.journalEncounterID)
+                  -- Use the direct EncounterJournal_OpenJournal function with all parameters
+                  -- Set difficulty based on instance type
+                  local difficultyID = item.instanceType == "raid" and 16 or 23 -- Mythic (raid) or Mythic (dungeon)
                   EncounterJournal_LoadUI()
-                  EncounterJournal_OpenJournal()
+
+                  -- Clear any existing filters and set difficulty before opening
+                  EJ_ClearSearch()
+                  EJ_ResetLootFilter()
+                  EJ_SetDifficulty(difficultyID)
+
+                  EncounterJournal_OpenJournal(difficultyID, item.journalInstanceID, encounter.journalEncounterID, nil, item.itemID, nil, nil)
+
+                  -- Manually select the loot tab as backup if it doesn't open automatically
+                  C_Timer.After(0.1, function()
+                    if EncounterJournal.encounter and EncounterJournal.encounter.info and EncounterJournal.encounter.info.lootTab then
+                      EncounterJournal.encounter.info.lootTab:Click()
+                    end
+                  end)
                   break -- Open to first encounter
                 end
               end
@@ -795,7 +788,7 @@ function Module:PopulateTable()
             -- Show tooltip indicating clickable
             GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Click to open Encounter Journal")
-            GameTooltip:AddLine("Opens to the encounter that drops this item", 1, 1, 1, true)
+            GameTooltip:AddLine("Opens to the encounter loot tab", 1, 1, 1, true)
             GameTooltip:Show()
             -- Change cursor to indicate clickable
             columnFrame:SetScript("OnUpdate", function()
@@ -813,16 +806,30 @@ function Module:PopulateTable()
         {
           text = item.instanceName or "Unknown",
           onClick = function()
-            -- Open encounter journal to the instance
-            EJ_SelectInstance(item.journalInstanceID)
+            -- Use the direct EncounterJournal_OpenJournal function with all parameters
+            -- Set difficulty based on instance type
+            local difficultyID = item.instanceType == "raid" and 16 or 23 -- Mythic (raid) or Mythic (dungeon)
             EncounterJournal_LoadUI()
-            EncounterJournal_OpenJournal()
+
+            -- Clear any existing filters and set difficulty before opening
+            EJ_ClearSearch()
+            EJ_ResetLootFilter()
+            EJ_SetDifficulty(difficultyID)
+
+            EncounterJournal_OpenJournal(difficultyID, item.journalInstanceID, nil, nil, item.itemID, nil, nil)
+
+            -- Manually select the loot tab as backup if it doesn't open automatically
+            C_Timer.After(0.1, function()
+              if EncounterJournal.encounter and EncounterJournal.encounter.info and EncounterJournal.encounter.info.lootTab then
+                EncounterJournal.encounter.info.lootTab:Click()
+              end
+            end)
           end,
           onEnter = function(columnFrame)
             -- Show tooltip indicating clickable
             GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Click to open Encounter Journal")
-            GameTooltip:AddLine("Opens to the instance overview", 1, 1, 1, true)
+            GameTooltip:AddLine("Opens to the instance loot tab", 1, 1, 1, true)
             GameTooltip:Show()
             -- Change cursor to indicate clickable
             columnFrame:SetScript("OnUpdate", function()
