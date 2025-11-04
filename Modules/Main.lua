@@ -985,6 +985,25 @@ function Module:SetupButtons()
       )
     end)
     menu:CreateDivider()
+    menu:CreateTitle("Delete Characters")
+    local deleteMenu = menu:CreateButton("Select character to delete")
+    for _, char in pairs(addon.Data:GetCharacters(true)) do
+      local nameColor = WHITE_FONT_COLOR
+      if char.info.class.file ~= nil then
+        local classColor = C_ClassColor.GetClassColor(char.info.class.file)
+        if classColor ~= nil then
+          nameColor = classColor
+        end
+      end
+      deleteMenu:CreateButton(
+        format("%s (%s)", nameColor:WrapTextInColorCode(char.info.name), char.info.realm),
+        function()
+          addon.Data:ShowDeleteConfirmation(char.info.name, char.info.realm, char.GUID)
+        end
+      )
+    end
+
+    menu:CreateDivider()
     menu:CreateTitle(INTERFACE_OPTIONS)
     menu:CreateCheckbox(
       "Show Weekly Affixes",
