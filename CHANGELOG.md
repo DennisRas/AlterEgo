@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.3 - 2026-01-20
+
+### Updated
+
+- Updated the TOC number to support Midnight Pre-patch + Beta
+
 ## v1.3.2 - 2025-08-06
 
 Please note: This pre-season week is a bit unusual, as Blizzard only provides partial data until the season officially begins.
