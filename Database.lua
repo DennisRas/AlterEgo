@@ -440,6 +440,60 @@ function Data:Initialize()
     self.defaultDB,
     true
   )
+  -- Initialize database
+end
+
+---Show custom confirmation dialog using AceGUI
+---@param name string Character name to display
+---@param realm string Character realm
+---@param guid string Character GUID
+function Data:ShowDeleteConfirmation(name, realm, guid)
+  -- Create a styled window matching the main addon window
+  local windowName = "DeleteConfirm" .. (guid or "")
+  local win = addon.Window:New({ name = windowName, title = "Delete Character", titlebar = true })
+  -- Body size (width, height)
+  win:SetBodySize(320, 160)
+
+  -- Center text in body
+  local text = win.body:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  text:SetPoint("TOP", win.body, "TOP", 0, -20)
+  text:SetJustifyH("CENTER")
+  text:SetText(format("Are you sure you want to delete\n%s (%s)?", name or "", realm or ""))
+
+  -- Create Delete button
+  local deleteBtn = CreateFrame("Button", nil, win.body, "UIPanelButtonTemplate")
+  deleteBtn:SetSize(120, 24)
+  deleteBtn:SetText("Delete")
+  deleteBtn:SetPoint("BOTTOM", win.body, "BOTTOM", 0, 12)
+  deleteBtn:SetScript("OnClick", function()
+    win:Hide()
+    self:DeleteCharacter(guid)
+  end)
+
+  -- Show the window (Window:New already hides by default)
+  win:Show()
+end
+
+---Delete a character from the database
+---@param guid string
+function Data:DeleteCharacter(guid)
+  if not guid then return end
+  if type(guid) ~= "string" then return end
+  if self.db.global.characters[guid] == nil then return end
+  
+  -- Get the current player's GUID
+  local currentCharacterGUID = UnitGUID("player")
+  
+  -- Block deletion of currently logged-in character
+  if guid == currentCharacterGUID then
+    addon.Core:Print("Cannot delete your currently logged-in character.")
+    return
+  end
+  
+  -- Remove the character entry
+  self.db.global.characters[guid] = nil
+  -- Re-render UI
+  addon.Core:Render()
 end
 
 ---Get the current Season IDs
