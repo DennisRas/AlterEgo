@@ -787,26 +787,18 @@ function Data:MigrateDB()
         end
       end
     end
-    -- Midnight Pre-patch stat squish (item levels -560)
+    -- Midnight Pre-patch stat squish
     if self.db.global.dbVersion == 30 then
-      local itemLevelReduction = 560
+      local function GetPostSquishItemLevel(preSquishItemLevel)
+        return C_CurveUtil.EvaluateGameCurve(92181, preSquishItemLevel)
+      end
       for _, character in pairs(self.db.global.characters) do
-        if character.info.ilvl.level > itemLevelReduction then
-          character.info.ilvl.level = character.info.ilvl.level - itemLevelReduction
-        end
-        if character.info.ilvl.pvp > itemLevelReduction then
-          character.info.ilvl.pvp = character.info.ilvl.pvp - itemLevelReduction
-        end
-        if character.info.ilvl.equipped > itemLevelReduction then
-          character.info.ilvl.equipped = character.info.ilvl.equipped - itemLevelReduction
-        end
-        for _, equipment in pairs(character.equipment) do
-          if equipment.itemLevel > itemLevelReduction then
-            equipment.itemLevel = equipment.itemLevel - itemLevelReduction
-          end
-          if equipment.itemMinLevel > itemLevelReduction then
-            equipment.itemMinLevel = equipment.itemMinLevel - itemLevelReduction
-          end
+        character.info.ilvl.level = GetPostSquishItemLevel(character.info.ilvl.level) or 0
+        character.info.ilvl.pvp = GetPostSquishItemLevel(character.info.ilvl.pvp) or 0
+        character.info.ilvl.level = GetPostSquishItemLevel(character.info.ilvl.level) or 0
+        for _, equipment in pairs(character.equipment or {}) do
+          equipment.itemLevel = GetPostSquishItemLevel(equipment.itemLevel) or 0
+          equipment.itemMinLevel = GetPostSquishItemLevel(equipment.itemMinLevel) or 0
         end
       end
     end

@@ -215,5 +215,6 @@
         "OPTIONS",
         "ITEM_QUALITY_COLORS",
         "RANK",
+        "C_CurveUtil",
     ]
 }

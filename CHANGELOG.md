@@ -1,8 +1,14 @@
 # Changelog
 
-## v1.3.4 - 2026-01-21
+## v1.3.5 - 2026-01-21
 
 Please note: Because of the stat squish in Midnight, all item levels won't be fully accurate until you've logged the characters. There's also a chance that Blizzard has messed up some item level ranges, so expect a couple of days with crazy bugs.
+
+### Fixed
+
+- Fixed a bug with item level squish
+
+## v1.3.4 - 2026-01-21
 
 ### Updated
 

@@ -175,7 +175,7 @@ function Module:Render()
             end
           end,
         },
-        {text = WrapTextInColorCode(tostring(item.itemLevel), select(4, GetItemQualityColor(item.itemQuality)))},
+        {text = WrapTextInColorCode(tostring(floor(item.itemLevel)), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
       },
     }
