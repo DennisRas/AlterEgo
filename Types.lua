@@ -74,7 +74,6 @@
 ---@field numCompletedDungeonRuns {heroic: number, mythic: number, mythicPlus: number}
 ---@field rating number
 ---@field keystone {challengeModeID: number, mapId: number, level: number, color: string, itemId: number, itemLink: string}
----@field weeklyRewardAvailable boolean
 ---@field bestSeasonScore number
 ---@field bestSeasonNumber number
 ---@field runHistory MythicPlusRunInfo[]

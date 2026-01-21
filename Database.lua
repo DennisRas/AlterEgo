@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 30
+Data.dbVersion = 31
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -121,7 +121,6 @@ Data.defaultCharacter = {
       itemId = 0,
       itemLink = "",
     },
-    weeklyRewardAvailable = false,
     bestSeasonScore = 0,
     bestSeasonNumber = 0,
     runHistory = {},
@@ -788,6 +787,29 @@ function Data:MigrateDB()
         end
       end
     end
+    -- Midnight Pre-patch stat squish (item levels -560)
+    if self.db.global.dbVersion == 30 then
+      local itemLevelReduction = 560
+      for _, character in pairs(self.db.global.characters) do
+        if character.info.ilvl.level > itemLevelReduction then
+          character.info.ilvl.level = character.info.ilvl.level - itemLevelReduction
+        end
+        if character.info.ilvl.pvp > itemLevelReduction then
+          character.info.ilvl.pvp = character.info.ilvl.pvp - itemLevelReduction
+        end
+        if character.info.ilvl.equipped > itemLevelReduction then
+          character.info.ilvl.equipped = character.info.ilvl.equipped - itemLevelReduction
+        end
+        for _, equipment in pairs(character.equipment) do
+          if equipment.itemLevel > itemLevelReduction then
+            equipment.itemLevel = equipment.itemLevel - itemLevelReduction
+          end
+          if equipment.itemMinLevel > itemLevelReduction then
+            equipment.itemMinLevel = equipment.itemMinLevel - itemLevelReduction
+          end
+        end
+      end
+    end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
@@ -1305,7 +1327,6 @@ function Data:UpdateMythicPlus()
   local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
   local runHistory = C_MythicPlus.GetRunHistory(true, true)
   local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
-  local weeklyRewardAvailable = C_MythicPlus.IsWeeklyRewardAvailable() -- Unused
   local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns()
   local affixes = self:GetAffixes()
@@ -1314,7 +1335,6 @@ function Data:UpdateMythicPlus()
   if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
   if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
   if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
-  if weeklyRewardAvailable ~= nil then character.mythicplus.weeklyRewardAvailable = weeklyRewardAvailable end
   if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
 
   character.mythicplus.numCompletedDungeonRuns = {
