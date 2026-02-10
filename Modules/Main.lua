@@ -11,7 +11,7 @@ function Module:OnInitialize()
   self:Render()
 end
 
-local CHARACTER_WIDTH = 120
+local CHARACTER_WIDTH = 130
 local dungeonPortalUnlockLevel = 10
 local vaultMaxLevelRewardMythic = 10
 local vaultMaxLevelRewardWorld = 8
@@ -1473,8 +1473,9 @@ function Module:Render()
     end
   end
 
-  do   -- Sidebar
+  do -- Sidebar
     local rowCount = 0
+    local totalHeight = 0
     do -- CharacterInfo Labels
       self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
       addon.Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
@@ -1491,12 +1492,13 @@ function Module:Render()
           self.window.sidebar.infoFrames[infoIndex] = infoFrame
         end
 
-        infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-        infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+        infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+        infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
         infoFrame:SetHeight(addon.Constants.sizes.row)
         infoFrame.text:SetText(info.label)
         infoFrame:Show()
         rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
       end)
     end
 
@@ -1514,11 +1516,12 @@ function Module:Render()
         self.window.sidebar.mpluslabel = label
       end
 
-      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
       label:SetHeight(addon.Constants.sizes.row)
       label:Show()
       rowCount = rowCount + 1
+      totalHeight = totalHeight + addon.Constants.sizes.row
     end
 
     do -- MythicPlus Labels
@@ -1573,101 +1576,163 @@ function Module:Render()
           GameTooltip:Hide()
         end)
 
-        dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-        dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+        dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+        dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
         dungeonFrame:SetHeight(addon.Constants.sizes.row)
         dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
         dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
         dungeonFrame:Show()
         rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
       end)
     end
 
-    do -- Raid Labels
-      self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
-      -- self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
-      addon.Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
-      -- addon.Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
+    do -- Raid Header
+      local label = self.window.sidebar.raidHeader
+      if not label then
+        label = CreateFrame("Frame", "$parentRaidHeader", self.window.sidebar)
+        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetFontObject("GameFontHighlight_NoShadow")
+        label.text:SetJustifyH("LEFT")
+        label.text:SetText(RAIDS)
+        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.window.sidebar.raidHeader = label
+      end
+
+      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+      label:SetHeight(addon.Constants.sizes.row)
+      label:Show()
+      rowCount = rowCount + 1
+      totalHeight = totalHeight + addon.Constants.sizes.row
+    end
+
+    do -- Raid Difficulties
+      local rowHeight = addon.Constants.sizes.row * 2
+      self.window.sidebar.raidDifficulties = self.window.sidebar.raidDifficulties or {}
+      addon.Utils:TableForEach(self.window.sidebar.raidDifficulties, function(f) f:Hide() end)
       if addon.Data.db.global.raids.enabled then
-        addon.Utils:TableForEach(raids, function(raid, raidIndex)
-          local raidFrame = self.window.sidebar.raidFrames[raidIndex]
-          if not raidFrame then
-            raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
-            raidFrame.difficultyFrames = {}
-            raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
-            raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", addon.Constants.sizes.padding, 0)
-            raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-            raidFrame.text:SetJustifyH("LEFT")
-            raidFrame.text:SetWordWrap(false)
-            raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-            raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
-            raidFrame.ModifiedIcon:SetSize(18, 18)
-            raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(addon.Constants.sizes.padding / 2), 0)
-            self.window.sidebar.raidFrames[raidIndex] = raidFrame
+        addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
+          local difficultyFrame = self.window.sidebar.raidDifficulties[difficultyIndex]
+          if not difficultyFrame then
+            difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, self.window.sidebar)
+            difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+            difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+            difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            difficultyFrame.text:SetJustifyH("LEFT")
+            difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+            self.window.sidebar.raidDifficulties[difficultyIndex] = difficultyFrame
           end
 
-          raidFrame:SetScript("OnEnter", function()
-            GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText(raid.name, 1, 1, 1)
-            if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
-            end
+          difficultyFrame:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(difficulty.name, 1, 1, 1)
             GameTooltip:Show()
           end)
-          raidFrame:SetScript("OnLeave", function()
+          difficultyFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
           end)
 
-          if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
-            raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
-            raidFrame.ModifiedIcon:Show()
-            raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(addon.Constants.sizes.padding / 2), 0)
-          else
-            raidFrame.ModifiedIcon:Hide()
-            raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
-          end
-
-          raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-          raidFrame:SetHeight(addon.Constants.sizes.row)
-          raidFrame.text:SetText(raid.short and raid.short or raid.name)
-          raidFrame:Show()
+          difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+          difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+          difficultyFrame:SetHeight(rowHeight)
+          difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
+          difficultyFrame:Show()
           rowCount = rowCount + 1
-
-          -- Difficulties
-          addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-          addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
-            local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
-            if not difficultyFrame then
-              difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
-              difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-              difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
-              difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
-              difficultyFrame.text:SetJustifyH("LEFT")
-              difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-              raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
-            end
-
-            difficultyFrame:SetScript("OnEnter", function()
-              GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText(difficulty.name, 1, 1, 1)
-              GameTooltip:Show()
-            end)
-            difficultyFrame:SetScript("OnLeave", function()
-              GameTooltip:Hide()
-            end)
-
-            difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-            difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-            difficultyFrame:SetHeight(addon.Constants.sizes.row)
-            difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
-            difficultyFrame:Show()
-            rowCount = rowCount + 1
-          end)
+          totalHeight = totalHeight + rowHeight
         end)
       end
     end
+
+    -- do -- Raid Labels
+    --   self.window.sidebar.raidFrames = self.window.sidebar.raidFrames or {}
+    --   -- self.window.sidebar.difficultyFrames = self.window.sidebar.difficultyFrames or {}
+    --   addon.Utils:TableForEach(self.window.sidebar.raidFrames, function(f) f:Hide() end)
+    --   -- addon.Utils:TableForEach(self.window.sidebar.difficultyFrames, function(f) f:Hide() end)
+    --   if addon.Data.db.global.raids.enabled then
+    --     addon.Utils:TableForEach(raids, function(raid, raidIndex)
+    --       local raidFrame = self.window.sidebar.raidFrames[raidIndex]
+    --       if not raidFrame then
+    --         raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, self.window.sidebar)
+    --         raidFrame.difficultyFrames = {}
+    --         raidFrame.text = raidFrame:CreateFontString(raidFrame:GetName() .. "Text", "OVERLAY")
+    --         raidFrame.text:SetPoint("LEFT", raidFrame, "LEFT", addon.Constants.sizes.padding, 0)
+    --         raidFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+    --         raidFrame.text:SetJustifyH("LEFT")
+    --         raidFrame.text:SetWordWrap(false)
+    --         raidFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+    --         raidFrame.ModifiedIcon = raidFrame:CreateTexture("$parentModifiedIcon", "ARTWORK")
+    --         raidFrame.ModifiedIcon:SetSize(18, 18)
+    --         raidFrame.ModifiedIcon:SetPoint("RIGHT", raidFrame, "RIGHT", -(addon.Constants.sizes.padding / 2), 0)
+    --         self.window.sidebar.raidFrames[raidIndex] = raidFrame
+    --       end
+
+    --       raidFrame:SetScript("OnEnter", function()
+    --         GameTooltip:SetOwner(raidFrame, "ANCHOR_RIGHT")
+    --         GameTooltip:SetText(raid.name, 1, 1, 1)
+    --         if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.description then
+    --           GameTooltip:AddLine(" ")
+    --           GameTooltip:AddLine(raid.modifiedInstanceInfo.description)
+    --         end
+    --         GameTooltip:Show()
+    --       end)
+    --       raidFrame:SetScript("OnLeave", function()
+    --         GameTooltip:Hide()
+    --       end)
+
+    --       if raid.modifiedInstanceInfo and raid.modifiedInstanceInfo.uiTextureKit then
+    --         raidFrame.ModifiedIcon:SetAtlas(GetFinalNameFromTextureKit("%s-small", raid.modifiedInstanceInfo.uiTextureKit))
+    --         raidFrame.ModifiedIcon:Show()
+    --         raidFrame.text:SetPoint("RIGHT", raidFrame.ModifiedIcon, "LEFT", -(addon.Constants.sizes.padding / 2), 0)
+    --       else
+    --         raidFrame.ModifiedIcon:Hide()
+    --         raidFrame.text:SetPoint("RIGHT", raidFrame, "RIGHT", -addon.Constants.sizes.padding, 0)
+    --       end
+
+    --       raidFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+    --       raidFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+    --       raidFrame:SetHeight(addon.Constants.sizes.row)
+    --       raidFrame.text:SetText(raid.short and raid.short or raid.name)
+    --       raidFrame:Show()
+    --       rowCount = rowCount + 1
+    -- totalHeight = totalHeight + addon.Constants.sizes.row
+
+    --       -- Difficulties
+    --       addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
+    --       addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
+    --         local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
+    --         if not difficultyFrame then
+    --           difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
+    --           difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+    --           difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+    --           difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+    --           difficultyFrame.text:SetJustifyH("LEFT")
+    --           difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+    --           raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+    --         end
+
+    --         difficultyFrame:SetScript("OnEnter", function()
+    --           GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+    --           GameTooltip:SetText(difficulty.name, 1, 1, 1)
+    --           GameTooltip:Show()
+    --         end)
+    --         difficultyFrame:SetScript("OnLeave", function()
+    --           GameTooltip:Hide()
+    --         end)
+
+    --         difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+    --         difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+    --         difficultyFrame:SetHeight(addon.Constants.sizes.row)
+    --         difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
+    --         difficultyFrame:Show()
+    --         rowCount = rowCount + 1
+    -- totalHeight = totalHeight + addon.Constants.sizes.row
+    --       end)
+    --     end)
+    --   end
+    -- end
 
     do -- Currencies Header
       local label = self.window.sidebar.currencyLabel
@@ -1683,13 +1748,14 @@ function Module:Render()
         self.window.sidebar.currencyLabel = label
       end
 
-      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
       label:SetHeight(addon.Constants.sizes.row)
 
       if addon.Data.db.global.currencies.enabled then
         label:Show()
         rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
       else
         label:Hide()
       end
@@ -1729,19 +1795,20 @@ function Module:Render()
             GameTooltip:Hide()
           end)
 
-          label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+          label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
           label:SetHeight(addon.Constants.sizes.row)
           label.icon:SetTexture(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
           label.text:SetText(currency.short and currency.short or currency.name)
           label.text:SetTextColor(color.r, color.g, color.b)
           label:Show()
           rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
         end)
       end
     end
 
-    windowHeight = windowHeight + rowCount * addon.Constants.sizes.row
+    windowHeight = windowHeight + totalHeight
   end
 
   do -- Character Columns
@@ -1749,6 +1816,7 @@ function Module:Render()
     addon.Utils:TableForEach(self.window.characterFrames, function(f) f:Hide() end)
     addon.Utils:TableForEach(characters, function(character, characterIndex)
       local rowCount = 0
+      local totalHeight = 0
       local characterFrame = self.window.characterFrames[characterIndex]
       if not characterFrame then
         characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.scrollparent.scrollchild)
@@ -1756,6 +1824,7 @@ function Module:Render()
         characterFrame.dungeonFrames = {}
         characterFrame.raidFrames = {}
         characterFrame.affixHeaderFrame = CreateFrame("Frame", "$parentAffixes", characterFrame)
+        characterFrame.raidHeader = CreateFrame("Frame", "$parentRaidHeader", characterFrame)
         characterFrame.currencyHeaderFrame = CreateFrame("Frame", "$parentCurrencies", characterFrame)
         self.window.characterFrames[characterIndex] = characterFrame
       end
@@ -1910,20 +1979,22 @@ function Module:Render()
             end
           end)
 
-          infoFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          infoFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           infoFrame:SetHeight(addon.Constants.sizes.row)
           infoFrame:Show()
           rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
         end)
       end
 
       do -- Dungeon Header
-        characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-        characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+        characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+        characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
         characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
         addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
         rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
       end
 
       do -- Dungeons
@@ -2071,147 +2142,326 @@ function Module:Render()
           end)
 
           addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-          dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           dungeonFrame:SetHeight(addon.Constants.sizes.row)
           dungeonFrame:Show()
           rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
         end)
       end
 
+      do -- Raid Header
+        characterFrame.raidHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+        characterFrame.raidHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+        characterFrame.raidHeader:SetHeight(addon.Constants.sizes.row)
+        addon.Utils:SetBackgroundColor(characterFrame.raidHeader, 0, 0, 0, 0.3)
+        rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
+      end
+
       do -- Raids
-        addon.Utils:TableForEach(characterFrame.raidFrames, function(f) f:Hide() end)
+        local rowHeight = 48
+        characterFrame.difficultyFrames = characterFrame.difficultyFrames or {}
+        addon.Utils:TableForEach(characterFrame.difficultyFrames, function(f) f:Hide() end)
         if addon.Data.db.global.raids.enabled then
-          addon.Utils:TableForEach(raids, function(raid, raidIndex)
-            local raidFrame = characterFrame.raidFrames[raidIndex]
-            if not raidFrame then
-              raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, characterFrame)
-              raidFrame.difficultyFrames = {}
-              raidFrame.headerFrame = CreateFrame("Frame", "$parentHeader", raidFrame)
-              characterFrame.raidFrames[raidIndex] = raidFrame
+          addon.Utils:TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
+            local difficultyFrame = characterFrame.difficultyFrames[difficultyIndex]
+            if not difficultyFrame then
+              difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, characterFrame)
+              difficultyFrame.iconFrames = {}
+              -- difficultyFrame.dividers = {}
+              characterFrame.difficultyFrames[difficultyIndex] = difficultyFrame
             end
 
-            addon.Utils:SetBackgroundColor(raidFrame.headerFrame, 0, 0, 0, 0.3)
-            raidFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-            raidFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-            raidFrame:Show()
-            raidFrame.headerFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-            raidFrame.headerFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-            raidFrame.headerFrame:SetHeight(addon.Constants.sizes.row)
-            raidFrame.headerFrame:Show()
+            -- Update difficulty row
+            addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+            difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+            difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+            difficultyFrame:SetHeight(rowHeight)
+            difficultyFrame:Show()
             rowCount = rowCount + 1
+            totalHeight = totalHeight + rowHeight
 
-            -- Difficulties
-            addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
-            addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
-              local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
-              if not difficultyFrame then
-                difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
-                difficultyFrame.encounterFrames = {}
-                raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+            -- Get all raid encounters
+            ---@type AE_Encounter[]
+            local encounters = {}
+            local numEncounters = 0
+            -- local numDividers = 0
+            addon.Utils:TableForEach(raids or {}, function(raid, raidIndex)
+              addon.Utils:TableForEach(raid.encounters or {}, function(encounter, encounterIndex)
+                table.insert(encounters, encounter)
+                numEncounters = numEncounters + 1
+              end)
+              -- numDividers = numDividers + 1
+            end)
+            -- if numDividers > 0 then
+            --   numDividers = numDividers - 1
+            -- end
+
+            -- addon.Utils:TableForEach(difficultyFrame.dividers, function(f) f:Hide() end)
+            -- for dividerIndex = 0, numDividers do
+            --   local dividerFrame = difficultyFrame.dividers[dividerIndex]
+            --   if not dividerFrame then
+            --     dividerFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, characterFrame)
+            --     dividerFrame.encounterFrames = {}
+            --     dividerFrame.dividers = {}
+            --     difficultyFrame.dividerFrames[difficultyIndex] = dividerFrame
+            --   end
+            -- end
+
+
+
+            -- difficultyFrame:SetScript("OnEnter", function()
+            --   GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+            --   GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
+            --   GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
+            --   if character.raids.savedInstances ~= nil then
+            --     local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+            --       return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+            --     end)
+            --     if savedInstance ~= nil then
+            --       GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
+            --     end
+            --   end
+            --   GameTooltip:AddLine(" ")
+            --   addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+            --     local color = LIGHTGRAY_FONT_COLOR
+            --     if character.raids.savedInstances then
+            --       local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+            --         return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+            --       end)
+            --       if savedInstance then
+            --         local savedEncounter = savedInstance.encounters[encounterIndex]
+            --         if savedEncounter and savedEncounter.isKilled then
+            --           color = GREEN_FONT_COLOR
+            --         end
+            --       end
+            --     end
+            --     GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
+            --   end)
+            --   GameTooltip:Show()
+            --   addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
+            -- end)
+
+            -- difficultyFrame:SetScript("OnLeave", function()
+            --   GameTooltip:Hide()
+            --   addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
+            -- end)
+
+
+            -- Encounters
+            local anchorEncounter = difficultyFrame
+            local colors = {
+              {r = 0,   g = 0.3, b = 0},
+              {r = 0.8, g = 0,   b = 1},
+              {r = 0,   g = 0,   b = 1},
+              {r = 1,   g = 0.5, b = 0},
+            }
+            local color = {r = 1, g = 1, b = 1}
+            local alpha = 0.1
+
+            local gapWidth = 6
+            local encounterX = 0
+            -- local halfEncounters = ceil(numEncounters / 2) + 1 -- Liq
+            local halfEncounters = ceil(numEncounters / 2)
+            local gapCount = halfEncounters + 1
+            local gapWidthTotal = gapCount * gapWidth
+            -- local iconSize = (CHARACTER_WIDTH - gapWidthTotal) / halfEncounters -- Liq
+            local iconSize = (CHARACTER_WIDTH - gapWidthTotal) / (halfEncounters + (numEncounters % 2 == 0 and 0.5 or 0))
+            local iconSizeMax = rowHeight * 0.4
+            -- iconSize = min(iconSize, iconSizeMax)
+            addon.Utils:TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
+            addon.Utils:TableForEach(encounters or {}, function(encounter, encounterIndex)
+              local iconFrame = difficultyFrame.iconFrames[encounterIndex]
+              if not iconFrame then
+                iconFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
+                iconFrame.Background = iconFrame:CreateTexture("Background", "BACKGROUND")
+                iconFrame.Background:SetTexture(addon.Constants.media.IconSettings)
+                iconFrame.Background:SetAllPoints()
+                -- iconFrame.Background:SetMask("interface/store/perkssquaregoldmask")
+                -- interface/covenantrenown/covenantrenownhexagonmask
+                --
+                -- interface/widgets/dragonridingsgvigorwidgetmask
+                -- interface/housing/housechestitemmask
+                -- interface/store/perkssquaregoldmask
+                -- interface/talentframe/talentsmaskapexnodesmallcircle
+                --
+                difficultyFrame.iconFrames[encounterIndex] = iconFrame
               end
 
-              difficultyFrame:SetScript("OnEnter", function()
-                GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
-                GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
-                if character.raids.savedInstances ~= nil then
-                  local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                  end)
-                  if savedInstance ~= nil then
-                    GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
-                  end
-                end
-                GameTooltip:AddLine(" ")
-                addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
-                  local color = LIGHTGRAY_FONT_COLOR
-                  if character.raids.savedInstances then
-                    local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                      return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                    end)
-                    if savedInstance then
-                      local savedEncounter = savedInstance.encounters[encounterIndex]
-                      if savedEncounter and savedEncounter.isKilled then
-                        color = GREEN_FONT_COLOR
-                      end
-                    end
-                  end
-                  GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
+              if character.raids.savedInstances then
+                local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                  return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == encounter.instanceID and savedInstance.expires > time()
                 end)
-                GameTooltip:Show()
-                addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
-              end)
-
-              difficultyFrame:SetScript("OnLeave", function()
-                GameTooltip:Hide()
-                addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
-              end)
-
-              addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
-              difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-              difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
-              difficultyFrame:SetHeight(addon.Constants.sizes.row)
-              difficultyFrame:Show()
-              rowCount = rowCount + 1
-
-              -- Encounters
-              local anchorEncounter = difficultyFrame
-              addon.Utils:TableForEach(difficultyFrame.encounterFrames, function(f) f:Hide() end)
-              addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
-                local encounterFrame = difficultyFrame.encounterFrames[encounterIndex]
-                if not encounterFrame then
-                  encounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
-                  difficultyFrame.encounterFrames[encounterIndex] = encounterFrame
-                end
-
-                local color = {r = 1, g = 1, b = 1}
-                local alpha = 0.1
-                local size = CHARACTER_WIDTH
-                size = size - addon.Constants.sizes.padding                     -- left/right cell padding
-                size = size - (addon.Utils:TableCount(raid.encounters) - 1) * 4 -- gaps
-                size = size / addon.Utils:TableCount(raid.encounters)           -- box sizes
-
-                if character.raids.savedInstances then
-                  local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                  end)
-                  if savedInstance then
-                    local savedEncounter = savedInstance.encounters[encounterIndex]
-                    if savedEncounter and savedEncounter.isKilled then
-                      color = UNCOMMON_GREEN_COLOR
-                      if addon.Data.db.global.raids.colors then
-                        color = difficulty.color
-                      end
-                      alpha = 0.5
+                if savedInstance then
+                  local savedEncounter = savedInstance.encounters[encounterIndex]
+                  if savedEncounter and savedEncounter.isKilled then
+                    color = UNCOMMON_GREEN_COLOR
+                    if addon.Data.db.global.raids.colors then
+                      color = difficulty.color
                     end
+                    alpha = 0.5
                   end
                 end
+              end
 
-                addon.Utils:SetBackgroundColor(encounterFrame, color.r, color.g, color.b, alpha)
-                if encounterIndex == 1 then
-                  encounterFrame:SetPoint("LEFT", anchorEncounter, "LEFT", addon.Constants.sizes.padding / 2, 0)
-                else
-                  encounterFrame:SetPoint("LEFT", anchorEncounter, "RIGHT", addon.Constants.sizes.padding / 2, 0)
-                end
-                encounterFrame:SetSize(size, addon.Constants.sizes.row - 12)
-                encounterFrame:Show()
-                anchorEncounter = encounterFrame
-              end)
+              iconFrame.Background:SetVertexColor(color.r, color.g, color.b, alpha)
+
+              local iconHeight = min(iconSize, iconSizeMax)
+              local heightGap = (rowHeight - iconHeight * 2) / 2
+              local encounterY = heightGap
+              encounterX = encounterX + gapWidth / 2 + (iconSize / 2)
+              encounterY = encounterY + (iconHeight / 2)
+              if encounterIndex % 2 == 0 then -- Bottom
+                encounterY = encounterY + iconHeight
+              end
+
+              iconFrame:SetPoint("CENTER", difficultyFrame, "TOPLEFT", encounterX, -encounterY)
+              iconFrame:SetSize(iconHeight, iconHeight) -- addon.Constants.sizes.row - 12
+              iconFrame:Show()
+              anchorEncounter = iconFrame
             end)
           end)
         end
       end
 
+      -- do -- Raids
+      --   addon.Utils:TableForEach(characterFrame.raidFrames, function(f) f:Hide() end)
+      --   if addon.Data.db.global.raids.enabled then
+      --     addon.Utils:TableForEach(raids, function(raid, raidIndex)
+      --       local raidFrame = characterFrame.raidFrames[raidIndex]
+      --       if not raidFrame then
+      --         raidFrame = CreateFrame("Frame", "$parentRaid" .. raidIndex, characterFrame)
+      --         raidFrame.difficultyFrames = {}
+      --         raidFrame.headerFrame = CreateFrame("Frame", "$parentHeader", raidFrame)
+      --         characterFrame.raidFrames[raidIndex] = raidFrame
+      --       end
+
+      --       addon.Utils:SetBackgroundColor(raidFrame.headerFrame, 0, 0, 0, 0.3)
+      --       raidFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+      --       raidFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+      --       raidFrame:Show()
+      --       raidFrame.headerFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+      --       raidFrame.headerFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+      --       raidFrame.headerFrame:SetHeight(addon.Constants.sizes.row)
+      --       raidFrame.headerFrame:Show()
+      --       rowCount = rowCount + 1
+      -- totalHeight = totalHeight + addon.Constants.sizes.row
+
+      --       -- Difficulties
+      --       addon.Utils:TableForEach(raidFrame.difficultyFrames, function(f) f:Hide() end)
+      --       addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
+      --         local difficultyFrame = raidFrame.difficultyFrames[difficultyIndex]
+      --         if not difficultyFrame then
+      --           difficultyFrame = CreateFrame("Frame", "$parentDifficulty" .. difficultyIndex, raidFrame)
+      --           difficultyFrame.encounterFrames = {}
+      --           raidFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+      --         end
+
+      --         difficultyFrame:SetScript("OnEnter", function()
+      --           GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+      --           GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
+      --           GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
+      --           if character.raids.savedInstances ~= nil then
+      --             local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+      --               return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+      --             end)
+      --             if savedInstance ~= nil then
+      --               GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
+      --             end
+      --           end
+      --           GameTooltip:AddLine(" ")
+      --           addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+      --             local color = LIGHTGRAY_FONT_COLOR
+      --             if character.raids.savedInstances then
+      --               local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+      --                 return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+      --               end)
+      --               if savedInstance then
+      --                 local savedEncounter = savedInstance.encounters[encounterIndex]
+      --                 if savedEncounter and savedEncounter.isKilled then
+      --                   color = GREEN_FONT_COLOR
+      --                 end
+      --               end
+      --             end
+      --             GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
+      --           end)
+      --           GameTooltip:Show()
+      --           addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
+      --         end)
+
+      --         difficultyFrame:SetScript("OnLeave", function()
+      --           GameTooltip:Hide()
+      --           addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
+      --         end)
+
+      --         addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+      --         difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+      --         difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+      --         difficultyFrame:SetHeight(addon.Constants.sizes.row)
+      --         difficultyFrame:Show()
+      --         rowCount = rowCount + 1
+      -- totalHeight = totalHeight + addon.Constants.sizes.row
+
+      --         -- Encounters
+      --         local anchorEncounter = difficultyFrame
+      --         addon.Utils:TableForEach(difficultyFrame.encounterFrames, function(f) f:Hide() end)
+      --         addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+      --           local encounterFrame = difficultyFrame.encounterFrames[encounterIndex]
+      --           if not encounterFrame then
+      --             encounterFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
+      --             difficultyFrame.encounterFrames[encounterIndex] = encounterFrame
+      --           end
+
+      --           local color = {r = 1, g = 1, b = 1}
+      --           local alpha = 0.1
+      --           local size = CHARACTER_WIDTH
+      --           size = size - addon.Constants.sizes.padding                     -- left/right cell padding
+      --           size = size - (addon.Utils:TableCount(raid.encounters) - 1) * 4 -- gaps
+      --           size = size / addon.Utils:TableCount(raid.encounters)           -- box sizes
+
+      --           if character.raids.savedInstances then
+      --             local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+      --               return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+      --             end)
+      --             if savedInstance then
+      --               local savedEncounter = savedInstance.encounters[encounterIndex]
+      --               if savedEncounter and savedEncounter.isKilled then
+      --                 color = UNCOMMON_GREEN_COLOR
+      --                 if addon.Data.db.global.raids.colors then
+      --                   color = difficulty.color
+      --                 end
+      --                 alpha = 0.5
+      --               end
+      --             end
+      --           end
+
+      --           addon.Utils:SetBackgroundColor(encounterFrame, color.r, color.g, color.b, alpha)
+      --           if encounterIndex == 1 then
+      --             encounterFrame:SetPoint("LEFT", anchorEncounter, "LEFT", addon.Constants.sizes.padding / 2, 0)
+      --           else
+      --             encounterFrame:SetPoint("LEFT", anchorEncounter, "RIGHT", addon.Constants.sizes.padding / 2, 0)
+      --           end
+      --           encounterFrame:SetSize(size, addon.Constants.sizes.row - 12)
+      --           encounterFrame:Show()
+      --           anchorEncounter = encounterFrame
+      --         end)
+      --       end)
+      --     end)
+      --   end
+      -- end
+
       do -- Currency Header
         characterFrame.currencyHeaderFrame:Hide()
         if addon.Data.db.global.currencies.enabled then
           characterFrame.currencyHeaderFrame:Show()
-          characterFrame.currencyHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          characterFrame.currencyHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          characterFrame.currencyHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          characterFrame.currencyHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           characterFrame.currencyHeaderFrame:SetHeight(addon.Constants.sizes.row)
           addon.Utils:SetBackgroundColor(characterFrame.currencyHeaderFrame, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
         end
       end
 
@@ -2301,11 +2551,12 @@ function Module:Render()
           end)
 
           addon.Utils:SetBackgroundColor(currencyFrame, 1, 1, 1, currencyIndex % 2 == 0 and 0.01 or 0)
-          currencyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -rowCount * addon.Constants.sizes.row)
-          currencyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -rowCount * addon.Constants.sizes.row)
+          currencyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          currencyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           currencyFrame:SetHeight(addon.Constants.sizes.row)
           currencyFrame:Show()
           rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
         end)
       end
 
