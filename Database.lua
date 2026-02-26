@@ -367,10 +367,9 @@ Data.raids = {
   {seasonID = 13, seasonDisplayID = 1, instanceID = 2657, journalInstanceID = 1273, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP",  name = "Nerub-ar Palace"},
   {seasonID = 14, seasonDisplayID = 2, instanceID = 2769, journalInstanceID = 1296, order = 2, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "LOU",  name = "Liberation of Undermine"},
   {seasonID = 15, seasonDisplayID = 3, instanceID = 2810, journalInstanceID = 1302, order = 3, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MO",   name = "Manaforge Omega"},
-
-  -- {seasonID = 15, seasonDisplayID = 1, instanceID = 2912, journalInstanceID = 1307, order = 1, numEncounters = 6, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TVS",  name = "The Voidspire"},
-  -- {seasonID = 15, seasonDisplayID = 1, instanceID = 2913, journalInstanceID = 1308, order = 2, numEncounters = 2, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MQD",  name = "March on Quel'Danas"},
-  -- {seasonID = 15, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TDR",  name = "The Dreamrift"},
+  {seasonID = 16, seasonDisplayID = 1, instanceID = 2912, journalInstanceID = 1307, order = 1, numEncounters = 6, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TVS",  name = "The Voidspire"},
+  {seasonID = 16, seasonDisplayID = 1, instanceID = 2913, journalInstanceID = 1308, order = 2, numEncounters = 2, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MQD",  name = "March on Quel'Danas"},
+  {seasonID = 16, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TDR",  name = "The Dreamrift"},
   -- {seasonID = 15, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TDR",  name = "The Dreamrift"},
 }
 

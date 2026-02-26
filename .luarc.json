@@ -216,5 +216,8 @@
         "ITEM_QUALITY_COLORS",
         "RANK",
         "C_CurveUtil",
+        "CAMPAIGN_COMPLETE_COLOR",
+        "DULL_RED_FONT_COLOR",
+        "GRAY_FONT_COLOR",
     ]
 }
