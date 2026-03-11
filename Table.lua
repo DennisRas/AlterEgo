@@ -9,36 +9,41 @@ addon.Table = Table
 
 Table.TableCollection = {}
 
+---Create a new table frame
+---@param config table
+---@return Frame
 function Table:New(config)
   local frame = CreateFrame("Frame", addonName .. "Table" .. (addon.Utils:TableCount(self.TableCollection) + 1))
   -- local frame = addon.Utils:CreateScrollFrame(addonName .. "Table" .. (addon.Utils:TableCount(TableCollection) + 1))
-  frame.config = CreateFromMixins(
-    {
-      header = {
-        enabled = true,
-        sticky = false,
-        height = 30,
-      },
-      rows = {
-        height = 22,
-        highlight = true,
-        striped = true,
-      },
-      columns = {
-        width = 100,
-        highlight = false,
-        striped = false,
-      },
-      cells = {
-        padding = 8,
-        highlight = false,
-      },
-      ---@type AE_TableData
-      data = {
-        columns = {},
-        rows = {},
-      },
+  ---@type AE_TableConfig
+  local defaultConfig = {
+    header = {
+      enabled = true,
+      sticky = false,
+      height = 30,
     },
+    rows = {
+      height = 22,
+      highlight = true,
+      striped = true,
+    },
+    columns = {
+      width = 100,
+      highlight = false,
+      striped = false,
+    },
+    cells = {
+      padding = 8,
+      highlight = false,
+    },
+    ---@type AE_TableData
+    data = {
+      columns = {},
+      rows = {},
+    },
+  }
+  frame.config = CreateFromMixins(
+    defaultConfig,
     config or {}
   )
   frame.rows = {}
