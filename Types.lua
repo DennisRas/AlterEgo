@@ -1,3 +1,9 @@
+---@class ColorTable
+---@field r number
+---@field g number
+---@field b number
+---@field a number
+
 ---@class AE_Inventory
 ---@field id number
 ---@field name string
@@ -98,7 +104,7 @@
 ---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
 ---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
 ---@field onClick fun(infoFrame: Frame, character: AE_Character)?
----@field backgroundColor ColorType?
+---@field backgroundColor ColorTable?
 ---@field enabled boolean
 
 ---@class AE_Affix
@@ -208,7 +214,7 @@
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
 ---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
----@field interface { windowScale: number, windowColor: ColorType}
+---@field interface { windowScale: number, windowColor: ColorTable}
 ---@field useRIOScoreColor boolean
 
 ---@class AE_Equipment
