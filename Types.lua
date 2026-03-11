@@ -49,10 +49,6 @@
 ---@field type Enum.WeeklyRewardChestThresholdType
 ---@field index number
 
----@class AE_CharacterVault: WeeklyRewardActivityInfo
----@field exampleRewardLink string
----@field exampleRewardUpgradeLink string
-
 ---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark" | "cloak"
 
 ---@class AE_Currency
@@ -108,7 +104,16 @@
 ---@field currencies AE_CharacterCurrency[]
 ---@field raids { savedInstances: AE_SavedInstance[] }
 ---@field mythicplus AE_CharacterMythicPlus
----@field vault { hasAVailableRewards: boolean, slots: AE_CharacterVault[], activityEncounterInfo: AE_WeeklyRewardActivityEncounterInfo[]}
+---@field vault AE_CharacterVault
+
+---@class AE_CharacterVault
+---@field hasAvailableRewards boolean
+---@field slots AE_CharacterVaultSlot[]
+---@field activityEncounterInfo AE_WeeklyRewardActivityEncounterInfo[]
+
+---@class AE_CharacterVaultSlot : WeeklyRewardActivityInfo
+---@field exampleRewardLink string
+---@field exampleRewardUpgradeLink string
 
 ---@class AE_CharacterRows
 ---@field label string

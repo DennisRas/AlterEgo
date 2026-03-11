@@ -185,7 +185,7 @@ end
 
 ---Get character activity progress
 ---@param character AE_Character
----@return AE_CharacterVault|nil, AE_CharacterVault|nil
+---@return AE_CharacterVaultSlot|nil, AE_CharacterVaultSlot|nil
 function Utils:GetActivitiesProgress(character)
   local activities = Utils:TableFilter(character.vault.slots, function(slot) return slot.type == Enum.WeeklyRewardChestThresholdType.Activities end)
   table.sort(activities, function(left, right)
