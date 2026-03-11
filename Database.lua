@@ -354,6 +354,15 @@ Data.dungeons = {
   {seasonID = 15, seasonDisplayID = 3, challengeModeID = 391, mapId = 2441, journalInstanceID = 1194, encounters = {}, loot = {}, teleports = {367416},         time = 0, abbr = "STRT",  name = "Tazavesh: Streets of Wonder"},
   {seasonID = 15, seasonDisplayID = 3, challengeModeID = 378, mapId = 2287, journalInstanceID = 1185, encounters = {}, loot = {}, teleports = {354465},         time = 0, abbr = "HOA",   name = "Halls of Atonement"},
   {seasonID = 15, seasonDisplayID = 3, challengeModeID = 542, mapId = 2830, journalInstanceID = 1303, encounters = {}, loot = {}, teleports = {1237215},        time = 0, abbr = "EDA",   name = "Eco-Dome Al'dani"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 556, mapId = 658,  journalInstanceID = 278,  encounters = {}, loot = {}, teleports = {1254555},        time = 0, abbr = "POS",   name = "Pit of Saron"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 161, mapId = 1209, journalInstanceID = 476,  encounters = {}, loot = {}, teleports = {1254557},        time = 0, abbr = "SR",    name = "Skyreach"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 583, mapId = 1753, journalInstanceID = 945,  encounters = {}, loot = {}, teleports = {1254551},        time = 0, abbr = "SEAT",  name = "Seat of the Triumvirate"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 402, mapId = 2526, journalInstanceID = 1201, encounters = {}, loot = {}, teleports = {393273},         time = 0, abbr = "AA",    name = "Algeth'ar Academy"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 557, mapId = 2805, journalInstanceID = 1299, encounters = {}, loot = {}, teleports = {1254400},        time = 0, abbr = "WS",    name = "Windrunner Spire"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 558, mapId = 2811, journalInstanceID = 1300, encounters = {}, loot = {}, teleports = {1254572},        time = 0, abbr = "MT",    name = "Magister's Terrace"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 560, mapId = 2874, journalInstanceID = 1315, encounters = {}, loot = {}, teleports = {1254559},        time = 0, abbr = "MC",    name = "Maisara Caverns"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 559, mapId = 2915, journalInstanceID = 1316, encounters = {}, loot = {}, teleports = {1254563},        time = 0, abbr = "NPX",   name = "Nexus-Point Xenas"},
+
 }
 
 ---@type AE_Raid[]
@@ -367,10 +376,9 @@ Data.raids = {
   {seasonID = 13, seasonDisplayID = 1, instanceID = 2657, journalInstanceID = 1273, order = 1, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "NAP",  name = "Nerub-ar Palace"},
   {seasonID = 14, seasonDisplayID = 2, instanceID = 2769, journalInstanceID = 1296, order = 2, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "LOU",  name = "Liberation of Undermine"},
   {seasonID = 15, seasonDisplayID = 3, instanceID = 2810, journalInstanceID = 1302, order = 3, numEncounters = 8, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MO",   name = "Manaforge Omega"},
-  {seasonID = 16, seasonDisplayID = 1, instanceID = 2912, journalInstanceID = 1307, order = 1, numEncounters = 6, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TVS",  name = "The Voidspire"},
-  {seasonID = 16, seasonDisplayID = 1, instanceID = 2913, journalInstanceID = 1308, order = 2, numEncounters = 2, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MQD",  name = "March on Quel'Danas"},
-  {seasonID = 16, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TDR",  name = "The Dreamrift"},
-  -- {seasonID = 15, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "TDR",  name = "The Dreamrift"},
+  {seasonID = 17, seasonDisplayID = 1, instanceID = 2912, journalInstanceID = 1307, order = 1, numEncounters = 6, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "VS",   name = "The Voidspire"},
+  {seasonID = 17, seasonDisplayID = 1, instanceID = 2913, journalInstanceID = 1308, order = 2, numEncounters = 2, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MQD",  name = "March on Quel'Danas"},
+  {seasonID = 17, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "DR",   name = "The Dreamrift"},
 }
 
 ---@type AE_Currency[]
@@ -411,6 +419,28 @@ Data.currencies = {
   {seasonID = 15, seasonDisplayID = 3, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
   {seasonID = 15, seasonDisplayID = 3, id = 3141, currencyType = "spark"},                    -- Fractured Spark
   {seasonID = 15, seasonDisplayID = 3, id = 3278, currencyType = "cloak"},                    -- Ethereal Strands
+  {seasonID = 17, seasonDisplayID = 1, id = 3383, currencyType = "crest"},                    -- Adventurer Dawncrest
+  {seasonID = 17, seasonDisplayID = 1, id = 3341, currencyType = "crest"},                    -- Veteran Dawncrest
+  {seasonID = 17, seasonDisplayID = 1, id = 3343, currencyType = "crest"},                    -- Champion Dawncrest
+  {seasonID = 17, seasonDisplayID = 1, id = 3345, currencyType = "crest"},                    -- Hero Dawncrest
+  {seasonID = 17, seasonDisplayID = 1, id = 3347, currencyType = "crest"},                    -- Myth Dawncrest
+  {seasonID = 17, seasonDisplayID = 1, id = 3028, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 17, seasonDisplayID = 1, id = 3310, currencyType = "delve"},                    -- Coffer Key Shards
+  {seasonID = 17, seasonDisplayID = 1, id = 3212, currencyType = "spark"},                    -- Radiant Spark Dust
+  {seasonID = 17, seasonDisplayID = 1, id = 3378, currencyType = "catalyst"},                 -- Dawnlight Manaflux
+}
+
+---@type AE_Season[]
+Data.seasons = {
+  {seasonID = 9,  seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Dragonflight, name = "Dragonflight - Season 1",   description = "Vault of the Incarnates"},
+  {seasonID = 10, seasonDisplayID = 2, expansionID = Enum.ExpansionLevel.Dragonflight, name = "Dragonflight - Season 2",   description = "Aberrus, the Shadowed Crucible"},
+  {seasonID = 11, seasonDisplayID = 3, expansionID = Enum.ExpansionLevel.Dragonflight, name = "Dragonflight - Season 3",   description = "Amirdrassil, the Dream's Hope"},
+  {seasonID = 12, seasonDisplayID = 4, expansionID = Enum.ExpansionLevel.Dragonflight, name = "Dragonflight - Season 4",   description = "Aberrus, the Shadowed Crucible"},
+  {seasonID = 13, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 1", description = "Nerub-ar Palace"},
+  {seasonID = 14, seasonDisplayID = 2, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 2", description = "Liberation of Undermine"},
+  {seasonID = 15, seasonDisplayID = 3, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 3", description = "Manaforge Omega"},
+  {seasonID = 16, seasonDisplayID = 4, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 4", description = "[Unused]"},
+  {seasonID = 17, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Midnight,     name = "Midnight - Season 1",       description = "The Voidspire, March on Quel'Danas, The Dreamrift"},
 }
 
 Data.oldUpgradeLevels = {
@@ -454,6 +484,19 @@ function Data:GetCurrentSeason()
   if not self.cache.seasonDisplayID or self.cache.seasonDisplayID == -1 then
     self.cache.seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
+
+  if self.cache.seasonID and self.cache.seasonID > 0 then
+    local season = addon.Utils:TableGet(self.seasons, "seasonID", self.cache.seasonID)
+    local currentExpansionLevel = GetExpansionLevel()
+    if season and currentExpansionLevel and season.expansionID < currentExpansionLevel then
+      local nextSeason = addon.Utils:TableGet(self.seasons, "expansionID", currentExpansionLevel)
+      if nextSeason then
+        self.cache.seasonID = nextSeason.seasonID
+        self.cache.seasonDisplayID = nextSeason.seasonDisplayID
+      end
+    end
+  end
+
   return self.cache.seasonID or -1, self.cache.seasonDisplayID or -1
 end
 
@@ -848,12 +891,10 @@ function Data:TaskSeasonReset()
       if character.currentSeason == nil or character.currentSeason < seasonID then
         wipe(character.mythicplus.runHistory or {})
         wipe(character.mythicplus.dungeons or {})
-        ---Keep Valorstones as they no longer reset
-        character.currencies = addon.Utils:TableFilter(character.currencies, function(currency)
-          return currency.id == 3008
-        end)
+        wipe(character.currencies or {})
         character.mythicplus.rating = 0
         character.currentSeason = seasonID
+        character.currentSeasonID = seasonID
       end
     end)
   end
