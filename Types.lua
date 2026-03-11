@@ -225,7 +225,11 @@
 ---@field showRealms boolean
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
+---@field vault { raids: boolean, dungeons: boolean, world: boolean }
 ---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
+---@field dungeons { enabled: boolean }
+---@field world { enabled: boolean }
+---@field currencies { enabled: boolean, hiddenCurrencies: table<number, boolean>, showIcons: boolean, showMaxEarned: boolean, alignCenter: boolean }
 ---@field interface { windowScale: number, windowColor: ColorTable}
 ---@field useRIOScoreColor boolean
 

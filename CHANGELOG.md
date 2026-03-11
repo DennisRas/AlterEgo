@@ -2,6 +2,10 @@
 
 ## v1.4.0 - 2026-03-11
 
+### Added
+
+- Added a new setting to toggle showing M+ dungeons in the main window.
+
 ### Updated
 
 - Updated currency tooltips to avoid confusion regarding season maximum (thanks Blizzard).
