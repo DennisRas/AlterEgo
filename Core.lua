@@ -8,7 +8,7 @@ _G[addonName] = addon
 --@end-debug@
 
 ---@class AE_Core : AceAddon
-local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
+local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0")
 addon.Core = Core
 
 ---@class AE_Libs
@@ -16,6 +16,49 @@ addon.Libs = {
   LibDBIcon = LibStub("LibDBIcon-1.0"),
   LibDataBroker = LibStub("LibDataBroker-1.1"),
 }
+
+---@type table<string, function> Table of event handlers
+addon.EventHandlers = {}
+
+---@type Frame Frame to register event handlers
+addon.EventFrame = CreateFrame("Frame", addonName .. "EventFrame")
+addon.EventFrame:SetScript("OnEvent", function(self, event, ...)
+  -- local start = debugprofilestop()
+  if addon.EventHandlers[event] then
+    addon.EventHandlers[event](self, event, ...)
+  end
+  -- local finish = debugprofilestop()
+  -- local duration = finish - start
+  -- local color = duration > 1 and "ff0000" or "00ff00"
+  -- print(format("%s |cff%s(%fms)|r", event, color, duration))
+end)
+
+---Register an event handler
+---@param event string|table
+---@param callback function
+function Core:RegisterEvent(event, callback)
+  if type(event) == "table" then
+    for _, eventName in ipairs(event) do
+      self:RegisterEvent(eventName, callback)
+    end
+    return
+  end
+  addon.EventHandlers[event] = callback
+  addon.EventFrame:RegisterEvent(event)
+end
+
+---Unregister an event handler
+---@param event string|table
+function Core:UnregisterEvent(event)
+  if type(event) == "table" then
+    for _, eventName in ipairs(event) do
+      self:UnregisterEvent(eventName)
+    end
+    return
+  end
+  addon.EventHandlers[event] = nil
+  addon.EventFrame:UnregisterEvent(event)
+end
 
 ---Initialize the addon
 function Core:OnInitialize()
@@ -92,43 +135,43 @@ end
 
 ---Register event handlers for game data updates
 function Core:OnEnable()
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
-    }, 3, function()
+    }, function()
       addon.Data:UpdateCharacterInfo()
       addon.Data:UpdateEquipment()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "BOSS_KILL",
       "CHALLENGE_MODE_COMPLETED",
       "ENCOUNTER_END",
       "LFG_LOCK_INFO_RECEIVED",
       "RAID_INSTANCE_WELCOME",
-    }, 3, function()
+    }, function()
       self:RequestGameData()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "CHALLENGE_MODE_MAPS_UPDATE",
       "WEEKLY_REWARDS_UPDATE",
-    }, 3, function()
+    }, function()
       addon.Data:UpdateVault()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "LFG_UPDATE_RANDOM_INFO",
       "UPDATE_INSTANCE_INFO",
-    }, 3, function()
+    }, function()
       addon.Data:UpdateRaidInstances()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "BAG_UPDATE_DELAYED",
       "CHALLENGE_MODE_COMPLETED",
@@ -140,21 +183,21 @@ function Core:OnEnable()
       "ITEM_CHANGED",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
-    }, 3, function()
+    }, function()
       addon.Data:UpdateKeystoneItem()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "CHALLENGE_MODE_COMPLETED",
       "CHALLENGE_MODE_MAPS_UPDATE",
       "CHALLENGE_MODE_RESET",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
-    }, 3, function()
+    }, function()
       addon.Data:UpdateMythicPlus()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "BONUS_ROLL_RESULT",
       "CHAT_MSG_CURRENCY",
@@ -165,14 +208,14 @@ function Core:OnEnable()
       "SPELL_CONFIRMATION_PROMPT",
       "TRADE_CURRENCY_CHANGED",
       "TRADE_SKILL_CURRENCY_REWARD_RESULT",
-    }, 3, function()
+    }, function()
       addon.Data:UpdateCurrencies()
     end
   )
-  self:RegisterBucketEvent(
+  self:RegisterEvent(
     {
       "PLAYER_MONEY",
-    }, 2, function()
+    }, function()
       addon.Data:UpdateMoney()
     end
   )

@@ -4,7 +4,7 @@ local addonName = select(1, ...)
 local addon = select(2, ...)
 
 ---@class AE_Module_Equipment : AceModule
-local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0", "AceEvent-3.0", "AceBucket-3.0")
+local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Equipment = Module
 
 function Module:OnInitialize()
@@ -12,11 +12,11 @@ function Module:OnInitialize()
 end
 
 function Module:OnEnable()
-  self:RegisterBucketEvent(
+  addon.Core:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
-    }, 3, function()
+    }, function()
       -- addon.Data:UpdateCharacterInfo()
       addon.Data:UpdateEquipment()
       self:Render()

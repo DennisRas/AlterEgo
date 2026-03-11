@@ -4,14 +4,20 @@
 
 ### Added
 
-- Added a new setting to toggle showing M+ dungeons in the main window.
+- Added Midnight Season 1 data (raids, M+ dungeons, and currencies).
+- Forced the switch to Midnight Season 1 even though the season hasn't started yet.
+- Added a new setting to enable/disable the dungeon section in the main window.
+- Raid progress in the main window now uses icons instead of (too many) boxes for boss kills.
 
 ### Updated
 
-- Updated currency tooltips to avoid confusion regarding season maximum (thanks Blizzard).
+- Reworked the raid section layout for clearer display of multiple raids in one row.
+- Updated currency tooltips to avoid confusion with season maximums (thanks Blizzard).
+- Removed the AceEvent library. No more incorrect CPU usage or issues from other addons using the same library :P
 
 ### Fixed
 
+- Fixed an issue with certain Lua errors in instances and battlegrounds.
 - Fixed an issue with an extra Raid row still showing when raids are disabled.
 - Fixed an issue with an extra Currency row still showing when currencies are toggled twice.
 
