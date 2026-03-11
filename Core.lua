@@ -17,6 +17,7 @@ addon.Libs = {
   LibDataBroker = LibStub("LibDataBroker-1.1"),
 }
 
+---Initialize the addon
 function Core:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Toggle AlterEgo window"
   _G["BINDING_NAME_ALTEREGOVAULT"] = "Toggle Great Vault window"
@@ -64,12 +65,14 @@ function Core:OnInitialize()
   self:Render()
 end
 
+---Toggle the main window
 function Core:ToggleWindow()
   local window = addon.Window:GetWindow("Main")
   if not window then return end
   window:Toggle()
 end
 
+---Toggle the vault window
 function Core:ToggleVault()
   if WeeklyRewardsFrame and ToggleFrame then
     ToggleFrame(WeeklyRewardsFrame)
@@ -78,7 +81,7 @@ function Core:ToggleVault()
   end
 end
 
----Temp
+---Render all modules
 function Core:Render()
   for _, module in addon.Core:IterateModules() do
     if module.Render ~= nil then
@@ -87,6 +90,7 @@ function Core:Render()
   end
 end
 
+---Register event handlers for game data updates
 function Core:OnEnable()
   self:RegisterBucketEvent(
     {
@@ -193,6 +197,7 @@ function Core:OnEnable()
   self:CheckGameData()
 end
 
+---Request game data from the API
 function Core:RequestGameData()
   C_MythicPlus.RequestCurrentAffixes()
   C_MythicPlus.RequestMapInfo()
@@ -200,6 +205,7 @@ function Core:RequestGameData()
   RequestRaidInfo()
 end
 
+---Check if game data is loaded
 function Core:CheckGameData()
   local seasonID, seasonDisplayID = addon.Data:GetCurrentSeason()
   if seasonID < 0 or seasonDisplayID < 0 then
@@ -215,6 +221,7 @@ function Core:CheckGameData()
   self:Render()
 end
 
+---Handle instance reset
 function Core:OnInstanceReset()
   local groupChannel = addon.Utils:GetGroupChannel()
   if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
@@ -223,6 +230,7 @@ function Core:OnInstanceReset()
   SendChatMessage(addon.Constants.prefix .. "Resetting instances...", groupChannel)
 end
 
+---Handle chat message system
 function Core:OnChatMessageSystem(_, msg)
   local groupChannel = addon.Utils:GetGroupChannel()
   if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
@@ -236,6 +244,8 @@ function Core:OnChatMessageSystem(_, msg)
   end)
 end
 
+---Announce keystones to a chat channel
+---@param chatType string
 function Core:AnnounceKeystones(chatType)
   local characters = addon.Data:GetCharacters()
   local dungeons = addon.Data:GetDungeons()
