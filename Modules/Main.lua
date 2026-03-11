@@ -1519,12 +1519,16 @@ function Module:Render()
         self.window.sidebar.raidHeader = label
       end
 
-      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-      label:SetHeight(addon.Constants.sizes.row)
-      label:Show()
-      rowCount = rowCount + 1
-      totalHeight = totalHeight + addon.Constants.sizes.row
+      if addon.Data.db.global.raids.enabled then
+        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetHeight(addon.Constants.sizes.row)
+        label:Show()
+        rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
+      else
+        label:Hide()
+      end
     end
 
     do -- Raid Difficulties
@@ -1572,16 +1576,15 @@ function Module:Render()
         label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
         label.text:SetFontObject("GameFontHighlight_NoShadow")
         label.text:SetJustifyH("LEFT")
-        label.text:SetText(CURRENCY)
+        label.text:SetText("Currencies")
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
         self.window.sidebar.currencyLabel = label
       end
 
-      label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-      label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-      label:SetHeight(addon.Constants.sizes.row)
-
       if addon.Data.db.global.currencies.enabled then
+        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetHeight(addon.Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
         totalHeight = totalHeight + addon.Constants.sizes.row
@@ -1822,6 +1825,7 @@ function Module:Render()
           characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
+          characterFrame.affixHeaderFrame:Show()
           addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
           totalHeight = totalHeight + addon.Constants.sizes.row
@@ -1833,308 +1837,312 @@ function Module:Render()
       do -- Dungeons
         characterFrame.dungeonFrames = characterFrame.dungeonFrames or {}
         addon.Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
-        if addon.Data.db.global.dungeons.enabled then
-          addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
-            local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
-            if not dungeonFrame then
-              dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
-              dungeonFrame.Text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
-              dungeonFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
-              dungeonFrame.Tier = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Tier", "OVERLAY")
-              dungeonFrame.Tier:SetPoint("LEFT", dungeonFrame.Text, "RIGHT", 3, 1)
-              dungeonFrame.Tier:SetJustifyH("LEFT")
-              dungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
-              dungeonFrame.Score = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Score", "OVERLAY")
-              dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
-              dungeonFrame.Score:SetJustifyH("RIGHT")
-              dungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
-              characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
-            end
+        addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
+          if not addon.Data.db.global.dungeons.enabled then return end
+          local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
+          if not dungeonFrame then
+            dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
+            dungeonFrame.Text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
+            dungeonFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
+            dungeonFrame.Tier = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Tier", "OVERLAY")
+            dungeonFrame.Tier:SetPoint("LEFT", dungeonFrame.Text, "RIGHT", 3, 1)
+            dungeonFrame.Tier:SetJustifyH("LEFT")
+            dungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
+            dungeonFrame.Score = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Score", "OVERLAY")
+            dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
+            dungeonFrame.Score:SetJustifyH("RIGHT")
+            dungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
+            characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
+          end
 
-            local affixScores
-            local overallScore
-            local inTimeInfo
-            local overTimeInfo
-            local bestAffixScore
-            local level = "-"
-            local color = HIGHLIGHT_FONT_COLOR
-            local tier = ""
-            local dungeonLevel = 0
+          local affixScores
+          local overallScore
+          local inTimeInfo
+          local overTimeInfo
+          local bestAffixScore
+          local level = "-"
+          local color = HIGHLIGHT_FONT_COLOR
+          local tier = ""
+          local dungeonLevel = 0
 
-            local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
-            if characterDungeon then
-              affixScores = characterDungeon.affixScores
-              overallScore = characterDungeon.bestOverAllScore
-              inTimeInfo = characterDungeon.bestTimedRun
-              overTimeInfo = characterDungeon.bestNotTimedRun
+          local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
+          if characterDungeon then
+            affixScores = characterDungeon.affixScores
+            overallScore = characterDungeon.bestOverAllScore
+            inTimeInfo = characterDungeon.bestTimedRun
+            overTimeInfo = characterDungeon.bestNotTimedRun
 
-              if overallScore and addon.Data.db.global.showAffixColors then
-                local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
-                if rarityColor ~= nil then
-                  color = CreateColor(rarityColor.r, rarityColor.g, rarityColor.b, rarityColor.a)
-                end
-              end
-
-              if affixScores then
-                ---@type AE_CharacterAffixScoreInfo
-                bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
-                  return affixScore.score
-                end)
-
-                if bestAffixScore then
-                  level = tostring(bestAffixScore.level)
-                  dungeonLevel = bestAffixScore.level or 0
-
-                  if bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
-                    tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
-                  elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
-                    tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
-                  elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
-                    tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
-                  end
-
-                  if bestAffixScore.overTime then
-                    color = LIGHTGRAY_FONT_COLOR
-                  end
-                end
+            if overallScore and addon.Data.db.global.showAffixColors then
+              local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
+              if rarityColor ~= nil then
+                color = CreateColor(rarityColor.r, rarityColor.g, rarityColor.b, rarityColor.a)
               end
             end
 
-            if level ~= "-" and addon.Data.db.global.showTiers then
-              level = format("%s %s", level, tier)
-            end
+            if affixScores then
+              ---@type AE_CharacterAffixScoreInfo
+              bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
+                return affixScore.score
+              end)
 
+              if bestAffixScore then
+                level = tostring(bestAffixScore.level)
+                dungeonLevel = bestAffixScore.level or 0
+
+                if bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
+                elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
+                elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
+                  tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
+                end
+
+                if bestAffixScore.overTime then
+                  color = LIGHTGRAY_FONT_COLOR
+                end
+              end
+            end
+          end
+
+          if level ~= "-" and addon.Data.db.global.showTiers then
+            level = format("%s %s", level, tier)
+          end
+
+          dungeonFrame.Text:ClearAllPoints()
+          dungeonFrame.Text:SetText(color:WrapTextInColorCode(level))
+          dungeonFrame.Text:SetPoint("LEFT", dungeonFrame, "LEFT")
+          dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
+          dungeonFrame.Text:SetJustifyH("CENTER")
+          dungeonFrame.Tier:ClearAllPoints()
+          dungeonFrame.Tier:SetText("")
+          dungeonFrame.Score:ClearAllPoints()
+          dungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore and tostring(overallScore) or "-"))
+          dungeonFrame.Score:SetPoint("LEFT", dungeonFrame, "CENTER")
+          dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT")
+          dungeonFrame.Score:SetJustifyH("CENTER")
+
+          if not addon.Data.db.global.showScores then
             dungeonFrame.Text:ClearAllPoints()
-            dungeonFrame.Text:SetText(color:WrapTextInColorCode(level))
-            dungeonFrame.Text:SetPoint("LEFT", dungeonFrame, "LEFT")
-            dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
-            dungeonFrame.Text:SetJustifyH("CENTER")
-            dungeonFrame.Tier:ClearAllPoints()
+            dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
+            dungeonFrame.Score:SetText("")
+          else
+            if not addon.Data.db.global.showTiers then
+              dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
+              dungeonFrame.Text:SetJustifyH("CENTER")
+            end
+          end
+
+          if level == "-" then
+            dungeonFrame.Text:ClearAllPoints()
+            dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
             dungeonFrame.Tier:SetText("")
-            dungeonFrame.Score:ClearAllPoints()
-            dungeonFrame.Score:SetText(color:WrapTextInColorCode(overallScore and tostring(overallScore) or "-"))
-            dungeonFrame.Score:SetPoint("LEFT", dungeonFrame, "CENTER")
-            dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT")
-            dungeonFrame.Score:SetJustifyH("CENTER")
+            dungeonFrame.Score:SetText("")
+          end
 
-            if not addon.Data.db.global.showScores then
-              dungeonFrame.Text:ClearAllPoints()
-              dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
-              dungeonFrame.Score:SetText("")
-            else
-              if not addon.Data.db.global.showTiers then
-                dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
-                dungeonFrame.Text:SetJustifyH("CENTER")
+          dungeonFrame:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(dungeon.name, 1, 1, 1)
+
+            if affixScores and addon.Utils:TableCount(affixScores) > 0 then
+              if overallScore and (inTimeInfo or overTimeInfo) then
+                GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(tostring(overallScore))), GREEN_FONT_COLOR)
+              end
+
+              if bestAffixScore then
+                GameTooltip_AddBlankLineToTooltip(GameTooltip)
+                GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
+                GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(bestAffixScore.level), HIGHLIGHT_FONT_COLOR)
+
+                local displayZeroHours = bestAffixScore.durationSec >= SECONDS_PER_HOUR
+                local durationText = SecondsToClock(bestAffixScore.durationSec, displayZeroHours)
+
+                if bestAffixScore.overTime then
+                  local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
+                  GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
+                else
+                  GameTooltip_AddColoredLine(GameTooltip, tier .. " " .. durationText, HIGHLIGHT_FONT_COLOR)
+                end
               end
             end
 
-            if level == "-" then
-              dungeonFrame.Text:ClearAllPoints()
-              dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
-              dungeonFrame.Tier:SetText("")
-              dungeonFrame.Score:SetText("")
-            end
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("Dungeon Timers")
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
+            GameTooltip:Show()
 
-            dungeonFrame:SetScript("OnEnter", function()
-              GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText(dungeon.name, 1, 1, 1)
-
-              if affixScores and addon.Utils:TableCount(affixScores) > 0 then
-                if overallScore and (inTimeInfo or overTimeInfo) then
-                  GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(tostring(overallScore))), GREEN_FONT_COLOR)
-                end
-
-                if bestAffixScore then
-                  GameTooltip_AddBlankLineToTooltip(GameTooltip)
-                  GameTooltip_AddNormalLine(GameTooltip, LFG_LIST_BEST_RUN)
-                  GameTooltip_AddColoredLine(GameTooltip, MYTHIC_PLUS_POWER_LEVEL:format(bestAffixScore.level), HIGHLIGHT_FONT_COLOR)
-
-                  local displayZeroHours = bestAffixScore.durationSec >= SECONDS_PER_HOUR
-                  local durationText = SecondsToClock(bestAffixScore.durationSec, displayZeroHours)
-
-                  if bestAffixScore.overTime then
-                    local overtimeText = DUNGEON_SCORE_OVERTIME_TIME:format(durationText)
-                    GameTooltip_AddColoredLine(GameTooltip, overtimeText, LIGHTGRAY_FONT_COLOR)
-                  else
-                    GameTooltip_AddColoredLine(GameTooltip, tier .. " " .. durationText, HIGHLIGHT_FONT_COLOR)
-                  end
-                end
-              end
-
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine("Dungeon Timers")
-              GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
-              GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
-              GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
-              GameTooltip:Show()
-
-              addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
-            end)
-            dungeonFrame:SetScript("OnLeave", function()
-              GameTooltip:Hide()
-              addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
-            end)
-
-            addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
-            dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
-            dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-            dungeonFrame:SetHeight(addon.Constants.sizes.row)
-            dungeonFrame:Show()
-            rowCount = rowCount + 1
-            totalHeight = totalHeight + addon.Constants.sizes.row
+            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
           end)
-        end
+          dungeonFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
+          end)
+
+          addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+          dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+          dungeonFrame:SetHeight(addon.Constants.sizes.row)
+          dungeonFrame:Show()
+          rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
+        end)
       end
 
       do -- Raid Header
-        characterFrame.raidHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
-        characterFrame.raidHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-        characterFrame.raidHeader:SetHeight(addon.Constants.sizes.row)
-        addon.Utils:SetBackgroundColor(characterFrame.raidHeader, 0, 0, 0, 0.3)
-        rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        if addon.Data.db.global.raids.enabled then
+          characterFrame.raidHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          characterFrame.raidHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+          characterFrame.raidHeader:SetHeight(addon.Constants.sizes.row)
+          characterFrame.raidHeader:Show()
+          addon.Utils:SetBackgroundColor(characterFrame.raidHeader, 0, 0, 0, 0.3)
+          rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
+        else
+          characterFrame.raidHeader:Hide()
+        end
       end
 
       do -- Raids
         characterFrame.difficultyFrames = characterFrame.difficultyFrames or {}
         addon.Utils:TableForEach(characterFrame.difficultyFrames, function(f) f:Hide() end)
-        if addon.Data.db.global.raids.enabled then
-          addon.Utils:TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
-            local difficultyFrame = characterFrame.difficultyFrames[difficultyIndex]
-            if not difficultyFrame then
-              difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, characterFrame)
-              difficultyFrame.iconFrames = {}
-              -- difficultyFrame.dividers = {}
-              characterFrame.difficultyFrames[difficultyIndex] = difficultyFrame
-            end
+        addon.Utils:TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
+          if not addon.Data.db.global.raids.enabled then return end
+          local difficultyFrame = characterFrame.difficultyFrames[difficultyIndex]
+          if not difficultyFrame then
+            difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, characterFrame)
+            difficultyFrame.iconFrames = {}
+            -- difficultyFrame.dividers = {}
+            characterFrame.difficultyFrames[difficultyIndex] = difficultyFrame
+          end
 
-            -- Update difficulty row
-            addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
-            difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
-            difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-            difficultyFrame:SetHeight(RAIDS_ROW_HEIGHT)
-            difficultyFrame:Show()
-            rowCount = rowCount + 1
-            totalHeight = totalHeight + RAIDS_ROW_HEIGHT
+          -- Update difficulty row
+          addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+          difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+          difficultyFrame:SetHeight(RAIDS_ROW_HEIGHT)
+          difficultyFrame:Show()
+          rowCount = rowCount + 1
+          totalHeight = totalHeight + RAIDS_ROW_HEIGHT
 
-            -- Get all raid encounters
-            ---@type AE_Encounter[]
-            local encounters = {}
-            local numEncounters = 0
-            addon.Utils:TableForEach(raids or {}, function(raid, raidIndex)
-              addon.Utils:TableForEach(raid.encounters or {}, function(encounter, encounterIndex)
-                table.insert(encounters, encounter)
-                numEncounters = numEncounters + 1
-              end)
+          -- Get all raid encounters
+          ---@type AE_Encounter[]
+          local encounters = {}
+          local numEncounters = 0
+          addon.Utils:TableForEach(raids or {}, function(raid, raidIndex)
+            addon.Utils:TableForEach(raid.encounters or {}, function(encounter, encounterIndex)
+              table.insert(encounters, encounter)
+              numEncounters = numEncounters + 1
             end)
+          end)
 
-            difficultyFrame:SetScript("OnEnter", function()
-              GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
-              GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
-              addon.Utils:TableForEach(raids, function(raid, raidIndex)
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddLine(raid.name)
-                if character.raids.savedInstances ~= nil then
+          difficultyFrame:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
+            GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
+            addon.Utils:TableForEach(raids, function(raid, raidIndex)
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine(raid.name)
+              if character.raids.savedInstances ~= nil then
+                local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                  return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                end)
+                if savedInstance ~= nil then
+                  GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
+                end
+              end
+              addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+                local color = LIGHTGRAY_FONT_COLOR
+                if character.raids.savedInstances then
                   local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                     return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                   end)
-                  if savedInstance ~= nil then
-                    GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
-                  end
-                end
-                addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
-                  local color = LIGHTGRAY_FONT_COLOR
-                  if character.raids.savedInstances then
-                    local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                      return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                    end)
-                    if savedInstance then
-                      local savedEncounter = savedInstance.encounters[encounterIndex]
-                      if savedEncounter and savedEncounter.isKilled then
-                        color = GREEN_FONT_COLOR
-                      end
+                  if savedInstance then
+                    local savedEncounter = savedInstance.encounters[encounterIndex]
+                    if savedEncounter and savedEncounter.isKilled then
+                      color = GREEN_FONT_COLOR
                     end
                   end
-                  GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
-                end)
+                end
+                GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
               end)
-              GameTooltip:Show()
-              addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
             end)
+            GameTooltip:Show()
+            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
+          end)
 
-            difficultyFrame:SetScript("OnLeave", function()
-              GameTooltip:Hide()
-              addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
-            end)
+          difficultyFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
+          end)
 
-            -- Encounters
-            local color = {r = 1, g = 1, b = 1}
-            local alpha = 0.08
+          -- Encounters
+          local color = {r = 1, g = 1, b = 1}
+          local alpha = 0.08
 
-            local gapWidth = 6
-            local encounterX = 1
-            local halfEncounters = math.ceil(numEncounters / 2)
-            local gapCount = halfEncounters + 1
-            local gapWidthTotal = gapCount * gapWidth
-            local iconSize = (CHARACTER_WIDTH - gapWidthTotal) / (halfEncounters + (numEncounters % 2 == 0 and 0.5 or 0))
-            local iconSizeMax = RAIDS_ROW_HEIGHT * 0.5
-            addon.Utils:TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
-            addon.Utils:TableForEach(encounters or {}, function(encounter, encounterIndex)
-              local iconFrame = difficultyFrame.iconFrames[encounterIndex]
-              if not iconFrame then
-                iconFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
-                iconFrame.Background = iconFrame:CreateTexture("Background", "BACKGROUND")
-                iconFrame.Background:SetTexture(addon.Constants.media.IconKill)
-                iconFrame.Background:SetAllPoints()
-                difficultyFrame.iconFrames[encounterIndex] = iconFrame
-              end
+          local gapWidth = 6
+          local encounterX = 1
+          local halfEncounters = math.ceil(numEncounters / 2)
+          local gapCount = halfEncounters + 1
+          local gapWidthTotal = gapCount * gapWidth
+          local iconSize = (CHARACTER_WIDTH - gapWidthTotal) / (halfEncounters + (numEncounters % 2 == 0 and 0.5 or 0))
+          local iconSizeMax = RAIDS_ROW_HEIGHT * 0.5
+          addon.Utils:TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
+          addon.Utils:TableForEach(encounters or {}, function(encounter, encounterIndex)
+            local iconFrame = difficultyFrame.iconFrames[encounterIndex]
+            if not iconFrame then
+              iconFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
+              iconFrame.Background = iconFrame:CreateTexture("Background", "BACKGROUND")
+              iconFrame.Background:SetTexture(addon.Constants.media.IconKill)
+              iconFrame.Background:SetAllPoints()
+              difficultyFrame.iconFrames[encounterIndex] = iconFrame
+            end
 
-              if character.raids.savedInstances then
-                local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                  return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == encounter.instanceID and savedInstance.expires > time()
-                end)
-                if savedInstance then
-                  local savedEncounter = savedInstance.encounters[encounterIndex]
-                  if savedEncounter and savedEncounter.isKilled then
-                    color = UNCOMMON_GREEN_COLOR
-                    if addon.Data.db.global.raids.colors then
-                      color = difficulty.color
-                    end
-                    alpha = 0.5
+            if character.raids.savedInstances then
+              local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == encounter.instanceID and savedInstance.expires > time()
+              end)
+              if savedInstance then
+                local savedEncounter = savedInstance.encounters[encounterIndex]
+                if savedEncounter and savedEncounter.isKilled then
+                  color = UNCOMMON_GREEN_COLOR
+                  if addon.Data.db.global.raids.colors then
+                    color = difficulty.color
                   end
+                  alpha = 0.5
                 end
               end
+            end
 
-              iconFrame.Background:SetVertexColor(color.r, color.g, color.b, alpha)
+            iconFrame.Background:SetVertexColor(color.r, color.g, color.b, alpha)
 
-              local iconHeight = math.min(iconSize, iconSizeMax)
-              local heightGap = (RAIDS_ROW_HEIGHT - iconHeight * 2) / 2
-              local encounterY = heightGap
-              encounterX = encounterX + gapWidth / 2 + (iconSize / 2)
-              encounterY = encounterY + (iconHeight / 2) + 2
-              if encounterIndex % 2 == 0 then -- Bottom
-                encounterY = encounterY + iconHeight - 4
-              end
+            local iconHeight = math.min(iconSize, iconSizeMax)
+            local heightGap = (RAIDS_ROW_HEIGHT - iconHeight * 2) / 2
+            local encounterY = heightGap
+            encounterX = encounterX + gapWidth / 2 + (iconSize / 2)
+            encounterY = encounterY + (iconHeight / 2) + 2
+            if encounterIndex % 2 == 0 then -- Bottom
+              encounterY = encounterY + iconHeight - 4
+            end
 
-              iconFrame:SetPoint("CENTER", difficultyFrame, "TOPLEFT", encounterX, -encounterY)
-              iconFrame:SetSize(iconHeight, iconHeight)
-              iconFrame:Show()
-            end)
+            iconFrame:SetPoint("CENTER", difficultyFrame, "TOPLEFT", encounterX, -encounterY)
+            iconFrame:SetSize(iconHeight, iconHeight)
+            iconFrame:Show()
           end)
-        end
+        end)
       end
 
       do -- Currency Header
-        characterFrame.currencyHeaderFrame:Hide()
         if addon.Data.db.global.currencies.enabled then
-          characterFrame.currencyHeaderFrame:Show()
           characterFrame.currencyHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.currencyHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           characterFrame.currencyHeaderFrame:SetHeight(addon.Constants.sizes.row)
+          characterFrame.currencyHeaderFrame:Show()
           addon.Utils:SetBackgroundColor(characterFrame.currencyHeaderFrame, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
           totalHeight = totalHeight + addon.Constants.sizes.row
+        else
+          characterFrame.currencyHeaderFrame:Hide()
         end
       end
 
