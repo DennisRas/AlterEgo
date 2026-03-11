@@ -8,6 +8,13 @@
 ---@field id number
 ---@field name string
 
+---@class AE_Season
+---@field seasonID number
+---@field seasonDisplayID number
+---@field expansionID Enum.ExpansionLevel
+---@field name string
+---@field description string
+
 ---@class AE_Raid
 ---@field seasonID number
 ---@field seasonDisplayID number

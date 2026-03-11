@@ -527,7 +527,7 @@ function Module:GetCharacterInfo(unfiltered)
           rating = tostring(character.mythicplus.rating)
           local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
-            ratingColor = color
+            ratingColor = CreateColor(color.r, color.g, color.b, color.a)
           else
             ratingColor = WHITE_FONT_COLOR
           end
@@ -551,13 +551,13 @@ function Module:GetCharacterInfo(unfiltered)
           bestSeasonScore = character.mythicplus.bestSeasonScore
           local color = addon.Utils:GetRatingColor(bestSeasonScore, addon.Data.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
           if color ~= nil then
-            bestSeasonScoreColor = color
+            bestSeasonScoreColor = CreateColor(color.r, color.g, color.b, color.a)
           end
         end
         if type(character.mythicplus.rating) == "number" then
           local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
-            ratingColor = color
+            ratingColor = CreateColor(color.r, color.g, color.b, color.a)
           end
           rating = tostring(character.mythicplus.rating)
         end
@@ -1152,7 +1152,7 @@ function Module:SetupButtons()
       if char.info.class.file ~= nil then
         local classColor = C_ClassColor.GetClassColor(char.info.class.file)
         if classColor ~= nil then
-          nameColor = classColor
+          nameColor = CreateColor(classColor.r, classColor.g, classColor.b, 1)
         end
       end
       rootMenu:CreateCheckbox(
@@ -1949,7 +1949,7 @@ function Module:Render()
             if overallScore and addon.Data.db.global.showAffixColors then
               local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
               if rarityColor ~= nil then
-                color = rarityColor
+                color = CreateColor(rarityColor.r, rarityColor.g, rarityColor.b, rarityColor.a)
               end
             end
 
@@ -2146,13 +2146,6 @@ function Module:Render()
             end)
 
             -- Encounters
-            local anchorEncounter = difficultyFrame
-            local colors = {
-              {r = 0,   g = 0.3, b = 0},
-              {r = 0.8, g = 0,   b = 1},
-              {r = 0,   g = 0,   b = 1},
-              {r = 1,   g = 0.5, b = 0},
-            }
             local color = {r = 1, g = 1, b = 1}
             local alpha = 0.08
 
@@ -2283,19 +2276,19 @@ function Module:Render()
           currencyFrame:SetScript("OnEnter", function()
             GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Currency Progress", 1, 1, 1)
-            GameTooltip:AddDoubleLine("Total:", quantity, nil, nil, nil, 1, 1, 1)
+            GameTooltip:AddDoubleLine("Currently Own:", tostring(quantity), nil, nil, nil, 1, 1, 1)
             if currency.useTotalEarnedForMaxQty then
               if maxQuantity > 0 then
                 GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", totalEarned, maxQuantity), nil, nil, nil, 1, 1, 1)
               else
                 if totalEarned > 0 then
-                  GameTooltip:AddDoubleLine("Season Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
+                  GameTooltip:AddDoubleLine("Season Earned:", tostring(totalEarned), nil, nil, nil, 1, 1, 1)
                 end
                 GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
               end
             else
               if totalEarned > 0 then
-                GameTooltip:AddDoubleLine("Total Earned:", totalEarned, nil, nil, nil, 1, 1, 1)
+                GameTooltip:AddDoubleLine("Total Earned:", tostring(totalEarned), nil, nil, nil, 1, 1, 1)
               end
               GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or tostring(maxQuantity), nil, nil, nil, 1, 1, 1)
             end
