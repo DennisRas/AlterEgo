@@ -3,7 +3,7 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@type Frame[]
+---@type table<string, AE_Window>
 local WindowCollection = {}
 local TITLEBAR_HEIGHT = 30
 local FOOTER_HEIGHT = 16
@@ -309,10 +309,14 @@ function Window:SetWindowBackgroundColor(color)
   end)
 end
 
+---Get the maximum window width based on current screen width
+---@return number
 function Window:GetMaxWindowWidth()
   return GetScreenWidth() - 100
 end
 
+---Toggle a window by name (defaults to "Main")
+---@param name string?
 function Window:ToggleWindow(name)
   if name == nil or name == "" then name = "Main" end
   local window = self:GetWindow(name)

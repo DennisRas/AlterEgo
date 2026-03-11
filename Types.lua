@@ -263,7 +263,10 @@
 ---@field border number?
 ---@field windowScale number?
 ---@field windowColor table?
+---@field point table?
 ---@field titlebarButtons AE_TitlebarButton[]? Array of buttons to add to the titlebar
+
+---@class AE_TableFrame : Frame
 
 ---@class AE_TableData
 ---@field columns AE_TableDataColumn[]?
@@ -333,3 +336,8 @@
 ---@field size number? The button size (defaults to titlebar height)
 ---@field iconSize number? The icon size (defaults to 12)
 ---@field enabled boolean? Whether the button is enabled (defaults to true)
+
+---@class AE_ScrollFrameConfig
+---@field name string?
+---@field scrollSpeedHorizontal number?
+---@field scrollSpeedVertical number?
