@@ -2276,7 +2276,7 @@ function Module:Render()
           currencyFrame:SetScript("OnEnter", function()
             GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Currency Progress", 1, 1, 1)
-            GameTooltip:AddDoubleLine("Currently Own:", tostring(quantity), nil, nil, nil, 1, 1, 1)
+            GameTooltip:AddDoubleLine("Currently Owned:", tostring(quantity), nil, nil, nil, 1, 1, 1)
             if currency.useTotalEarnedForMaxQty then
               if maxQuantity > 0 then
                 GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", totalEarned, maxQuantity), nil, nil, nil, 1, 1, 1)

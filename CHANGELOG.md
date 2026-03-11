@@ -2,6 +2,10 @@
 
 ## v1.4.0 - 2026-03-11
 
+### Updated
+
+- Updated currency tooltips to avoid confusion regarding season maximum (thanks Blizzard).
+
 ## v1.3.5 - 2026-01-21
 
 Please note: Because of the stat squish in Midnight, all item levels won't be fully accurate until you've logged the characters. There's also a chance that Blizzard has messed up some item level ranges, so expect a couple of days with crazy bugs.
