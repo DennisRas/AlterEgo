@@ -25,7 +25,7 @@
 ---@field journalInstanceID number
 ---@field instanceID number
 ---@field order number
--- ---@field numEncounters number
+---@field numEncounters number
 ---@field encounters AE_Encounter[]
 ---@field modifiedInstanceInfo table|nil
 ---@field abbr string
@@ -224,6 +224,7 @@
 ---@field minimap { minimapPos: number, hide: boolean, lock: boolean }
 ---@field sorting AE_CharacterSortingOption
 ---@field showTiers boolean
+---@field showScores boolean
 ---@field showAffixColors boolean
 ---@field showAffixHeader boolean
 ---@field showZeroRatedCharacters boolean
