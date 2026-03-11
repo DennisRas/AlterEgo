@@ -328,7 +328,9 @@
 ---@field body Frame?
 ---@field sidebar Frame?
 ---@field border Frame?
----@field titlebarButtons table<string, Frame> Table of created titlebar buttons
+---@field width number?
+---@field height number?
+---@field titlebarButtons AE_TitlebarButton[] Array of titlebar buttons
 ---@field Toggle fun(self: AE_Window, state?: boolean)
 ---@field SetTitle fun(self: AE_Window, title: string)
 ---@field SetBodySize fun(self: AE_Window, width: number, height: number)

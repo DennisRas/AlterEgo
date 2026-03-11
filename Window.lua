@@ -37,7 +37,7 @@ function Window:New(options)
   window:SetToplevel(true)
   window:SetMovable(true)
   window:SetPoint(unpack(window.config.point))
-  window:SetSize(300, 300)
+  window:SetSize(window.config.width or 300, window.config.height or 300)
   window:EnableMouse(true) -- Disable click-throughs
   window:SetParent(window.config.parent)
   window:SetClampedToScreen(true)
@@ -76,6 +76,10 @@ function Window:New(options)
       h = h + TITLEBAR_HEIGHT
     end
     window:SetSize(w, h)
+  end
+
+  if window.config.width and window.config.height then
+    window:SetBodySize(window.config.width, window.config.height)
   end
 
   ---Add a button to the titlebar
@@ -181,7 +185,7 @@ function Window:New(options)
 
   ---Get a titlebar button by name
   ---@param buttonName string
-  ---@return Frame?
+  ---@return AE_TitlebarButton?
   function window:GetTitlebarButton(buttonName)
     return addon.Utils:TableFind(window.titlebarButtons, function(button) return button:GetName() == buttonName end)
   end
@@ -288,7 +292,7 @@ end
 
 ---Get a window by name
 ---@param name string
----@return Frame
+---@return AE_Window?
 function Window:GetWindow(name)
   return WindowCollection[name]
 end
