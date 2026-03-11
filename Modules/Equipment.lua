@@ -187,7 +187,7 @@ function Module:Render()
   if character.info.class.file ~= nil then
     local classColor = C_ClassColor.GetClassColor(character.info.class.file)
     if classColor ~= nil then
-      nameColor = classColor
+      nameColor = CreateColor(classColor.r, classColor.g, classColor.b, 1)
     end
   end
 

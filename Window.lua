@@ -17,7 +17,7 @@ addon.Window = Window
 ---@param options AE_WindowOptions
 ---@return AE_Window
 function Window:New(options)
-  ---@class AE_Window : Frame
+  ---@class AE_Window
   local window = CreateFrame("Frame", addonName .. "Window123123" .. (options and options.name or #WindowCollection + 1), options.parent or UIParent)
   window.config = CreateFromMixins(
     {
@@ -78,8 +78,117 @@ function Window:New(options)
     window:SetSize(w, h)
   end
 
+  ---Add a button to the titlebar
+  ---@param buttonConfig AE_TitlebarButton
+  ---@return Frame
+  function window:AddTitlebarButton(buttonConfig)
+    if not window.titlebar then
+      error("Cannot add titlebar button: window has no titlebar")
+    end
+
+    local buttonName = buttonConfig.name
+    if window.titlebarButtons[buttonName] then
+      error("Button with name '" .. buttonName .. "' already exists")
+    end
+
+    local buttonSize = buttonConfig.size or TITLEBAR_HEIGHT
+    local iconSize = buttonConfig.iconSize or 12
+    local isEnabled = buttonConfig.enabled ~= false
+
+    -- Create the button frame
+    local button
+    if buttonConfig.setupMenu then
+      -- Create dropdown button
+      button = CreateFrame("DropdownButton", "$parent" .. buttonName, window.titlebar)
+      button:SetupMenu(buttonConfig.setupMenu)
+    else
+      -- Create regular button
+      button = CreateFrame("Button", "$parent" .. buttonName, window.titlebar)
+      button:RegisterForClicks("AnyUp")
+      if buttonConfig.onClick then
+        button:SetScript("OnClick", buttonConfig.onClick)
+      end
+    end
+
+    -- Create the icon
+    button.Icon = window.titlebar:CreateTexture(button:GetName() .. "Icon", "ARTWORK")
+    button.Icon:SetPoint("CENTER", button, "CENTER")
+    button.Icon:SetSize(iconSize, iconSize)
+    button.Icon:SetTexture(buttonConfig.icon)
+    button.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+
+    -- Set up tooltip
+    if buttonConfig.tooltipTitle then
+      button:SetScript("OnEnter", function()
+        button.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
+        addon.Utils:SetBackgroundColor(button, 1, 1, 1, 0.05)
+        GameTooltip:SetOwner(button, "ANCHOR_TOP")
+        GameTooltip:SetText(buttonConfig.tooltipTitle, 1, 1, 1, 1, true)
+        if buttonConfig.tooltipDescription then
+          GameTooltip:AddLine(buttonConfig.tooltipDescription, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true)
+        end
+        GameTooltip:Show()
+      end)
+
+      button:SetScript("OnLeave", function()
+        button.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        addon.Utils:SetBackgroundColor(button, 1, 1, 1, 0)
+        GameTooltip:Hide()
+      end)
+    end
+
+    button:SetSize(buttonSize, buttonSize)
+    button:SetEnabled(isEnabled)
+    button:Show()
+
+    -- Store the button
+    table.insert(window.titlebarButtons, button)
+
+    -- Reposition all the buttons from right to left
+    local anchorFrame = window.titlebar.CloseButton
+    if window.titlebarButtons then
+      for _, titlebarButton in ipairs(window.titlebarButtons) do
+        titlebarButton:SetPoint("RIGHT", anchorFrame, "LEFT", 0, 0)
+        anchorFrame = titlebarButton
+      end
+    end
+
+    return button
+  end
+
+  ---Remove a button from the titlebar
+  ---@param buttonName string
+  function window:RemoveTitlebarButton(buttonName)
+    local button = addon.Utils:TableFind(window.titlebarButtons, function(button) return button:GetName() == buttonName end)
+    if not button then
+      error("Button with name '" .. buttonName .. "' does not exist")
+    end
+
+    -- Remove the button
+    button:Hide()
+    button:SetParent(nil)
+    window.titlebarButtons = addon.Utils:TableFilter(window.titlebarButtons, function(btn) return btn:GetName() ~= buttonName end)
+
+    -- Reposition all the buttons from right to left
+    local anchorFrame = window.titlebar.CloseButton
+    if window.titlebarButtons then
+      for _, titlebarButton in ipairs(window.titlebarButtons) do
+        titlebarButton:SetPoint("RIGHT", anchorFrame, "LEFT", 0, 0)
+        anchorFrame = titlebarButton
+      end
+    end
+  end
+
+  ---Get a titlebar button by name
+  ---@param buttonName string
+  ---@return Frame?
+  function window:GetTitlebarButton(buttonName)
+    return addon.Utils:TableFind(window.titlebarButtons, function(button) return button:GetName() == buttonName end)
+  end
+
   -- Border
   if window.config.border > 0 then
+    ---@diagnostic disable-next-line: assign-type-mismatch
     window.border = CreateFrame("Frame", "$parentBorder", window, "BackdropTemplate")
     window.border:SetPoint("TOPLEFT", window, "TOPLEFT", -3, 3)
     window.border:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 3, -3)
@@ -159,6 +268,16 @@ function Window:New(options)
     window.sidebar:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT")
     window.sidebar:SetWidth(window.config.sidebar)
     addon.Utils:SetBackgroundColor(window.sidebar, 0, 0, 0, 0.3)
+  end
+
+  -- Initialize titlebar buttons table
+  window.titlebarButtons = {}
+
+  -- Add titlebar buttons if provided
+  if window.config.titlebarButtons then
+    for _, buttonConfig in ipairs(window.config.titlebarButtons) do
+      window:AddTitlebarButton(buttonConfig)
+    end
   end
 
   window:Hide()
