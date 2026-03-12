@@ -3,15 +3,12 @@ description: "Report a bug"
 title: "[Bug] "
 labels: ["Bug"]
 body:
-  - type: dropdown
+  - type: input
     id: addon_version
     attributes:
       label: "Addon version"
-      description: "Which addon version are you using?"
-      options:
-        - "Latest release (CurseForge/Wago etc.)"
-        - "Alpha / Beta"
-        - "Git development version"
+      description: "Which addon version are you using? Check in-game addon menu or your addon manager."
+      placeholder: "v1.4.0, alpha, beta, git branch name, etc."
     validations:
       required: true
 
@@ -21,18 +18,17 @@ body:
       label: "Tested with only this addon enabled?"
       description: "Did you disable all other addons when reproducing this bug?"
       options:
-        - "Not tested"
-        - "Yes"
         - "No"
+        - "Yes"
     validations:
       required: true
 
   - type: textarea
     id: actual
     attributes:
-      label: "Describe what happened (actual behaviour)"
+      label: "Describe what happened"
       description: "What were you doing and what went wrong?"
-      placeholder: "Opened the addon, clicked on X, then..."
+      placeholder: "Opened the addon, clicked on X, then... (Do not post Lua errors here - scroll down for that)"
     validations:
       required: true
 
@@ -64,7 +60,7 @@ body:
       description: "Paste any Lua errors here (between the three backticks)."
       value: |
         ```lua
-        [error message here]
+        [replace this line with the error message here]
         ```
       render: markdown
 
