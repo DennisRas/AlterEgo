@@ -1,0 +1,33 @@
+name: "Feature Request"
+description: "Suggest a new feature or improvement"
+title: "[Feature Request] "
+labels: ["Feature Request"]
+body:
+  - type: textarea
+    id: needs
+    attributes:
+      label: "Describe your needs"
+      description: "What problem are you trying to solve, or what are you missing?"
+      placeholder: "I want to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired
+    attributes:
+      label: "Desired data / layout / solution"
+      description: "What would you like to see in the UI or data?"
+      placeholder: "For example, a new column that shows..."
+
+  - type: textarea
+    id: inspiration
+    attributes:
+      label: "Inspiration"
+      description: "Links or names of other addons / UIs that do something similar."
+      placeholder: "Addon X or program Y has a view where..."
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: "Anything else?"
+      description: "Any extra details that might help."

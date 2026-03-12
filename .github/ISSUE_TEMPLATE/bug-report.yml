@@ -1,0 +1,81 @@
+name: "Bug Report"
+description: "Report a bug"
+title: "[Bug] "
+labels: ["Bug"]
+body:
+  - type: dropdown
+    id: addon_version
+    attributes:
+      label: "Addon version"
+      description: "Which addon version are you using?"
+      options:
+        - "Latest release (CurseForge/Wago etc.)"
+        - "Alpha / Beta"
+        - "Git development version"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: only_addon
+    attributes:
+      label: "Tested with only this addon enabled?"
+      description: "Did you disable all other addons when reproducing this bug?"
+      options:
+        - "Not tested"
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Describe what happened (actual behaviour)"
+      description: "What were you doing and what went wrong?"
+      placeholder: "Opened the addon, clicked on X, then..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce"
+      description: "List the steps so I can reproduce the bug."
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "What did you expect to happen?"
+      description: "Describe the expected behaviour."
+      placeholder: "I expected..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: lua_errors
+    attributes:
+      label: "Lua error(s)"
+      description: "Paste any Lua errors here (between the three backticks)."
+      value: |
+        ```lua
+        [error message here]
+        ```
+      render: markdown
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots"
+      description: "Upload screenshots here or paste image links."
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: "Anything else?"
+      description: "Any extra details that might help."

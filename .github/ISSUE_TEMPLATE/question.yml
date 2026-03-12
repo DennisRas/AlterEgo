@@ -1,0 +1,17 @@
+name: "Question / Support"
+description: "Ask a question about using this addon"
+title: "[Question] "
+labels: ["Question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: "Your question"
+      description: "Describe what you're unsure about."
+      placeholder: "How do I...?"
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots"
+      description: "Upload screenshots here or paste image links."
