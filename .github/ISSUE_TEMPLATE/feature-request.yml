@@ -3,6 +3,12 @@ description: "Suggest a new feature or improvement"
 title: "[Feature Request] "
 labels: ["Feature Request"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+        Please fill out the following fields to help us implement the feature.
+
   - type: textarea
     id: needs
     attributes:
@@ -25,9 +31,3 @@ body:
       label: "Inspiration"
       description: "Links or names of other addons / UIs that do something similar."
       placeholder: "Addon X or program Y has a view where..."
-
-  - type: textarea
-    id: extra
-    attributes:
-      label: "Anything else?"
-      description: "Any extra details that might help."

@@ -3,6 +3,12 @@ description: "Report a bug"
 title: "[Bug] "
 labels: ["Bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        Please fill out the following fields to help us investigate the issue.
+
   - type: input
     id: addon_version
     attributes:
@@ -26,9 +32,12 @@ body:
   - type: textarea
     id: actual
     attributes:
-      label: "Describe what happened"
-      description: "What were you doing and what went wrong?"
-      placeholder: "Opened the addon, clicked on X, then... (Do not post Lua errors here - scroll down for that)"
+      label: "Describe what happened and what you expected to happen"
+      description: "What were you doing and what went wrong? What did you expect to happen?"
+      placeholder: |
+        I opened the addon, clicked on X, then...
+        I expected to see Y, but I saw Z instead.
+        An error message appeared... (Do not post Lua error(s) here - scroll down for that)
     validations:
       required: true
 
@@ -45,22 +54,13 @@ body:
       required: true
 
   - type: textarea
-    id: expected
-    attributes:
-      label: "What did you expect to happen?"
-      description: "Describe the expected behaviour."
-      placeholder: "I expected..."
-    validations:
-      required: true
-
-  - type: textarea
     id: lua_errors
     attributes:
       label: "Lua error(s)"
       description: "Paste any Lua errors here (between the three backticks)."
       value: |
         ```lua
-        [replace this line with the error message here]
+        [replace this line with the error here - keep the backticks above and below the error]
         ```
       render: markdown
 
@@ -69,9 +69,3 @@ body:
     attributes:
       label: "Screenshots"
       description: "Upload screenshots here or paste image links."
-
-  - type: textarea
-    id: extra
-    attributes:
-      label: "Anything else?"
-      description: "Any extra details that might help."

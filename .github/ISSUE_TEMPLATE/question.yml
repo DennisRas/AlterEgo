@@ -3,6 +3,12 @@ description: "Ask a question about using this addon"
 title: "[Question] "
 labels: ["Question"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to ask a question!
+        Please fill out the following fields to help us answer your question.
+
   - type: textarea
     id: question
     attributes:
