@@ -1,11 +1,8 @@
 Are you a Mythic+ enthusiast with multiple characters and alts to manage?  
-With AlterEgo, you'll gain unparalleled control and insight into your Mythic+ progress, rating, item levels, and Great Vault rewards for all your characters.
+AlterEgo helps you keep track of Mythic+ and raid progress across all your characters at a glance.
 
-When it comes to Mythic+ dungeons, AlterEgo is your trusty sidekick. It provides you with detailed information about your highest Mythic+ key levels completed on each character, making it a breeze to identify your progress across your roster.
-
-AlterEgo also offers an optional easy-to-read grid overview of your raid progress on all your characters. Quickly identify which bosses you've successfully defeated and where you might need to focus your efforts. Never lose track of your achievements in the raiding world with this feature.
-
-We understand that every player has unique needs and preferences. That's why we've included a range of customizable options, allowing you to tailor the data displayed and the colors used to your liking. With AlterEgo, your WoW experience becomes more personalized and efficient.
+See your highest keys, rating, raid boss kills, item levels, equipment, currencies, and Great Vault status per character so you always know who is ready for what.
+A range of customization options lets you control which data is shown and how it looks, so AlterEgo fits your UI instead of fighting it.
 
 Download AlterEgo today and take control of your gaming experience like never before!
 
@@ -16,7 +13,7 @@ Download AlterEgo today and take control of your gaming experience like never be
 - Track all of your Mythic+ levels for each affix.
 - Track all of your Mythic+ keystone items.
 - Track all of your Raid lockouts and kills.
-- Track all of your seasonal currencies, such as crests and flightstones.
+- Track all of your seasonal currencies, such as crests and sparks.
 - Track your Great Vault progress and get notified of available Great Vault rewards.
 - Track and view equipped items on all of your characters.
 - Get a fantastic overview of everything in a big datagrid.
@@ -29,12 +26,18 @@ Download AlterEgo today and take control of your gaming experience like never be
 
 ## Slash Commands
 
-- **/alterego** (or /ae) - shows/hides the main window
+- **/alterego** - toggles the main window
 
-## Feedback
+You can also use the short command **/ae**
+
+## Bugs and Feedback
 
 Your feedback is invaluable and instrumental in making AlterEgo the best it can be.  
 If you come across any bugs or have suggestions for improvements, please don't hesitate to reach out.
+
+To keep feedback in one place and make it much easier for me to fix bugs, ship improvements, and keep AlterEgo healthy long term, I am moving all support to the issue tracker instead of the comments. This helps make sure nothing gets lost, lets me track progress clearly, and gives your ideas a much better chance of turning into real features.
+
+**Report bugs, suggest new features, or ask questions on the [AlterEgo GitHub repository](https://github.com/DennisRas/AlterEgo/issues)**
 
 ## Video Spotlight
 
