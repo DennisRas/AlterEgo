@@ -541,6 +541,14 @@ function Data:GetCharacter(playerGUID)
   return self.db.global.characters[playerGUID]
 end
 
+---Remove a character from the addon. No undo; log in on that character again to reintroduce.
+---@param characterOrGUID AE_Character|string
+function Data:DeleteCharacter(characterOrGUID)
+  local GUID = type(characterOrGUID) == "table" and characterOrGUID.GUID or characterOrGUID
+  if not GUID or self.db.global.characters[GUID] == nil then return end
+  self.db.global.characters[GUID] = nil
+end
+
 ---Get all of the raids in the current season
 ---@param unfiltered boolean?
 ---@return AE_RaidDifficulty[]

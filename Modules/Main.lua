@@ -11,6 +11,24 @@ function Module:OnInitialize()
   self:Render()
 end
 
+do
+  local dialogName = "ALTEREGO_DELETE_CHARACTER"
+  StaticPopupDialogs[dialogName] = {
+    text = "Remove %s?\n\nThis cannot be undone.\nTo add this character again, log in on them.",
+    button1 = YES,
+    button2 = CANCEL,
+    OnAccept = function(_, character)
+      if character then
+        addon.Data:DeleteCharacter(character)
+        Module:Render()
+      end
+    end,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+  }
+end
+
 local CHARACTER_WIDTH = 130
 local RAIDS_ROW_HEIGHT = 48
 local dungeonPortalUnlockLevel = 10
@@ -1096,8 +1114,9 @@ function Module:Render()
                   nameColor = CreateColor(classColor.r, classColor.g, classColor.b, 1)
                 end
               end
-              rootMenu:CreateCheckbox(
-                format("%s (%s)", nameColor:WrapTextInColorCode(char.info.name), char.info.realm),
+              local characterName = format("%s (%s)", nameColor:WrapTextInColorCode(char.info.name), char.info.realm)
+              local characterButton = rootMenu:CreateCheckbox(
+                characterName,
                 function(value) return addon.Data.db.global.characters[value].enabled end,
                 function(value)
                   addon.Data.db.global.characters[value].enabled = not addon.Data.db.global.characters[value].enabled
@@ -1105,6 +1124,15 @@ function Module:Render()
                 end,
                 char.GUID
               )
+              if char.GUID ~= UnitGUID("player") then
+                local removeButton = characterButton:CreateButton("Remove character", function()
+                  StaticPopup_Show("ALTEREGO_DELETE_CHARACTER", characterName, nil, char)
+                end)
+                removeButton:SetTooltip(function(tooltip, elm)
+                  tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+                  tooltip:AddLine(format("Remove %s?", characterName), nil, nil, nil, true)
+                end)
+              end
             end)
           end,
           iconSize = 14,

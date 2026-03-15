@@ -216,7 +216,10 @@
       "WHITE_FONT_COLOR",
       "wipe",
       "WORLD",
-      "WrapTextInColorCode"
+      "WrapTextInColorCode",
+            "StaticPopupDialogs",
+            "YES",
+            "StaticPopup_Show"
     ]
   }
 }
