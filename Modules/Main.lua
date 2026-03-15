@@ -1001,7 +1001,7 @@ function Module:Render()
                 difficulty.id
               )
             end)
-            menu:CreateTitle(CURRENCY)
+            menu:CreateTitle("Currencies")
             menu:CreateCheckbox(
               "Enable Currencies",
               function() return addon.Data.db.global.currencies.enabled end,
