@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.1 - 2026-03-15
+
+### Added
+
+- Added a scrollbar to the character list in case you're an extreme altoholic (60+ characters).
+
 ## v1.4.0 - 2026-03-11
 
 ### Added

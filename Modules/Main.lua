@@ -1087,6 +1087,7 @@ function Module:Render()
           tooltipDescription = "Toggle your characters.",
           setupMenu = function(_, rootMenu)
             local charactersUnfiltered = addon.Data:GetCharacters(true)
+            rootMenu:SetScrollMode(math.min(20 * 50, GetScreenHeight() - 20)) -- 20 pixels per row, 50 rows
             addon.Utils:TableForEach(charactersUnfiltered, function(char)
               local nameColor = WHITE_FONT_COLOR
               if char.info.class.file ~= nil then
