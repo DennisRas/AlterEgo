@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 31
+Data.dbVersion = 32
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -26,6 +26,7 @@ Data.defaultDB = {
     showAffixHeader = true,
     showZeroRatedCharacters = true,
     showRealms = true,
+    showGuildInformation = false,
     announceKeystones = {
       autoParty = true,
       autoGuild = false,
@@ -98,6 +99,13 @@ Data.defaultCharacter = {
       equipped = 0,
       pvp = 0,
       color = "ffffffff",
+    },
+    guild = {
+      isInGuild = false,
+      name = "",
+      rankName = "",
+      rankIndex = 0,
+      realm = "",
     },
   },
   equipment = {},
@@ -1123,6 +1131,8 @@ function Data:UpdateCharacterInfo()
   local playerFactionGroupEnglish, playerFactionGroupLocalized = UnitFactionGroup("player")
   local avgItemLevel, avgItemLevelEquipped, avgItemLevelPvp = GetAverageItemLevel()
   local itemLevelColorR, itemLevelColorG, itemLevelColorB = GetItemLevelColor()
+  local guildName, guildRankName, guildRankIndex, guildRealm = GetGuildInfo("player")
+  local isInGuild = IsInGuild()
 
   if playerName then character.info.name = playerName end
   if playerRealm then character.info.realm = playerRealm end
@@ -1142,6 +1152,12 @@ function Data:UpdateCharacterInfo()
   if avgItemLevelEquipped then character.info.ilvl.equipped = avgItemLevelEquipped end
   if avgItemLevelPvp then character.info.ilvl.pvp = avgItemLevelPvp end
   if itemLevelColorR and itemLevelColorG and itemLevelColorB then character.info.ilvl.color = CreateColor(itemLevelColorR, itemLevelColorG, itemLevelColorB):GenerateHexColor() end
+  if type(character.info.guild) ~= "table" then character.info.guild = self.defaultCharacter.info.guild end
+  character.info.guild.name = guildName
+  character.info.guild.rankName = guildRankName
+  character.info.guild.rankIndex = guildRankIndex
+  character.info.guild.realm = guildRealm
+  character.info.guild.isInGuild = isInGuild
 
   character.lastUpdate = GetServerTime()
   addon.Core:Render()

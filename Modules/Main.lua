@@ -410,7 +410,7 @@ function Module:GetCharacterInfo(unfiltered)
       end,
       onEnter = function(infoFrame, character)
         local name = "-"
-        local nameColor = "ffffffff"
+        local nameColor = WHITE_FONT_COLOR
         local characterCurrencies = {}
         if character.info.name ~= nil then
           name = character.info.name
@@ -418,15 +418,15 @@ function Module:GetCharacterInfo(unfiltered)
         if character.info.class.file ~= nil then
           local classColor = C_ClassColor.GetClassColor(character.info.class.file)
           if classColor ~= nil then
-            nameColor = classColor.GenerateHexColor(classColor)
+            nameColor = CreateColor(classColor.r, classColor.g, classColor.b, 1)
           end
         end
-        name = "|c" .. nameColor .. name .. "|r"
-        if not addon.Data.db.global.showRealms then
-          name = name .. format(" (%s)", character.info.realm)
-        end
+        name = format("%s (%s)", nameColor:WrapTextInColorCode(name), character.info.realm)
         GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine(name, 1, 1, 1)
+        if character.info.guild ~= nil and character.info.guild.isInGuild then
+          GameTooltip:AddLine(format("<%s>", character.info.guild.name), NECROLORD_GREEN_COLOR.r, NECROLORD_GREEN_COLOR.g, NECROLORD_GREEN_COLOR.b)
+        end
         GameTooltip:AddLine(format("Level %d %s", character.info.level, character.info.race ~= nil and character.info.race.name or ""), 1, 1, 1)
         if character.info.factionGroup ~= nil and character.info.factionGroup.localized ~= nil then
           GameTooltip:AddLine(character.info.factionGroup.localized, 1, 1, 1)
@@ -498,6 +498,43 @@ function Module:GetCharacterInfo(unfiltered)
       end,
       tooltip = false,
       enabled = addon.Data.db.global.showRealms,
+    },
+    {
+      label = "Guild",
+      value = function(character)
+        local guild = "-"
+        local guildColor = WHITE_FONT_COLOR
+        if character.info.guild == nil then
+          guildColor = LIGHTGRAY_FONT_COLOR
+        elseif character.info.guild.isInGuild then
+          guild = character.info.guild.name
+          guildColor = NECROLORD_GREEN_COLOR
+        end
+        return guildColor:WrapTextInColorCode(guild)
+      end,
+      onEnter = function(infoFrame, character)
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
+        if character.info.guild == nil then
+          GameTooltip:AddLine("Guild", 1, 1, 1)
+          GameTooltip:AddLine("Log in to update your guild information.")
+        elseif character.info.guild.isInGuild and character.info.guild.name ~= nil then
+          local realmName = character.info.realm
+          if character.info.guild.realm ~= nil and strlenutf8(character.info.guild.realm) > 0 then
+            realmName = character.info.guild.realm
+          end
+          GameTooltip:AddLine(character.info.guild.name, 1, 1, 1)
+          GameTooltip:AddDoubleLine("Rank:", character.info.guild.rankName ~= nil and character.info.guild.rankName or "-", nil, nil, nil, 1, 1, 1)
+          GameTooltip:AddDoubleLine("Realm:", realmName, nil, nil, nil, 1, 1, 1)
+        else
+          GameTooltip:AddLine("Guild", 1, 1, 1)
+          GameTooltip:AddLine("Not in a guild.")
+        end
+        GameTooltip:Show()
+      end,
+      onLeave = function()
+        GameTooltip:Hide()
+      end,
+      enabled = addon.Data.db.global.showGuildInformation,
     },
     {
       label = STAT_AVERAGE_ITEM_LEVEL,
@@ -809,7 +846,7 @@ function Module:Render()
               tooltip:AddLine("Too many alts?", nil, nil, nil, true)
             end)
             menu:CreateCheckbox(
-              "Show realm names",
+              "Show realm",
               function() return addon.Data.db.global.showRealms end,
               function()
                 addon.Data.db.global.showRealms = not addon.Data.db.global.showRealms
@@ -818,6 +855,17 @@ function Module:Render()
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("They're everywhere!", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Show guild",
+              function() return addon.Data.db.global.showGuildInformation end,
+              function()
+                addon.Data.db.global.showGuildInformation = not addon.Data.db.global.showGuildInformation
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Show the guild name, rank, and realm.", nil, nil, nil, true)
             end)
             local rioColors = menu:CreateCheckbox(
               "Use Raider.IO rating colors",

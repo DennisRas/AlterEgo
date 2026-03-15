@@ -6,6 +6,7 @@
 
 - Added a new option on the character list to remove a character from the addon.
 - Added a scrollbar to the character list in case you're an extreme altoholic (60+ characters).
+- Added guild information as a row and to the character tooltip.
 
 ## v1.4.0 - 2026-03-11
 

@@ -146,6 +146,14 @@ function Core:OnEnable()
   )
   self:RegisterEvent(
     {
+      "GUILD_ROSTER_UPDATE",
+      "PLAYER_GUILD_UPDATE",
+    }, function(...)
+      addon.Data:UpdateCharacterInfo()
+    end
+  )
+  self:RegisterEvent(
+    {
       "BOSS_KILL",
       "CHALLENGE_MODE_COMPLETED",
       "ENCOUNTER_END",
