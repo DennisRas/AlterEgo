@@ -435,37 +435,6 @@ function Module:GetCharacterInfo(unfiltered)
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine(GetMoneyString(character.money, true), 1, 1, 1)
         end
-        if character.currencies ~= nil and addon.Utils:TableCount(character.currencies) > 0 then
-          local dataCurrencies = addon.Data:GetCurrencies()
-          addon.Utils:TableForEach(dataCurrencies, function(dataCurrency)
-            local characterCurrency = addon.Utils:TableGet(character.currencies, "id", dataCurrency.id)
-            if characterCurrency then
-              local icon = CreateSimpleTextureMarkup(characterCurrency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
-              local currencyLabel = format("%s %s", icon, characterCurrency.maxQuantity > 0 and math.min(characterCurrency.quantity, characterCurrency.maxQuantity) or characterCurrency.quantity)
-              local currencyValue = ""
-              if characterCurrency.useTotalEarnedForMaxQty then
-                if characterCurrency.maxQuantity > 0 then
-                  currencyValue = format("%d/%d", characterCurrency.totalEarned, characterCurrency.maxQuantity)
-                else
-                  currencyValue = "No limit"
-                end
-              elseif characterCurrency.maxQuantity > 0 then
-                currencyValue = tostring(characterCurrency.maxQuantity)
-              end
-              table.insert(characterCurrencies, {
-                currencyLabel,
-                currencyValue,
-              })
-            end
-          end)
-        end
-        if addon.Utils:TableCount(characterCurrencies) > 0 then
-          GameTooltip:AddLine(" ")
-          GameTooltip:AddDoubleLine("Currencies:", "Maximum:")
-          addon.Utils:TableForEach(characterCurrencies, function(characterCurrency)
-            GameTooltip:AddDoubleLine(characterCurrency[1], characterCurrency[2], 1, 1, 1, 1, 1, 1)
-          end)
-        end
         if character.lastUpdate ~= nil then
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine(format("Last update:\n|cffffffff%s|r", date("%c", character.lastUpdate)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
