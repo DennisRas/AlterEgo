@@ -554,7 +554,7 @@ function Module:GetCharacterInfo(unfiltered)
       value = function(character)
         local rating = "-"
         local ratingColor = LIGHTGRAY_FONT_COLOR
-        if character.mythicplus.rating ~= nil then
+        if character.mythicplus.rating ~= nil and C_MythicPlus.IsMythicPlusActive() then
           rating = tostring(character.mythicplus.rating)
           local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
@@ -592,43 +592,39 @@ function Module:GetCharacterInfo(unfiltered)
           end
           rating = tostring(character.mythicplus.rating)
         end
+
         GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Mythic+ Rating", 1, 1, 1)
-        GameTooltip:AddLine(format("Current Season: %s", ratingColor:WrapTextInColorCode(rating)), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-        GameTooltip:AddLine(format("Runs this Season: %s", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns))), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-        if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
-          local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(tostring(bestSeasonScore))
-          if bestSeasonNumber > 0 then
-            local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
-            bestSeasonValue = format("%s %s", bestSeasonValue, season)
+        if not C_MythicPlus.IsMythicPlusActive() then
+          GameTooltip:AddLine("Mythic+ is not active.", DIM_RED_FONT_COLOR.r, DIM_RED_FONT_COLOR.g, DIM_RED_FONT_COLOR.b)
+        else
+          -- Season information
+          GameTooltip:AddDoubleLine("Current Season:", ratingColor:WrapTextInColorCode(rating), nil, nil, nil, ratingColor.r, ratingColor.g, ratingColor.b)
+          if bestSeasonNumber ~= nil and bestSeasonScore ~= nil then
+            local bestSeasonValue = bestSeasonScoreColor:WrapTextInColorCode(tostring(bestSeasonScore))
+            if bestSeasonNumber > 0 then
+              local season = LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(format("(Season %s)", bestSeasonNumber))
+              bestSeasonValue = format("%s %s", bestSeasonValue, season)
+            end
+            GameTooltip:AddDoubleLine("Best Season:", bestSeasonValue, nil, nil, nil, 1, 1, 1)
           end
-          GameTooltip:AddLine(format("Best Season: %s", bestSeasonValue), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
-        end
-        if character.mythicplus.dungeons ~= nil and addon.Utils:TableCount(character.mythicplus.dungeons) > 0 then
+          GameTooltip:AddDoubleLine("Runs this Season:", WHITE_FONT_COLOR:WrapTextInColorCode(tostring(numSeasonRuns)), nil, nil, nil, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
+
+          -- Dungeon information
           GameTooltip:AddLine(" ")
-          local characterDungeons = CopyTable(character.mythicplus.dungeons)
-          for _, dungeon in pairs(characterDungeons) do
-            local dungeonName = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
-            if dungeonName ~= nil then
-              dungeon.name = dungeonName
-            else
-              dungeon.name = ""
-            end
-          end
-          table.sort(characterDungeons, function(a, b)
-            return strcmputf8i(a.name, b.name) < 0
-          end)
-          for _, dungeon in pairs(characterDungeons) do
-            if dungeon.name ~= "" then
-              local levelColor = LIGHTGRAY_FONT_COLOR
-              local levelValue = "-"
-              if dungeon.level > 0 then
+          GameTooltip:AddLine("Highest Keys:")
+          addon.Utils:TableForEach(dungeons, function(dungeon)
+            local level = "-"
+            local levelColor = LIGHTGRAY_FONT_COLOR
+            if character.mythicplus.dungeons ~= nil and addon.Utils:TableCount(character.mythicplus.dungeons) > 0 then
+              local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+              if characterDungeon ~= nil and type(characterDungeon.level) == "number" and characterDungeon.level > 0 then
+                level = format("+%s", tostring(characterDungeon.level))
                 levelColor = WHITE_FONT_COLOR
-                levelValue = "+" .. tostring(dungeon.level)
               end
-              GameTooltip:AddDoubleLine(dungeon.name, levelValue, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, levelColor.r, levelColor.g, levelColor.b)
             end
-          end
+            GameTooltip:AddDoubleLine(dungeon.name, level, 1, 1, 1, levelColor.r, levelColor.g, levelColor.b)
+          end)
           if numSeasonRuns > 0 then
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)

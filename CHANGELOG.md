@@ -12,10 +12,13 @@
 
 - Updated the order of the currencies for relevance.
 - Removed buggy currency list from the character tooltip.
+- Updated the rating tooltip with a better number/color format.
+- Buggy rating tooltip text is now hidden when Mythic+ isn't active (Blizzard reports half of the numbers only pre-season).
 
 ### Fixed
 
 - Fixed an issue with the custom character sorting causing a lua bug in combat.
+- Fixed a bug with the rating tooltip not showing dungeons for alts after season reset.
 
 ## v1.4.0 - 2026-03-11
 
