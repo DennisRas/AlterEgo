@@ -2,23 +2,26 @@
 
 ## v1.4.1 - 2026-03-15
 
-### Added
+### New
 
-- Added a new option on the character list to remove a character from the addon.
-- Added a scrollbar to the character list in case you're an extreme altoholic (60+ characters).
-- Added guild information as a row and to the character tooltip.
+- Option to remove characters from the addon on the character list.
+- Scrollbar for the character list (for the truly dedicated altoholics with 60+ characters).
+- Guild information displayed as a row in the list (disabled by default) and in the character tooltip.
 
-### Updated
+### Improvements
 
-- Updated the order of the currencies for relevance.
-- Removed buggy currency list from the character tooltip.
-- Updated the rating tooltip with a better number/color format.
-- Buggy rating tooltip text is now hidden when Mythic+ isn't active (Blizzard reports half of the numbers only pre-season).
+- Reordered currencies for better relevance.
+- Improved rating tooltip formatting (numbers and colors).
+- Rating tooltip text now hides automatically when Mythic+ is inactive (Blizzard only reports partial data before the season starts).
 
-### Fixed
+### Fixes
 
-- Fixed an issue with the custom character sorting causing a lua bug in combat.
-- Fixed a bug with the rating tooltip not showing dungeons for alts after season reset.
+- Fixed a Lua error in combat caused by custom character sorting.
+- Fixed rating tooltip not showing dungeon data for alts after a season reset.
+
+### Removed
+
+- Removed the buggy currency list from the character tooltip.
 
 ## v1.4.0 - 2026-03-11
 
