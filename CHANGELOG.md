@@ -8,6 +8,11 @@
 - Added a scrollbar to the character list in case you're an extreme altoholic (60+ characters).
 - Added guild information as a row and to the character tooltip.
 
+### Updated
+
+- Updated the order of the currencies for relevance.
+- Removed buggy currency list from the character tooltip.
+
 ## v1.4.0 - 2026-03-11
 
 ### Added

@@ -432,10 +432,10 @@ Data.currencies = {
   {seasonID = 17, seasonDisplayID = 1, id = 3343, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Champion Dawncrest
   {seasonID = 17, seasonDisplayID = 1, id = 3345, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Hero Dawncrest
   {seasonID = 17, seasonDisplayID = 1, id = 3347, useTotalEarnedForMaxQty = true,  currencyType = "crest"},                    -- Myth Dawncrest
-  {seasonID = 17, seasonDisplayID = 1, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
-  {seasonID = 17, seasonDisplayID = 1, id = 3310, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Coffer Key Shards
-  {seasonID = 17, seasonDisplayID = 1, id = 3212, useTotalEarnedForMaxQty = true,  currencyType = "spark"},                    -- Radiant Spark Dust
   {seasonID = 17, seasonDisplayID = 1, id = 3378, useTotalEarnedForMaxQty = true,  currencyType = "catalyst"},                 -- Dawnlight Manaflux
+  {seasonID = 17, seasonDisplayID = 1, id = 3212, useTotalEarnedForMaxQty = true,  currencyType = "spark"},                    -- Radiant Spark Dust
+  {seasonID = 17, seasonDisplayID = 1, id = 3310, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Coffer Key Shards
+  {seasonID = 17, seasonDisplayID = 1, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
 }
 
 ---@type AE_Season[]
