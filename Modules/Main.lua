@@ -1732,7 +1732,6 @@ function Module:Render()
               infoFrame.SortLeftButton = CreateFrame("Button", infoFrame:GetName() .. "SortLeft", infoFrame)
               infoFrame.SortLeftButton:SetSize(addon.Constants.sizes.row, addon.Constants.sizes.row)
               infoFrame.SortLeftButton:SetPoint("LEFT", infoFrame, "LEFT")
-              infoFrame.SortLeftButton:SetPropagateMouseMotion(true)
               infoFrame.SortLeftButton.Icon = infoFrame.SortLeftButton:CreateTexture(infoFrame.SortLeftButton:GetName() .. "Icon", "ARTWORK")
               infoFrame.SortLeftButton.Icon:SetAtlas("common-icon-backarrow", true)
               infoFrame.SortLeftButton.Icon:SetDesaturation(1)
@@ -1767,7 +1766,6 @@ function Module:Render()
               infoFrame.SortRightButton = CreateFrame("Button", infoFrame:GetName() .. "SortRight", infoFrame)
               infoFrame.SortRightButton:SetSize(addon.Constants.sizes.row, addon.Constants.sizes.row)
               infoFrame.SortRightButton:SetPoint("RIGHT", infoFrame, "RIGHT")
-              infoFrame.SortRightButton:SetPropagateMouseMotion(true)
               infoFrame.SortRightButton.Icon = infoFrame.SortRightButton:CreateTexture(infoFrame.SortRightButton:GetName() .. "Icon", "ARTWORK")
               infoFrame.SortRightButton.Icon:SetAtlas("common-icon-forwardarrow", true)
               infoFrame.SortRightButton.Icon:SetDesaturation(1)
@@ -1798,6 +1796,11 @@ function Module:Render()
               addon.Data:SortCharacter(character, 1)
               self:Render()
             end)
+
+            if not InCombatLockdown() then
+              infoFrame.SortLeftButton:SetPropagateMouseMotion(true)
+              infoFrame.SortRightButton:SetPropagateMouseMotion(true)
+            end
           end
 
           if info.value then
@@ -1814,23 +1817,18 @@ function Module:Render()
             if info.onEnter then
               info.onEnter(infoFrame, character)
             end
+
             if infoIndex == 1 then
-              if addon.Data.db.global.sorting == "custom" then
-                if characterIndex > 1 then
-                  infoFrame.SortLeftButton:Show()
-                else
-                  infoFrame.SortLeftButton:Hide()
-                end
-                if characterIndex < numCharacters then
-                  infoFrame.SortRightButton:Show()
-                else
-                  infoFrame.SortRightButton:Hide()
-                end
-              else
-                infoFrame.SortLeftButton:Hide()
-                infoFrame.SortRightButton:Hide()
+              infoFrame.SortLeftButton:Hide()
+              infoFrame.SortRightButton:Hide()
+              if addon.Data.db.global.sorting == "custom" and not InCombatLockdown() then
+                infoFrame.SortLeftButton:SetPropagateMouseMotion(true)
+                infoFrame.SortRightButton:SetPropagateMouseMotion(true)
+                if characterIndex > 1 then infoFrame.SortLeftButton:Show() end
+                if characterIndex < numCharacters then infoFrame.SortRightButton:Show() end
               end
             end
+
             if not info.backgroundColor then
               addon.Utils:SetHighlightColor(infoFrame)
             end

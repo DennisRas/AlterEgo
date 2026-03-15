@@ -13,6 +13,10 @@
 - Updated the order of the currencies for relevance.
 - Removed buggy currency list from the character tooltip.
 
+### Fixed
+
+- Fixed an issue with the custom character sorting causing a lua bug in combat.
+
 ## v1.4.0 - 2026-03-11
 
 ### Added
