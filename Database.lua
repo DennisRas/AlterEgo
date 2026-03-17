@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 32
+Data.dbVersion = 33
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -38,6 +38,10 @@ Data.defaultDB = {
       raids = true,
       dungeons = true,
       world = true,
+    },
+    preyHunts = {
+      enabled = true,
+      hiddenDifficulties = {},
     },
     raids = {
       enabled = true,
@@ -111,6 +115,9 @@ Data.defaultCharacter = {
   equipment = {},
   money = 0,
   currencies = {},
+  preyHunts = {
+    questsCompleted = {},
+  },
   raids = {
     savedInstances = {},
   },
@@ -451,6 +458,107 @@ Data.seasons = {
   {seasonID = 17, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Midnight,     name = "Midnight - Season 1",       description = "The Voidspire, March on Quel'Danas, The Dreamrift"},
 }
 
+---@type AE_PreyHuntDifficulty[]
+Data.preyHuntDifficulties = {
+  {id = Enum.AE_PreyHuntDifficulty.Normal,    name = "Normal",    affixes = {["Ambush"] = "Your target occasionally ambushes you while you are engaged in combat with other enemies, or when you trigger a trap."}},
+  {id = Enum.AE_PreyHuntDifficulty.Hard,      name = "Hard",      affixes = {["Torment"] = "Astalor's artifact insidiously torments you, increasing damage taken by 2%. This effect stacks based on your Prey hunt progress.", ["Hunter's Momentum"] = "Dying in this zone will reduce your hunt progress.", ["Seeping Gore"] = "While in combat, gore occasionally appears beneath you, inflicting Shadow damage after a short delay."}},
+  {id = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Nightmare", affixes = {["Echo of Predation"] = "A bloody spirit periodically stalks you, dealing massive Shadow damage on contact.", ["Bloody Command"] = "Astalor occasionally commands you to kill an enemy, causing you to bleed for massive Physical damage if you fail."}},
+}
+
+---@type AE_PreyHuntQuest[]
+Data.preyHuntQuests = {
+  {questID = 91095, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Magister Sunbreaker (Normal)"},
+  {questID = 91096, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Magistrix Emberlash (Normal)"},
+  {questID = 91097, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Senior Tinker Ozwold (Normal)"},
+  {questID = 91098, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: L-N-0R the Recycler (Normal)"},
+  {questID = 91099, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Mordril Shadowfell (Normal)"},
+  {questID = 91100, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Deliah Gloomsong (Normal)"},
+  {questID = 91101, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Phaseblade Talasha (Normal)"},
+  {questID = 91102, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Nexus-Edge Hadim (Normal)"},
+  {questID = 91103, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Jo'zolo the Breaker (Normal)"},
+  {questID = 91104, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Zadu, Fist of Nalorakk (Normal)"},
+  {questID = 91105, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: The Talon of Jan'alai (Normal)"},
+  {questID = 91106, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: The Wing of Akil'zon (Normal)"},
+  {questID = 91107, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Ranger Swiftglade (Normal)"},
+  {questID = 91108, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Lieutenant Blazewing (Normal)"},
+  {questID = 91109, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Petyoll the Razorleaf (Normal)"},
+  {questID = 91110, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Lamyne of the Undercroft (Normal)"},
+  {questID = 91111, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: High Vindicator Vureem (Normal)"},
+  {questID = 91112, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Crusader Luxia Maxwell (Normal)"},
+  {questID = 91113, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Praetor Singularis (Normal)"},
+  {questID = 91114, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Consul Nebulor (Normal)"},
+  {questID = 91115, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Executor Kaenius (Normal)"},
+  {questID = 91116, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Imperator Enigmalia (Normal)"},
+  {questID = 91117, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Knight-Errant Bloodshatter (Normal)"},
+  {questID = 91118, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Vylenna the Defector (Normal)"},
+  {questID = 91119, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Lost Theldrin (Normal)"},
+  {questID = 91120, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Neydra the Starving (Normal)"},
+  {questID = 91121, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Thornspeaker Edgath (Normal)"},
+  {questID = 91122, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Thorn-Witch Liset (Normal)"},
+  {questID = 91123, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Grothoz, the Burning Shadow (Normal)"},
+  {questID = 91124, difficultyID = Enum.AE_PreyHuntDifficulty.Normal,    name = "Prey: Dengzag, the Darkened Blaze (Normal)"},
+  {questID = 91210, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Magister Sunbreaker (Hard)"},
+  {questID = 91211, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Magister Sunbreaker (Nightmare)"},
+  {questID = 91212, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Magistrix Emberlash (Hard)"},
+  {questID = 91213, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Magistrix Emberlash (Nightmare)"},
+  {questID = 91214, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Senior Tinker Ozwold (Hard)"},
+  {questID = 91215, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Senior Tinker Ozwold (Nightmare)"},
+  {questID = 91216, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: L-N-0R the Recycler (Hard)"},
+  {questID = 91217, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: L-N-0R the Recycler (Nightmare)"},
+  {questID = 91218, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Mordril Shadowfell (Hard)"},
+  {questID = 91219, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Mordril Shadowfell (Nightmare)"},
+  {questID = 91220, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Deliah Gloomsong (Hard)"},
+  {questID = 91221, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Deliah Gloomsong (Nightmare)"},
+  {questID = 91222, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Phaseblade Talasha (Hard)"},
+  {questID = 91223, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Phaseblade Talasha (Nightmare)n"},
+  {questID = 91224, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Nexus-Edge Hadim (Hard)"},
+  {questID = 91225, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Nexus-Edge Hadim (Nightmare)"},
+  {questID = 91226, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Jo'zolo the Breaker (Hard)"},
+  {questID = 91227, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Jo'zolo the Breaker (Nightmare)"},
+  {questID = 91228, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Zadu, Fist of Nalorakk (Hard)"},
+  {questID = 91229, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Zadu, Fist of Nalorakk (Nightmare)"},
+  {questID = 91230, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: The Talon of Jan'alai (Hard)"},
+  {questID = 91231, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: The Talon of Jan'alai (Nightmare)"},
+  {questID = 91232, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: The Wing of Akil'zon (Hard)"},
+  {questID = 91233, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: The Wing of Akil'zon (Nightmare)"},
+  {questID = 91234, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Ranger Swiftglade (Hard)"},
+  {questID = 91235, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Ranger Swiftglade (Nightmare)"},
+  {questID = 91236, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Lieutenant Blazewing (Hard)"},
+  {questID = 91237, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Lieutenant Blazewing (Nightmare)"},
+  {questID = 91238, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Petyoll the Razorleaf (Hard)"},
+  {questID = 91239, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Petyoll the Razorleaf (Nightmare)"},
+  {questID = 91240, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Lamyne of the Undercroft (Hard)"},
+  {questID = 91241, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Lamyne of the Undercroft (Nightmare)"},
+  {questID = 91242, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: High Vindicator Vureem (Hard)"},
+  {questID = 91243, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Crusader Luxia Maxwell (Hard)"},
+  {questID = 91244, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Praetor Singularis (Hard)"},
+  {questID = 91245, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Consul Nebulor (Hard)"},
+  {questID = 91246, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Executor Kaenius (Hard)"},
+  {questID = 91247, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Imperator Enigmalia (Hard)"},
+  {questID = 91248, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Knight-Errant Bloodshatter (Hard)"},
+  {questID = 91249, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Vylenna the Defector (Hard)"},
+  {questID = 91250, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Lost Theldrin (Hard)"},
+  {questID = 91251, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Neydra the Starving (Hard)"},
+  {questID = 91252, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Thornspeaker Edgath (Hard)"},
+  {questID = 91253, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Thorn-Witch Liset (Hard)"},
+  {questID = 91254, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Grothoz, the Burning Shadow (Hard)"},
+  {questID = 91255, difficultyID = Enum.AE_PreyHuntDifficulty.Hard,      name = "Prey: Dengzag, the Darkened Blaze (Hard)"},
+  {questID = 91256, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: High Vindicator Vureem (Nightmare)"},
+  {questID = 91257, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Crusader Luxia Maxwell (Nightmare)"},
+  {questID = 91258, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Praetor Singularis (Nightmare)"},
+  {questID = 91259, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Consul Nebulor (Nightmare)"},
+  {questID = 91260, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Executor Kaenius (Nightmare)"},
+  {questID = 91261, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Imperator Enigmalia (Nightmare)"},
+  {questID = 91262, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Knight-Errant Bloodshatter (Nightmare)"},
+  {questID = 91263, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Vylenna the Defector (Nightmare)"},
+  {questID = 91264, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Lost Theldrin (Nightmare)"},
+  {questID = 91265, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Neydra the Starving (Nightmare)"},
+  {questID = 91266, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Thornspeaker Edgath (Nightmare)"},
+  {questID = 91267, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Thorn-Witch Liset (Nightmare)"},
+  {questID = 91268, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Grothoz, the Burning Shadow (Nightmare)"},
+  {questID = 91269, difficultyID = Enum.AE_PreyHuntDifficulty.Nightmare, name = "Prey: Dengzag, the Darkened Blaze (Nightmare)"},
+}
+
 Data.oldUpgradeLevels = {
   [14] = {
     ["Explorer"] = {11942, 11943, 11944, 11945, 11946, 11947, 11948, 11949},   -- Explorer
@@ -555,6 +663,32 @@ function Data:DeleteCharacter(characterOrGUID)
   local GUID = type(characterOrGUID) == "table" and characterOrGUID.GUID or characterOrGUID
   if not GUID or self.db.global.characters[GUID] == nil then return end
   self.db.global.characters[GUID] = nil
+end
+
+---Get all of the prey hunt difficulties in the current season
+---@param unfiltered boolean?
+---@return AE_PreyHuntDifficulty[]
+function Data:GetPreyHuntDifficulties(unfiltered)
+  local result = {}
+  for _, difficulty in pairs(self.preyHuntDifficulties) do
+    table.insert(result, difficulty)
+  end
+  table.sort(result, function(a, b)
+    return a.id < b.id
+  end)
+  return result
+end
+
+---Get all of the prey hunt quests in the current season
+
+---@param unfiltered boolean?
+---@return AE_PreyHuntQuest[]
+function Data:GetPreyHuntQuests(unfiltered)
+  local result = {}
+  for _, quest in pairs(self.preyHuntQuests) do
+    table.insert(result, quest)
+  end
+  return result
 end
 
 ---Get all of the raids in the current season
@@ -780,6 +914,7 @@ end
 ---Update everything!
 function Data:UpdateDB()
   self:UpdateCharacterInfo()
+  self:UpdatePreyProgress()
   self:UpdateEquipment()
   self:UpdateMoney()
   self:UpdateCurrencies()
@@ -873,10 +1008,11 @@ end
 function Data:TaskWeeklyReset()
   if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
     addon.Utils:TableForEach(self.db.global.characters, function(character)
+      -- I'm not sure if this is still needed
       if character.currencies ~= nil then
         addon.Utils:TableForEach(character.currencies, function(currency)
           if currency.currencyType == "crest" and currency.maxQuantity > 0 then
-            currency.maxQuantity = currency.maxQuantity + 90
+            currency.maxQuantity = currency.maxQuantity + 100
           end
         end)
       end
@@ -888,6 +1024,8 @@ function Data:TaskWeeklyReset()
       addon.Utils:TableForEach(character.mythicplus.runHistory, function(run)
         run.thisWeek = false
       end)
+      -- Reset Prey Hunts
+      wipe(character.preyHunts.questsCompleted or {})
       wipe(character.vault.activityEncounterInfo or {})
       wipe(character.vault.slots or {})
       wipe(character.mythicplus.keystone or {})
@@ -1116,6 +1254,16 @@ function Data:UpdateRaidInstances()
     character.raids.savedInstances[savedInstanceIndex] = savedInstance
   end
   addon.Core:Render()
+end
+
+function Data:UpdatePreyProgress()
+  local character = self:GetCharacter()
+  if not character then return end
+  character.preyHunts = character.preyHunts or {}
+  character.preyHunts.questsCompleted = wipe(character.preyHunts.questsCompleted or {})
+  addon.Utils:TableForEach(self.preyHuntQuests, function(quest)
+    character.preyHunts.questsCompleted[quest.questID] = C_QuestLog.IsQuestFlaggedCompleted(quest.questID)
+  end)
 end
 
 ---Refresh general character info from the API

@@ -146,6 +146,13 @@ function Core:OnEnable()
   )
   self:RegisterEvent(
     {
+      "QUEST_LOG_UPDATE",
+    }, function()
+      addon.Data:UpdatePreyProgress()
+    end
+  )
+  self:RegisterEvent(
+    {
       "GUILD_ROSTER_UPDATE",
       "PLAYER_GUILD_UPDATE",
     }, function(...)

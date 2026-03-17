@@ -102,6 +102,7 @@
 ---@field equipment AE_Equipment[]
 ---@field money number
 ---@field currencies AE_CharacterCurrency[]
+---@field preyHunts { questsCompleted: table<number, boolean> }
 ---@field raids { savedInstances: AE_SavedInstance[] }
 ---@field mythicplus AE_CharacterMythicPlus
 ---@field vault AE_CharacterVault
@@ -232,12 +233,29 @@
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
 ---@field vault { raids: boolean, dungeons: boolean, world: boolean }
+---@field preyHunts { enabled: boolean, hiddenDifficulties: table<number, boolean> }
 ---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
 ---@field dungeons { enabled: boolean }
 ---@field world { enabled: boolean }
 ---@field currencies { enabled: boolean, hiddenCurrencies: table<number, boolean>, showIcons: boolean, showMaxEarned: boolean, alignCenter: boolean }
 ---@field interface { windowScale: number, windowColor: ColorTable}
 ---@field useRIOScoreColor boolean
+
+Enum.AE_PreyHuntDifficulty = {
+  Normal = 1,
+  Hard = 2,
+  Nightmare = 3,
+}
+
+---@class AE_PreyHuntDifficulty
+---@field id number
+---@field name string
+---@field affixes table<string, string> Affixes of the difficulty
+
+---@class AE_PreyHuntQuest
+---@field questID number
+---@field difficultyID number ID of the difficulty
+---@field name string Name of the quest
 
 ---@class AE_Equipment
 ---@field itemName string

@@ -31,6 +31,7 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 
+Types.lua
 Constants.lua
 Utils.lua
 Window.lua

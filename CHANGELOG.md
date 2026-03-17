@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.2 - 2026-03-17
+
+### New
+
+- Added tracking for Prey Hunt progress (experimental).
+- Feature can be enabled/disabled in the settings, and displayed difficulties can be customized.
+
 ## v1.4.1 - 2026-03-15
 
 ### New

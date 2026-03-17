@@ -883,6 +883,33 @@ function Module:Render()
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Just one more!", nil, nil, nil, true)
             end)
+            menu:CreateTitle("Prey Hunts")
+            menu:CreateCheckbox(
+              "Enable Prey Hunts",
+              function() return addon.Data.db.global.preyHunts.enabled end,
+              function()
+                addon.Data.db.global.preyHunts.enabled = not addon.Data.db.global.preyHunts.enabled
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Let's go for a hunt!", nil, nil, nil, true)
+            end)
+            local preyHuntsDifficultiesSetting = menu:CreateButton(
+              "Difficulties"
+            )
+            addon.Utils:TableForEach(addon.Data:GetPreyHuntDifficulties(true), function(difficulty)
+              local hiddenDifficulties = addon.Data.db.global.preyHunts.hiddenDifficulties or {}
+              preyHuntsDifficultiesSetting:CreateCheckbox(
+                difficulty.name,
+                function(difficultyID) return not hiddenDifficulties[difficultyID] end,
+                function(difficultyID)
+                  addon.Data.db.global.preyHunts.hiddenDifficulties[difficultyID] = not hiddenDifficulties[difficultyID]
+                  self:Render()
+                end,
+                difficulty.id
+              )
+            end)
             menu:CreateTitle(DUNGEONS)
             menu:CreateCheckbox(
               "Enable Dungeons",
@@ -1456,6 +1483,74 @@ function Module:Render()
       end)
     end
 
+    do -- Prey Header
+      local label = self.window.sidebar.preyLabel
+      if not label then
+        label = CreateFrame("Frame", "$parentPreyLabel", self.window.sidebar)
+        label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetFontObject("GameFontHighlight_NoShadow")
+        label.text:SetJustifyH("LEFT")
+        label.text:SetText("Prey Hunts")
+        label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
+        self.window.sidebar.preyLabel = label
+      end
+      if addon.Data.db.global.preyHunts.enabled then
+        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetHeight(addon.Constants.sizes.row)
+        label:Show()
+        rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
+      else
+        label:Hide()
+      end
+    end
+
+    do -- Prey Difficulties
+      self.window.sidebar.preyDifficulties = self.window.sidebar.preyDifficulties or {}
+      addon.Utils:TableForEach(self.window.sidebar.preyDifficulties, function(f) f:Hide() end)
+      addon.Utils:TableForEach(addon.Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
+        if addon.Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
+        if not addon.Data.db.global.preyHunts.enabled then return end
+        local difficultyFrame = self.window.sidebar.preyDifficulties[difficultyIndex]
+        if not difficultyFrame then
+          difficultyFrame = CreateFrame("Frame", "$parentPreyDifficulty" .. difficultyIndex, self.window.sidebar)
+          difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+          difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
+          difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+          difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
+          difficultyFrame.text:SetJustifyH("LEFT")
+          difficultyFrame.text:SetVertexColor(1.0, 1.0, 1.0, 1.0)
+          self.window.sidebar.preyDifficulties[difficultyIndex] = difficultyFrame
+        end
+
+        difficultyFrame:SetScript("OnEnter", function()
+          GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+          GameTooltip:SetText(difficulty.name, 1, 1, 1)
+          GameTooltip:AddLine("With each difficulty level, new affixes are added, leading to more challenging encounters.", nil, nil, nil, true)
+          addon.Utils:TableForEach(difficulty.affixes, function(affix, affixName)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(format("%s:", affixName), nil, nil, nil, true)
+            GameTooltip:AddLine(affix, 1, 1, 1, true)
+          end)
+          GameTooltip:Show()
+        end)
+        difficultyFrame:SetScript("OnLeave", function()
+          GameTooltip:Hide()
+        end)
+
+        difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
+        difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        difficultyFrame:SetHeight(addon.Constants.sizes.row)
+        difficultyFrame.text:SetText(difficulty.name)
+        difficultyFrame:Show()
+        rowCount = rowCount + 1
+        totalHeight = totalHeight + addon.Constants.sizes.row
+      end)
+    end
+
     do -- MythicPlus Header
       local label = self.window.sidebar.mpluslabel
       if not label then
@@ -1698,6 +1793,7 @@ function Module:Render()
         characterFrame.dungeonFrames = {}
         characterFrame.raidFrames = {}
         characterFrame.affixHeaderFrame = CreateFrame("Frame", "$parentAffixes", characterFrame)
+        characterFrame.preyHeader = CreateFrame("Frame", "$parentPreyHeader", characterFrame)
         characterFrame.raidHeader = CreateFrame("Frame", "$parentRaidHeader", characterFrame)
         characterFrame.currencyHeaderFrame = CreateFrame("Frame", "$parentCurrencies", characterFrame)
         self.window.characterFrames[characterIndex] = characterFrame
@@ -1855,6 +1951,96 @@ function Module:Render()
           infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           infoFrame:SetHeight(addon.Constants.sizes.row)
           infoFrame:Show()
+          rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
+        end)
+      end
+
+      do -- Prey Header
+        if addon.Data.db.global.preyHunts.enabled then
+          characterFrame.preyHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          characterFrame.preyHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+          characterFrame.preyHeader:SetHeight(addon.Constants.sizes.row)
+          characterFrame.preyHeader:Show()
+          addon.Utils:SetBackgroundColor(characterFrame.preyHeader, 0, 0, 0, 0.3)
+          rowCount = rowCount + 1
+          totalHeight = totalHeight + addon.Constants.sizes.row
+        else
+          characterFrame.preyHeader:Hide()
+        end
+      end
+
+      do -- Prey Progress
+        characterFrame.preyProgress = characterFrame.preyProgress or {}
+        addon.Utils:TableForEach(characterFrame.preyProgress, function(f) f:Hide() end)
+        addon.Utils:TableForEach(addon.Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
+          if addon.Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
+          if not addon.Data.db.global.preyHunts.enabled then return end
+          local difficultyFrame = characterFrame.preyProgress[difficultyIndex]
+          if not difficultyFrame then
+            difficultyFrame = CreateFrame("Frame", "$parentPreyProgress" .. difficultyIndex, characterFrame)
+            difficultyFrame.Text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
+            difficultyFrame.Text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding * 1.5, -addon.Constants.sizes.padding)
+            difficultyFrame.Text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding * 1.5, addon.Constants.sizes.padding)
+            difficultyFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
+            difficultyFrame.Text:SetJustifyH("CENTER")
+            characterFrame.preyProgress[difficultyIndex] = difficultyFrame
+          end
+
+          local textValue = "-"
+          local textColor = LIGHTGRAY_FONT_COLOR
+          local numQuestsCompleted = 0
+          local maxQuests = 4
+          local characterQuestsCompleted = character.preyHunts and character.preyHunts.questsCompleted or {}
+
+          local quests = addon.Utils:TableFilter(addon.Data.preyHuntQuests, function(quest)
+            return quest.difficultyID == difficulty.id
+          end)
+          local questsCompleted = addon.Utils:TableFilter(quests, function(quest)
+            return characterQuestsCompleted[quest.questID]
+          end)
+          numQuestsCompleted = addon.Utils:TableCount(questsCompleted)
+
+          if numQuestsCompleted >= maxQuests then
+            textValue = format("%d / %d", numQuestsCompleted, maxQuests)
+            textColor = GREEN_FONT_COLOR
+          elseif numQuestsCompleted > 0 then
+            textValue = format("%d / %d", numQuestsCompleted, maxQuests)
+            textColor = WHITE_FONT_COLOR
+          end
+
+          difficultyFrame:SetScript("OnEnter", function()
+            GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Prey Hunt Progress", 1, 1, 1)
+            GameTooltip:AddDoubleLine("Difficulty:", difficulty.name, nil, nil, nil, 1, 1, 1)
+            if character.preyHunts == nil or character.preyHunts.questsCompleted == nil then
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("No Data")
+              GameTooltip:AddLine("Log your character to update.", 1, 1, 1, true)
+            else
+              GameTooltip:AddDoubleLine("Hunts Completed:", format("%d / %d", numQuestsCompleted, maxQuests), nil, nil, nil, textColor.r, textColor.g, textColor.b)
+            end
+            if numQuestsCompleted > 0 then
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine("Quests Done:")
+              addon.Utils:TableForEach(questsCompleted, function(quest)
+                GameTooltip:AddLine(quest.name, 1, 1, 1)
+              end)
+            end
+            GameTooltip:Show()
+            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
+          end)
+          difficultyFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
+          end)
+
+          difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
+          difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
+          difficultyFrame:SetHeight(addon.Constants.sizes.row)
+          difficultyFrame:Show()
+          difficultyFrame.Text:SetText(textValue)
+          difficultyFrame.Text:SetTextColor(textColor.r, textColor.g, textColor.b)
           rowCount = rowCount + 1
           totalHeight = totalHeight + addon.Constants.sizes.row
         end)
