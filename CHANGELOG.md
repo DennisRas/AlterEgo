@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.4.3 - 2026-03-17
+## v1.4.3 - 2026-03-18
 
 - Updated the changelog to be more concise and easier to read.
 - Fixed a Lua error on login/reload caused by Prey Hunts.
