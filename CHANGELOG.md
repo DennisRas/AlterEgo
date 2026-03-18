@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.3 - 2026-03-17
+
+### Fixes
+
+- Fixed Prey Hunts Lua error on login/reload.
+
 ## v1.4.2 - 2026-03-17
 
 ### New

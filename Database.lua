@@ -7,7 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 33
+Data.dbVersion = 34
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -999,6 +999,16 @@ function Data:MigrateDB()
         end
       end
     end
+    -- Add new prey hunt object if it doesn't exist
+    if self.db.global.dbVersion == 33 then
+      for _, character in pairs(self.db.global.characters) do
+        if character.preyHunts == nil or character.preyHunts.questsCompleted == nil then
+          character.preyHunts = {
+            questsCompleted = {},
+          }
+        end
+      end
+    end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
@@ -1008,28 +1018,22 @@ end
 function Data:TaskWeeklyReset()
   if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
     addon.Utils:TableForEach(self.db.global.characters, function(character)
-      -- I'm not sure if this is still needed
-      if character.currencies ~= nil then
-        addon.Utils:TableForEach(character.currencies, function(currency)
-          if currency.currencyType == "crest" and currency.maxQuantity > 0 then
-            currency.maxQuantity = currency.maxQuantity + 100
-          end
-        end)
-      end
+      -- Check if vault has available rewards
       addon.Utils:TableForEach(character.vault.slots, function(slot)
         if slot.progress >= slot.threshold then
           character.vault.hasAvailableRewards = true
         end
       end)
+      -- Mark previous m+ runs as not this week
       addon.Utils:TableForEach(character.mythicplus.runHistory, function(run)
         run.thisWeek = false
       end)
       -- Reset Prey Hunts
-      wipe(character.preyHunts.questsCompleted or {})
-      wipe(character.vault.activityEncounterInfo or {})
-      wipe(character.vault.slots or {})
-      wipe(character.mythicplus.keystone or {})
-      wipe(character.mythicplus.numCompletedDungeonRuns or {})
+      character.preyHunts.questsCompleted = wipe(character.preyHunts.questsCompleted or {})
+      character.vault.activityEncounterInfo = wipe(character.vault.activityEncounterInfo or {})
+      character.vault.slots = wipe(character.vault.slots or {})
+      character.mythicplus.keystone = wipe(character.mythicplus.keystone or {})
+      character.mythicplus.numCompletedDungeonRuns = wipe(character.mythicplus.numCompletedDungeonRuns or {})
     end)
   end
   self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()
