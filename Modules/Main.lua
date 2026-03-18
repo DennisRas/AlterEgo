@@ -167,7 +167,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       addon.Utils:TableForEach(raids, function(raid)
         if raidInstanceID ~= raid.instanceID then
           GameTooltip:AddLine(" ")
-          GameTooltip:AddLine(raid.name, 1, 1, 1)
+          GameTooltip:AddLine(raid.name)
         end
 
         addon.Utils:TableForEach(raid.encounters or {}, function(encounter)
