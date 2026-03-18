@@ -35,7 +35,7 @@
 
 ---@class AE_RaidDifficulty
 ---@field id number
----@field color table
+---@field color colorRGBA
 ---@field order number
 ---@field abbr string
 ---@field name string

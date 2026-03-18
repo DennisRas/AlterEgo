@@ -2269,14 +2269,14 @@ function Module:Render()
             addon.Utils:TableForEach(raids, function(raid, raidIndex)
               GameTooltip:AddLine(" ")
               GameTooltip:AddLine(raid.name)
-              addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
+              addon.Utils:TableForEach(raid.encounters, function(encounter)
                 local color = LIGHTGRAY_FONT_COLOR
                 if character.raids.savedInstances then
                   local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                     return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                   end)
                   if savedInstance then
-                    local savedEncounter = savedInstance.encounters[encounterIndex]
+                    local savedEncounter = addon.Utils:TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
                     if savedEncounter and savedEncounter.isKilled then
                       color = GREEN_FONT_COLOR
                     end
@@ -2312,7 +2312,7 @@ function Module:Render()
               difficultyFrame.iconFrames[encounterIndex] = iconFrame
             end
 
-            local color = {r = 1, g = 1, b = 1}
+            local color = CreateColor(1, 1, 1)
             local alpha = 0.08
 
             if character.raids.savedInstances then
