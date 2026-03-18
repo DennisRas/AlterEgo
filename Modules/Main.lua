@@ -2269,14 +2269,6 @@ function Module:Render()
             addon.Utils:TableForEach(raids, function(raid, raidIndex)
               GameTooltip:AddLine(" ")
               GameTooltip:AddLine(raid.name)
-              if character.raids.savedInstances ~= nil then
-                local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
-                  return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
-                end)
-                if savedInstance ~= nil then
-                  GameTooltip:AddLine(format("Expires: |cffffffff%s|r", date("%c", savedInstance.expires)))
-                end
-              end
               addon.Utils:TableForEach(raid.encounters, function(encounter, encounterIndex)
                 local color = LIGHTGRAY_FONT_COLOR
                 if character.raids.savedInstances then

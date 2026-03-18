@@ -5,6 +5,7 @@
 - Updated the changelog to be more concise and easier to read.
 - Fixed a Lua error on login/reload caused by Prey Hunts.
 - Fixed an issue with the raid progress icons. No, you haven't killed all 9 bosses yet :P
+- Removed "Expires" from raid progress tooltips. With combined raids it was duplicated/crowded and it's pretty know when weekly reset happens.
 
 ## v1.4.2 - 2026-03-17
 
