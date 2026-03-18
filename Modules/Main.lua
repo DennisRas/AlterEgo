@@ -2302,12 +2302,8 @@ function Module:Render()
             addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
           end)
 
-          -- Encounters
-          local color = {r = 1, g = 1, b = 1}
-          local alpha = 0.08
-
           local gapWidth = 6
-          local encounterX = 1
+          local encounterX = 3
           local halfEncounters = math.ceil(numEncounters / 2)
           local gapCount = halfEncounters + 1
           local gapWidthTotal = gapCount * gapWidth
@@ -2324,12 +2320,15 @@ function Module:Render()
               difficultyFrame.iconFrames[encounterIndex] = iconFrame
             end
 
+            local color = {r = 1, g = 1, b = 1}
+            local alpha = 0.08
+
             if character.raids.savedInstances then
               local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
                 return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == encounter.instanceID and savedInstance.expires > time()
               end)
               if savedInstance then
-                local savedEncounter = savedInstance.encounters[encounterIndex]
+                local savedEncounter = addon.Utils:TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
                 if savedEncounter and savedEncounter.isKilled then
                   color = UNCOMMON_GREEN_COLOR
                   if addon.Data.db.global.raids.colors then

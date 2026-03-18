@@ -4,6 +4,7 @@
 
 - Updated the changelog to be more concise and easier to read.
 - Fixed a Lua error on login/reload caused by Prey Hunts.
+- Fixed an issue with the raid progress icons. No, you haven't killed all 9 bosses yet :P
 
 ## v1.4.2 - 2026-03-17
 
