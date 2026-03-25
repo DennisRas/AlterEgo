@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.4 - 2026-03-25
+
+- Fixed incorrect dungeon data for Seat of the Triumvirate
+
 ## v1.4.3 - 2026-03-18
 
 - Updated the changelog to be more concise and easier to read.

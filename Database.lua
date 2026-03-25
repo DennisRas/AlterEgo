@@ -371,7 +371,7 @@ Data.dungeons = {
   {seasonID = 15, seasonDisplayID = 3, challengeModeID = 542, mapId = 2830, journalInstanceID = 1303, encounters = {}, loot = {}, teleports = {1237215},        time = 0, abbr = "EDA",   name = "Eco-Dome Al'dani"},
   {seasonID = 17, seasonDisplayID = 1, challengeModeID = 556, mapId = 658,  journalInstanceID = 278,  encounters = {}, loot = {}, teleports = {1254555},        time = 0, abbr = "POS",   name = "Pit of Saron"},
   {seasonID = 17, seasonDisplayID = 1, challengeModeID = 161, mapId = 1209, journalInstanceID = 476,  encounters = {}, loot = {}, teleports = {1254557},        time = 0, abbr = "SR",    name = "Skyreach"},
-  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 583, mapId = 1753, journalInstanceID = 945,  encounters = {}, loot = {}, teleports = {1254551},        time = 0, abbr = "SEAT",  name = "Seat of the Triumvirate"},
+  {seasonID = 17, seasonDisplayID = 1, challengeModeID = 239, mapId = 1753, journalInstanceID = 945,  encounters = {}, loot = {}, teleports = {1254551},        time = 0, abbr = "SEAT",  name = "Seat of the Triumvirate"},
   {seasonID = 17, seasonDisplayID = 1, challengeModeID = 402, mapId = 2526, journalInstanceID = 1201, encounters = {}, loot = {}, teleports = {393273},         time = 0, abbr = "AA",    name = "Algeth'ar Academy"},
   {seasonID = 17, seasonDisplayID = 1, challengeModeID = 557, mapId = 2805, journalInstanceID = 1299, encounters = {}, loot = {}, teleports = {1254400},        time = 0, abbr = "WS",    name = "Windrunner Spire"},
   {seasonID = 17, seasonDisplayID = 1, challengeModeID = 558, mapId = 2811, journalInstanceID = 1300, encounters = {}, loot = {}, teleports = {1254572},        time = 0, abbr = "MT",    name = "Magister's Terrace"},
