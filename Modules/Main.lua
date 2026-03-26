@@ -2381,64 +2381,76 @@ function Module:Render()
             characterFrame.currencyFrames[currencyIndex] = currencyFrame
           end
 
-          local quantity = 0
-          local totalEarned = 0
-          local maxQuantity = currency.maxQuantity or 0
-          local maxEarned = false
-          local color = CAMPAIGN_COMPLETE_COLOR
-          local icon = CreateSimpleTextureMarkup(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+          local infoMaxQuantity = currency.maxQuantity or 0
+          local infoMaxWeeklyQuantity = currency.maxWeeklyQuantity or 0
+          local infoIcon = CreateSimpleTextureMarkup(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+          local charQuantity = 0
+          local charTotalEarned = 0
+          local charEarnedThisWeek = 0
+          local hasEarnedMax = false
+          local statusColor = CAMPAIGN_COMPLETE_COLOR
 
           local characterCurrency = addon.Utils:TableGet(character.currencies, "id", currency.id)
           if characterCurrency then
-            quantity = characterCurrency.quantity
-            totalEarned = characterCurrency.totalEarned
+            charQuantity = characterCurrency.quantity or 0
+            charTotalEarned = characterCurrency.totalEarned or 0
+            charEarnedThisWeek = characterCurrency.quantityEarnedThisWeek or 0
           end
 
-          local text = tostring(maxQuantity > 0 and math.min(quantity, maxQuantity) or quantity)
-
-          if maxQuantity > 0 then
-            maxEarned = quantity >= maxQuantity
+          local value = charQuantity
+          if infoMaxQuantity > 0 then
+            value = math.min(charQuantity, infoMaxQuantity)
+            hasEarnedMax = charQuantity >= infoMaxQuantity
             if currency.useTotalEarnedForMaxQty then
-              maxEarned = totalEarned >= maxQuantity
+              hasEarnedMax = charTotalEarned >= infoMaxQuantity
+            end
+          end
+          if infoMaxWeeklyQuantity > 0 and charEarnedThisWeek >= infoMaxWeeklyQuantity then
+            hasEarnedMax = true
+          end
+
+          local text = tostring(value)
+
+          if addon.Data.db.global.currencies.showIcons then
+            text = format("%s %s", infoIcon, value)
+          end
+
+          if addon.Data.db.global.currencies.showMaxEarned and hasEarnedMax then
+            statusColor = DULL_RED_FONT_COLOR
+          end
+
+          if value == 0 then
+            statusColor = GRAY_FONT_COLOR
+            if currency.currencyType == "crest" and charTotalEarned == 0 then
+              text = "-"
             end
           end
 
-          if addon.Data.db.global.currencies.showIcons then
-            text = format("%s %s", icon, quantity)
-          end
-
-          if addon.Data.db.global.currencies.showMaxEarned and maxEarned then
-            color = DULL_RED_FONT_COLOR
-          end
-
-          if quantity == 0 then
-            color = GRAY_FONT_COLOR
-          end
-
-          if totalEarned == 0 and quantity == 0 and currency.currencyType == "crest" then
-            text = "-"
-          end
-
-          currencyFrame.Text:SetText(color:WrapTextInColorCode(text))
+          currencyFrame.Text:SetText(statusColor:WrapTextInColorCode(text))
           currencyFrame.Text:SetJustifyH(addon.Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
           currencyFrame:SetScript("OnEnter", function()
             GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Currency Progress", 1, 1, 1)
-            GameTooltip:AddDoubleLine("Currently Owned:", tostring(quantity), nil, nil, nil, 1, 1, 1)
+            GameTooltip:AddDoubleLine("Owned:", tostring(charQuantity), nil, nil, nil, 1, 1, 1)
+            if infoMaxWeeklyQuantity > 0 then
+              GameTooltip:AddDoubleLine("Weekly Maximum:", format("%d/%d", charEarnedThisWeek, infoMaxWeeklyQuantity), nil, nil, nil, 1, 1, 1)
+            end
             if currency.useTotalEarnedForMaxQty then
-              if maxQuantity > 0 then
-                GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", totalEarned, maxQuantity), nil, nil, nil, 1, 1, 1)
+              if infoMaxQuantity > 0 then
+                GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", charTotalEarned, infoMaxQuantity), nil, nil, nil, 1, 1, 1)
               else
-                if totalEarned > 0 then
-                  GameTooltip:AddDoubleLine("Season Earned:", tostring(totalEarned), nil, nil, nil, 1, 1, 1)
+                if charTotalEarned > 0 then
+                  GameTooltip:AddDoubleLine("Season Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
                 end
                 GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
               end
             else
-              if totalEarned > 0 then
-                GameTooltip:AddDoubleLine("Total Earned:", tostring(totalEarned), nil, nil, nil, 1, 1, 1)
+              if charTotalEarned > 0 then
+                GameTooltip:AddDoubleLine("Total Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
               end
-              GameTooltip:AddDoubleLine("Maximum:", maxQuantity == 0 and "No limit" or tostring(maxQuantity), nil, nil, nil, 1, 1, 1)
+              if infoMaxQuantity > 0 then
+                GameTooltip:AddDoubleLine("Total Maximum:", tostring(infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+              end
             end
             GameTooltip:Show()
             addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)

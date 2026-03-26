@@ -617,20 +617,19 @@ function Data:GetCurrentSeason()
 end
 
 ---Get the currencies of the current season enriched with C_CurrencyInfo data
----@return AE_Currency[]
+---@return AE_CurrencyInfo[]
 function Data:GetCurrencies()
+  local currencies = {}
   local seasonID = self:GetCurrentSeason()
-  local currencies = addon.Utils:TableFilter(self.currencies, function(dataCurrency)
-    return dataCurrency.seasonID == seasonID
-  end)
-  addon.Utils:TableForEach(currencies, function(currency)
+  addon.Utils:TableForEach(self.currencies, function(currency)
+    if currency.seasonID ~= seasonID then
+      return
+    end
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
     if currencyInfo then
-      currency.name = currencyInfo.name
-      currency.description = currencyInfo.description
-      currency.iconFileID = currencyInfo.iconFileID
-      currency.maxQuantity = currencyInfo.maxQuantity or 0
-      currency.quality = currencyInfo.quality or 1
+      currencyInfo.id = currency.id
+      currencyInfo.currencyType = currency.currencyType
+      table.insert(currencies, currencyInfo)
     end
   end)
   return currencies
@@ -1014,7 +1013,7 @@ function Data:MigrateDB()
   end
 end
 
----Perform weekly reset tasks (e.g., vault)
+---Perform weekly reset tasks (e.g., vault, weekly-earn currency progress for offline alts)
 function Data:TaskWeeklyReset()
   if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
     addon.Utils:TableForEach(self.db.global.characters, function(character)
@@ -1034,6 +1033,12 @@ function Data:TaskWeeklyReset()
       character.vault.slots = wipe(character.vault.slots or {})
       character.mythicplus.keystone = wipe(character.mythicplus.keystone or {})
       character.mythicplus.numCompletedDungeonRuns = wipe(character.mythicplus.numCompletedDungeonRuns or {})
+      -- Reset quantityEarnedThisWeek if maxWeeklyQuantity is set
+      addon.Utils:TableForEach(character.currencies or {}, function(characterCurrency)
+        if characterCurrency.maxWeeklyQuantity and characterCurrency.maxWeeklyQuantity > 0 then
+          characterCurrency.quantityEarnedThisWeek = 0
+        end
+      end)
     end)
   end
   self.db.global.weeklyReset = time() + C_DateAndTime.GetSecondsUntilWeeklyReset()

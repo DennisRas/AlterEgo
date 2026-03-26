@@ -58,6 +58,10 @@
 ---@field useTotalEarnedForMaxQty boolean
 ---@field currencyType AE_CurrencyType
 
+---@class AE_CurrencyInfo : CurrencyInfo
+---@field id number
+---@field currencyType AE_CurrencyType
+
 ---@class AE_CharacterCurrency : CurrencyInfo
 ---@field id number
 ---@field currencyType AE_CurrencyType
