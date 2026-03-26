@@ -2,10 +2,11 @@
 
 ## v1.4.4 - 2026-03-25
 
-- Added new Weekly Maximum information to currencies
-- Fixed an issue with Coffer Key Shards showing incorrect maximum
-- Fixed incorrect/missing dungeon data for Seat of the Triumvirate
-- Removed confusing currency limit on Restored Coffer Keys
+- Added new Weekly Maximum information to currencies.
+- Fixed an issue with Coffer Key Shards showing incorrect maximum.
+- Fixed incorrect/missing dungeon data for Seat of the Triumvirate.
+- Fixed teleport spell for the Skyreach dungeon.
+- Removed confusing currency limit on Restored Coffer Keys.
 
 ## v1.4.3 - 2026-03-18
 
