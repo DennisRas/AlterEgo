@@ -5,4 +5,7 @@
   <Binding name="ALTEREGOVAULT" category="AlterEgo">
     ALTEREGO_TOGGLE_VAULT()
   </Binding>
+  <Binding name="ALTEREGOEQUIPMENT" category="AlterEgo">
+    ALTEREGO_TOGGLE_EQUIPMENT()
+  </Binding>
 </Bindings>

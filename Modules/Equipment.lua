@@ -194,4 +194,6 @@ function Module:Render()
   self.window:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
   self.dataTable:SetData(data)
   self.window:SetBodySize(tableWidth, tableHeight)
+  addon.Window:SetWindowScale(addon.Data.db.global.interface.windowScale / 100)
+  addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
 end

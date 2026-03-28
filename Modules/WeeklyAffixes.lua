@@ -113,4 +113,6 @@ function Module:Render()
 
   self.table:SetData(data)
   self.window:SetBodySize(tableWidth, tableHeight)
+  addon.Window:SetWindowScale(addon.Data.db.global.interface.windowScale / 100)
+  addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
 end

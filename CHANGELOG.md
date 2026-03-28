@@ -2,6 +2,8 @@
 
 ## v1.4.5 - 2026-03-28
 
+- Added a new keybind for opening the character equipment window.
+- Added a new minimap shortcut for opening the character equipment window.
 - Fixed an issue with incorrect currency values in the main window if maximum value is reached.
 
 ## v1.4.4 - 2026-03-25

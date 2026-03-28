@@ -64,8 +64,10 @@ end
 function Core:OnInitialize()
   _G["BINDING_NAME_ALTEREGO"] = "Toggle AlterEgo window"
   _G["BINDING_NAME_ALTEREGOVAULT"] = "Toggle Great Vault window"
+  _G["BINDING_NAME_ALTEREGOEQUIPMENT"] = "Toggle Character Equipment window"
   _G["ALTEREGO_TOGGLE_WINDOW"] = self.ToggleWindow
   _G["ALTEREGO_TOGGLE_VAULT"] = self.ToggleVault
+  _G["ALTEREGO_TOGGLE_EQUIPMENT"] = self.ToggleEquipment
   self:RegisterChatCommand("ae", function()
     self:ToggleWindow()
   end)
@@ -79,9 +81,16 @@ function Core:OnInitialize()
     type = "launcher",
     icon = addon.Constants.media.Logo,
     OnClick = function(...)
-      local _, b = ...
-      if b and b == "RightButton" then
-        self:ToggleVault()
+      local mouseButton = select(2, ...)
+      local isShiftKeyDown = IsLeftShiftKeyDown() or IsRightShiftKeyDown()
+      if mouseButton then
+        if mouseButton == "LeftButton" and isShiftKeyDown then
+          self:ToggleEquipment()
+        elseif mouseButton == "RightButton" then
+          self:ToggleVault()
+        else
+          self:ToggleWindow()
+        end
       else
         self:ToggleWindow()
       end
@@ -90,6 +99,7 @@ function Core:OnInitialize()
       tooltip:SetText(addonName, 1, 1, 1)
       tooltip:AddLine("|cff00ff00Left click|r to open AlterEgo.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       tooltip:AddLine("|cff00ff00Right click|r to open the Great Vault.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+      tooltip:AddLine("|cff00ff00Shift+Left click|r to open your character equipment.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       local dragText = "|cff00ff00Drag|r to move this icon"
       if addon.Data.db.global.minimap.lock then
         dragText = dragText .. " |cffff0000(locked)|r"
@@ -122,6 +132,15 @@ function Core:ToggleVault()
   else
     WeeklyRewards_ShowUI()
   end
+end
+
+---Toggle the equipment window
+function Core:ToggleEquipment()
+  local module = addon.Core:GetModule("Equipment", true)
+  if not module then return end
+  local character = addon.Data:GetCharacter()
+  if not character then return end
+  module:OpenCharacter(character)
 end
 
 ---Render all modules
