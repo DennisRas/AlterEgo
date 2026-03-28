@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.5 - 2026-03-28
+
+- Fixed an issue with incorrect currency values in the main window if maximum value is reached.
+
 ## v1.4.4 - 2026-03-25
 
 - Added new Weekly Maximum information to currencies.

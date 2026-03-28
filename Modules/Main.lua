@@ -2388,7 +2388,8 @@ function Module:Render()
           local charTotalEarned = 0
           local charEarnedThisWeek = 0
           local hasEarnedMax = false
-          local statusColor = CAMPAIGN_COMPLETE_COLOR
+          local cellColor = CAMPAIGN_COMPLETE_COLOR
+          local cellValue = "0"
 
           local characterCurrency = addon.Utils:TableGet(character.currencies, "id", currency.id)
           if characterCurrency then
@@ -2397,9 +2398,7 @@ function Module:Render()
             charEarnedThisWeek = characterCurrency.quantityEarnedThisWeek or 0
           end
 
-          local value = charQuantity
           if infoMaxQuantity > 0 then
-            value = math.min(charQuantity, infoMaxQuantity)
             hasEarnedMax = charQuantity >= infoMaxQuantity
             if currency.useTotalEarnedForMaxQty then
               hasEarnedMax = charTotalEarned >= infoMaxQuantity
@@ -2409,24 +2408,23 @@ function Module:Render()
             hasEarnedMax = true
           end
 
-          local text = tostring(value)
-
+          cellValue = tostring(charQuantity)
           if addon.Data.db.global.currencies.showIcons then
-            text = format("%s %s", infoIcon, value)
+            cellValue = format("%s %s", infoIcon, cellValue)
           end
 
           if addon.Data.db.global.currencies.showMaxEarned and hasEarnedMax then
-            statusColor = DULL_RED_FONT_COLOR
+            cellColor = DULL_RED_FONT_COLOR
           end
 
-          if value == 0 then
-            statusColor = GRAY_FONT_COLOR
+          if charQuantity == 0 then
+            cellColor = GRAY_FONT_COLOR
             if currency.currencyType == "crest" and charTotalEarned == 0 then
-              text = "-"
+              cellValue = "-"
             end
           end
 
-          currencyFrame.Text:SetText(statusColor:WrapTextInColorCode(text))
+          currencyFrame.Text:SetText(cellColor:WrapTextInColorCode(cellValue))
           currencyFrame.Text:SetJustifyH(addon.Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
           currencyFrame:SetScript("OnEnter", function()
             GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
