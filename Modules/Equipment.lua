@@ -7,6 +7,28 @@ local addon = select(2, ...)
 local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Equipment = Module
 
+local Slots = {
+  [1] = {id = 1, side = "LEFT", name = "Head", canEnchant = true, canSocket = true},
+  [2] = {id = 2, side = "LEFT", name = "Neck", canEnchant = false, canSocket = false},
+  [3] = {id = 3, side = "LEFT", name = "Shoulder", canEnchant = true, canSocket = false},
+  [4] = {id = 4, side = "LEFT", name = "Shirt", canEnchant = false, canSocket = false},
+  [5] = {id = 5, side = "LEFT", name = "Chest", canEnchant = true, canSocket = false},
+  [6] = {id = 6, side = "RIGHT", name = "Waist", canEnchant = false, canSocket = true},
+  [7] = {id = 7, side = "RIGHT", name = "Legs", canEnchant = true, canSocket = false},
+  [8] = {id = 8, side = "RIGHT", name = "Feet", canEnchant = true, canSocket = false},
+  [9] = {id = 9, side = "LEFT", name = "Wrist", canEnchant = false, canSocket = true},
+  [10] = {id = 10, side = "RIGHT", name = "Hands", canEnchant = false, canSocket = false},
+  [11] = {id = 11, side = "RIGHT", name = "Finger0", canEnchant = true, canSocket = false},
+  [12] = {id = 12, side = "RIGHT", name = "Finger1", canEnchant = true, canSocket = false},
+  [13] = {id = 13, side = "RIGHT", name = "Trinket0", canEnchant = false, canSocket = false},
+  [14] = {id = 14, side = "RIGHT", name = "Trinket1", canEnchant = false, canSocket = false},
+  [15] = {id = 15, side = "LEFT", name = "Back", canEnchant = false, canSocket = false},
+  [16] = {id = 16, side = "RIGHT", name = "MainHand", canEnchant = true, canSocket = false},
+  [17] = {id = 17, side = "LEFT", name = "SecondaryHand", canEnchant = true, canSocket = false},
+  --    [18] = {id = 18, side = "LEFT", name = "Ranged", canEnchant = false},
+  --    [19] = {id = 19, side = "LEFT", name = "Tabard", canEnchant = false}
+}
+
 function Module:OnInitialize()
   self:Render()
 end
@@ -38,7 +60,7 @@ function Module:OpenCharacter(character)
 end
 
 function Module:Render()
-  local tableWidth = 610
+  local tableWidth = 870
   local tableHeight = 0
   local rowHeight = 22
 
@@ -73,6 +95,8 @@ function Module:Render()
       {width = 280},
       {width = 80, align = "CENTER"},
       {width = 150},
+      {width = 180},
+      {width = 80},
     },
     rows = {
       {
@@ -81,6 +105,8 @@ function Module:Render()
           {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
           {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Enchant",       backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
+          {text = "Gems",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
         },
       },
     },
@@ -151,6 +177,61 @@ function Module:Render()
       end)
     end
 
+    local enchantText, enchantTooltip, enchantColor = "", "", GREEN_FONT_COLOR
+    ---@type string[]
+    local socketTexts = {}
+    ---@type string[]
+    local socketTooltipLines = {}
+
+    local tooltipData = C_TooltipInfo.GetHyperlink(item.itemLink)
+    if tooltipData ~= nil then
+      for _, line in pairs(tooltipData.lines) do
+        if line.type == Enum.TooltipDataLineType.ItemEnchantmentPermanent then
+          enchantText = line.leftText
+          enchantTooltip = line.leftText
+          -- Extract the enchant value from the enchant line
+          local enchantValue = string.match(line.leftText, ENCHANTED_TOOLTIP_LINE:gsub("%%s", "(.*)"))
+          if enchantValue ~= nil then
+            enchantTooltip = enchantValue
+            enchantText = enchantValue
+
+            -- Extract the enchant name and atlas from the enchant line
+            local enchantName, enchantAtlas = string.match(enchantValue, "(.*)|A:(.*):20:20|a")
+            if enchantName ~= nil then
+              enchantText = "|A:" .. enchantAtlas .. ":20:20|a" .. enchantName
+
+              -- Remove the enchant prefix from the name
+              local enchantNameSplit = {strsplit("-", enchantName)}
+              if enchantNameSplit[2] ~= nil then
+                enchantText = "|A:" .. enchantAtlas .. ":20:20|a" .. strtrim(enchantNameSplit[2])
+              end
+            end
+          end
+        end
+
+        if line.type == Enum.TooltipDataLineType.GemSocket then
+          if line.gemIcon then
+            local gemTexture = CreateSimpleTextureMarkup(line.gemIcon, 14, 14)
+            table.insert(socketTexts, gemTexture)
+            table.insert(socketTooltipLines, gemTexture .. " " .. line.leftText)
+          elseif line.socketType then
+            local socketTexture = CreateSimpleTextureMarkup(string.format("Interface\\ItemSocketingFrame\\UI-EmptySocket-%s", line.socketType), 14, 14)
+            table.insert(socketTexts, socketTexture)
+            table.insert(socketTooltipLines, socketTexture .. " " .. line.leftText)
+          end
+        end
+      end
+    end
+
+    if enchantText == "" and Slots[item.itemSlotID] and Slots[item.itemSlotID].canEnchant then
+      enchantText = "Missing"
+      enchantColor = DIM_RED_FONT_COLOR
+    end
+
+    if addon.Utils:TableCount(socketTexts) == 0 and Slots[item.itemSlotID] and Slots[item.itemSlotID].canSocket then
+      table.insert(socketTexts, DIM_RED_FONT_COLOR:WrapTextInColorCode("Missing"))
+    end
+
     ---@type AE_TableDataRow
     local row = {
       columns = {
@@ -177,6 +258,36 @@ function Module:Render()
         },
         {text = WrapTextInColorCode(tostring(floor(item.itemLevel)), select(4, GetItemQualityColor(item.itemQuality)))},
         {text = upgradeLevel},
+        {
+          text = enchantColor:WrapTextInColorCode(enchantText),
+          onEnter = function(columnFrame)
+            if enchantTooltip ~= "" then
+              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+              GameTooltip:AddLine("Enchanted:")
+              GameTooltip:AddLine(enchantTooltip, 1, 1, 1)
+              GameTooltip:Show()
+            end
+          end,
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+        },
+        {
+          text = strjoin(" ", unpack(socketTexts)),
+          onEnter = function(columnFrame)
+            if addon.Utils:TableCount(socketTooltipLines) > 0 then
+              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+              GameTooltip:AddLine("Gems:")
+              addon.Utils:TableForEach(socketTooltipLines, function(line)
+                GameTooltip:AddLine(line, 1, 1, 1)
+              end)
+              GameTooltip:Show()
+            end
+          end,
+          onLeave = function()
+            GameTooltip:Hide()
+          end,
+        },
       },
     }
     table.insert(data.rows, row)

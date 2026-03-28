@@ -219,7 +219,8 @@
       "WrapTextInColorCode",
             "StaticPopupDialogs",
             "YES",
-            "StaticPopup_Show"
+            "StaticPopup_Show",
+            "ENCHANTED_TOOLTIP_LINE"
     ]
   }
 }
