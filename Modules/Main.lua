@@ -2408,13 +2408,14 @@ function Module:Render()
             hasEarnedMax = true
           end
 
-          cellValue = tostring(charQuantity)
-          if addon.Data.db.global.currencies.showIcons then
-            cellValue = format("%s %s", infoIcon, cellValue)
+          if infoMaxWeeklyQuantity > 0 and infoMaxQuantity > 0 then
+            cellValue = format("%d (%d)", charQuantity, charEarnedThisWeek)
+          else
+            cellValue = tostring(charQuantity)
           end
 
-          if addon.Data.db.global.currencies.showMaxEarned and hasEarnedMax then
-            cellColor = DULL_RED_FONT_COLOR
+          if addon.Data.db.global.currencies.showIcons then
+            cellValue = format("%s %s", infoIcon, cellValue)
           end
 
           if charQuantity == 0 then
@@ -2422,6 +2423,10 @@ function Module:Render()
             if currency.currencyType == "crest" and charTotalEarned == 0 then
               cellValue = "-"
             end
+          end
+
+          if addon.Data.db.global.currencies.showMaxEarned and hasEarnedMax then
+            cellColor = DULL_RED_FONT_COLOR
           end
 
           currencyFrame.Text:SetText(cellColor:WrapTextInColorCode(cellValue))
