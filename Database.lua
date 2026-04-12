@@ -583,8 +583,6 @@ Data.cache = {
 
 ---Initiate AceDB
 function Data:Initialize()
-  ---@class AceDBObject-3.0
-  ---@field global AE_Global
   self.db = LibStub("AceDB-3.0"):New(
     "AlterEgoDB",
     self.defaultDB,
@@ -1538,8 +1536,8 @@ function Data:UpdateVault()
     end
     table.insert(character.vault.slots, activity)
   end)
-  local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
-  if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
+
+  character.vault.hasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() == true
   addon.Core:Render()
 end
 
@@ -1552,7 +1550,6 @@ function Data:UpdateMythicPlus()
   local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
   local runHistory = C_MythicPlus.GetRunHistory(true, true)
   local bestSeasonScore, bestSeasonNumber = C_MythicPlus.GetSeasonBestMythicRatingFromThisExpansion()
-  local HasAvailableRewards = C_WeeklyRewards.HasAvailableRewards()
   local numHeroic, numMythic, numMythicPlus = C_WeeklyRewards.GetNumCompletedDungeonRuns()
   local affixes = self:GetAffixes()
 
@@ -1560,7 +1557,8 @@ function Data:UpdateMythicPlus()
   if runHistory ~= nil then character.mythicplus.runHistory = runHistory end
   if bestSeasonScore ~= nil then character.mythicplus.bestSeasonScore = bestSeasonScore end
   if bestSeasonNumber ~= nil then character.mythicplus.bestSeasonNumber = bestSeasonNumber end
-  if HasAvailableRewards ~= nil then character.vault.hasAvailableRewards = HasAvailableRewards end
+
+  character.vault.hasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() == true
 
   character.mythicplus.numCompletedDungeonRuns = {
     heroic = numHeroic or 0,

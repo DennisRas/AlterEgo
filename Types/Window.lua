@@ -1,0 +1,35 @@
+---@class AE_TitlebarButton
+---@field name string The unique name for the button
+---@field icon string The icon texture path
+---@field tooltipTitle string The tooltip title
+---@field tooltipDescription string The tooltip description
+---@field onClick function? The click handler function
+---@field setupMenu function? Optional menu setup function for dropdown buttons
+---@field size number? The button size (defaults to titlebar height)
+---@field iconSize number? The icon size (defaults to 12)
+---@field enabled boolean? Whether the button is enabled (defaults to true)
+
+---@class AE_WindowOptions
+---@field parent any?
+---@field name string?
+---@field title string?
+---@field sidebar number?
+---@field titlebar boolean?
+---@field border number?
+---@field windowScale number?
+---@field windowColor table?
+---@field point table?
+---@field titlebarButtons AE_TitlebarButton[]? Array of buttons to add to the titlebar
+
+---@class AE_Window : Frame
+---@field config AE_WindowOptions
+---@field titlebar Frame?
+---@field body Frame?
+---@field sidebar Frame?
+---@field border Frame?
+---@field width number?
+---@field height number?
+---@field titlebarButtons AE_TitlebarButton[] Array of titlebar buttons
+
+---@class AE_WindowManager
+---@field windows table<string, AE_Window>

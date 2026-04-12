@@ -3,7 +3,7 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@class AE_Module_WeeklyAffixes : AceModule
+---@type AE_Module_WeeklyAffixes|AceModule
 local Module = addon.Core:NewModule("WeeklyAffixes", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_WeeklyAffixes = Module
 
@@ -28,7 +28,7 @@ function Module:Render()
       title = "Weekly Affixes",
       point = {"TOP", UIParent, "TOP", 0, -15},
     })
-    self.table = addon.Table:New({rows = {height = rowHeight, striped = true}})
+    self.table = addon.Table:New({ rows = { height = rowHeight, striped = true } })
     self.table:SetParent(self.window.body)
     self.table:SetAllPoints()
     self.window:SetScript("OnShow", function()

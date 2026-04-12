@@ -11,54 +11,10 @@ _G[addonName] = addon
 local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0")
 addon.Core = Core
 
----@class AE_Libs
 addon.Libs = {
   LibDBIcon = LibStub("LibDBIcon-1.0"),
   LibDataBroker = LibStub("LibDataBroker-1.1"),
 }
-
----@type table<string, function> Table of event handlers
-addon.EventHandlers = {}
-
----@type Frame Frame to register event handlers
-addon.EventFrame = CreateFrame("Frame", addonName .. "EventFrame")
-addon.EventFrame:SetScript("OnEvent", function(self, event, ...)
-  -- local start = debugprofilestop()
-  if addon.EventHandlers[event] then
-    addon.EventHandlers[event](self, event, ...)
-  end
-  -- local finish = debugprofilestop()
-  -- local duration = finish - start
-  -- local color = duration > 1 and "ff0000" or "00ff00"
-  -- print(format("%s |cff%s(%fms)|r", event, color, duration))
-end)
-
----Register an event handler
----@param event string|table
----@param callback function
-function Core:RegisterEvent(event, callback)
-  if type(event) == "table" then
-    for _, eventName in ipairs(event) do
-      self:RegisterEvent(eventName, callback)
-    end
-    return
-  end
-  addon.EventHandlers[event] = callback
-  addon.EventFrame:RegisterEvent(event)
-end
-
----Unregister an event handler
----@param event string|table
-function Core:UnregisterEvent(event)
-  if type(event) == "table" then
-    for _, eventName in ipairs(event) do
-      self:UnregisterEvent(eventName)
-    end
-    return
-  end
-  addon.EventHandlers[event] = nil
-  addon.EventFrame:UnregisterEvent(event)
-end
 
 ---Initialize the addon
 function Core:OnInitialize()
@@ -154,7 +110,7 @@ end
 
 ---Register event handlers for game data updates
 function Core:OnEnable()
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
@@ -163,14 +119,14 @@ function Core:OnEnable()
       addon.Data:UpdateEquipment()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "QUEST_LOG_UPDATE",
     }, function()
       addon.Data:UpdatePreyProgress()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "GUILD_ROSTER_UPDATE",
       "PLAYER_GUILD_UPDATE",
@@ -178,7 +134,7 @@ function Core:OnEnable()
       addon.Data:UpdateCharacterInfo()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "BOSS_KILL",
       "CHALLENGE_MODE_COMPLETED",
@@ -189,7 +145,7 @@ function Core:OnEnable()
       self:RequestGameData()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "CHALLENGE_MODE_MAPS_UPDATE",
       "WEEKLY_REWARDS_UPDATE",
@@ -197,7 +153,7 @@ function Core:OnEnable()
       addon.Data:UpdateVault()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "LFG_UPDATE_RANDOM_INFO",
       "UPDATE_INSTANCE_INFO",
@@ -205,7 +161,7 @@ function Core:OnEnable()
       addon.Data:UpdateRaidInstances()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "BAG_UPDATE_DELAYED",
       "CHALLENGE_MODE_COMPLETED",
@@ -221,7 +177,7 @@ function Core:OnEnable()
       addon.Data:UpdateKeystoneItem()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "CHALLENGE_MODE_COMPLETED",
       "CHALLENGE_MODE_MAPS_UPDATE",
@@ -231,7 +187,7 @@ function Core:OnEnable()
       addon.Data:UpdateMythicPlus()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "BONUS_ROLL_RESULT",
       "CHAT_MSG_CURRENCY",
@@ -246,30 +202,33 @@ function Core:OnEnable()
       addon.Data:UpdateCurrencies()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "PLAYER_MONEY",
     }, function()
       addon.Data:UpdateMoney()
     end
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
     function()
       self:Render()
-    end
+    end,
+    true
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     "CHAT_MSG_SYSTEM",
     function(...)
       self:OnChatMessageSystem(...)
-    end
+    end,
+    true
   )
-  self:RegisterEvent(
+  addon.Events:RegisterEvent(
     "PLAYER_LEVEL_UP",
     function()
       addon.Data:UpdateDB()
-    end
+    end,
+    true
   )
   self:CheckGameData()
 end
@@ -287,7 +246,8 @@ function Core:CheckGameData()
   local seasonID, seasonDisplayID = addon.Data:GetCurrentSeason()
   if seasonID < 0 or seasonDisplayID < 0 then
     self:RequestGameData()
-    return self:ScheduleTimer("CheckGameData", 3)
+    self:ScheduleTimer("CheckGameData", 3)
+    return
   end
 
   addon.Data:loadGameData()
@@ -308,6 +268,8 @@ function Core:OnInstanceReset()
 end
 
 ---Handle chat message system
+---@param _ any
+---@param msg string
 function Core:OnChatMessageSystem(_, msg)
   local groupChannel = addon.Utils:GetGroupChannel()
   if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then

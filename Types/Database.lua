@@ -1,0 +1,42 @@
+---@class AE_Global
+---@field weeklyReset number
+---@field characters AE_Character[]
+---@field minimap { minimapPos: number, hide: boolean, lock: boolean }
+---@field sorting AE_CharacterSortingOption
+---@field showTiers boolean
+---@field showScores boolean
+---@field showAffixColors boolean
+---@field showAffixHeader boolean
+---@field showZeroRatedCharacters boolean
+---@field showRealms boolean
+---@field showGuildInformation boolean
+---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
+---@field announceResets boolean
+---@field vault { raids: boolean, dungeons: boolean, world: boolean }
+---@field preyHunts { enabled: boolean, hiddenDifficulties: table<number, boolean> }
+---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
+---@field dungeons { enabled: boolean }
+---@field world { enabled: boolean }
+---@field currencies { enabled: boolean, hiddenCurrencies: table<number, boolean>, showIcons: boolean, showMaxEarned: boolean, alignCenter: boolean }
+---@field interface { windowScale: number, windowColor: ColorTable}
+---@field useRIOScoreColor boolean
+
+---@class AE_Data
+---@field db { global: AE_Global }|nil
+---@field dbVersion number
+---@field defaultDB table
+---@field defaultCharacter AE_Character
+---@field inventory table
+---@field affixes table
+---@field raidDifficulties table
+---@field vaultTypes table
+---@field affixRotations table
+---@field keystones table
+---@field dungeons AE_Dungeon[]
+---@field raids AE_Raid[]
+---@field currencies AE_Currency[]
+---@field seasons AE_Season[]
+---@field preyHuntDifficulties AE_PreyHuntDifficulty[]
+---@field preyHuntQuests AE_PreyHuntQuest[]
+---@field oldUpgradeLevels table
+---@field cache table

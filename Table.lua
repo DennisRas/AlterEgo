@@ -6,16 +6,14 @@ local addon = select(2, ...)
 ---@class AE_Table
 local Table = {}
 addon.Table = Table
-
----@type AE_TableFrame[]
-local TableCollection = {}
+Table.frames = {}
 
 ---Create a new table frame
----@param config table
+---@param config AE_TableConfig?
 ---@return AE_TableFrame
 function Table:New(config)
   ---@type AE_TableFrame
-  local frame = CreateFrame("Frame", addonName .. "Table" .. (addon.Utils:TableCount(TableCollection) + 1)) ---@diagnostic disable-line:assign-type-mismatch
+  local frame = CreateFrame("Frame", addonName .. "Table" .. (addon.Utils:TableCount(self.frames) + 1)) ---@diagnostic disable-line:assign-type-mismatch
 
   ---@type AE_TableConfig
   local defaultConfig = {
@@ -38,16 +36,14 @@ function Table:New(config)
       padding = 8,
       highlight = false,
     },
-    ---@type AE_TableData
     data = {
       columns = {},
       rows = {},
     },
   }
-  frame.config = CreateFromMixins(
-    defaultConfig,
-    config or {}
-  )
+  local mergedConfig = CopyTable(defaultConfig)
+  addon.Utils:TableMergeDeep(mergedConfig, config or {})
+  frame.config = mergedConfig
   frame.rows = {}
   frame.data = frame.config.data
   frame.scrollFrame = addon.Utils:CreateScrollFrame({
@@ -66,7 +62,7 @@ function Table:New(config)
   ---@param height number
   function frame:SetRowHeight(height)
     self.config.rows.height = height
-    self:Update()
+    self:RenderTable()
   end
 
   function frame:RenderTable()
@@ -218,6 +214,6 @@ function Table:New(config)
 
   frame.scrollFrame:HookScript("OnSizeChanged", function() frame:RenderTable() end)
   frame:RenderTable()
-  table.insert(TableCollection, frame)
+  table.insert(self.frames, frame)
   return frame
 end

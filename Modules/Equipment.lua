@@ -3,7 +3,7 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@class AE_Module_Equipment : AceModule
+---@type AE_Module_Equipment|AceModule
 local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Equipment = Module
 
@@ -34,7 +34,7 @@ function Module:OnInitialize()
 end
 
 function Module:OnEnable()
-  addon.Core:RegisterEvent(
+  addon.Events:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
@@ -70,7 +70,7 @@ function Module:Render()
       title = "Character",
       point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15},
     })
-    self.dataTable = addon.Table:New({rows = {height = rowHeight, striped = true}})
+    self.dataTable = addon.Table:New({ rows = { height = rowHeight, striped = true } })
     self.dataTable:SetParent(self.window.body)
     self.dataTable:SetAllPoints()
     self.window:SetScript("OnShow", function()

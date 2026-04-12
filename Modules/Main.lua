@@ -3,7 +3,7 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@class AE_Module_Main : AceModule
+---@type AE_Module_Main|AceModule
 local Module = addon.Core:NewModule("Main", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Main = Module
 
@@ -387,7 +387,6 @@ function Module:GetCharacterInfo(unfiltered)
   local dungeons = addon.Data:GetDungeons()
   local difficulties = addon.Data:GetRaidDifficulties(true)
   local _, seasonDisplayID = addon.Data:GetCurrentSeason()
-  ---@class AE_Module_Equipment
   local equipmentModule = addon.Core:GetModule("Equipment", true)
 
   ---@type AE_CharacterRows[]

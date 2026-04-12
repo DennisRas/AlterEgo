@@ -1,0 +1,91 @@
+---@class AE_CharacterCurrency : CurrencyInfo
+---@field id number
+---@field currencyType AE_CurrencyType
+
+---@class AE_CharacterInfo
+---@field name string
+---@field realm string
+---@field level number
+---@field race {name: string, file: string, id: number}
+---@field class {name: string, file: string, id: number}
+---@field factionGroup {english: string, localized: string}
+---@field ilvl {level: number, equipped: number, pvp: number, color: string}
+
+---@class AE_CharacterAffixScoreInfo : MythicPlusAffixScoreInfo
+---@field id number
+
+---@class AE_CharacterDungeon
+---@field challengeModeID number
+---@field rating number
+---@field level number
+---@field finishedSuccess boolean
+---@field bestTimedRun MapSeasonBestInfo|nil
+---@field bestNotTimedRun MapSeasonBestInfo|nil
+---@field affixScores AE_CharacterAffixScoreInfo[]
+---@field bestOverAllScore number
+
+---@class AE_CharacterMythicPlus
+---@field numCompletedDungeonRuns {heroic: number, mythic: number, mythicPlus: number}
+---@field rating number
+---@field keystone {challengeModeID: number, mapId: number, level: number, color: string, itemId: number, itemLink: string}
+---@field bestSeasonScore number
+---@field bestSeasonNumber number
+---@field runHistory MythicPlusRunInfo[]
+---@field dungeons AE_CharacterDungeon[]
+
+---@class AE_CharacterVault
+---@field hasAvailableRewards boolean
+---@field slots AE_CharacterVaultSlot[]
+---@field activityEncounterInfo AE_WeeklyRewardActivityEncounterInfo[]
+
+---@class AE_CharacterVaultSlot : WeeklyRewardActivityInfo
+---@field exampleRewardLink string
+---@field exampleRewardUpgradeLink string
+
+---@class AE_Equipment
+---@field itemName string
+---@field itemLink string
+---@field itemQuality Enum.ItemQuality
+---@field itemLevel number
+---@field itemMinLevel number
+---@field itemType string
+---@field itemSubType string
+---@field itemStackCount number
+---@field itemEquipLoc string
+---@field itemTexture integer
+---@field sellPrice number
+---@field classID number
+---@field subclassID number
+---@field bindType number
+---@field expansionID number
+---@field setID number?
+---@field isCraftingReagent boolean
+---@field itemUpgradeTrack string|nil
+---@field itemUpgradeLevel number|nil
+---@field itemUpgradeMax number|nil
+---@field itemUpgradeColor string|nil
+---@field itemSlotID number
+---@field itemSlotName string
+
+---@class AE_Character
+---@field GUID WOWGUID
+---@field lastUpdate number
+---@field currentSeason number
+---@field order number
+---@field info AE_CharacterInfo
+---@field equipment AE_Equipment[]
+---@field money number
+---@field currencies AE_CharacterCurrency[]
+---@field preyHunts { questsCompleted: table<number, boolean> }
+---@field raids { savedInstances: AE_SavedInstance[] }
+---@field mythicplus AE_CharacterMythicPlus
+---@field vault AE_CharacterVault
+
+---@class AE_CharacterRows
+---@field label string
+---@field value function
+---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
+---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
+---@field onClick fun(infoFrame: Frame, character: AE_Character)?
+---@field backgroundColor ColorTable?
+---@field enabled boolean

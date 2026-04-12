@@ -31,11 +31,21 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 
-Types.lua
+Types\Events.lua
+Types\Constants.lua
+Types\GameData.lua
+Types\Character.lua
+Types\Database.lua
+Types\Table.lua
+Types\Window.lua
+Types\Utils.lua
+Types\Addon.lua
+
 Constants.lua
 Utils.lua
 Window.lua
 Table.lua
+Events.lua
 Database.lua
 
 Core.lua

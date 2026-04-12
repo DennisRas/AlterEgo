@@ -3,8 +3,6 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@type table<string, AE_Window>
-local WindowCollection = {}
 local TITLEBAR_HEIGHT = 30
 local FOOTER_HEIGHT = 16
 -- local SIDEBAR_WIDTH = 150
@@ -12,26 +10,27 @@ local FOOTER_HEIGHT = 16
 ---@class AE_WindowManager
 local Window = {}
 addon.Window = Window
+Window.windows = {}
 
 ---Create a window frame
 ---@param options AE_WindowOptions
 ---@return AE_Window
 function Window:New(options)
-  ---@class AE_Window
-  local window = CreateFrame("Frame", addonName .. "Window123123" .. (options and options.name or #WindowCollection + 1), options.parent or UIParent)
-  window.config = CreateFromMixins(
-    {
-      parent = UIParent,
-      name = "",
-      title = "",
-      border = addon.Constants.sizes.border,
-      titlebar = true,
-      windowScale = 100,
-      windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
-      point = {"CENTER"},
-    },
-    options or {}
-  )
+  ---@type AE_Window
+  local window = CreateFrame("Frame", addonName .. "Window" .. (options and options.name or addon.Utils:TableCount(self.windows) + 1), options.parent or UIParent)
+  local defaultWindowOptions = {
+    parent = UIParent,
+    name = "",
+    title = "",
+    border = addon.Constants.sizes.border,
+    titlebar = true,
+    windowScale = 100,
+    windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
+    point = {"CENTER"},
+  }
+  local mergedWindowOptions = CopyTable(defaultWindowOptions)
+  addon.Utils:TableMergeDeep(mergedWindowOptions, options or {})
+  window.config = mergedWindowOptions
   window:SetFrameStrata("MEDIUM")
   window:SetFrameLevel(3000)
   window:SetToplevel(true)
@@ -286,7 +285,7 @@ function Window:New(options)
 
   window:Hide()
   table.insert(UISpecialFrames, window:GetName())
-  WindowCollection[window.config.name] = window
+  self.windows[window.config.name] = window
   return window
 end
 
@@ -294,13 +293,13 @@ end
 ---@param name string
 ---@return AE_Window?
 function Window:GetWindow(name)
-  return WindowCollection[name]
+  return self.windows[name]
 end
 
 ---Scale each window
 ---@param scale number
 function Window:SetWindowScale(scale)
-  addon.Utils:TableForEach(WindowCollection, function(window)
+  addon.Utils:TableForEach(self.windows, function(window)
     window:SetScale(scale)
   end)
 end
@@ -308,7 +307,7 @@ end
 ---Set background color to each window
 ---@param color ColorTable
 function Window:SetWindowBackgroundColor(color)
-  addon.Utils:TableForEach(WindowCollection, function(window)
+  addon.Utils:TableForEach(self.windows, function(window)
     addon.Utils:SetBackgroundColor(window, color.r, color.g, color.b, color.a)
   end)
 end

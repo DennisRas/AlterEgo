@@ -5,9 +5,8 @@ local addon = select(2, ...)
 
 ---@class AE_Utils
 local Utils = {}
-addon.Utils = Utils
-
 Utils.ScrollCollection = {}
+addon.Utils = Utils
 
 ---Calculate the dungeon timer
 ---@param time number
@@ -48,7 +47,7 @@ end
 
 ---Set the highlight color for a parent frame
 ---@param parent Frame
----@param r number|table?
+---@param r number?
 ---@param g number?
 ---@param b number?
 ---@param a number?
@@ -57,10 +56,6 @@ function Utils:SetHighlightColor(parent, r, g, b, a)
     parent.Highlight = parent:CreateTexture("Highlight", "OVERLAY")
     parent.Highlight:SetTexture("Interface/BUTTONS/WHITE8X8")
     parent.Highlight:SetAllPoints()
-  end
-
-  if type(r) == "table" then
-    r, g, b, a = r.a, r.g, r.b, r.a
   end
 
   if r == nil then
@@ -82,42 +77,42 @@ end
 ---Find a table item by callback
 ---@generic T
 ---@param tbl T[]
----@param callback fun(value: T, index?: number): boolean
----@return T|nil, number|nil
+---@param callback fun(value: T, index: integer): boolean
+---@return T?, integer?
 function Utils:TableFind(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
-  for i, v in ipairs(tbl) do
-    if callback(v, i) then
-      return v, i
+  for index, value in ipairs(tbl) do
+    if callback(value, index) then
+      return value, index
     end
   end
   return nil, nil
 end
 
 ---Find a table item by key and value
----@generic T
+---@generic T : table
 ---@param tbl T[]
----@param key string
----@param val any
----@return T|nil
-function Utils:TableGet(tbl, key, val)
+---@param key string|number
+---@param value any
+---@return T?, integer?
+function Utils:TableGet(tbl, key, value)
   assert(type(tbl) == "table", "Must be a table!")
-  return self:TableFind(tbl, function(elm)
-    return elm[key] and elm[key] == val
+  return self:TableFind(tbl, function(element)
+    return element[key] and element[key] == value
   end)
 end
 
 ---Create a new table containing all elements that pass truth test
 ---@generic T
----@param tbl T[]
----@param callback fun(value: T, index?: number): boolean
+---@param tbl table<any, T>
+---@param callback fun(value: T, key: any): boolean
 ---@return T[]
 function Utils:TableFilter(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
   local t = {}
-  for i, v in pairs(tbl) do
-    if callback(v, i) then
-      table.insert(t, v)
+  for key, value in pairs(tbl) do
+    if callback(value, key) then
+      table.insert(t, value)
     end
   end
   return t
@@ -125,7 +120,7 @@ end
 
 ---Count table items
 ---@param tbl table
----@return number
+---@return integer
 function Utils:TableCount(tbl)
   assert(type(tbl) == "table", "Must be a table!")
   local n = 0
@@ -136,49 +131,68 @@ function Utils:TableCount(tbl)
 end
 
 ---Deep copy a table
----@generic T
----@param tbl T[]
----@param cache table?
----@return T[]
+---@param tbl table
+---@param cache table<table, table>?
+---@return table
 function Utils:TableCopy(tbl, cache)
   assert(type(tbl) == "table", "Must be a table!")
   local t = {}
   cache = cache or {}
   cache[tbl] = t
-  self:TableForEach(tbl, function(v, k)
-    if type(v) == "table" then
-      t[k] = cache[v] or self:TableCopy(v, cache)
+  self:TableForEach(tbl, function(value, key)
+    if type(value) == "table" then
+      t[key] = cache[value] or self:TableCopy(value, cache)
     else
-      t[k] = v
+      t[key] = value
     end
   end)
   return t
 end
 
+---@param destination table
+---@param source table?
+---@return table
+function Utils:TableMergeDeep(destination, source)
+  if not source then
+    return destination
+  end
+  for key, value in pairs(source) do
+    if type(value) == "table" then
+      local existing = destination[key]
+      if type(existing) == "table" then
+        self:TableMergeDeep(existing, value)
+      else
+        destination[key] = CopyTable(value)
+      end
+    else
+      destination[key] = value
+    end
+  end
+  return destination
+end
+
 ---Map each item in a table
----@generic T
----@param tbl T[]
----@param callback fun(value: T, index?: number): any
----@return T[]
+---@param tbl table
+---@param callback fun(value: any, key: any): any, any?
+---@return table
 function Utils:TableMap(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
   local t = {}
-  self:TableForEach(tbl, function(v, k)
-    local newv, newk = callback(v, k)
-    t[newk and newk or k] = newv
+  self:TableForEach(tbl, function(value, key)
+    local newValue, newKey = callback(value, key)
+    t[newKey and newKey or key] = newValue
   end)
   return t
 end
 
 ---Run a callback on each table item
----@generic T
----@param tbl T[]
----@param callback fun(value: T, index: number)
----@return T[]
+---@param tbl table
+---@param callback fun(value: any, key: any)
+---@return table
 function Utils:TableForEach(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
-  for ik, iv in pairs(tbl) do
-    callback(iv, ik)
+  for key, value in pairs(tbl) do
+    callback(value, key)
   end
   return tbl
 end
@@ -213,9 +227,9 @@ end
 
 ---Get the lowest keystone level completed from highest <numRuns> runs.
 ---Example: 4, 2, 2, 5, with numRuns = 2 would return 4
----@param character any
----@param numRuns number
----@return number|nil, number
+---@param character AE_Character
+---@param numRuns integer
+---@return integer?, integer?
 function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
   local lowestLevel
   local lowestCount   = 0
@@ -259,7 +273,7 @@ function Utils:GetLowestLevelInTopDungeonRuns(character, numRuns)
 end
 
 ---Get the group type
----@return string|nil
+---@return "RAID"|"PARTY"|nil
 function Utils:GetGroupChannel()
   if IsInRaid() then
     return "RAID"
@@ -273,8 +287,8 @@ end
 ---Get a rating color
 ---@param rating number
 ---@param useRIOScoreColor boolean
----@param isPreviousSeason boolean
----@return ColorMixin|nil
+---@param isPreviousSeason boolean?
+---@return ColorMixin
 function Utils:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
   local color
   local RIO = _G["RaiderIO"]
@@ -287,18 +301,17 @@ function Utils:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
 end
 
 ---Create a scrollable frame with horizontal and vertical scrollbars
----@param config AE_ScrollFrameConfig
+---@param config AE_ScrollFrameConfig?
 ---@return ScrollFrame
 function Utils:CreateScrollFrame(config)
   local frame = CreateFrame("ScrollFrame", addonName .. "ScrollFrame" .. (Utils:TableCount(self.ScrollCollection) + 1))
-  frame.config = CreateFromMixins(
-    {
-      scrollSpeedHorizontal = 20,
-      scrollSpeedVertical = 20,
-    },
-    config or {}
-  )
-
+  local defaultScrollConfig = {
+    scrollSpeedHorizontal = 20,
+    scrollSpeedVertical = 20,
+  }
+  local mergedScrollConfig = CopyTable(defaultScrollConfig)
+  self:TableMergeDeep(mergedScrollConfig, config or {})
+  frame.config = mergedScrollConfig
   frame.content = CreateFrame("Frame", "$parentContent", frame)
   frame.scrollbarH = CreateFrame("Slider", "$parentScrollbarH", frame, "UISliderTemplate")
   frame.scrollbarV = CreateFrame("Slider", "$parentScrollbarV", frame, "UISliderTemplate")
