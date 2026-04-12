@@ -1,8 +1,9 @@
 # Changelog
 
-## v1.4.6 - 2026-04-12
+## v1.4.6 - 2026-04-13
 
 - Added new Delve currency: Untainted Mana-Crystals
+- Fixed the Great Vault "Rewards" label so it clears after you claim an item
 
 ## v1.4.5 - 2026-03-28
 
