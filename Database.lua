@@ -443,6 +443,7 @@ Data.currencies = {
   {seasonID = 17, seasonDisplayID = 1, id = 3212, useTotalEarnedForMaxQty = true,  currencyType = "spark"},                    -- Radiant Spark Dust
   {seasonID = 17, seasonDisplayID = 1, id = 3310, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Coffer Key Shards
   {seasonID = 17, seasonDisplayID = 1, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Restored Coffer key
+  {seasonID = 17, seasonDisplayID = 1, id = 3356, useTotalEarnedForMaxQty = false, currencyType = "delve"},                    -- Untainted Mana-Crystals
 }
 
 ---@type AE_Season[]

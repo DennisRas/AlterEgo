@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.6 - 2026-04-12
+
+- Added new Delve currency: Untainted Mana-Crystals
+
 ## v1.4.5 - 2026-03-28
 
 - Added new Enchant/Gem columns to the equipment window.
