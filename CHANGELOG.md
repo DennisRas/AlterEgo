@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.7 - 2026-04-13
+
+- Fixed severe freezes and chat spam when the addon updated windows (for example the equipment window).
+
 ## v1.4.6 - 2026-04-13
 
 - Added new Delve currency: Untainted Mana-Crystals

@@ -41,8 +41,9 @@ function Table:New(config)
       rows = {},
     },
   }
-  local mergedConfig = CopyTable(defaultConfig)
-  addon.Utils:TableMergeDeep(mergedConfig, config or {})
+  local mergedConfig = {}
+  addon.Utils:TableMergeConfig(mergedConfig, defaultConfig)
+  addon.Utils:TableMergeConfig(mergedConfig, config or {})
   frame.config = mergedConfig
   frame.rows = {}
   frame.data = frame.config.data

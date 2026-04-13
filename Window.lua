@@ -18,6 +18,7 @@ Window.windows = {}
 function Window:New(options)
   ---@type AE_Window
   local window = CreateFrame("Frame", addonName .. "Window" .. (options and options.name or addon.Utils:TableCount(self.windows) + 1), options.parent or UIParent)
+  ---@type AE_WindowOptions
   local defaultWindowOptions = {
     parent = UIParent,
     name = "",
@@ -28,8 +29,9 @@ function Window:New(options)
     windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
     point = {"CENTER"},
   }
-  local mergedWindowOptions = CopyTable(defaultWindowOptions)
-  addon.Utils:TableMergeDeep(mergedWindowOptions, options or {})
+  local mergedWindowOptions = {}
+  addon.Utils:TableMergeConfig(mergedWindowOptions, defaultWindowOptions)
+  addon.Utils:TableMergeConfig(mergedWindowOptions, options or {})
   window.config = mergedWindowOptions
   window:SetFrameStrata("MEDIUM")
   window:SetFrameLevel(3000)
