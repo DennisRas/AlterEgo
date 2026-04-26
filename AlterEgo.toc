@@ -1,4 +1,4 @@
-## Interface: 120001
+## Interface: 120005
 ## Title: AlterEgo
 ## Notes: Mythic Plus tracker for all of your characters
 ## Version: @project-version@

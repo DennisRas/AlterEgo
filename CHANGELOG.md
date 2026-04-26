@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.8 - 2026-04-26
+
+- Updated TOC number to the latest patch 12.0.5.
+
 ## v1.4.7 - 2026-04-13
 
 - Fixed severe freezes and chat spam when the addon updated windows (for example the equipment window).
