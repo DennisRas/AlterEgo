@@ -4,7 +4,7 @@
 
 - Added new Bonus roll currency "Nebulous Voidcore".
 - Added new currency tooltip notes for special cases.
-- Updated TOC number to the latest patch 12.0.5.
+- Updated TOC number to support patch 12.0.5.
 
 ## v1.4.7 - 2026-04-13
 
