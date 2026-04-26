@@ -180,9 +180,10 @@ function Utils:TableMergeConfig(destination, source)
 end
 
 ---Map each item in a table
----@param tbl table
----@param callback fun(value: any, key: any): any, any?
----@return table
+---@generic T
+---@param tbl T[]
+---@param callback fun(value: T, key: any): T, any?
+---@return T[]
 function Utils:TableMap(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
   local t = {}
@@ -194,9 +195,10 @@ function Utils:TableMap(tbl, callback)
 end
 
 ---Run a callback on each table item
----@param tbl table
----@param callback fun(value: any, key: any)
----@return table
+---@generic T
+---@param tbl T[]
+---@param callback fun(value: T, key: any)
+---@return T[]
 function Utils:TableForEach(tbl, callback)
   assert(type(tbl) == "table", "Must be a table!")
   for key, value in pairs(tbl) do

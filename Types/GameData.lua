@@ -1,4 +1,4 @@
----@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark" | "cloak"
+---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark" | "cloak" | "bonusroll"
 
 ---@class AE_Inventory
 ---@field id number
@@ -58,10 +58,12 @@
 ---@field seasonDisplayID number
 ---@field useTotalEarnedForMaxQty boolean
 ---@field currencyType AE_CurrencyType
+---@field tooltipNote string|nil
 
 ---@class AE_CurrencyInfo : CurrencyInfo
 ---@field id number
 ---@field currencyType AE_CurrencyType
+---@field tooltipNote string|nil
 
 ---@class AE_Affix
 ---@field id number

@@ -1757,6 +1757,10 @@ function Module:Render()
             GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
             GameTooltip:SetText(currency.name, color.r, color.g, color.b)
             GameTooltip:AddLine(currency.description, nil, nil, nil, true)
+            if currency.tooltipNote then
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addonName .. ":"), currency.tooltipNote), 1, 1, 1, true)
+            end
             GameTooltip:Show()
           end)
           label:SetScript("OnLeave", function()
@@ -2448,6 +2452,10 @@ function Module:Render()
               if infoMaxQuantity > 0 then
                 GameTooltip:AddDoubleLine("Total Maximum:", tostring(infoMaxQuantity), nil, nil, nil, 1, 1, 1)
               end
+            end
+            if currency.tooltipNote then
+              GameTooltip:AddLine(" ")
+              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addonName .. ":"), currency.tooltipNote), 1, 1, 1, true)
             end
             GameTooltip:Show()
             addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
