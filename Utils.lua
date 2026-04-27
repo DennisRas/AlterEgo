@@ -90,7 +90,7 @@ function Utils:TableFind(tbl, callback)
 end
 
 ---Find a table item by key and value
----@generic T : table
+---@generic T
 ---@param tbl T[]
 ---@param key string|number
 ---@param value any
@@ -104,7 +104,7 @@ end
 
 ---Create a new table containing all elements that pass truth test
 ---@generic T
----@param tbl table<any, T>
+---@param tbl T[]
 ---@param callback fun(value: T, key: any): boolean
 ---@return T[]
 function Utils:TableFilter(tbl, callback)
