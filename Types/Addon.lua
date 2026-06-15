@@ -1,4 +1,6 @@
 ---@class AE_Libs
+---@field AceAddon AceAddon
+---@field AceDB AceDB-3.0
 ---@field LibDBIcon unknown
 ---@field LibDataBroker unknown
 ---@field LiqUI LibLiqUI

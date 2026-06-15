@@ -7,6 +7,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
+local LibAceDB = addon.Libs.AceDB
 local TableCopy = addon.Libs.LiqUI.Utils.TableCopy
 local TableCount = addon.Libs.LiqUI.Utils.TableCount
 local TableFilter = addon.Libs.LiqUI.Utils.TableFilter
@@ -596,7 +597,7 @@ Data.cache = {
 
 ---Initiate AceDB
 function Data:Initialize()
-  self.db = LibStub("AceDB-3.0"):New(
+  self.db = LibAceDB:New(
     "AlterEgoDB",
     self.defaultDB,
     true

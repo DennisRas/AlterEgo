@@ -5,6 +5,7 @@ local addon = select(2, ...)
 
 local Data = addon.Data
 local Helpers = addon.Helpers
+local LibAceAddon = addon.Libs.AceAddon
 local LibDataBroker = addon.Libs.LibDataBroker
 local LibDBIcon = addon.Libs.LibDBIcon
 local LibLiqUI = addon.Libs.LiqUI
@@ -17,7 +18,7 @@ _G[addonName] = addon
 --@end-debug@
 
 ---@class AE_Core : AceAddon
-local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0")
+local Core = LibAceAddon:NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0")
 addon.Core = Core
 
 ---Initialize the addon
