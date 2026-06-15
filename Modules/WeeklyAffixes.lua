@@ -30,7 +30,7 @@ function Module:Render()
   local rowHeight = 28
 
   if not self.window then
-    ---@type LiqUI_Window
+    ---@type LiqUI_WindowInstance
     self.window = addon.LiqUI.Window:New({
       name = "Affixes",
       title = "Weekly Affixes",
@@ -76,7 +76,7 @@ function Module:Render()
   self.window:HideBodyPlaceholder()
   self.table:Show()
 
-  ---@type LiqUI_TableConfigColumn[]
+  ---@type LiqUI_TableOptionsColumn[]
   local columns = {}
   ---@type LiqUI_TableData
   local rows = {}
@@ -86,7 +86,7 @@ function Module:Render()
     local row = {data = {}}
     TableForEach(affixRotation.activation, function(activationLevel, activationLevelIndex)
       local width = activationLevelIndex == 1 and 220 or columnWidth
-      ---@type LiqUI_TableConfigColumn
+      ---@type LiqUI_TableOptionsColumn
       local column = {id = "activation" .. activationLevelIndex, width = width}
       table.insert(columns, column)
       ---@type LiqUI_TableDataCellExtended

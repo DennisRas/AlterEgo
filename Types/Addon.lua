@@ -3,7 +3,7 @@
 ---@field AceDB AceDB-3.0
 ---@field LibDBIcon unknown
 ---@field LibDataBroker unknown
----@field LiqUI LibLiqUI
+---@field LiqUI LiqUI
 
 ---@class AE_Core : AceAddon
 

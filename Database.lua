@@ -1031,7 +1031,7 @@ function Data:MigrateDB()
         loggers = {},
       }
       for _, windowName in ipairs({"Main", "Affixes", "Equipment"}) do
-        ---@type LiqUI_WindowSettings
+        ---@type LiqUI_WindowDB
         local windowSettings = {}
         if interface and interface.windowScale then
           windowSettings.scale = interface.windowScale
