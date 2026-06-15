@@ -35,6 +35,137 @@ local Slots = {
   --    [19] = {id = 19, side = "LEFT", name = "Tabard", canEnchant = false}
 }
 
+local EQUIPMENT_HEADER_HEIGHT = 30
+
+---@param item AE_Equipment
+---@return string
+local function equipmentItemSortName(item)
+  local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
+  if itemID then
+    local name = C_Item.GetItemNameByID(itemID)
+    if name then
+      return name
+    end
+  end
+  return item.itemLink or ""
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentTiebreak(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  if itemA.itemSlotID ~= itemB.itemSlotID then
+    return itemA.itemSlotID < itemB.itemSlotID
+  end
+  local itemIDA = C_Item.GetItemIDForItemInfo(itemA.itemLink) or 0
+  local itemIDB = C_Item.GetItemIDForItemInfo(itemB.itemLink) or 0
+  return itemIDA < itemIDB
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@param primaryA number|string
+---@param primaryB number|string
+---@return boolean
+local function compareEquipmentPrimaryThenSlot(rowA, rowB, primaryA, primaryB)
+  if primaryA ~= primaryB then
+    return primaryA < primaryB
+  end
+  return compareEquipmentTiebreak(rowA, rowB)
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentSlotColumn(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  return compareEquipmentPrimaryThenSlot(rowA, rowB, itemA.itemSlotID, itemB.itemSlotID)
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentItemColumn(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  local nameA = equipmentItemSortName(itemA)
+  local nameB = equipmentItemSortName(itemB)
+  if nameA ~= nameB then
+    return nameA < nameB
+  end
+  return compareEquipmentTiebreak(rowA, rowB)
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentILvlColumn(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  return compareEquipmentPrimaryThenSlot(rowA, rowB, itemA.itemLevel, itemB.itemLevel)
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentUpgradeColumn(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  local trackA = itemA.itemUpgradeTrack or ""
+  local trackB = itemB.itemUpgradeTrack or ""
+  if trackA ~= trackB then
+    return compareEquipmentPrimaryThenSlot(rowA, rowB, trackA, trackB)
+  end
+  local levelA = itemA.itemUpgradeLevel or 0
+  local levelB = itemB.itemUpgradeLevel or 0
+  if levelA ~= levelB then
+    return compareEquipmentPrimaryThenSlot(rowA, rowB, levelA, levelB)
+  end
+  return compareEquipmentTiebreak(rowA, rowB)
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentEnchantColumn(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  return compareEquipmentPrimaryThenSlot(rowA, rowB, rowA.enchantSort, rowB.enchantSort)
+end
+
+---@param rowA AE_EquipmentTableRow
+---@param rowB AE_EquipmentTableRow
+---@return boolean
+local function compareEquipmentGemsColumn(rowA, rowB)
+  local itemA = rowA.item
+  local itemB = rowB.item
+  if not itemA or not itemB then
+    return false
+  end
+  return compareEquipmentPrimaryThenSlot(rowA, rowB, rowA.gemCount, rowB.gemCount)
+end
+
 function Module:OnInitialize()
   self:Render()
 end
@@ -92,15 +223,21 @@ function Module:Render()
     })
     self.dataTable = addon.LiqUI.Table:New({
       name = "Equipment",
+      header = {enabled = true, sticky = true, height = EQUIPMENT_HEADER_HEIGHT},
       columns = {
-        {id = "slot",    headerText = "Slot",          width = 100},
-        {id = "item",    headerText = "Item",          width = 280},
-        {id = "ilevel",  headerText = "iLevel",        width = 80, align = "CENTER"},
-        {id = "upgrade", headerText = "Upgrade Level", width = 150},
-        {id = "enchant", headerText = "Enchant",       width = 180},
-        {id = "gems",    headerText = "Gems",          width = 80},
+        {id = "slot", headerText = "Slot", width = 100, sorting = {enabled = true, compare = compareEquipmentSlotColumn}},
+        {id = "item", headerText = "Item", width = 280, sorting = {enabled = true, compare = compareEquipmentItemColumn}},
+        {id = "ilevel", headerText = "iLevel", width = 80, align = "CENTER", sorting = {enabled = true, compare = compareEquipmentILvlColumn}},
+        {id = "upgrade", headerText = "Upgrade Level", width = 150, sorting = {enabled = true, compare = compareEquipmentUpgradeColumn}},
+        {id = "enchant", headerText = "Enchant", width = 180, sorting = {enabled = true, compare = compareEquipmentEnchantColumn}},
+        {id = "gems", headerText = "Gems", width = 80, sorting = {enabled = true, compare = compareEquipmentGemsColumn}},
       },
       rowStyle = {height = rowHeight, striped = true},
+      sorting = {
+        enabled = true,
+        defaultOrder = "asc",
+        defaultCompare = compareEquipmentSlotColumn,
+      },
     })
     self.dataTable:SetParent(self.window.body)
     self.dataTable:SetPoint("TOPLEFT", self.window.body, "TOPLEFT", 0, 0)
@@ -239,8 +376,14 @@ function Module:Render()
       table.insert(socketTexts, DIM_RED_FONT_COLOR:WrapTextInColorCode("Missing"))
     end
 
-    ---@type LiqUI_TableDataRowExtended
+    local enchantSort = enchantTooltip ~= "" and enchantTooltip or enchantText
+    local gemCount = TableCount(socketTexts)
+
+    ---@type AE_EquipmentTableRow
     local row = {
+      item = item,
+      enchantSort = enchantSort,
+      gemCount = gemCount,
       data = {
         {data = _G[item.itemSlotName]},
         {

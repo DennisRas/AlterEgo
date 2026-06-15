@@ -37,6 +37,7 @@ Types\Events.lua
 Types\Constants.lua
 Types\GameData.lua
 Types\Character.lua
+Types\Equipment.lua
 Types\Database.lua
 Types\Addon.lua
 

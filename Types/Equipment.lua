@@ -1,0 +1,4 @@
+---@class AE_EquipmentTableRow : LiqUI_TableDataRowExtended
+---@field item AE_Equipment
+---@field enchantSort string
+---@field gemCount number
