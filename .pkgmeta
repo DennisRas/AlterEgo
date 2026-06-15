@@ -32,4 +32,4 @@ externals:
     commit: default
   Libs/LiqUI:
     url: https://github.com/DennisRas/LiqUI.git
-    commit: f8517ba
+    branch: main
