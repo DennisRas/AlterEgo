@@ -10,9 +10,12 @@ addon.Module_WeeklyAffixes = Module
 local Data = addon.Data
 local Constants = addon.Constants
 local LibLiqUI = addon.Libs.LiqUI
-local TableCount = LibLiqUI.Utils.TableCount
 local TableForEach = LibLiqUI.Utils.TableForEach
 local TableGet = LibLiqUI.Utils.TableGet
+
+local PLACEHOLDER_BODY_WIDTH = 500
+local PLACEHOLDER_BODY_HEIGHT = 80
+local PLACEHOLDER_TEXT = "The weekly schedule is not updated.\nCheck back next addon update!"
 
 function Module:OnInitialize()
   self:Render()
@@ -63,75 +66,78 @@ function Module:Render()
     return
   end
 
+  if not affixRotation then
+    self.window:ShowBodyPlaceholder(PLACEHOLDER_TEXT)
+    self.table:Hide()
+    self.window:SetBodySize(PLACEHOLDER_BODY_WIDTH, PLACEHOLDER_BODY_HEIGHT)
+    return
+  end
+
+  self.window:HideBodyPlaceholder()
+  self.table:Show()
+
   ---@type LiqUI_TableConfigColumn[]
   local columns = {}
   ---@type LiqUI_TableData
   local rows = {}
 
-  if affixRotation then
-    do
-      ---@type LiqUI_TableDataRowExtended
-      local row = {data = {}}
-      TableForEach(affixRotation.activation, function(activationLevel, activationLevelIndex)
-        local width = activationLevelIndex == 1 and 220 or columnWidth
-        ---@type LiqUI_TableConfigColumn
-        local column = {id = "activation" .. activationLevelIndex, width = width}
-        table.insert(columns, column)
-        ---@type LiqUI_TableDataCellExtended
-        local cell = {
-          data = "+" .. activationLevel,
-          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3},
-        }
-        table.insert(row.data, cell)
-      end)
-      table.insert(rows, row)
-    end
-
-    TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
-      ---@type LiqUI_TableDataRowExtended
-      local row = {
-        backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil,
-        data = {},
+  do
+    ---@type LiqUI_TableDataRowExtended
+    local row = {data = {}}
+    TableForEach(affixRotation.activation, function(activationLevel, activationLevelIndex)
+      local width = activationLevelIndex == 1 and 220 or columnWidth
+      ---@type LiqUI_TableConfigColumn
+      local column = {id = "activation" .. activationLevelIndex, width = width}
+      table.insert(columns, column)
+      ---@type LiqUI_TableDataCellExtended
+      local cell = {
+        data = "+" .. activationLevel,
+        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3},
       }
+      table.insert(row.data, cell)
+    end)
+    table.insert(rows, row)
+  end
 
-      TableForEach(affixValues, function(affixValue)
-        if type(affixValue) == "number" then
-          local affix = TableGet(affixes, "id", affixValue)
-          if affix then
-            local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
-            ---@type LiqUI_TableDataCellExtended
-            local cell = {
-              data = affix.fileDataID and "|T" .. affix.fileDataID .. ":0|t " .. name or name,
-              backgroundColor = row.backgroundColor,
-              onEnter = function(cellFrame)
-                GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
-                GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)
-                GameTooltip:AddLine(affix.description, nil, nil, nil, true)
-                GameTooltip:Show()
-              end,
-              onLeave = function()
-                GameTooltip:Hide()
-              end,
-            }
-            table.insert(row.data, cell)
-          end
-        else
+  TableForEach(affixRotation.affixes, function(affixValues, weekIndex)
+    ---@type LiqUI_TableDataRowExtended
+    local row = {
+      backgroundColor = weekIndex == activeWeek and {r = 1, g = 1, b = 1, a = 0.1} or nil,
+      data = {},
+    }
+
+    TableForEach(affixValues, function(affixValue)
+      if type(affixValue) == "number" then
+        local affix = TableGet(affixes, "id", affixValue)
+        if affix then
+          local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
           ---@type LiqUI_TableDataCellExtended
           local cell = {
-            data = affixValue,
+            data = affix.fileDataID and "|T" .. affix.fileDataID .. ":0|t " .. name or name,
             backgroundColor = row.backgroundColor,
+            onEnter = function(cellFrame)
+              GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)
+              GameTooltip:AddLine(affix.description, nil, nil, nil, true)
+              GameTooltip:Show()
+            end,
+            onLeave = function()
+              GameTooltip:Hide()
+            end,
           }
           table.insert(row.data, cell)
         end
-      end)
-      table.insert(rows, row)
+      else
+        ---@type LiqUI_TableDataCellExtended
+        local cell = {
+          data = affixValue,
+          backgroundColor = row.backgroundColor,
+        }
+        table.insert(row.data, cell)
+      end
     end)
-  else
-    table.insert(columns, {id = "message", width = 500})
-    ---@type LiqUI_TableDataRowExtended
-    local row = {data = {{data = "The weekly schedule is not updated. Check back next addon update!"}}}
     table.insert(rows, row)
-  end
+  end)
 
   self.table:SetColumns(columns)
   self.table:SetData(rows)
