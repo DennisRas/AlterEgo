@@ -19,6 +19,7 @@
 ---@field world { enabled: boolean }
 ---@field currencies { enabled: boolean, hiddenCurrencies: table<number, boolean>, showIcons: boolean, showMaxEarned: boolean, alignCenter: boolean }
 ---@field interface { windowScale: number, windowColor: ColorTable}
+---@field liqui LiqUI_DB
 ---@field useRIOScoreColor boolean
 
 ---@class AE_Data

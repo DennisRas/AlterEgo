@@ -1,6 +1,6 @@
 {
   "runtime.version": "Lua 5.1",
-  "workspace.ignoreDir": ["Libs/"],
+  "workspace.ignoreDir": ["!Libs/LiqUI", "Libs/"],
   "diagnostics": {
     "disable": [
       "deprecated",

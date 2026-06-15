@@ -3,6 +3,15 @@ local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
+local Data = addon.Data
+local Helpers = addon.Helpers
+local LibDataBroker = addon.Libs.LibDataBroker
+local LibDBIcon = addon.Libs.LibDBIcon
+local LibLiqUI = addon.Libs.LiqUI
+local TableCount = LibLiqUI.Utils.TableCount
+local TableForEach = LibLiqUI.Utils.TableForEach
+local TableGet = LibLiqUI.Utils.TableGet
+
 --@debug@
 _G[addonName] = addon
 --@end-debug@
@@ -10,11 +19,6 @@ _G[addonName] = addon
 ---@class AE_Core : AceAddon
 local Core = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0")
 addon.Core = Core
-
-addon.Libs = {
-  LibDBIcon = LibStub("LibDBIcon-1.0"),
-  LibDataBroker = LibStub("LibDataBroker-1.1"),
-}
 
 ---Initialize the addon
 function Core:OnInitialize()
@@ -30,7 +34,9 @@ function Core:OnInitialize()
   self:RegisterChatCommand("alterego", function()
     self:ToggleWindow()
   end)
-  addon.Data:Initialize()
+  Data:Initialize()
+  Data:MigrateDB()
+  addon.LiqUI = LibLiqUI:New({ name = addonName, db = Data.db.global.liqui })
 
   local libDataObject = {
     label = addonName,
@@ -57,16 +63,16 @@ function Core:OnInitialize()
       tooltip:AddLine("|cff00ff00Right click|r to open the Great Vault.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       tooltip:AddLine("|cff00ff00Shift+Left click|r to open your character equipment.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       local dragText = "|cff00ff00Drag|r to move this icon"
-      if addon.Data.db.global.minimap.lock then
+      if Data.db.global.minimap.lock then
         dragText = dragText .. " |cffff0000(locked)|r"
       end
       tooltip:AddLine(dragText .. ".", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     end,
   }
 
-  addon.Libs.LibDataBroker:NewDataObject(addonName, libDataObject)
-  addon.Libs.LibDBIcon:Register(addonName, libDataObject, addon.Data.db.global.minimap)
-  addon.Libs.LibDBIcon:AddButtonToCompartment(addonName)
+  LibDataBroker:NewDataObject(addonName, libDataObject)
+  LibDBIcon:Register(addonName, libDataObject, Data.db.global.minimap)
+  LibDBIcon:AddButtonToCompartment(addonName)
 
   hooksecurefunc("ResetInstances", function()
     self:OnInstanceReset()
@@ -76,7 +82,7 @@ end
 
 ---Toggle the main window
 function Core:ToggleWindow()
-  local window = addon.Window:GetWindow("Main")
+  local window = addon.LiqUI.Window:GetWindow("Main")
   if not window then return end
   window:Toggle()
 end
@@ -94,7 +100,7 @@ end
 function Core:ToggleEquipment()
   local module = addon.Core:GetModule("Equipment", true)
   if not module then return end
-  local character = addon.Data:GetCharacter()
+  local character = Data:GetCharacter()
   if not character then return end
   module:OpenCharacter(character)
 end
@@ -115,15 +121,15 @@ function Core:OnEnable()
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
     }, function()
-      addon.Data:UpdateCharacterInfo()
-      addon.Data:UpdateEquipment()
+      Data:UpdateCharacterInfo()
+      Data:UpdateEquipment()
     end
   )
   addon.Events:RegisterEvent(
     {
       "QUEST_LOG_UPDATE",
     }, function()
-      addon.Data:UpdatePreyProgress()
+      Data:UpdatePreyProgress()
     end
   )
   addon.Events:RegisterEvent(
@@ -131,7 +137,7 @@ function Core:OnEnable()
       "GUILD_ROSTER_UPDATE",
       "PLAYER_GUILD_UPDATE",
     }, function(...)
-      addon.Data:UpdateCharacterInfo()
+      Data:UpdateCharacterInfo()
     end
   )
   addon.Events:RegisterEvent(
@@ -150,7 +156,7 @@ function Core:OnEnable()
       "CHALLENGE_MODE_MAPS_UPDATE",
       "WEEKLY_REWARDS_UPDATE",
     }, function()
-      addon.Data:UpdateVault()
+      Data:UpdateVault()
     end
   )
   addon.Events:RegisterEvent(
@@ -158,7 +164,7 @@ function Core:OnEnable()
       "LFG_UPDATE_RANDOM_INFO",
       "UPDATE_INSTANCE_INFO",
     }, function()
-      addon.Data:UpdateRaidInstances()
+      Data:UpdateRaidInstances()
     end
   )
   addon.Events:RegisterEvent(
@@ -174,7 +180,7 @@ function Core:OnEnable()
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
-      addon.Data:UpdateKeystoneItem()
+      Data:UpdateKeystoneItem()
     end
   )
   addon.Events:RegisterEvent(
@@ -184,7 +190,7 @@ function Core:OnEnable()
       "CHALLENGE_MODE_RESET",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
-      addon.Data:UpdateMythicPlus()
+      Data:UpdateMythicPlus()
     end
   )
   addon.Events:RegisterEvent(
@@ -199,14 +205,14 @@ function Core:OnEnable()
       "TRADE_CURRENCY_CHANGED",
       "TRADE_SKILL_CURRENCY_REWARD_RESULT",
     }, function()
-      addon.Data:UpdateCurrencies()
+      Data:UpdateCurrencies()
     end
   )
   addon.Events:RegisterEvent(
     {
       "PLAYER_MONEY",
     }, function()
-      addon.Data:UpdateMoney()
+      Data:UpdateMoney()
     end
   )
   addon.Events:RegisterEvent(
@@ -226,7 +232,7 @@ function Core:OnEnable()
   addon.Events:RegisterEvent(
     "PLAYER_LEVEL_UP",
     function()
-      addon.Data:UpdateDB()
+      Data:UpdateDB()
     end,
     true
   )
@@ -243,25 +249,24 @@ end
 
 ---Check if game data is loaded
 function Core:CheckGameData()
-  local seasonID, seasonDisplayID = addon.Data:GetCurrentSeason()
+  local seasonID, seasonDisplayID = Data:GetCurrentSeason()
   if seasonID < 0 or seasonDisplayID < 0 then
     self:RequestGameData()
     self:ScheduleTimer("CheckGameData", 3)
     return
   end
 
-  addon.Data:loadGameData()
-  addon.Data:MigrateDB()
-  addon.Data:TaskWeeklyReset()
-  addon.Data:TaskSeasonReset()
-  addon.Data:UpdateDB()
+  Data:loadGameData()
+  Data:TaskWeeklyReset()
+  Data:TaskSeasonReset()
+  Data:UpdateDB()
   self:Render()
 end
 
 ---Handle instance reset
 function Core:OnInstanceReset()
-  local groupChannel = addon.Utils:GetGroupChannel()
-  if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
+  local groupChannel = Helpers:GetGroupChannel()
+  if not groupChannel or not Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
     return
   end
   SendChatMessage(addon.Constants.prefix .. "Resetting instances...", groupChannel)
@@ -271,12 +276,12 @@ end
 ---@param _ any
 ---@param msg string
 function Core:OnChatMessageSystem(_, msg)
-  local groupChannel = addon.Utils:GetGroupChannel()
-  if not groupChannel or not addon.Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
+  local groupChannel = Helpers:GetGroupChannel()
+  if not groupChannel or not Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
     return
   end
   local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
-  addon.Utils:TableForEach(resetPatterns, function(resetPattern)
+  TableForEach(resetPatterns, function(resetPattern)
     if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
       SendChatMessage(addon.Constants.prefix .. msg, groupChannel)
     end
@@ -286,19 +291,19 @@ end
 ---Announce keystones to a chat channel
 ---@param chatType string
 function Core:AnnounceKeystones(chatType)
-  local characters = addon.Data:GetCharacters()
-  local dungeons = addon.Data:GetDungeons()
-  local multiline = addon.Data.db.global.announceKeystones.multiline
-  local multilineNames = addon.Data.db.global.announceKeystones.multilineNames
+  local characters = Data:GetCharacters()
+  local dungeons = Data:GetDungeons()
+  local multiline = Data.db.global.announceKeystones.multiline
+  local multilineNames = Data.db.global.announceKeystones.multilineNames
   local keystones = {}
   local keystonesCompact = {}
 
-  if addon.Utils:TableCount(characters) < 1 then
+  if TableCount(characters) < 1 then
     self:Print("You have no characters saved.")
     return
   end
 
-  addon.Utils:TableForEach(characters, function(character)
+  TableForEach(characters, function(character)
     local keystone = character.mythicplus.keystone
     local dungeon
 
@@ -307,9 +312,9 @@ function Core:AnnounceKeystones(chatType)
     end
 
     if type(keystone.challengeModeID) == "number" and keystone.challengeModeID > 0 then
-      dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", keystone.challengeModeID)
+      dungeon = TableGet(dungeons, "challengeModeID", keystone.challengeModeID)
     elseif type(keystone.mapId) == "number" and keystone.mapId > 0 then
-      dungeon = addon.Utils:TableGet(dungeons, "mapId", keystone.mapId)
+      dungeon = TableGet(dungeons, "mapId", keystone.mapId)
     end
 
     if not dungeon then
@@ -325,14 +330,14 @@ function Core:AnnounceKeystones(chatType)
     table.insert(keystonesCompact, text)
   end)
 
-  if addon.Utils:TableCount(keystones) < 1 then
+  if TableCount(keystones) < 1 then
     self:Print("You have no keystones saved.")
     return
   end
 
   if multiline then
     SendChatMessage(addon.Constants.prefix .. "My keystones:", chatType)
-    addon.Utils:TableForEach(keystones, function(keystone)
+    TableForEach(keystones, function(keystone)
       local chatMessage = keystone.itemLink and keystone.itemLink or keystone.text
       if multilineNames == true then
         chatMessage = keystone.characterName .. ": " .. chatMessage

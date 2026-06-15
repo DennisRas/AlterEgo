@@ -7,6 +7,12 @@ local addon = select(2, ...)
 local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Equipment = Module
 
+local Data = addon.Data
+local Constants = addon.Constants
+local LibLiqUI = addon.Libs.LiqUI
+local TableCount = LibLiqUI.Utils.TableCount
+local TableForEach = LibLiqUI.Utils.TableForEach
+
 local Slots = {
   [1] = {id = 1, side = "LEFT", name = "Head", canEnchant = true, canSocket = true},
   [2] = {id = 2, side = "LEFT", name = "Neck", canEnchant = false, canSocket = false},
@@ -40,7 +46,7 @@ function Module:OnEnable()
       "UNIT_INVENTORY_CHANGED",
     }, function()
       -- addon.Data:UpdateCharacterInfo()
-      addon.Data:UpdateEquipment()
+      Data:UpdateEquipment()
       self:Render()
     end
   )
@@ -61,21 +67,44 @@ end
 
 function Module:Render()
   local tableWidth = 870
-  local tableHeight = 0
   local rowHeight = 22
 
   if not self.window then
-    self.window = addon.Window:New({
+    self.window = addon.LiqUI.Window:New({
       name = "Equipment",
       title = "Character",
       point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15},
+      onShow = function()
+        Module:Render()
+      end,
+      titlebarButtons = {
+        {
+          name = "Settings",
+          icon = Constants.media.IconSettings,
+          tooltipTitle = "Settings",
+          tooltipDescription = "Window appearance.",
+          onMenu = function(window, rootMenu)
+            window:AppendWindowOptionsMenu(rootMenu)
+          end,
+          iconSize = 12,
+        },
+      },
     })
-    self.dataTable = addon.Table:New({ rows = { height = rowHeight, striped = true } })
+    self.dataTable = addon.LiqUI.Table:New({
+      name = "Equipment",
+      columns = {
+        {id = "slot",    headerText = "Slot",          width = 100},
+        {id = "item",    headerText = "Item",          width = 280},
+        {id = "ilevel",  headerText = "iLevel",        width = 80, align = "CENTER"},
+        {id = "upgrade", headerText = "Upgrade Level", width = 150},
+        {id = "enchant", headerText = "Enchant",       width = 180},
+        {id = "gems",    headerText = "Gems",          width = 80},
+      },
+      rowStyle = {height = rowHeight, striped = true},
+    })
     self.dataTable:SetParent(self.window.body)
-    self.dataTable:SetAllPoints()
-    self.window:SetScript("OnShow", function()
-      self:Render()
-    end)
+    self.dataTable:SetPoint("TOPLEFT", self.window.body, "TOPLEFT", 0, 0)
+    self.dataTable:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
   end
 
   if not self.window:IsVisible() then
@@ -88,32 +117,10 @@ function Module:Render()
     return
   end
 
-  ---@type AE_TableData
-  local data = {
-    columns = {
-      {width = 100},
-      {width = 280},
-      {width = 80, align = "CENTER"},
-      {width = 150},
-      {width = 180},
-      {width = 80},
-    },
-    rows = {
-      {
-        columns = {
-          {text = "Slot",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Item",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "iLevel",        backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Upgrade Level", backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Enchant",       backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-          {text = "Gems",          backgroundColor = {r = 0, g = 0, b = 0, a = 0.3}},
-        },
-      },
-    },
-  }
-  tableHeight = tableHeight + 30
+  ---@type LiqUI_TableData
+  local rows = {}
 
-  addon.Utils:TableForEach(character.equipment, function(item)
+  TableForEach(character.equipment, function(item)
     local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
 
     local upgradeLevel = ""
@@ -152,8 +159,8 @@ function Module:Render()
     ---TWW Season 2 Item: D.I.S.C.
     if itemID == 245966 or itemID == 245964 or itemID == 245965 or itemID == 242664 then
       local DISCLevels = {691, 694, 697, 701}
-      local numDISCLevels = addon.Utils:TableCount(DISCLevels)
-      addon.Utils:TableForEach(DISCLevels, function(DISCLevel, i)
+      local numDISCLevels = TableCount(DISCLevels)
+      TableForEach(DISCLevels, function(DISCLevel, i)
         if item.itemLevel == DISCLevel then
           upgradeLevel = format("D.I.S.C. %d/%d", i, numDISCLevels)
           if i == numDISCLevels then
@@ -166,8 +173,8 @@ function Module:Render()
     ---TWW Season 3 Item: Reshii Wraps
     if itemID == 235499 then
       local ItemLevels = {694, 701, 707, 714, 720, 730}
-      local numItemLevels = addon.Utils:TableCount(ItemLevels)
-      addon.Utils:TableForEach(ItemLevels, function(ItemLevel, i)
+      local numItemLevels = TableCount(ItemLevels)
+      TableForEach(ItemLevels, function(ItemLevel, i)
         if item.itemLevel == ItemLevel then
           upgradeLevel = format("%s %d/%d", RANK, i, numItemLevels)
           if i == numItemLevels then
@@ -228,18 +235,18 @@ function Module:Render()
       enchantColor = DIM_RED_FONT_COLOR
     end
 
-    if addon.Utils:TableCount(socketTexts) == 0 and Slots[item.itemSlotID] and Slots[item.itemSlotID].canSocket then
+    if TableCount(socketTexts) == 0 and Slots[item.itemSlotID] and Slots[item.itemSlotID].canSocket then
       table.insert(socketTexts, DIM_RED_FONT_COLOR:WrapTextInColorCode("Missing"))
     end
 
-    ---@type AE_TableDataRow
+    ---@type LiqUI_TableDataRowExtended
     local row = {
-      columns = {
-        {text = _G[item.itemSlotName]},
+      data = {
+        {data = _G[item.itemSlotName]},
         {
-          text = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
-          onEnter = function(columnFrame)
-            GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+          data = "|T" .. item.itemTexture .. ":0|t " .. item.itemLink,
+          onEnter = function(cellFrame)
+            GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
             GameTooltip:SetHyperlink(item.itemLink)
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
@@ -256,13 +263,13 @@ function Module:Render()
             end
           end,
         },
-        {text = WrapTextInColorCode(tostring(floor(item.itemLevel)), select(4, GetItemQualityColor(item.itemQuality)))},
-        {text = upgradeLevel},
+        {data = WrapTextInColorCode(tostring(floor(item.itemLevel)), select(4, GetItemQualityColor(item.itemQuality)))},
+        {data = upgradeLevel},
         {
-          text = enchantColor:WrapTextInColorCode(enchantText),
-          onEnter = function(columnFrame)
+          data = enchantColor:WrapTextInColorCode(enchantText),
+          onEnter = function(cellFrame)
             if enchantTooltip ~= "" then
-              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
               GameTooltip:AddLine("Enchanted:")
               GameTooltip:AddLine(enchantTooltip, 1, 1, 1)
               GameTooltip:Show()
@@ -273,12 +280,12 @@ function Module:Render()
           end,
         },
         {
-          text = strjoin(" ", unpack(socketTexts)),
-          onEnter = function(columnFrame)
-            if addon.Utils:TableCount(socketTooltipLines) > 0 then
-              GameTooltip:SetOwner(columnFrame, "ANCHOR_RIGHT")
+          data = strjoin(" ", unpack(socketTexts)),
+          onEnter = function(cellFrame)
+            if TableCount(socketTooltipLines) > 0 then
+              GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
               GameTooltip:AddLine("Gems:")
-              addon.Utils:TableForEach(socketTooltipLines, function(line)
+              TableForEach(socketTooltipLines, function(line)
                 GameTooltip:AddLine(line, 1, 1, 1)
               end)
               GameTooltip:Show()
@@ -290,8 +297,7 @@ function Module:Render()
         },
       },
     }
-    table.insert(data.rows, row)
-    tableHeight = tableHeight + rowHeight
+    table.insert(rows, row)
   end)
 
   local nameColor = WHITE_FONT_COLOR
@@ -303,8 +309,7 @@ function Module:Render()
   end
 
   self.window:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
-  self.dataTable:SetData(data)
-  self.window:SetBodySize(tableWidth, tableHeight)
-  addon.Window:SetWindowScale(addon.Data.db.global.interface.windowScale / 100)
-  addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
+  self.dataTable:SetData(rows)
+  local bodyWidth, bodyHeight = self.dataTable:GetSize()
+  self.window:SetBodySize(bodyWidth > 0 and bodyWidth or tableWidth, bodyHeight)
 end

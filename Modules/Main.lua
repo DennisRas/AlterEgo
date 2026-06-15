@@ -7,6 +7,19 @@ local addon = select(2, ...)
 local Module = addon.Core:NewModule("Main", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Main = Module
 
+local Data = addon.Data
+local Helpers = addon.Helpers
+local Constants = addon.Constants
+local LibLiqUI = addon.Libs.LiqUI
+local SetBackgroundColor = LibLiqUI.Utils.SetBackgroundColor
+local SetHighlightColor = LibLiqUI.Utils.SetHighlightColor
+local TableCount = LibLiqUI.Utils.TableCount
+local TableFilter = LibLiqUI.Utils.TableFilter
+local TableFind = LibLiqUI.Utils.TableFind
+local TableForEach = LibLiqUI.Utils.TableForEach
+local TableGet = LibLiqUI.Utils.TableGet
+local CreateScrollArea = LibLiqUI.Utils.CreateScrollArea
+
 function Module:OnInitialize()
   self:Render()
 end
@@ -19,7 +32,7 @@ do
     button2 = CANCEL,
     OnAccept = function(_, character)
       if character then
-        addon.Data:DeleteCharacter(character)
+        Data:DeleteCharacter(character)
         Module:Render()
       end
     end,
@@ -79,14 +92,14 @@ end
 ---@param character AE_Character
 ---@param activityType Enum.WeeklyRewardChestThresholdType
 local function getVaultProgressTooltip(infoFrame, character, activityType)
-  local loggedCharacter = addon.Data:GetCharacter()
-  local difficulties = addon.Data:GetRaidDifficulties(true)
-  local dungeons = addon.Data:GetDungeons()
-  local raids = addon.Data:GetRaids()
-  local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
-  local numActivities = addon.Utils:TableCount(activities)
-  local activitiesInProgress = addon.Utils:TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
-  local numActivitiesInProgress = addon.Utils:TableCount(activitiesInProgress)
+  local loggedCharacter = Data:GetCharacter()
+  local difficulties = Data:GetRaidDifficulties(true)
+  local dungeons = Data:GetDungeons()
+  local raids = Data:GetRaids()
+  local activities = TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
+  local numActivities = TableCount(activities)
+  local activitiesInProgress = TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
+  local numActivitiesInProgress = TableCount(activitiesInProgress)
   table.sort(activities, function(a, b) return a.index < b.index end)
   table.sort(activitiesInProgress, function(a, b) return a.threshold < b.threshold end)
   local vaultTooltipText = vaultTooltipTexts[activityType]
@@ -110,7 +123,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       local color = LIGHTGRAY_FONT_COLOR
       local rewardItemLevel = "?"
 
-      local activity = addon.Utils:TableGet(activities, "index", i)
+      local activity = TableGet(activities, "index", i)
       if activity then
         textLeft = format("%d %s:", activity.threshold, string.lower(activity.type and vaultTooltipTexts[activity.type] and vaultTooltipTexts[activity.type]["objective"] or vaultTooltipText["objective"]))
         if activity.progress >= activity.threshold then
@@ -120,7 +133,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           -- Difficulty name
           if activity.type == Enum.WeeklyRewardChestThresholdType.Raid then
             local difficultyName = GetDifficultyInfo(activity.level)
-            local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
+            local dataDifficulty = TableGet(difficulties, "id", activity.level)
             if dataDifficulty then
               textRight = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
             elseif difficultyName then
@@ -150,7 +163,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
         end
       else
         -- Get activity threshold and objective from logged in character since current character is missing vault activity data
-        local activityInfo = addon.Utils:TableFind(loggedCharacter and loggedCharacter.vault and loggedCharacter.vault.slots or {}, function(slot) return slot.type == activityType and slot.index == i end)
+        local activityInfo = TableFind(loggedCharacter and loggedCharacter.vault and loggedCharacter.vault.slots or {}, function(slot) return slot.type == activityType and slot.index == i end)
         if activityInfo then
           textLeft = format("%d %s:", activityInfo.threshold, string.lower(activityInfo.type and vaultTooltipTexts[activityInfo.type] and vaultTooltipTexts[activityInfo.type]["objective"] or vaultTooltipText["objective"]))
           textRight = format("Locked (%d/%d)", 0, activityInfo.threshold)
@@ -164,23 +177,23 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
     if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
       local raidInstanceID = nil
       local activityEncounterInfo = character.vault.activityEncounterInfo or {}
-      addon.Utils:TableForEach(raids, function(raid)
+      TableForEach(raids, function(raid)
         if raidInstanceID ~= raid.instanceID then
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine(raid.name)
         end
 
-        addon.Utils:TableForEach(raid.encounters or {}, function(encounter)
+        TableForEach(raid.encounters or {}, function(encounter)
           local bestDifficulty = nil
           local color = DISABLED_FONT_COLOR
           local difficultyName = "-"
 
-          local encounterInfo = addon.Utils:TableFind(activityEncounterInfo, function(activityEncounter)
+          local encounterInfo = TableFind(activityEncounterInfo, function(activityEncounter)
             return activityEncounter.instanceID == raid.journalInstanceID and activityEncounter.encounterID == encounter.journalEncounterID and activityEncounter.index == 1
           end)
 
           if encounterInfo and encounterInfo.bestDifficulty then
-            bestDifficulty = addon.Utils:TableGet(difficulties, "id", encounterInfo.bestDifficulty)
+            bestDifficulty = TableGet(difficulties, "id", encounterInfo.bestDifficulty)
           end
 
           if bestDifficulty then
@@ -216,8 +229,8 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
 
   do -- Dungeon runs
     if activityType == Enum.WeeklyRewardChestThresholdType.Activities then
-      local runsThisWeek = addon.Utils:TableFilter(character.mythicplus.runHistory or {}, function(run) return run.thisWeek == true end)
-      local numRunsThisWeek = addon.Utils:TableCount(runsThisWeek)
+      local runsThisWeek = TableFilter(character.mythicplus.runHistory or {}, function(run) return run.thisWeek == true end)
+      local numRunsThisWeek = TableCount(runsThisWeek)
       local numMaxRuns = vaultMaxNumRunsMythic
       table.sort(runsThisWeek, function(a, b) return a.level > b.level end)
 
@@ -234,13 +247,13 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       local missingRuns = numMaxRuns - numRunsThisWeek
 
       if numRunsThisWeek > 0 then
-        addon.Utils:TableForEach(runsThisWeek, function(run, i)
+        TableForEach(runsThisWeek, function(run, i)
           if i > numMaxRuns then return end
           local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
-          local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
+          local dungeon = TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
           local dungeonName = "Mythic+"
           local color = WHITE_FONT_COLOR
-          local matchesThreshold = addon.Utils:TableFind(character.vault.slots or {}, function(activity)
+          local matchesThreshold = TableFind(character.vault.slots or {}, function(activity)
             return activity.type and activity.type == activityType and activity.threshold and activity.threshold == i
           end)
           if matchesThreshold then
@@ -295,7 +308,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           local activity = activities[numActivities]
           local nextDifficultyID = DifficultyUtil.GetNextPrimaryRaidDifficultyID(activity.level)
           if nextDifficultyID then
-            local difficulty = addon.Utils:TableGet(difficulties, "id", nextDifficultyID)
+            local difficulty = TableGet(difficulties, "id", nextDifficultyID)
             if difficulty then
               text = format(vaultTooltipText["rewardsImprove"], difficulty.name)
             end
@@ -304,7 +317,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           end
         elseif activityType == Enum.WeeklyRewardChestThresholdType.Activities then
           local activity = activities[numActivities]
-          local level = addon.Utils:GetLowestLevelInTopDungeonRuns(character, activity.threshold)
+          local level = Helpers:GetLowestLevelInTopDungeonRuns(character, activity.threshold)
           if level and level < vaultMaxLevelRewardMythic then
             text = format(vaultTooltipText["rewardsImprove"], WeeklyRewardsUtil.GetNextMythicLevel(level))
           else
@@ -336,28 +349,28 @@ end
 ---@param activityType Enum.WeeklyRewardChestThresholdType
 ---@return string
 local function getVaultProgressValue(character, activityType)
-  local difficulties = addon.Data:GetRaidDifficulties(true)
-  local activities = addon.Utils:TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
+  local difficulties = Data:GetRaidDifficulties(true)
+  local activities = TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
   local texts = {}
 
   for i = 1, 3 do
     local text = "-"
     local color = LIGHTGRAY_FONT_COLOR
 
-    local activity = addon.Utils:TableGet(activities, "index", i)
+    local activity = TableGet(activities, "index", i)
     if activity and activity.progress >= activity.threshold then
       text = "?"
       color = UNCOMMON_GREEN_COLOR
 
       if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
-        local dataDifficulty = addon.Utils:TableGet(difficulties, "id", activity.level)
+        local dataDifficulty = TableGet(difficulties, "id", activity.level)
         local difficultyName = GetDifficultyInfo(activity.level)
         if difficultyName then
           text = difficultyName
         end
         if dataDifficulty then
           text = dataDifficulty.abbr and dataDifficulty.abbr or dataDifficulty.name
-          if addon.Data.db.global.raids.colors and dataDifficulty.color then
+          if Data.db.global.raids.colors and dataDifficulty.color then
             color = dataDifficulty.color
           end
         end
@@ -384,9 +397,9 @@ end
 ---@param unfiltered boolean?
 ---@return AE_CharacterRows[]
 function Module:GetCharacterInfo(unfiltered)
-  local dungeons = addon.Data:GetDungeons()
-  local difficulties = addon.Data:GetRaidDifficulties(true)
-  local _, seasonDisplayID = addon.Data:GetCurrentSeason()
+  local dungeons = Data:GetDungeons()
+  local difficulties = Data:GetRaidDifficulties(true)
+  local _, seasonDisplayID = Data:GetCurrentSeason()
   local equipmentModule = addon.Core:GetModule("Equipment", true)
 
   ---@type AE_CharacterRows[]
@@ -465,7 +478,7 @@ function Module:GetCharacterInfo(unfiltered)
         return realmColor:WrapTextInColorCode(realm)
       end,
       tooltip = false,
-      enabled = addon.Data.db.global.showRealms,
+      enabled = Data.db.global.showRealms,
     },
     {
       label = "Guild",
@@ -502,7 +515,7 @@ function Module:GetCharacterInfo(unfiltered)
       onLeave = function()
         GameTooltip:Hide()
       end,
-      enabled = addon.Data.db.global.showGuildInformation,
+      enabled = Data.db.global.showGuildInformation,
     },
     {
       label = STAT_AVERAGE_ITEM_LEVEL,
@@ -555,7 +568,7 @@ function Module:GetCharacterInfo(unfiltered)
         local ratingColor = LIGHTGRAY_FONT_COLOR
         if character.mythicplus.rating ~= nil and C_MythicPlus.IsMythicPlusActive() then
           rating = tostring(character.mythicplus.rating)
-          local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
+          local color = Helpers:GetRatingColor(character.mythicplus.rating, Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = CreateColor(color.r, color.g, color.b, color.a)
           else
@@ -572,20 +585,20 @@ function Module:GetCharacterInfo(unfiltered)
         local bestSeasonNumber = nil
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = addon.Utils:TableCount(character.mythicplus.runHistory)
+          numSeasonRuns = TableCount(character.mythicplus.runHistory)
         end
         if character.mythicplus.bestSeasonNumber ~= nil then
           bestSeasonNumber = character.mythicplus.bestSeasonNumber
         end
         if character.mythicplus.bestSeasonScore ~= nil then
           bestSeasonScore = character.mythicplus.bestSeasonScore
-          local color = addon.Utils:GetRatingColor(bestSeasonScore, addon.Data.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
+          local color = Helpers:GetRatingColor(bestSeasonScore, Data.db.global.useRIOScoreColor, bestSeasonNumber ~= nil and bestSeasonNumber < seasonDisplayID)
           if color ~= nil then
             bestSeasonScoreColor = CreateColor(color.r, color.g, color.b, color.a)
           end
         end
         if type(character.mythicplus.rating) == "number" then
-          local color = addon.Utils:GetRatingColor(character.mythicplus.rating, addon.Data.db.global.useRIOScoreColor, false)
+          local color = Helpers:GetRatingColor(character.mythicplus.rating, Data.db.global.useRIOScoreColor, false)
           if color ~= nil then
             ratingColor = CreateColor(color.r, color.g, color.b, color.a)
           end
@@ -612,11 +625,11 @@ function Module:GetCharacterInfo(unfiltered)
           -- Dungeon information
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine("Highest Keys:")
-          addon.Utils:TableForEach(dungeons, function(dungeon)
+          TableForEach(dungeons, function(dungeon)
             local level = "-"
             local levelColor = LIGHTGRAY_FONT_COLOR
-            if character.mythicplus.dungeons ~= nil and addon.Utils:TableCount(character.mythicplus.dungeons) > 0 then
-              local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
+            if character.mythicplus.dungeons ~= nil and TableCount(character.mythicplus.dungeons) > 0 then
+              local characterDungeon = TableGet(character.mythicplus.dungeons, "challengeModeID", dungeon.challengeModeID)
               if characterDungeon ~= nil and type(characterDungeon.level) == "number" and characterDungeon.level > 0 then
                 level = format("+%s", tostring(characterDungeon.level))
                 levelColor = WHITE_FONT_COLOR
@@ -637,10 +650,10 @@ function Module:GetCharacterInfo(unfiltered)
       onClick = function(infoFrame, character)
         local numSeasonRuns = 0
         if character.mythicplus.runHistory ~= nil then
-          numSeasonRuns = addon.Utils:TableCount(character.mythicplus.runHistory)
+          numSeasonRuns = TableCount(character.mythicplus.runHistory)
         end
         if character.mythicplus.dungeons ~= nil
-          and addon.Utils:TableCount(character.mythicplus.dungeons) > 0
+          and TableCount(character.mythicplus.dungeons) > 0
           and numSeasonRuns > 0
           and IsModifiedClick("CHATLINK")
         then
@@ -677,9 +690,9 @@ function Module:GetCharacterInfo(unfiltered)
         if character.mythicplus.keystone ~= nil then
           local dungeon
           if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
-            dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+            dungeon = TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
           elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
-            dungeon = addon.Utils:TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
+            dungeon = TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
           end
           if dungeon ~= nil then
             currentKeystone = dungeon.abbr
@@ -733,28 +746,28 @@ function Module:GetCharacterInfo(unfiltered)
         GameTooltip:Hide()
       end,
       backgroundColor = {r = 0, g = 0, b = 0, a = 0.3},
-      enabled = addon.Data.db.global.vault.raids or addon.Data.db.global.vault.dungeons or addon.Data.db.global.vault.world,
+      enabled = Data.db.global.vault.raids or Data.db.global.vault.dungeons or Data.db.global.vault.world,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(RAIDS),
       value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.Raid) end,
       onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.Raid) end,
       onLeave = function() GameTooltip:Hide() end,
-      enabled = addon.Data.db.global.vault.raids,
+      enabled = Data.db.global.vault.raids,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(DUNGEONS),
       value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.Activities) end,
       onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.Activities) end,
       onLeave = function() GameTooltip:Hide() end,
-      enabled = addon.Data.db.global.vault.dungeons,
+      enabled = Data.db.global.vault.dungeons,
     },
     {
       label = WHITE_FONT_COLOR:WrapTextInColorCode(WORLD),
       value = function(character) return getVaultProgressValue(character, Enum.WeeklyRewardChestThresholdType.World) end,
       onEnter = function(infoFrame, character) getVaultProgressTooltip(infoFrame, character, Enum.WeeklyRewardChestThresholdType.World) end,
       onLeave = function() GameTooltip:Hide() end,
-      enabled = addon.Data.db.global.vault.world,
+      enabled = Data.db.global.vault.world,
     },
   }
 
@@ -762,47 +775,51 @@ function Module:GetCharacterInfo(unfiltered)
     return rows
   end
 
-  return addon.Utils:TableFilter(rows, function(info)
+  return TableFilter(rows, function(info)
     return info.enabled
   end)
 end
 
 ---Render the main window
 function Module:Render()
-  local currentAffixes = addon.Data:GetCurrentAffixes()
-  local activeWeek = addon.Data:GetActiveAffixRotation(currentAffixes)
-  local seasonID = addon.Data:GetCurrentSeason()
-  local dungeons = addon.Data:GetDungeons()
-  local currencies = addon.Data:GetCurrencies()
-  local affixRotation = addon.Data:GetAffixRotation()
-  local raidDifficulties = addon.Data:GetRaidDifficulties()
+  local currentAffixes = Data:GetCurrentAffixes()
+  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
+  local seasonID = Data:GetCurrentSeason()
+  local dungeons = Data:GetDungeons()
+  local currencies = Data:GetCurrencies()
+  local affixRotation = Data:GetAffixRotation()
+  local raidDifficulties = Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
-  local raids = addon.Data:GetRaids()
-  local characters = addon.Data:GetCharacters()
-  local numCharacters = addon.Utils:TableCount(characters)
-  local affixes = addon.Data:GetAffixes(true)
-  local windowWidthMax = addon.Window:GetMaxWindowWidth()
+  local raids = Data:GetRaids()
+  local characters = Data:GetCharacters()
+  local numCharacters = TableCount(characters)
+  local affixes = Data:GetAffixes(true)
+  local windowWidthMax = addon.LiqUI.Window:GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
   if not self.window then
-    self.window = addon.Window:New({
+    self.window = addon.LiqUI.Window:New({
       name = "Main",
       title = addonName,
+      icon = Constants.media.LogoTransparent,
       sidebar = 150,
+      onShow = function()
+        Module:Render()
+      end,
       titlebarButtons = {
         {
           name = "Settings",
-          icon = addon.Constants.media.IconSettings,
+          icon = Constants.media.IconSettings,
           tooltipTitle = "Settings",
           tooltipDescription = "Let's customize things a bit.",
-          setupMenu = function(_, menu)
+          onMenu = function(window, menu)
             menu:CreateTitle(CHARACTER)
             menu:CreateCheckbox(
               "Show characters with zero rating",
-              function() return addon.Data.db.global.showZeroRatedCharacters end,
+              function() return Data.db.global.showZeroRatedCharacters end,
               function()
-                addon.Data.db.global.showZeroRatedCharacters = not addon.Data.db.global.showZeroRatedCharacters
+                Data.db.global.showZeroRatedCharacters = not Data.db.global.showZeroRatedCharacters
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -811,9 +828,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show realm",
-              function() return addon.Data.db.global.showRealms end,
+              function() return Data.db.global.showRealms end,
               function()
-                addon.Data.db.global.showRealms = not addon.Data.db.global.showRealms
+                Data.db.global.showRealms = not Data.db.global.showRealms
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -822,9 +839,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show guild",
-              function() return addon.Data.db.global.showGuildInformation end,
+              function() return Data.db.global.showGuildInformation end,
               function()
-                addon.Data.db.global.showGuildInformation = not addon.Data.db.global.showGuildInformation
+                Data.db.global.showGuildInformation = not Data.db.global.showGuildInformation
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -833,9 +850,9 @@ function Module:Render()
             end)
             local rioColors = menu:CreateCheckbox(
               "Use Raider.IO rating colors",
-              function() return addon.Data.db.global.useRIOScoreColor end,
+              function() return Data.db.global.useRIOScoreColor end,
               function()
-                addon.Data.db.global.useRIOScoreColor = not addon.Data.db.global.useRIOScoreColor
+                Data.db.global.useRIOScoreColor = not Data.db.global.useRIOScoreColor
                 self:Render()
               end
             )
@@ -851,9 +868,9 @@ function Module:Render()
             menu:CreateTitle(DELVES_GREAT_VAULT_LABEL)
             menu:CreateCheckbox(
               "Show Raids",
-              function() return addon.Data.db.global.vault.raids end,
+              function() return Data.db.global.vault.raids end,
               function()
-                addon.Data.db.global.vault.raids = not addon.Data.db.global.vault.raids
+                Data.db.global.vault.raids = not Data.db.global.vault.raids
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -862,9 +879,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show Dungeons",
-              function() return addon.Data.db.global.vault.dungeons end,
+              function() return Data.db.global.vault.dungeons end,
               function()
-                addon.Data.db.global.vault.dungeons = not addon.Data.db.global.vault.dungeons
+                Data.db.global.vault.dungeons = not Data.db.global.vault.dungeons
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -873,9 +890,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show World",
-              function() return addon.Data.db.global.vault.world end,
+              function() return Data.db.global.vault.world end,
               function()
-                addon.Data.db.global.vault.world = not addon.Data.db.global.vault.world
+                Data.db.global.vault.world = not Data.db.global.vault.world
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -885,9 +902,9 @@ function Module:Render()
             menu:CreateTitle("Prey Hunts")
             menu:CreateCheckbox(
               "Enable Prey Hunts",
-              function() return addon.Data.db.global.preyHunts.enabled end,
+              function() return Data.db.global.preyHunts.enabled end,
               function()
-                addon.Data.db.global.preyHunts.enabled = not addon.Data.db.global.preyHunts.enabled
+                Data.db.global.preyHunts.enabled = not Data.db.global.preyHunts.enabled
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -897,13 +914,13 @@ function Module:Render()
             local preyHuntsDifficultiesSetting = menu:CreateButton(
               "Difficulties"
             )
-            addon.Utils:TableForEach(addon.Data:GetPreyHuntDifficulties(true), function(difficulty)
-              local hiddenDifficulties = addon.Data.db.global.preyHunts.hiddenDifficulties or {}
+            TableForEach(Data:GetPreyHuntDifficulties(true), function(difficulty)
+              local hiddenDifficulties = Data.db.global.preyHunts.hiddenDifficulties or {}
               preyHuntsDifficultiesSetting:CreateCheckbox(
                 difficulty.name,
                 function(difficultyID) return not hiddenDifficulties[difficultyID] end,
                 function(difficultyID)
-                  addon.Data.db.global.preyHunts.hiddenDifficulties[difficultyID] = not hiddenDifficulties[difficultyID]
+                  Data.db.global.preyHunts.hiddenDifficulties[difficultyID] = not hiddenDifficulties[difficultyID]
                   self:Render()
                 end,
                 difficulty.id
@@ -912,9 +929,9 @@ function Module:Render()
             menu:CreateTitle(DUNGEONS)
             menu:CreateCheckbox(
               "Enable Dungeons",
-              function() return addon.Data.db.global.dungeons.enabled end,
+              function() return Data.db.global.dungeons.enabled end,
               function()
-                addon.Data.db.global.dungeons.enabled = not addon.Data.db.global.dungeons.enabled
+                Data.db.global.dungeons.enabled = not Data.db.global.dungeons.enabled
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -923,9 +940,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show icons",
-              function() return addon.Data.db.global.showTiers end,
+              function() return Data.db.global.showTiers end,
               function()
-                addon.Data.db.global.showTiers = not addon.Data.db.global.showTiers
+                Data.db.global.showTiers = not Data.db.global.showTiers
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -934,9 +951,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show rating",
-              function() return addon.Data.db.global.showScores end,
+              function() return Data.db.global.showScores end,
               function()
-                addon.Data.db.global.showScores = not addon.Data.db.global.showScores
+                Data.db.global.showScores = not Data.db.global.showScores
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -945,9 +962,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Use rating colors",
-              function() return addon.Data.db.global.showAffixColors end,
+              function() return Data.db.global.showAffixColors end,
               function()
-                addon.Data.db.global.showAffixColors = not addon.Data.db.global.showAffixColors
+                Data.db.global.showAffixColors = not Data.db.global.showAffixColors
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -957,9 +974,9 @@ function Module:Render()
             menu:CreateTitle(RAIDS)
             menu:CreateCheckbox(
               "Enable Raids",
-              function() return addon.Data.db.global.raids.enabled end,
+              function() return Data.db.global.raids.enabled end,
               function()
-                addon.Data.db.global.raids.enabled = not addon.Data.db.global.raids.enabled
+                Data.db.global.raids.enabled = not Data.db.global.raids.enabled
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -968,9 +985,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Use difficulty colors",
-              function() return addon.Data.db.global.raids.colors end,
+              function() return Data.db.global.raids.colors end,
               function()
-                addon.Data.db.global.raids.colors = not addon.Data.db.global.raids.colors
+                Data.db.global.raids.colors = not Data.db.global.raids.colors
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -980,13 +997,13 @@ function Module:Render()
             local raidDifficultiesSetting = menu:CreateButton(
               "Difficulties"
             )
-            addon.Utils:TableForEach(addon.Data:GetRaidDifficulties(true), function(difficulty)
-              local hiddenDifficulties = addon.Data.db.global.raids.hiddenDifficulties or {}
+            TableForEach(Data:GetRaidDifficulties(true), function(difficulty)
+              local hiddenDifficulties = Data.db.global.raids.hiddenDifficulties or {}
               raidDifficultiesSetting:CreateCheckbox(
                 difficulty.name,
                 function(id) return not hiddenDifficulties[id] end,
                 function(id)
-                  addon.Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
+                  Data.db.global.raids.hiddenDifficulties[id] = not hiddenDifficulties[id]
                   self:Render()
                 end,
                 difficulty.id
@@ -995,9 +1012,9 @@ function Module:Render()
             menu:CreateTitle("Currencies")
             menu:CreateCheckbox(
               "Enable Currencies",
-              function() return addon.Data.db.global.currencies.enabled end,
+              function() return Data.db.global.currencies.enabled end,
               function()
-                addon.Data.db.global.currencies.enabled = not addon.Data.db.global.currencies.enabled
+                Data.db.global.currencies.enabled = not Data.db.global.currencies.enabled
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1006,9 +1023,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show icons",
-              function() return addon.Data.db.global.currencies.showIcons end,
+              function() return Data.db.global.currencies.showIcons end,
               function()
-                addon.Data.db.global.currencies.showIcons = not addon.Data.db.global.currencies.showIcons
+                Data.db.global.currencies.showIcons = not Data.db.global.currencies.showIcons
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1017,9 +1034,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Align text center",
-              function() return addon.Data.db.global.currencies.alignCenter end,
+              function() return Data.db.global.currencies.alignCenter end,
               function()
-                addon.Data.db.global.currencies.alignCenter = not addon.Data.db.global.currencies.alignCenter
+                Data.db.global.currencies.alignCenter = not Data.db.global.currencies.alignCenter
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1028,9 +1045,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Highlight max earned",
-              function() return addon.Data.db.global.currencies.showMaxEarned end,
+              function() return Data.db.global.currencies.showMaxEarned end,
               function()
-                addon.Data.db.global.currencies.showMaxEarned = not addon.Data.db.global.currencies.showMaxEarned
+                Data.db.global.currencies.showMaxEarned = not Data.db.global.currencies.showMaxEarned
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1040,13 +1057,13 @@ function Module:Render()
             local enabledCurrenciesOption = menu:CreateButton(
               "Currencies"
             )
-            addon.Utils:TableForEach(addon.Data:GetCurrencies(), function(currency)
-              local hiddenCurrencies = addon.Data.db.global.currencies.hiddenCurrencies or {}
+            TableForEach(Data:GetCurrencies(), function(currency)
+              local hiddenCurrencies = Data.db.global.currencies.hiddenCurrencies or {}
               enabledCurrenciesOption:CreateCheckbox(
                 currency.name,
                 function(id) return not hiddenCurrencies[id] end,
                 function(id)
-                  addon.Data.db.global.currencies.hiddenCurrencies[id] = not hiddenCurrencies[id]
+                  Data.db.global.currencies.hiddenCurrencies[id] = not hiddenCurrencies[id]
                   self:Render()
                 end,
                 currency.id
@@ -1056,9 +1073,9 @@ function Module:Render()
             menu:CreateTitle(INTERFACE_OPTIONS)
             menu:CreateCheckbox(
               "Show Weekly Affixes",
-              function() return addon.Data.db.global.showAffixHeader end,
+              function() return Data.db.global.showAffixHeader end,
               function()
-                addon.Data.db.global.showAffixHeader = not addon.Data.db.global.showAffixHeader
+                Data.db.global.showAffixHeader = not Data.db.global.showAffixHeader
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1067,10 +1084,10 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Show the minimap button",
-              function() return not addon.Data.db.global.minimap.hide end,
+              function() return not Data.db.global.minimap.hide end,
               function()
-                addon.Data.db.global.minimap.hide = not addon.Data.db.global.minimap.hide
-                addon.Libs.LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
+                Data.db.global.minimap.hide = not Data.db.global.minimap.hide
+                addon.Libs.LibDBIcon:Refresh(addonName, Data.db.global.minimap)
               end
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
@@ -1078,74 +1095,28 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Lock the minimap button",
-              function() return addon.Data.db.global.minimap.lock end,
+              function() return Data.db.global.minimap.lock end,
               function()
-                addon.Data.db.global.minimap.lock = not addon.Data.db.global.minimap.lock
-                addon.Libs.LibDBIcon:Refresh(addonName, addon.Data.db.global.minimap)
+                Data.db.global.minimap.lock = not Data.db.global.minimap.lock
+                addon.Libs.LibDBIcon:Refresh(addonName, Data.db.global.minimap)
               end
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("No more moving the button around accidentally!", nil, nil, nil, true)
             end)
-            local windowScaleButton = menu:CreateButton("Window scale")
-            for i = 80, 200, 10 do
-              windowScaleButton:CreateRadio(
-                i .. "%",
-                function(value) return addon.Data.db.global.interface.windowScale == value end,
-                function(value)
-                  addon.Data.db.global.interface.windowScale = value
-                  self:Render()
-                  return MenuResponse.Refresh
-                end,
-                i
-              )
-            end
-            local function saveAndRefresh(color)
-              if color.r then
-                addon.Data.db.global.interface.windowColor.r = color.r
-                addon.Data.db.global.interface.windowColor.g = color.g
-                addon.Data.db.global.interface.windowColor.b = color.b
-              end
-              if color.a then
-                addon.Data.db.global.interface.windowColor.a = color.a
-              end
-              addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
-            end
-            local colorInfo = {
-              r = addon.Data.db.global.interface.windowColor.r,
-              g = addon.Data.db.global.interface.windowColor.g,
-              b = addon.Data.db.global.interface.windowColor.b,
-              opacity = addon.Data.db.global.interface.windowColor.a,
-              hasOpacity = 1,
-              swatchFunc = function()
-                local r, g, b = ColorPickerFrame:GetColorRGB()
-                local a = ColorPickerFrame:GetColorAlpha()
-                if r then
-                  saveAndRefresh({r = r, g = g, b = b, a = a or 1})
-                end
-              end,
-              opacityFunc = function() end,
-              cancelFunc = saveAndRefresh,
-            }
-            menu:CreateColorSwatch(
-              "Window background color",
-              function()
-                ColorPickerFrame:SetupColorPickerAndShow(colorInfo)
-              end,
-              colorInfo
-            )
+            window:AppendWindowOptionsMenu(menu)
           end,
           iconSize = 12,
         },
         {
           name = "Characters",
-          icon = addon.Constants.media.IconCharacters,
+          icon = Constants.media.IconCharacters,
           tooltipTitle = "Characters",
           tooltipDescription = "Toggle your characters.",
-          setupMenu = function(_, rootMenu)
-            local charactersUnfiltered = addon.Data:GetCharacters(true)
+          onMenu = function(_, rootMenu)
+            local charactersUnfiltered = Data:GetCharacters(true)
             rootMenu:SetScrollMode(math.min(20 * 50, GetScreenHeight() - 20)) -- 20 pixels per row, 50 rows
-            addon.Utils:TableForEach(charactersUnfiltered, function(char)
+            TableForEach(charactersUnfiltered, function(char)
               local nameColor = WHITE_FONT_COLOR
               if char.info.class.file ~= nil then
                 local classColor = C_ClassColor.GetClassColor(char.info.class.file)
@@ -1156,9 +1127,9 @@ function Module:Render()
               local characterName = format("%s (%s)", nameColor:WrapTextInColorCode(char.info.name), char.info.realm)
               local characterButton = rootMenu:CreateCheckbox(
                 characterName,
-                function(value) return addon.Data.db.global.characters[value].enabled end,
+                function(value) return Data.db.global.characters[value].enabled end,
                 function(value)
-                  addon.Data.db.global.characters[value].enabled = not addon.Data.db.global.characters[value].enabled
+                  Data.db.global.characters[value].enabled = not Data.db.global.characters[value].enabled
                   self:Render()
                 end,
                 char.GUID
@@ -1178,16 +1149,16 @@ function Module:Render()
         },
         {
           name = "Sorting",
-          icon = addon.Constants.media.IconSorting,
+          icon = Constants.media.IconSorting,
           tooltipTitle = "Sorting",
           tooltipDescription = "Sort your characters.",
-          setupMenu = function(_, rootMenu)
-            for _, option in ipairs(addon.Constants.sortingOptions) do
+          onMenu = function(_, rootMenu)
+            for _, option in ipairs(Constants.sortingOptions) do
               local button = rootMenu:CreateRadio(
                 option.text,
-                function(value) return addon.Data.db.global.sorting == value end,
+                function(value) return Data.db.global.sorting == value end,
                 function(value)
-                  addon.Data.db.global.sorting = value
+                  Data.db.global.sorting = value
                   self:Render()
                   return MenuResponse.Refresh
                 end,
@@ -1209,10 +1180,10 @@ function Module:Render()
         },
         {
           name = "Announce",
-          icon = addon.Constants.media.IconAnnounce,
+          icon = Constants.media.IconAnnounce,
           tooltipTitle = "Announcements",
           tooltipDescription = "Sharing is caring.",
-          setupMenu = function(_, menu)
+          onMenu = function(window, menu)
             menu:CreateTitle("Announce Current Keystones")
             local sendToParty = menu:CreateButton(
               "Send to Party Chat",
@@ -1256,16 +1227,16 @@ function Module:Render()
             local withCharacterNames
             local withMultipleMessages = menu:CreateCheckbox(
               "Multiple chat messages",
-              function() return addon.Data.db.global.announceKeystones.multiline end,
+              function() return Data.db.global.announceKeystones.multiline end,
               function()
-                addon.Data.db.global.announceKeystones.multiline = not addon.Data.db.global.announceKeystones.multiline
-                withCharacterNames:SetEnabled(addon.Data.db.global.announceKeystones.multiline)
+                Data.db.global.announceKeystones.multiline = not Data.db.global.announceKeystones.multiline
+                withCharacterNames:SetEnabled(Data.db.global.announceKeystones.multiline)
               end
             )
             withCharacterNames = menu:CreateCheckbox(
               "Include character names",
-              function() return addon.Data.db.global.announceKeystones.multilineNames end,
-              function() addon.Data.db.global.announceKeystones.multilineNames = not addon.Data.db.global.announceKeystones.multilineNames end
+              function() return Data.db.global.announceKeystones.multilineNames end,
+              function() Data.db.global.announceKeystones.multilineNames = not Data.db.global.announceKeystones.multilineNames end
             )
             withMultipleMessages:SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
@@ -1276,19 +1247,19 @@ function Module:Render()
             withCharacterNames:SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Add character names before each keystone.", nil, nil, nil, true)
-              if not addon.Data.db.global.announceKeystones.multiline then
+              if not Data.db.global.announceKeystones.multiline then
                 tooltip:AddLine(" ")
                 tooltip:AddLine("Multiple chat messages must be enabled.", 1, 0, 0, true)
               end
             end)
-            withCharacterNames:SetEnabled(addon.Data.db.global.announceKeystones.multiline)
+            withCharacterNames:SetEnabled(Data.db.global.announceKeystones.multiline)
             menu:CreateDivider()
             menu:CreateTitle("Automatic Announcements")
             menu:CreateCheckbox(
               "Announce instance resets",
-              function() return addon.Data.db.global.announceResets end,
+              function() return Data.db.global.announceResets end,
               function()
-                addon.Data.db.global.announceResets = not addon.Data.db.global.announceResets
+                Data.db.global.announceResets = not Data.db.global.announceResets
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1297,9 +1268,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Announce new keystones (Party)",
-              function() return addon.Data.db.global.announceKeystones.autoParty end,
+              function() return Data.db.global.announceKeystones.autoParty end,
               function()
-                addon.Data.db.global.announceKeystones.autoParty = not addon.Data.db.global.announceKeystones.autoParty
+                Data.db.global.announceKeystones.autoParty = not Data.db.global.announceKeystones.autoParty
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1308,9 +1279,9 @@ function Module:Render()
             end)
             menu:CreateCheckbox(
               "Announce new keystones (Guild)",
-              function() return addon.Data.db.global.announceKeystones.autoGuild end,
+              function() return Data.db.global.announceKeystones.autoGuild end,
               function()
-                addon.Data.db.global.announceKeystones.autoGuild = not addon.Data.db.global.announceKeystones.autoGuild
+                Data.db.global.announceKeystones.autoGuild = not Data.db.global.announceKeystones.autoGuild
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
@@ -1322,7 +1293,7 @@ function Module:Render()
         },
         {
           name = "GreatVault",
-          icon = addon.Constants.media.IconKeyhole,
+          icon = Constants.media.IconKeyhole,
           tooltipTitle = DELVES_GREAT_VAULT_LABEL,
           tooltipDescription = WEEKLY_REWARDS_ADD_ITEMS .. "\n\n" .. GREEN_FONT_COLOR:WrapTextInColorCode(format("<%s>", WEEKLY_REWARDS_CLICK_TO_PREVIEW_INSTRUCTIONS)),
           onClick = function()
@@ -1334,9 +1305,6 @@ function Module:Render()
     })
     self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window.titlebar)
     self.window.affixes.buttons = {}
-    self.window:SetScript("OnShow", function()
-      self:Render()
-    end)
   end
 
   if not self.window:IsVisible() then
@@ -1355,40 +1323,11 @@ function Module:Render()
     self.window.zeroCharacters:Hide()
   end
 
-  if not self.window.body.scrollparent then
-    self.window.body.scrollparent = CreateFrame("ScrollFrame", "$parentScrollFrame", self.window.body)
-    self.window.body.scrollparent:SetAllPoints()
-    self.window.body.scrollparent.scrollchild = CreateFrame("Frame", "$parentScrollChild", self.window.body.scrollparent)
-    self.window.body.scrollparent:SetScrollChild(self.window.body.scrollparent.scrollchild)
-    self.window.body.scrollbar = CreateFrame("Slider", "$parentScrollbar", self.window.body, "UISliderTemplate")
-    self.window.body.scrollbar:SetPoint("BOTTOMLEFT", self.window.body, "BOTTOMLEFT", 0, 0)
-    self.window.body.scrollbar:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
-    self.window.body.scrollbar:SetHeight(6)
-    self.window.body.scrollbar:SetMinMaxValues(0, 100)
-    self.window.body.scrollbar:SetValue(0)
-    self.window.body.scrollbar:SetValueStep(1)
-    self.window.body.scrollbar:SetOrientation("HORIZONTAL")
-    self.window.body.scrollbar:SetObeyStepOnDrag(true)
-    if self.window.body.scrollbar.NineSlice then
-      self.window.body.scrollbar.NineSlice:Hide()
-    end
-    self.window.body.scrollbar.thumb = self.window.body.scrollbar:GetThumbTexture()
-    self.window.body.scrollbar.thumb:SetPoint("CENTER")
-    self.window.body.scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
-    self.window.body.scrollbar.thumb:SetHeight(10)
-    self.window.body.scrollbar:SetScript("OnValueChanged", function(_, value)
-      self.window.body.scrollparent:SetHorizontalScroll(value)
-    end)
-    self.window.body.scrollbar:SetScript("OnEnter", function()
-      self.window.body.scrollbar.thumb:SetColorTexture(1, 1, 1, 0.2)
-    end)
-    self.window.body.scrollbar:SetScript("OnLeave", function()
-      self.window.body.scrollbar.thumb:SetColorTexture(1, 1, 1, 0.15)
-    end)
-    self.window.body.scrollparent:SetScript("OnMouseWheel", function(_, delta)
-      self.window.body.scrollbar:SetValue(self.window.body.scrollbar:GetValue() - delta * ((self.window.body.scrollparent.scrollchild:GetWidth() - self.window.body.scrollparent:GetWidth()) * 0.1))
-    end)
+  if not self.window.body.scrollArea then
+    self.window.body.scrollArea = CreateScrollArea(self.window.body, { horizontal = true, name = "$parentCharacterScroll" })
+    self.window.body.scrollArea:SetAllPoints()
   end
+  local scrollContent = self.window.body.scrollArea.content
 
   do -- Titlebar: Affixes
     if numCharacters < 3 then
@@ -1397,7 +1336,7 @@ function Module:Render()
       self.window.titlebar.title:Show()
     end
 
-    if currentAffixes and addon.Utils:TableCount(currentAffixes) > 0 and addon.Data.db.global.showAffixHeader then
+    if currentAffixes and TableCount(currentAffixes) > 0 and Data.db.global.showAffixHeader then
       if numCharacters < 2 then
         self.window.affixes:Hide()
       else
@@ -1409,7 +1348,7 @@ function Module:Render()
 
     if self.window.affixes:IsVisible() then
       local affixAnchor = self.window.titlebar
-      addon.Utils:TableForEach(currentAffixes, function(affix, affixIndex)
+      TableForEach(currentAffixes, function(affix, affixIndex)
         local name, desc, fileDataID = C_ChallengeMode.GetAffixInfo(affix.id)
         local affixFrame = self.window.affixes.buttons[affixIndex]
         if not affixFrame then
@@ -1435,7 +1374,7 @@ function Module:Render()
         end)
         affixFrame:SetScript("OnClick", function()
           if not weeklyAffixesModule then return end
-          addon.Window:ToggleWindow("Affixes")
+          addon.LiqUI.Window:ToggleWindow("Affixes")
         end)
 
         if affixIndex == 1 then
@@ -1443,7 +1382,7 @@ function Module:Render()
           if numCharacters < 3 then
             affixFrame:SetPoint("LEFT", self.window.titlebar.icon, "RIGHT", 6, 0)
           else
-            affixFrame:SetPoint("CENTER", affixAnchor, "CENTER", -((addon.Utils:TableCount(currentAffixes) * 20) / 2), 0)
+            affixFrame:SetPoint("CENTER", affixAnchor, "CENTER", -((TableCount(currentAffixes) * 20) / 2), 0)
           end
         else
           affixFrame:SetPoint("LEFT", affixAnchor, "RIGHT", 6, 0)
@@ -1458,14 +1397,14 @@ function Module:Render()
     local totalHeight = 0
     do -- CharacterInfo Labels
       self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
-      addon.Utils:TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
-      addon.Utils:TableForEach(characterInfo, function(info, infoIndex)
+      TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
+      TableForEach(characterInfo, function(info, infoIndex)
         local infoFrame = self.window.sidebar.infoFrames[infoIndex]
         if not infoFrame then
           infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
           infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-          infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
-          infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+          infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", Constants.sizes.padding, -3)
+          infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
           infoFrame.text:SetJustifyH("LEFT")
           infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           infoFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
@@ -1474,11 +1413,11 @@ function Module:Render()
 
         infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
         infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-        infoFrame:SetHeight(addon.Constants.sizes.row)
+        infoFrame:SetHeight(Constants.sizes.row)
         infoFrame.text:SetText(info.label)
         infoFrame:Show()
         rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        totalHeight = totalHeight + Constants.sizes.row
       end)
     end
 
@@ -1487,21 +1426,21 @@ function Module:Render()
       if not label then
         label = CreateFrame("Frame", "$parentPreyLabel", self.window.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
-        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
         label.text:SetFontObject("GameFontHighlight_NoShadow")
         label.text:SetJustifyH("LEFT")
         label.text:SetText("Prey Hunts")
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
         self.window.sidebar.preyLabel = label
       end
-      if addon.Data.db.global.preyHunts.enabled then
+      if Data.db.global.preyHunts.enabled then
         label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
         label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-        label:SetHeight(addon.Constants.sizes.row)
+        label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        totalHeight = totalHeight + Constants.sizes.row
       else
         label:Hide()
       end
@@ -1509,16 +1448,16 @@ function Module:Render()
 
     do -- Prey Difficulties
       self.window.sidebar.preyDifficulties = self.window.sidebar.preyDifficulties or {}
-      addon.Utils:TableForEach(self.window.sidebar.preyDifficulties, function(f) f:Hide() end)
-      addon.Utils:TableForEach(addon.Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
-        if addon.Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
-        if not addon.Data.db.global.preyHunts.enabled then return end
+      TableForEach(self.window.sidebar.preyDifficulties, function(f) f:Hide() end)
+      TableForEach(Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
+        if Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
+        if not Data.db.global.preyHunts.enabled then return end
         local difficultyFrame = self.window.sidebar.preyDifficulties[difficultyIndex]
         if not difficultyFrame then
           difficultyFrame = CreateFrame("Frame", "$parentPreyDifficulty" .. difficultyIndex, self.window.sidebar)
           difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-          difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
-          difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+          difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
+          difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
           difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           difficultyFrame.text:SetJustifyH("LEFT")
           difficultyFrame.text:SetVertexColor(1.0, 1.0, 1.0, 1.0)
@@ -1529,7 +1468,7 @@ function Module:Render()
           GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
           GameTooltip:SetText(difficulty.name, 1, 1, 1)
           GameTooltip:AddLine("With each difficulty level, new affixes are added, leading to more challenging encounters.", nil, nil, nil, true)
-          addon.Utils:TableForEach(difficulty.affixes, function(affix, affixName)
+          TableForEach(difficulty.affixes, function(affix, affixName)
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine(format("%s:", affixName), nil, nil, nil, true)
             GameTooltip:AddLine(affix, 1, 1, 1, true)
@@ -1542,11 +1481,11 @@ function Module:Render()
 
         difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
         difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-        difficultyFrame:SetHeight(addon.Constants.sizes.row)
+        difficultyFrame:SetHeight(Constants.sizes.row)
         difficultyFrame.text:SetText(difficulty.name)
         difficultyFrame:Show()
         rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        totalHeight = totalHeight + Constants.sizes.row
       end)
     end
 
@@ -1555,8 +1494,8 @@ function Module:Render()
       if not label then
         label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
-        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
         label.text:SetFontObject("GameFontHighlight_NoShadow")
         label.text:SetJustifyH("LEFT")
         label.text:SetText(DUNGEONS)
@@ -1564,13 +1503,13 @@ function Module:Render()
         self.window.sidebar.mpluslabel = label
       end
 
-      if addon.Data.db.global.dungeons.enabled then
+      if Data.db.global.dungeons.enabled then
         label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
         label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-        label:SetHeight(addon.Constants.sizes.row)
+        label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        totalHeight = totalHeight + Constants.sizes.row
       else
         label:Hide()
       end
@@ -1578,9 +1517,9 @@ function Module:Render()
 
     do -- MythicPlus Labels
       self.window.sidebar.mpluslabels = self.window.sidebar.mpluslabels or {}
-      addon.Utils:TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
-      if addon.Data.db.global.dungeons.enabled then
-        addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
+      TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
+      if Data.db.global.dungeons.enabled then
+        TableForEach(dungeons, function(dungeon, dungeonIndex)
           local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
           if not dungeonFrame then
             dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
@@ -1588,16 +1527,16 @@ function Module:Render()
             dungeonFrame:EnableMouse(true)
             dungeonFrame.icon = dungeonFrame:CreateTexture(dungeonFrame:GetName() .. "Icon", "ARTWORK")
             dungeonFrame.icon:SetSize(16, 16)
-            dungeonFrame.icon:SetPoint("LEFT", dungeonFrame, "LEFT", addon.Constants.sizes.padding, 0)
+            dungeonFrame.icon:SetPoint("LEFT", dungeonFrame, "LEFT", Constants.sizes.padding, 0)
             dungeonFrame.text = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Text", "OVERLAY")
-            dungeonFrame.text:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT", 16 + addon.Constants.sizes.padding * 2, -3)
-            dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            dungeonFrame.text:SetPoint("TOPLEFT", dungeonFrame, "TOPLEFT", 16 + Constants.sizes.padding * 2, -3)
+            dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             dungeonFrame.text:SetJustifyH("LEFT")
             dungeonFrame.text:SetFontObject("GameFontHighlight_NoShadow")
             self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
           end
 
-          local knownTeleportSpellID = addon.Utils:TableFind(dungeon.teleports or {}, function(spellID)
+          local knownTeleportSpellID = TableFind(dungeon.teleports or {}, function(spellID)
             return C_SpellBook.IsSpellInSpellBook(spellID)
           end)
 
@@ -1631,12 +1570,12 @@ function Module:Render()
 
           dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
           dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-          dungeonFrame:SetHeight(addon.Constants.sizes.row)
+          dungeonFrame:SetHeight(Constants.sizes.row)
           dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
           dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
           dungeonFrame:Show()
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         end)
       end
     end
@@ -1646,8 +1585,8 @@ function Module:Render()
       if not label then
         label = CreateFrame("Frame", "$parentRaidHeader", self.window.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
-        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
         label.text:SetFontObject("GameFontHighlight_NoShadow")
         label.text:SetJustifyH("LEFT")
         label.text:SetText(RAIDS)
@@ -1655,13 +1594,13 @@ function Module:Render()
         self.window.sidebar.raidHeader = label
       end
 
-      if addon.Data.db.global.raids.enabled then
+      if Data.db.global.raids.enabled then
         label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
         label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-        label:SetHeight(addon.Constants.sizes.row)
+        label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        totalHeight = totalHeight + Constants.sizes.row
       else
         label:Hide()
       end
@@ -1669,15 +1608,15 @@ function Module:Render()
 
     do -- Raid Difficulties
       self.window.sidebar.raidDifficulties = self.window.sidebar.raidDifficulties or {}
-      addon.Utils:TableForEach(self.window.sidebar.raidDifficulties, function(f) f:Hide() end)
-      if addon.Data.db.global.raids.enabled then
-        addon.Utils:TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
+      TableForEach(self.window.sidebar.raidDifficulties, function(f) f:Hide() end)
+      if Data.db.global.raids.enabled then
+        TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
           local difficultyFrame = self.window.sidebar.raidDifficulties[difficultyIndex]
           if not difficultyFrame then
             difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, self.window.sidebar)
             difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-            difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
-            difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
+            difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             difficultyFrame.text:SetJustifyH("LEFT")
             difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
             self.window.sidebar.raidDifficulties[difficultyIndex] = difficultyFrame
@@ -1708,8 +1647,8 @@ function Module:Render()
       if not label then
         label = CreateFrame("Frame", "$parentCurrencyLabel", self.window.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", addon.Constants.sizes.padding, 0)
-        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 0)
+        label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
+        label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
         label.text:SetFontObject("GameFontHighlight_NoShadow")
         label.text:SetJustifyH("LEFT")
         label.text:SetText("Currencies")
@@ -1717,13 +1656,13 @@ function Module:Render()
         self.window.sidebar.currencyLabel = label
       end
 
-      if addon.Data.db.global.currencies.enabled then
+      if Data.db.global.currencies.enabled then
         label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
         label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-        label:SetHeight(addon.Constants.sizes.row)
+        label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
-        totalHeight = totalHeight + addon.Constants.sizes.row
+        totalHeight = totalHeight + Constants.sizes.row
       else
         label:Hide()
       end
@@ -1731,10 +1670,10 @@ function Module:Render()
 
     do -- Currency Labels
       self.window.sidebar.currencyLabels = self.window.sidebar.currencyLabels or {}
-      addon.Utils:TableForEach(self.window.sidebar.currencyLabels, function(f) f:Hide() end)
-      if addon.Data.db.global.currencies.enabled then
-        addon.Utils:TableForEach(currencies, function(currency, currencyIndex)
-          if addon.Data.db.global.currencies.hiddenCurrencies and addon.Data.db.global.currencies.hiddenCurrencies[currency.id] then
+      TableForEach(self.window.sidebar.currencyLabels, function(f) f:Hide() end)
+      if Data.db.global.currencies.enabled then
+        TableForEach(currencies, function(currency, currencyIndex)
+          if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then
             return
           end
           local label = self.window.sidebar.currencyLabels[currencyIndex]
@@ -1742,10 +1681,10 @@ function Module:Render()
             label = CreateFrame("Frame", "$parentCurrency" .. currencyIndex, self.window.sidebar)
             label.icon = label:CreateTexture(label:GetName() .. "Icon", "ARTWORK")
             label.icon:SetSize(16, 16)
-            label.icon:SetPoint("LEFT", label, "LEFT", addon.Constants.sizes.padding, 0)
+            label.icon:SetPoint("LEFT", label, "LEFT", Constants.sizes.padding, 0)
             label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
-            label.text:SetPoint("TOPLEFT", label, "TOPLEFT", 16 + addon.Constants.sizes.padding * 2, -3)
-            label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            label.text:SetPoint("TOPLEFT", label, "TOPLEFT", 16 + Constants.sizes.padding * 2, -3)
+            label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             label.text:SetJustifyH("LEFT")
             label.text:SetFontObject("GameFontHighlight_NoShadow")
             self.window.sidebar.currencyLabels[currencyIndex] = label
@@ -1769,13 +1708,13 @@ function Module:Render()
 
           label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
           label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
-          label:SetHeight(addon.Constants.sizes.row)
+          label:SetHeight(Constants.sizes.row)
           label.icon:SetTexture(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
           label.text:SetText(currency.short and currency.short or currency.name)
           label.text:SetTextColor(color.r, color.g, color.b)
           label:Show()
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         end)
       end
     end
@@ -1785,13 +1724,13 @@ function Module:Render()
 
   do -- Character Columns
     self.window.characterFrames = self.window.characterFrames or {}
-    addon.Utils:TableForEach(self.window.characterFrames, function(f) f:Hide() end)
-    addon.Utils:TableForEach(characters, function(character, characterIndex)
+    TableForEach(self.window.characterFrames, function(f) f:Hide() end)
+    TableForEach(characters, function(character, characterIndex)
       local rowCount = 0
       local totalHeight = 0
       local characterFrame = self.window.characterFrames[characterIndex]
       if not characterFrame then
-        characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, self.window.body.scrollparent.scrollchild)
+        characterFrame = CreateFrame("Frame", "$parentCharacterColumn" .. characterIndex, scrollContent)
         characterFrame.infoFrames = {}
         characterFrame.dungeonFrames = {}
         characterFrame.raidFrames = {}
@@ -1802,21 +1741,21 @@ function Module:Render()
         self.window.characterFrames[characterIndex] = characterFrame
       end
 
-      characterFrame:SetPoint("TOPLEFT", self.window.body.scrollparent.scrollchild, "TOPLEFT", (characterIndex - 1) * CHARACTER_WIDTH, 0)
-      characterFrame:SetPoint("BOTTOMLEFT", self.window.body.scrollparent.scrollchild, "BOTTOMLEFT", (characterIndex - 1) * CHARACTER_WIDTH, 0)
+      characterFrame:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", (characterIndex - 1) * CHARACTER_WIDTH, 0)
+      characterFrame:SetPoint("BOTTOMLEFT", scrollContent, "BOTTOMLEFT", (characterIndex - 1) * CHARACTER_WIDTH, 0)
       characterFrame:SetWidth(CHARACTER_WIDTH)
-      addon.Utils:SetBackgroundColor(characterFrame, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
+      SetBackgroundColor(characterFrame, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
       characterFrame:Show()
 
       do -- Info
-        addon.Utils:TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
-        addon.Utils:TableForEach(characterInfo, function(info, infoIndex)
+        TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
+        TableForEach(characterInfo, function(info, infoIndex)
           local infoFrame = characterFrame.infoFrames[infoIndex]
           if not infoFrame then
             infoFrame = CreateFrame("Button", "$parentInfo" .. infoIndex, characterFrame)
             infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
-            infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", addon.Constants.sizes.padding * 1.5, -addon.Constants.sizes.padding)
-            infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding * 1.5, addon.Constants.sizes.padding)
+            infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", Constants.sizes.padding * 1.5, -Constants.sizes.padding)
+            infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -Constants.sizes.padding * 1.5, Constants.sizes.padding)
             infoFrame.text:SetJustifyH("CENTER")
             infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
             characterFrame.infoFrames[infoIndex] = infoFrame
@@ -1825,7 +1764,7 @@ function Module:Render()
           if infoIndex == 1 then
             if not infoFrame.SortLeftButton then
               infoFrame.SortLeftButton = CreateFrame("Button", infoFrame:GetName() .. "SortLeft", infoFrame)
-              infoFrame.SortLeftButton:SetSize(addon.Constants.sizes.row, addon.Constants.sizes.row)
+              infoFrame.SortLeftButton:SetSize(Constants.sizes.row, Constants.sizes.row)
               infoFrame.SortLeftButton:SetPoint("LEFT", infoFrame, "LEFT")
               infoFrame.SortLeftButton.Icon = infoFrame.SortLeftButton:CreateTexture(infoFrame.SortLeftButton:GetName() .. "Icon", "ARTWORK")
               infoFrame.SortLeftButton.Icon:SetAtlas("common-icon-backarrow", true)
@@ -1854,12 +1793,12 @@ function Module:Render()
               end
             end)
             infoFrame.SortLeftButton:SetScript("OnClick", function()
-              addon.Data:SortCharacter(character, -1)
+              Data:SortCharacter(character, -1)
               self:Render()
             end)
             if not infoFrame.SortRightButton then
               infoFrame.SortRightButton = CreateFrame("Button", infoFrame:GetName() .. "SortRight", infoFrame)
-              infoFrame.SortRightButton:SetSize(addon.Constants.sizes.row, addon.Constants.sizes.row)
+              infoFrame.SortRightButton:SetSize(Constants.sizes.row, Constants.sizes.row)
               infoFrame.SortRightButton:SetPoint("RIGHT", infoFrame, "RIGHT")
               infoFrame.SortRightButton.Icon = infoFrame.SortRightButton:CreateTexture(infoFrame.SortRightButton:GetName() .. "Icon", "ARTWORK")
               infoFrame.SortRightButton.Icon:SetAtlas("common-icon-forwardarrow", true)
@@ -1888,7 +1827,7 @@ function Module:Render()
               end
             end)
             infoFrame.SortRightButton:SetScript("OnClick", function()
-              addon.Data:SortCharacter(character, 1)
+              Data:SortCharacter(character, 1)
               self:Render()
             end)
 
@@ -1903,9 +1842,9 @@ function Module:Render()
           end
 
           if info.backgroundColor then
-            addon.Utils:SetBackgroundColor(infoFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
+            SetBackgroundColor(infoFrame, info.backgroundColor.r, info.backgroundColor.g, info.backgroundColor.b, info.backgroundColor.a)
           else
-            addon.Utils:SetBackgroundColor(infoFrame, 0, 0, 0, 0)
+            SetBackgroundColor(infoFrame, 0, 0, 0, 0)
           end
 
           infoFrame:SetScript("OnEnter", function()
@@ -1916,7 +1855,7 @@ function Module:Render()
             if infoIndex == 1 then
               infoFrame.SortLeftButton:Hide()
               infoFrame.SortRightButton:Hide()
-              if addon.Data.db.global.sorting == "custom" and not InCombatLockdown() then
+              if Data.db.global.sorting == "custom" and not InCombatLockdown() then
                 infoFrame.SortLeftButton:SetPropagateMouseMotion(true)
                 infoFrame.SortRightButton:SetPropagateMouseMotion(true)
                 if characterIndex > 1 then infoFrame.SortLeftButton:Show() end
@@ -1925,7 +1864,7 @@ function Module:Render()
             end
 
             if not info.backgroundColor then
-              addon.Utils:SetHighlightColor(infoFrame)
+              SetHighlightColor(infoFrame)
             end
           end)
 
@@ -1940,7 +1879,7 @@ function Module:Render()
             end
 
             if not info.backgroundColor then
-              addon.Utils:SetHighlightColor(infoFrame, 1, 1, 1, 0)
+              SetHighlightColor(infoFrame, 1, 1, 1, 0)
             end
           end)
 
@@ -1952,22 +1891,22 @@ function Module:Render()
 
           infoFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           infoFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          infoFrame:SetHeight(addon.Constants.sizes.row)
+          infoFrame:SetHeight(Constants.sizes.row)
           infoFrame:Show()
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         end)
       end
 
       do -- Prey Header
-        if addon.Data.db.global.preyHunts.enabled then
+        if Data.db.global.preyHunts.enabled then
           characterFrame.preyHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.preyHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          characterFrame.preyHeader:SetHeight(addon.Constants.sizes.row)
+          characterFrame.preyHeader:SetHeight(Constants.sizes.row)
           characterFrame.preyHeader:Show()
-          addon.Utils:SetBackgroundColor(characterFrame.preyHeader, 0, 0, 0, 0.3)
+          SetBackgroundColor(characterFrame.preyHeader, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         else
           characterFrame.preyHeader:Hide()
         end
@@ -1975,16 +1914,16 @@ function Module:Render()
 
       do -- Prey Progress
         characterFrame.preyProgress = characterFrame.preyProgress or {}
-        addon.Utils:TableForEach(characterFrame.preyProgress, function(f) f:Hide() end)
-        addon.Utils:TableForEach(addon.Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
-          if addon.Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
-          if not addon.Data.db.global.preyHunts.enabled then return end
+        TableForEach(characterFrame.preyProgress, function(f) f:Hide() end)
+        TableForEach(Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
+          if Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
+          if not Data.db.global.preyHunts.enabled then return end
           local difficultyFrame = characterFrame.preyProgress[difficultyIndex]
           if not difficultyFrame then
             difficultyFrame = CreateFrame("Frame", "$parentPreyProgress" .. difficultyIndex, characterFrame)
             difficultyFrame.Text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
-            difficultyFrame.Text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", addon.Constants.sizes.padding * 1.5, -addon.Constants.sizes.padding)
-            difficultyFrame.Text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding * 1.5, addon.Constants.sizes.padding)
+            difficultyFrame.Text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding * 1.5, -Constants.sizes.padding)
+            difficultyFrame.Text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding * 1.5, Constants.sizes.padding)
             difficultyFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
             difficultyFrame.Text:SetJustifyH("CENTER")
             characterFrame.preyProgress[difficultyIndex] = difficultyFrame
@@ -1996,13 +1935,13 @@ function Module:Render()
           local maxQuests = 4
           local characterQuestsCompleted = character.preyHunts and character.preyHunts.questsCompleted or {}
 
-          local quests = addon.Utils:TableFilter(addon.Data.preyHuntQuests, function(quest)
+          local quests = TableFilter(Data.preyHuntQuests, function(quest)
             return quest.difficultyID == difficulty.id
           end)
-          local questsCompleted = addon.Utils:TableFilter(quests, function(quest)
+          local questsCompleted = TableFilter(quests, function(quest)
             return characterQuestsCompleted[quest.questID]
           end)
-          numQuestsCompleted = addon.Utils:TableCount(questsCompleted)
+          numQuestsCompleted = TableCount(questsCompleted)
 
           if numQuestsCompleted >= maxQuests then
             textValue = format("%d / %d", numQuestsCompleted, maxQuests)
@@ -2026,38 +1965,38 @@ function Module:Render()
             if numQuestsCompleted > 0 then
               GameTooltip:AddLine(" ")
               GameTooltip:AddLine("Quests Done:")
-              addon.Utils:TableForEach(questsCompleted, function(quest)
+              TableForEach(questsCompleted, function(quest)
                 GameTooltip:AddLine(quest.name, 1, 1, 1)
               end)
             end
             GameTooltip:Show()
-            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
+            SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
           end)
           difficultyFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
-            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
+            SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
           end)
 
           difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          difficultyFrame:SetHeight(addon.Constants.sizes.row)
+          difficultyFrame:SetHeight(Constants.sizes.row)
           difficultyFrame:Show()
           difficultyFrame.Text:SetText(textValue)
           difficultyFrame.Text:SetTextColor(textColor.r, textColor.g, textColor.b)
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         end)
       end
 
       do -- Dungeon Header
-        if addon.Data.db.global.dungeons.enabled then
+        if Data.db.global.dungeons.enabled then
           characterFrame.affixHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.affixHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          characterFrame.affixHeaderFrame:SetHeight(addon.Constants.sizes.row)
+          characterFrame.affixHeaderFrame:SetHeight(Constants.sizes.row)
           characterFrame.affixHeaderFrame:Show()
-          addon.Utils:SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
+          SetBackgroundColor(characterFrame.affixHeaderFrame, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         else
           characterFrame.affixHeaderFrame:Hide()
         end
@@ -2065,9 +2004,9 @@ function Module:Render()
 
       do -- Dungeons
         characterFrame.dungeonFrames = characterFrame.dungeonFrames or {}
-        addon.Utils:TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
-        addon.Utils:TableForEach(dungeons, function(dungeon, dungeonIndex)
-          if not addon.Data.db.global.dungeons.enabled then return end
+        TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
+        TableForEach(dungeons, function(dungeon, dungeonIndex)
+          if not Data.db.global.dungeons.enabled then return end
           local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
           if not dungeonFrame then
             dungeonFrame = CreateFrame("Frame", "$parentDungeons" .. dungeonIndex, characterFrame)
@@ -2078,7 +2017,7 @@ function Module:Render()
             dungeonFrame.Tier:SetJustifyH("LEFT")
             dungeonFrame.Tier:SetFontObject("GameFontHighlight_NoShadow")
             dungeonFrame.Score = dungeonFrame:CreateFontString(dungeonFrame:GetName() .. "Score", "OVERLAY")
-            dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -addon.Constants.sizes.padding * 2, 1)
+            dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT", -Constants.sizes.padding * 2, 1)
             dungeonFrame.Score:SetJustifyH("RIGHT")
             dungeonFrame.Score:SetFontObject("GameFontHighlight_NoShadow")
             characterFrame.dungeonFrames[dungeonIndex] = dungeonFrame
@@ -2094,14 +2033,14 @@ function Module:Render()
           local tier = ""
           local dungeonLevel = 0
 
-          local characterDungeon = addon.Utils:TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
+          local characterDungeon = TableGet(character.mythicplus.dungeons or {}, "challengeModeID", dungeon.challengeModeID)
           if characterDungeon then
             affixScores = characterDungeon.affixScores
             overallScore = characterDungeon.bestOverAllScore
             inTimeInfo = characterDungeon.bestTimedRun
             overTimeInfo = characterDungeon.bestNotTimedRun
 
-            if overallScore and addon.Data.db.global.showAffixColors then
+            if overallScore and Data.db.global.showAffixColors then
               local rarityColor = C_ChallengeMode.GetSpecificDungeonOverallScoreRarityColor(overallScore)
               if rarityColor ~= nil then
                 color = CreateColor(rarityColor.r, rarityColor.g, rarityColor.b, rarityColor.a)
@@ -2118,11 +2057,11 @@ function Module:Render()
                 level = tostring(bestAffixScore.level)
                 dungeonLevel = bestAffixScore.level or 0
 
-                if bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3) then
+                if bestAffixScore.durationSec <= Helpers:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 3, seasonID) then
                   tier = "|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a"
-                elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2) then
+                elseif bestAffixScore.durationSec <= Helpers:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 2, seasonID) then
                   tier = "|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a"
-                elseif bestAffixScore.durationSec <= addon.Utils:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1) then
+                elseif bestAffixScore.durationSec <= Helpers:calculateDungeonTimer(dungeon.time, bestAffixScore.level, 1, seasonID) then
                   tier = "|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a"
                 end
 
@@ -2133,7 +2072,7 @@ function Module:Render()
             end
           end
 
-          if level ~= "-" and addon.Data.db.global.showTiers then
+          if level ~= "-" and Data.db.global.showTiers then
             level = format("%s %s", level, tier)
           end
 
@@ -2150,12 +2089,12 @@ function Module:Render()
           dungeonFrame.Score:SetPoint("RIGHT", dungeonFrame, "RIGHT")
           dungeonFrame.Score:SetJustifyH("CENTER")
 
-          if not addon.Data.db.global.showScores then
+          if not Data.db.global.showScores then
             dungeonFrame.Text:ClearAllPoints()
             dungeonFrame.Text:SetPoint("CENTER", dungeonFrame, "CENTER")
             dungeonFrame.Score:SetText("")
           else
-            if not addon.Data.db.global.showTiers then
+            if not Data.db.global.showTiers then
               dungeonFrame.Text:SetPoint("RIGHT", dungeonFrame, "CENTER", 0, 0)
               dungeonFrame.Text:SetJustifyH("CENTER")
             end
@@ -2172,7 +2111,7 @@ function Module:Render()
             GameTooltip:SetOwner(dungeonFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText(dungeon.name, 1, 1, 1)
 
-            if affixScores and addon.Utils:TableCount(affixScores) > 0 then
+            if affixScores and TableCount(affixScores) > 0 then
               if overallScore and (inTimeInfo or overTimeInfo) then
                 GameTooltip_AddNormalLine(GameTooltip, DUNGEON_SCORE_TOTAL_SCORE:format(color:WrapTextInColorCode(tostring(overallScore))), GREEN_FONT_COLOR)
               end
@@ -2196,37 +2135,37 @@ function Module:Render()
 
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine("Dungeon Timers")
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 1), false), 1, 1, 1)
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 2), false), 1, 1, 1)
-            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(addon.Utils:calculateDungeonTimer(dungeon.time, dungeonLevel, 3), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier1:14:14:0:0|a " .. SecondsToClock(Helpers:calculateDungeonTimer(dungeon.time, dungeonLevel, 1, seasonID), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier2:16:16:0:0|a " .. SecondsToClock(Helpers:calculateDungeonTimer(dungeon.time, dungeonLevel, 2, seasonID), false), 1, 1, 1)
+            GameTooltip:AddLine("|A:Professions-ChatIcon-Quality-Tier3:16:16:0:0|a " .. SecondsToClock(Helpers:calculateDungeonTimer(dungeon.time, dungeonLevel, 3, seasonID), false), 1, 1, 1)
             GameTooltip:Show()
 
-            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
+            SetHighlightColor(dungeonFrame, 1, 1, 1, 0.05)
           end)
           dungeonFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
-            addon.Utils:SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
+            SetHighlightColor(dungeonFrame, 1, 1, 1, 0)
           end)
 
-          addon.Utils:SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
+          SetBackgroundColor(dungeonFrame, 1, 1, 1, dungeonIndex % 2 == 0 and 0.01 or 0)
           dungeonFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           dungeonFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          dungeonFrame:SetHeight(addon.Constants.sizes.row)
+          dungeonFrame:SetHeight(Constants.sizes.row)
           dungeonFrame:Show()
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         end)
       end
 
       do -- Raid Header
-        if addon.Data.db.global.raids.enabled then
+        if Data.db.global.raids.enabled then
           characterFrame.raidHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.raidHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          characterFrame.raidHeader:SetHeight(addon.Constants.sizes.row)
+          characterFrame.raidHeader:SetHeight(Constants.sizes.row)
           characterFrame.raidHeader:Show()
-          addon.Utils:SetBackgroundColor(characterFrame.raidHeader, 0, 0, 0, 0.3)
+          SetBackgroundColor(characterFrame.raidHeader, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         else
           characterFrame.raidHeader:Hide()
         end
@@ -2234,9 +2173,9 @@ function Module:Render()
 
       do -- Raids
         characterFrame.difficultyFrames = characterFrame.difficultyFrames or {}
-        addon.Utils:TableForEach(characterFrame.difficultyFrames, function(f) f:Hide() end)
-        addon.Utils:TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
-          if not addon.Data.db.global.raids.enabled then return end
+        TableForEach(characterFrame.difficultyFrames, function(f) f:Hide() end)
+        TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
+          if not Data.db.global.raids.enabled then return end
           local difficultyFrame = characterFrame.difficultyFrames[difficultyIndex]
           if not difficultyFrame then
             difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, characterFrame)
@@ -2246,7 +2185,7 @@ function Module:Render()
           end
 
           -- Update difficulty row
-          addon.Utils:SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
+          SetBackgroundColor(difficultyFrame, 1, 1, 1, difficultyIndex % 2 == 0 and 0.01 or 0)
           difficultyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           difficultyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           difficultyFrame:SetHeight(RAIDS_ROW_HEIGHT)
@@ -2258,8 +2197,8 @@ function Module:Render()
           ---@type AE_Encounter[]
           local encounters = {}
           local numEncounters = 0
-          addon.Utils:TableForEach(raids or {}, function(raid, raidIndex)
-            addon.Utils:TableForEach(raid.encounters or {}, function(encounter, encounterIndex)
+          TableForEach(raids or {}, function(raid, raidIndex)
+            TableForEach(raid.encounters or {}, function(encounter, encounterIndex)
               table.insert(encounters, encounter)
               numEncounters = numEncounters + 1
             end)
@@ -2269,17 +2208,17 @@ function Module:Render()
             GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Raid Progress", 1, 1, 1, 1, true)
             GameTooltip:AddLine(format("Difficulty: |cffffffff%s|r", difficulty.short and difficulty.short or difficulty.name))
-            addon.Utils:TableForEach(raids, function(raid, raidIndex)
+            TableForEach(raids, function(raid, raidIndex)
               GameTooltip:AddLine(" ")
               GameTooltip:AddLine(raid.name)
-              addon.Utils:TableForEach(raid.encounters, function(encounter)
+              TableForEach(raid.encounters, function(encounter)
                 local color = LIGHTGRAY_FONT_COLOR
                 if character.raids.savedInstances then
-                  local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+                  local savedInstance = TableFind(character.raids.savedInstances, function(savedInstance)
                     return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
                   end)
                   if savedInstance then
-                    local savedEncounter = addon.Utils:TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
+                    local savedEncounter = TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
                     if savedEncounter and savedEncounter.isKilled then
                       color = GREEN_FONT_COLOR
                     end
@@ -2289,12 +2228,12 @@ function Module:Render()
               end)
             end)
             GameTooltip:Show()
-            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
+            SetHighlightColor(difficultyFrame, 1, 1, 1, 0.05)
           end)
 
           difficultyFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
-            addon.Utils:SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
+            SetHighlightColor(difficultyFrame, 1, 1, 1, 0)
           end)
 
           local gapWidth = 6
@@ -2304,13 +2243,13 @@ function Module:Render()
           local gapWidthTotal = gapCount * gapWidth
           local iconSize = (CHARACTER_WIDTH - gapWidthTotal) / (halfEncounters + (numEncounters % 2 == 0 and 0.5 or 0))
           local iconSizeMax = RAIDS_ROW_HEIGHT * 0.5
-          addon.Utils:TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
-          addon.Utils:TableForEach(encounters or {}, function(encounter, encounterIndex)
+          TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
+          TableForEach(encounters or {}, function(encounter, encounterIndex)
             local iconFrame = difficultyFrame.iconFrames[encounterIndex]
             if not iconFrame then
               iconFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
               iconFrame.Background = iconFrame:CreateTexture("Background", "BACKGROUND")
-              iconFrame.Background:SetTexture(addon.Constants.media.IconKill)
+              iconFrame.Background:SetTexture(Constants.media.IconKill)
               iconFrame.Background:SetAllPoints()
               difficultyFrame.iconFrames[encounterIndex] = iconFrame
             end
@@ -2319,14 +2258,14 @@ function Module:Render()
             local alpha = 0.08
 
             if character.raids.savedInstances then
-              local savedInstance = addon.Utils:TableFind(character.raids.savedInstances, function(savedInstance)
+              local savedInstance = TableFind(character.raids.savedInstances, function(savedInstance)
                 return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == encounter.instanceID and savedInstance.expires > time()
               end)
               if savedInstance then
-                local savedEncounter = addon.Utils:TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
+                local savedEncounter = TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
                 if savedEncounter and savedEncounter.isKilled then
                   color = UNCOMMON_GREEN_COLOR
-                  if addon.Data.db.global.raids.colors then
+                  if Data.db.global.raids.colors then
                     color = difficulty.color
                   end
                   alpha = 0.5
@@ -2353,14 +2292,14 @@ function Module:Render()
       end
 
       do -- Currency Header
-        if addon.Data.db.global.currencies.enabled then
+        if Data.db.global.currencies.enabled then
           characterFrame.currencyHeaderFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.currencyHeaderFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          characterFrame.currencyHeaderFrame:SetHeight(addon.Constants.sizes.row)
+          characterFrame.currencyHeaderFrame:SetHeight(Constants.sizes.row)
           characterFrame.currencyHeaderFrame:Show()
-          addon.Utils:SetBackgroundColor(characterFrame.currencyHeaderFrame, 0, 0, 0, 0.3)
+          SetBackgroundColor(characterFrame.currencyHeaderFrame, 0, 0, 0, 0.3)
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         else
           characterFrame.currencyHeaderFrame:Hide()
         end
@@ -2368,18 +2307,18 @@ function Module:Render()
 
       do -- Currencies
         characterFrame.currencyFrames = characterFrame.currencyFrames or {}
-        addon.Utils:TableForEach(characterFrame.currencyFrames, function(f) f:Hide() end)
-        addon.Utils:TableForEach(currencies, function(currency, currencyIndex)
-          if not addon.Data.db.global.currencies.enabled then return end
-          if addon.Data.db.global.currencies.hiddenCurrencies and addon.Data.db.global.currencies.hiddenCurrencies[currency.id] then return end
+        TableForEach(characterFrame.currencyFrames, function(f) f:Hide() end)
+        TableForEach(currencies, function(currency, currencyIndex)
+          if not Data.db.global.currencies.enabled then return end
+          if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then return end
 
           local currencyFrame = characterFrame.currencyFrames[currencyIndex]
           if not currencyFrame then
             currencyFrame = CreateFrame("Frame", "$parentCurrencies" .. currencyIndex, characterFrame)
             currencyFrame.Text = currencyFrame:CreateFontString(currencyFrame:GetName() .. "TextLeft", "OVERLAY")
             currencyFrame.Text:SetFontObject("GameFontHighlight_NoShadow")
-            currencyFrame.Text:SetPoint("TOPLEFT", currencyFrame, "TOPLEFT", addon.Constants.sizes.padding, -3)
-            currencyFrame.Text:SetPoint("BOTTOMRIGHT", currencyFrame, "BOTTOMRIGHT", -addon.Constants.sizes.padding, 3)
+            currencyFrame.Text:SetPoint("TOPLEFT", currencyFrame, "TOPLEFT", Constants.sizes.padding, -3)
+            currencyFrame.Text:SetPoint("BOTTOMRIGHT", currencyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             currencyFrame.Text:SetJustifyH("LEFT")
             characterFrame.currencyFrames[currencyIndex] = currencyFrame
           end
@@ -2394,7 +2333,7 @@ function Module:Render()
           local cellColor = CAMPAIGN_COMPLETE_COLOR
           local cellValue = "0"
 
-          local characterCurrency = addon.Utils:TableGet(character.currencies, "id", currency.id)
+          local characterCurrency = TableGet(character.currencies, "id", currency.id)
           if characterCurrency then
             charQuantity = characterCurrency.quantity or 0
             charTotalEarned = characterCurrency.totalEarned or 0
@@ -2412,11 +2351,11 @@ function Module:Render()
           end
 
           cellValue = tostring(charQuantity)
-          if addon.Data.db.global.currencies.showIcons then
+          if Data.db.global.currencies.showIcons then
             cellValue = format("%s %s", infoIcon, cellValue)
           end
 
-          if addon.Data.db.global.currencies.showMaxEarned and hasEarnedMax then
+          if Data.db.global.currencies.showMaxEarned and hasEarnedMax then
             cellColor = DULL_RED_FONT_COLOR
           end
 
@@ -2428,7 +2367,7 @@ function Module:Render()
           end
 
           currencyFrame.Text:SetText(cellColor:WrapTextInColorCode(cellValue))
-          currencyFrame.Text:SetJustifyH(addon.Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
+          currencyFrame.Text:SetJustifyH(Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
           currencyFrame:SetScript("OnEnter", function()
             GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Currency Progress", 1, 1, 1)
@@ -2458,20 +2397,20 @@ function Module:Render()
               GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addonName .. ":"), currency.tooltipNote), 1, 1, 1, true)
             end
             GameTooltip:Show()
-            addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
+            SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
           end)
           currencyFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
-            addon.Utils:SetHighlightColor(currencyFrame, 1, 1, 1, 0)
+            SetHighlightColor(currencyFrame, 1, 1, 1, 0)
           end)
 
-          addon.Utils:SetBackgroundColor(currencyFrame, 1, 1, 1, currencyIndex % 2 == 0 and 0.01 or 0)
+          SetBackgroundColor(currencyFrame, 1, 1, 1, currencyIndex % 2 == 0 and 0.01 or 0)
           currencyFrame:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           currencyFrame:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
-          currencyFrame:SetHeight(addon.Constants.sizes.row)
+          currencyFrame:SetHeight(Constants.sizes.row)
           currencyFrame:Show()
           rowCount = rowCount + 1
-          totalHeight = totalHeight + addon.Constants.sizes.row
+          totalHeight = totalHeight + Constants.sizes.row
         end)
       end
 
@@ -2480,23 +2419,11 @@ function Module:Render()
   end
 
   self.window:SetBodySize(math.min(windowWidth, windowWidthMax), windowHeight)
-  self.window.body.scrollparent.scrollchild:SetSize(windowWidth, windowHeight)
-  addon.Window:SetWindowScale(addon.Data.db.global.interface.windowScale / 100)
-  addon.Window:SetWindowBackgroundColor(addon.Data.db.global.interface.windowColor)
-
-  if self.window.body.scrollparent.scrollchild:GetWidth() > self.window.body.scrollparent:GetWidth() then
-    self.window.body.scrollbar:SetMinMaxValues(0, self.window.body.scrollparent.scrollchild:GetWidth() - self.window.body.scrollparent:GetWidth())
-    self.window.body.scrollbar.thumb:SetWidth(self.window.body.scrollbar:GetWidth() / 10)
-    self.window.body.scrollbar.thumb:SetHeight(self.window.body.scrollbar:GetHeight())
-    self.window.body.scrollbar:Show()
-  else
-    self.window.body.scrollparent:SetHorizontalScroll(0)
-    self.window.body.scrollbar:Hide()
-  end
+  self.window.body.scrollArea:UpdateLayout(windowWidth, windowHeight)
 
   local zeroCharactersText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
   if numCharacters <= 0 then
-    if not addon.Data.db.global.showZeroRatedCharacters and addon.Utils:TableCount(addon.Data:GetCharacters(true)) > 0 then
+    if not Data.db.global.showZeroRatedCharacters and TableCount(Data:GetCharacters(true)) > 0 then
       zeroCharactersText = zeroCharactersText .. "\n\n|cff00ee00New Season?|r\nYou are currently hiding characters with zero rating. If this is not your intention then enable the setting |cffffffffShow characters with zero rating|r"
     end
     self.window.zeroCharacters:Show()

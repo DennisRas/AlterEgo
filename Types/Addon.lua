@@ -1,6 +1,7 @@
 ---@class AE_Libs
 ---@field LibDBIcon unknown
 ---@field LibDataBroker unknown
+---@field LiqUI LibLiqUI
 
 ---@class AE_Core : AceAddon
 
@@ -8,13 +9,14 @@
 ---@class AE_Module_Equipment : AceModule
 ---@class AE_Module_WeeklyAffixes : AceModule
 
+---@class AE_Helpers
+
 ---@class AE_Addon
 ---@field Core AE_Core
 ---@field Libs AE_Libs
+---@field LiqUI LiqUI_Instance
 ---@field Constants AE_Constants
----@field Utils AE_Utils
----@field Window AE_WindowManager
----@field Table AE_Table
+---@field Helpers AE_Helpers
 ---@field Events AE_Events
 ---@field Data AE_Data
 ---@field Module_Main AE_Module_Main

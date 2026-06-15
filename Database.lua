@@ -7,7 +7,14 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
-Data.dbVersion = 34
+local TableCopy = addon.Libs.LiqUI.Utils.TableCopy
+local TableCount = addon.Libs.LiqUI.Utils.TableCount
+local TableFilter = addon.Libs.LiqUI.Utils.TableFilter
+local TableFind = addon.Libs.LiqUI.Utils.TableFind
+local TableForEach = addon.Libs.LiqUI.Utils.TableForEach
+local TableGet = addon.Libs.LiqUI.Utils.TableGet
+
+Data.dbVersion = 35
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -68,6 +75,11 @@ Data.defaultDB = {
       -- fontSize = 12,
       windowScale = 100,
       windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
+    },
+    liqui = {
+      windows = {},
+      tables = {},
+      loggers = {},
     },
     useRIOScoreColor = false,
   },
@@ -602,10 +614,10 @@ function Data:GetCurrentSeason()
   end
 
   if self.cache.seasonID and self.cache.seasonID > 0 then
-    local season = addon.Utils:TableGet(self.seasons, "seasonID", self.cache.seasonID)
+    local season = TableGet(self.seasons, "seasonID", self.cache.seasonID)
     local currentExpansionLevel = GetExpansionLevel()
     if season and currentExpansionLevel and season.expansionID < currentExpansionLevel then
-      local nextSeason = addon.Utils:TableGet(self.seasons, "expansionID", currentExpansionLevel)
+      local nextSeason = TableGet(self.seasons, "expansionID", currentExpansionLevel)
       if nextSeason then
         self.cache.seasonID = nextSeason.seasonID
         self.cache.seasonDisplayID = nextSeason.seasonDisplayID
@@ -621,7 +633,7 @@ end
 function Data:GetCurrencies()
   local currencies = {}
   local seasonID = self:GetCurrentSeason()
-  addon.Utils:TableForEach(self.currencies, function(currency)
+  TableForEach(self.currencies, function(currency)
     if currency.seasonID ~= seasonID then
       return
     end
@@ -649,7 +661,7 @@ function Data:GetCharacter(playerGUID)
   end
 
   if self.db.global.characters[playerGUID] == nil then
-    self.db.global.characters[playerGUID] = addon.Utils:TableCopy(Data.defaultCharacter)
+    self.db.global.characters[playerGUID] = TableCopy(Data.defaultCharacter)
   end
 
   self.db.global.characters[playerGUID].GUID = playerGUID
@@ -721,7 +733,7 @@ end
 ---Get the current affixes of the week
 ---@return MythicPlusKeystoneAffix[]
 function Data:GetCurrentAffixes()
-  if addon.Utils:TableCount(self.cache.currentAffixes) == 0 then
+  if TableCount(self.cache.currentAffixes) == 0 then
     local currentAffixes = C_MythicPlus.GetCurrentAffixes()
     if currentAffixes then
       self.cache.currentAffixes = currentAffixes
@@ -734,7 +746,7 @@ end
 ---@param baseOnly boolean?
 ---@return AE_Affix[]
 function Data:GetAffixes(baseOnly)
-  return addon.Utils:TableFilter(self.affixes, function(dataAffix)
+  return TableFilter(self.affixes, function(dataAffix)
     return not baseOnly or dataAffix.base == 1
   end)
 end
@@ -743,7 +755,7 @@ end
 ---@return AE_AffixRotation|nil
 function Data:GetAffixRotation()
   local seasonID = self:GetCurrentSeason()
-  return addon.Utils:TableGet(self.affixRotations, "seasonID", seasonID)
+  return TableGet(self.affixRotations, "seasonID", seasonID)
 end
 
 ---Get the index of the active affix week
@@ -753,9 +765,9 @@ function Data:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
   local index = 0
   if currentAffixes and affixRotation then
-    addon.Utils:TableForEach(affixRotation.affixes, function(affixWeek, affixWeekIndex)
+    TableForEach(affixRotation.affixes, function(affixWeek, affixWeekIndex)
       local thisWeek = true
-      addon.Utils:TableForEach(affixWeek, function(affixID, affixIndex)
+      TableForEach(affixWeek, function(affixID, affixIndex)
         if not (currentAffixes[affixIndex] and currentAffixes[affixIndex].id == affixID) then
           thisWeek = false
         end
@@ -772,7 +784,7 @@ end
 ---@return number|nil
 function Data:GetKeystoneItemID()
   local seasonID = self:GetCurrentSeason()
-  local keystone = addon.Utils:TableGet(self.keystones, "seasonID", seasonID)
+  local keystone = TableGet(self.keystones, "seasonID", seasonID)
 
   if keystone ~= nil then
     return keystone.itemID
@@ -785,7 +797,7 @@ end
 ---@return AE_Dungeon[]
 function Data:GetDungeons()
   local seasonID = self:GetCurrentSeason()
-  local dungeons = addon.Utils:TableFilter(self.dungeons, function(dataDungeon)
+  local dungeons = TableFilter(self.dungeons, function(dataDungeon)
     return dataDungeon.seasonID == seasonID
   end)
 
@@ -801,7 +813,7 @@ end
 ---@return AE_Raid[]
 function Data:GetRaids(unfiltered)
   local seasonID = self:GetCurrentSeason()
-  local raids = addon.Utils:TableFilter(self.raids, function(dataRaid)
+  local raids = TableFilter(self.raids, function(dataRaid)
     return dataRaid.seasonID == seasonID
   end)
 
@@ -814,7 +826,7 @@ function Data:GetRaids(unfiltered)
   end
 
   if self.db.global.raids.modifiedInstanceOnly and seasonID == 12 then
-    raids = addon.Utils:TableFilter(raids, function(raid)
+    raids = TableFilter(raids, function(raid)
       return raid.modifiedInstanceInfo ~= nil
     end)
   end
@@ -856,7 +868,7 @@ function Data:GetCharacters(unfiltered)
   table.sort(characters, function(a, b)
     return (a.order or 0) < (b.order or 0)
   end)
-  addon.Utils:TableForEach(characters, function(character)
+  TableForEach(characters, function(character)
     self.db.global.characters[character.GUID].order = order
     order = order + 1
   end)
@@ -949,9 +961,9 @@ function Data:MigrateDB()
       for characterIndex in pairs(self.db.global.characters) do
         local character = self.db.global.characters[characterIndex]
         if character.mythicplus.dungeons ~= nil then
-          addon.Utils:TableForEach(character.mythicplus.dungeons, function(dungeon)
-            addon.Utils:TableForEach(dungeon.affixScores, function(affixScore)
-              local affix = addon.Utils:TableGet(affixes, "name", affixScore.name)
+          TableForEach(character.mythicplus.dungeons, function(dungeon)
+            TableForEach(dungeon.affixScores, function(affixScore)
+              local affix = TableGet(affixes, "name", affixScore.name)
               if affixScore.id == nil then
                 affixScore.id = affix and affix.id or 0
               end
@@ -1009,6 +1021,27 @@ function Data:MigrateDB()
         end
       end
     end
+    if self.db.global.dbVersion == 34 then
+      local interface = self.db.global.interface
+      ---@type LiqUI_DB
+      local liqui = {
+        windows = {},
+        tables = {},
+        loggers = {},
+      }
+      for _, windowName in ipairs({"Main", "Affixes", "Equipment"}) do
+        ---@type LiqUI_WindowSettings
+        local windowSettings = {}
+        if interface and interface.windowScale then
+          windowSettings.scale = interface.windowScale
+        end
+        if interface and interface.windowColor then
+          windowSettings.windowColor = TableCopy(interface.windowColor)
+        end
+        liqui.windows[windowName] = windowSettings
+      end
+      self.db.global.liqui = liqui
+    end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
@@ -1017,15 +1050,15 @@ end
 ---Perform weekly reset tasks (e.g., vault, weekly-earn currency progress for offline alts)
 function Data:TaskWeeklyReset()
   if type(self.db.global.weeklyReset) == "number" and self.db.global.weeklyReset <= time() then
-    addon.Utils:TableForEach(self.db.global.characters, function(character)
+    TableForEach(self.db.global.characters, function(character)
       -- Check if vault has available rewards
-      addon.Utils:TableForEach(character.vault.slots, function(slot)
+      TableForEach(character.vault.slots, function(slot)
         if slot.progress >= slot.threshold then
           character.vault.hasAvailableRewards = true
         end
       end)
       -- Mark previous m+ runs as not this week
-      addon.Utils:TableForEach(character.mythicplus.runHistory, function(run)
+      TableForEach(character.mythicplus.runHistory, function(run)
         run.thisWeek = false
       end)
       -- Reset Prey Hunts
@@ -1035,7 +1068,7 @@ function Data:TaskWeeklyReset()
       character.mythicplus.keystone = wipe(character.mythicplus.keystone or {})
       character.mythicplus.numCompletedDungeonRuns = wipe(character.mythicplus.numCompletedDungeonRuns or {})
       -- Reset quantityEarnedThisWeek if maxWeeklyQuantity is set
-      addon.Utils:TableForEach(character.currencies or {}, function(characterCurrency)
+      TableForEach(character.currencies or {}, function(characterCurrency)
         if characterCurrency.maxWeeklyQuantity and characterCurrency.maxWeeklyQuantity > 0 then
           characterCurrency.quantityEarnedThisWeek = 0
         end
@@ -1049,7 +1082,7 @@ end
 function Data:TaskSeasonReset()
   local seasonID = self:GetCurrentSeason()
   if seasonID then
-    addon.Utils:TableForEach(self.db.global.characters, function(character)
+    TableForEach(self.db.global.characters, function(character)
       if character.currentSeason == nil or character.currentSeason < seasonID then
         wipe(character.mythicplus.runHistory or {})
         wipe(character.mythicplus.dungeons or {})
@@ -1215,7 +1248,7 @@ function Data:UpdateRaidInstances()
 
   for savedInstanceIndex = 1, numSavedInstances do
     local name, lockoutId, reset, difficultyID, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress, extendDisabled, instanceID = GetSavedInstanceInfo(savedInstanceIndex)
-    local raid = addon.Utils:TableGet(raids, "instanceID", instanceID)
+    local raid = TableGet(raids, "instanceID", instanceID)
     ---@type AE_SavedInstance
     local savedInstance = {
       index = savedInstanceIndex,
@@ -1245,7 +1278,7 @@ function Data:UpdateRaidInstances()
       local bossName, fileDataID, isKilled = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
       local instanceEncounterID = 0
       if raid then
-        addon.Utils:TableForEach(raid.encounters, function(encounter)
+        TableForEach(raid.encounters, function(encounter)
           if string.lower(encounter.name) == string.lower(bossName) then
             instanceEncounterID = encounter.instanceEncounterID
           end
@@ -1271,7 +1304,7 @@ function Data:UpdatePreyProgress()
   if not character then return end
   character.preyHunts = character.preyHunts or {}
   character.preyHunts.questsCompleted = wipe(character.preyHunts.questsCompleted or {})
-  addon.Utils:TableForEach(self.preyHuntQuests, function(quest)
+  TableForEach(self.preyHuntQuests, function(quest)
     character.preyHunts.questsCompleted[quest.questID] = C_QuestLog.IsQuestFlaggedCompleted(quest.questID)
   end)
 end
@@ -1339,7 +1372,7 @@ function Data:UpdateCurrencies()
 
   character.currencies = wipe(character.currencies or {})
 
-  addon.Utils:TableForEach(self.currencies or {}, function(dataCurrency)
+  TableForEach(self.currencies or {}, function(dataCurrency)
     local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
     if not currency then return end
     currency.id = dataCurrency.id
@@ -1363,7 +1396,7 @@ function Data:UpdateEquipment()
   upgradePattern = upgradePattern:gsub("%%d", "%%s")
   upgradePattern = upgradePattern:format("(.+)", "(%d+)", "(%d+)")
 
-  addon.Utils:TableForEach(self.inventory or {}, function(slot)
+  TableForEach(self.inventory or {}, function(slot)
     local inventoryItemLink = GetInventoryItemLink("player", slot.id)
     if not inventoryItemLink then return end
 
@@ -1374,7 +1407,7 @@ function Data:UpdateEquipment()
     if itemName == nil then return end
 
     local tooltipData = C_TooltipInfo.GetInventoryItem("player", slot.id)
-    addon.Utils:TableForEach(tooltipData.lines, function(line)
+    TableForEach(tooltipData.lines, function(line)
       if not line.leftText then return end
       local match, _, uTrack, uLevel, uMax = line.leftText:find(upgradePattern)
       if not match then return end
@@ -1465,7 +1498,7 @@ function Data:UpdateKeystoneItem()
   local keystoneChallengeModeID = tonumber(linkChallengeModeID) or 0
   local keystoneLevel = tonumber(linkLevel) or 0
 
-  local dungeon = addon.Utils:TableGet(dungeons, "challengeModeID", keystoneChallengeModeID)
+  local dungeon = TableGet(dungeons, "challengeModeID", keystoneChallengeModeID)
   if not dungeon then return addon.Core:Render() end
   local dungeonMapId = tonumber(dungeon.mapId) or 0
 
@@ -1513,11 +1546,11 @@ function Data:UpdateVault()
   character.vault.activityEncounterInfo = wipe(character.vault.activityEncounterInfo or {})
   character.vault.slots = wipe(character.vault.slots or {})
 
-  addon.Utils:TableForEach(self.vaultTypes or {}, function(vaultType)
+  TableForEach(self.vaultTypes or {}, function(vaultType)
     for index = 1, 3 do
       local encounters = C_WeeklyRewards.GetActivityEncounterInfo(vaultType.id, index)
       if encounters then
-        addon.Utils:TableForEach(encounters, function(encounter)
+        TableForEach(encounters, function(encounter)
           if not encounter then return end
           encounter.type = vaultType.id
           encounter.index = index
@@ -1528,7 +1561,7 @@ function Data:UpdateVault()
   end)
 
   local activities = C_WeeklyRewards.GetActivities()
-  addon.Utils:TableForEach(activities, function(activity)
+  TableForEach(activities, function(activity)
     activity.exampleRewardLink = ""
     activity.exampleRewardUpgradeLink = ""
     if activity.progress >= activity.threshold then
@@ -1574,8 +1607,8 @@ function Data:UpdateMythicPlus()
     local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
 
     if affixScores then
-      addon.Utils:TableForEach(affixScores, function(affixScore)
-        local affix = addon.Utils:TableGet(affixes, "name", affixScore.name)
+      TableForEach(affixScores, function(affixScore)
+        local affix = TableGet(affixes, "name", affixScore.name)
         affixScore.id = affix and affix.id or 0
       end)
     end
@@ -1593,7 +1626,7 @@ function Data:UpdateMythicPlus()
     }
 
     if ratingSummary then
-      local run = addon.Utils:TableFind(ratingSummary.runs or {}, function(run)
+      local run = TableFind(ratingSummary.runs or {}, function(run)
         return run.challengeModeID == dataDungeon.challengeModeID
       end)
       if run then
@@ -1608,7 +1641,7 @@ function Data:UpdateMythicPlus()
 end
 
 -- function Data:GetClasses()
---   if addon.Utils:TableCount(Data.cache.classes) > 0 then
+--   if TableCount(Data.cache.classes) > 0 then
 --     return Data.cache.classes
 --   end
 
@@ -1628,12 +1661,12 @@ end
 -- end
 
 -- function Data:GetSpecs()
---   if addon.Utils:TableCount(Data.cache.specs) > 0 then
+--   if TableCount(Data.cache.specs) > 0 then
 --     return Data.cache.specs
 --   end
 
 --   local classes = Data:GetClasses()
---   addon.Utils:TableForEach(classes, function(cls)
+--   TableForEach(classes, function(cls)
 --     for specIndex = 1, GetNumSpecializationsForClassID(cls.ID) do
 --       local specID, name, description, icon, role, isRecommended, isAllowed = GetSpecializationInfoForClassID(cls.ID, specIndex)
 --       if specID then
