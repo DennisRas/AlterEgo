@@ -394,6 +394,7 @@ Data.raids = {
   {seasonID = 17, seasonDisplayID = 1, instanceID = 2912, journalInstanceID = 1307, order = 1, numEncounters = 6, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "VS",   name = "The Voidspire"},
   {seasonID = 17, seasonDisplayID = 1, instanceID = 2913, journalInstanceID = 1308, order = 2, numEncounters = 2, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MQD",  name = "March on Quel'Danas"},
   {seasonID = 17, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "DR",   name = "The Dreamrift"},
+  {seasonID = 17, seasonDisplayID = 1, instanceID = 1592, journalInstanceID = 1305, order = 4, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "SF",   name = "Sporefall"},
 }
 
 ---@type AE_Currency[]
@@ -457,7 +458,7 @@ Data.seasons = {
   {seasonID = 14, seasonDisplayID = 2, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 2", description = "Liberation of Undermine"},
   {seasonID = 15, seasonDisplayID = 3, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 3", description = "Manaforge Omega"},
   {seasonID = 16, seasonDisplayID = 4, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 4", description = "[Unused]"},
-  {seasonID = 17, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Midnight,     name = "Midnight - Season 1",       description = "The Voidspire, March on Quel'Danas, The Dreamrift"},
+  {seasonID = 17, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Midnight,     name = "Midnight - Season 1",       description = "The Voidspire, March on Quel'Danas, The Dreamrift, Sporefall"},
 }
 
 ---@type AE_PreyHuntDifficulty[]

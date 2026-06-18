@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.4.9 - 2026-06-18
+
+- Added the "Sporefall" raid.
+- Updated TOC number to support patch 12.0.7.
+
 ## v1.4.8 - 2026-04-26
 
 - Added new Bonus roll currency "Nebulous Voidcore".
