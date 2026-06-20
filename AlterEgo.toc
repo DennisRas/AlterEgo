@@ -26,13 +26,11 @@ Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\lib.xml
 Libs\LiqUI\LiqUI.xml
-
 Libs\AceAddon-3.0\AceAddon-3.0.xml
 Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 
-Boot.lua
 Types\Events.lua
 Types\Constants.lua
 Types\GameData.lua
@@ -41,12 +39,13 @@ Types\Equipment.lua
 Types\Database.lua
 Types\Addon.lua
 
+Boot.lua
 Constants.lua
 Events.lua
 Database.lua
 Helpers.lua
-
 AlterEgo.lua
-Modules/Main.lua
-Modules/WeeklyAffixes.lua
-Modules/Equipment.lua
+
+Modules\Main.lua
+Modules\WeeklyAffixes.lua
+Modules\Equipment.lua
