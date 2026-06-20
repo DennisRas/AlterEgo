@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.0 - TBD
+
+- Added per-window options for scale, background color, and border from the titlebar menu.
+- Updated main, equipment, and weekly affix windows to the shared LiqUI window framework.
+- Updated equipment window with sortable sticky column headers.
+
 ## v1.4.9 - 2026-06-18
 
 - Added the "Sporefall" raid.

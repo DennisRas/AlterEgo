@@ -1,6 +1,6 @@
 {
   "runtime.version": "Lua 5.1",
-  "workspace.ignoreDir": ["Libs/"],
+  "workspace.useGitIgnore": false,
   "diagnostics": {
     "disable": [
       "deprecated",
@@ -71,6 +71,7 @@
       "GetAverageItemLevel",
       "GetDetailedItemLevelInfo",
       "GetDifficultyInfo",
+      "GetExpansionLevel",
       "GetFinalNameFromTextureKit",
       "GetItemLevelColor",
       "GetItemQualityColor",
@@ -217,10 +218,10 @@
       "wipe",
       "WORLD",
       "WrapTextInColorCode",
-            "StaticPopupDialogs",
-            "YES",
-            "StaticPopup_Show",
-            "ENCHANTED_TOOLTIP_LINE"
+      "StaticPopupDialogs",
+      "YES",
+      "StaticPopup_Show",
+      "ENCHANTED_TOOLTIP_LINE"
     ]
   }
 }
