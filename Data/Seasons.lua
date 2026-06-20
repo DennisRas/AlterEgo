@@ -16,5 +16,5 @@ Data.seasons = {
   {seasonID = 14, seasonDisplayID = 2, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 2", description = "Liberation of Undermine"},
   {seasonID = 15, seasonDisplayID = 3, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 3", description = "Manaforge Omega"},
   {seasonID = 16, seasonDisplayID = 4, expansionID = Enum.ExpansionLevel.WarWithin,    name = "The War Within - Season 4", description = "[Unused]"},
-  {seasonID = 17, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Midnight,     name = "Midnight - Season 1",       description = "The Voidspire, March on Quel'Danas, The Dreamrift"},
+  {seasonID = 17, seasonDisplayID = 1, expansionID = Enum.ExpansionLevel.Midnight,     name = "Midnight - Season 1",       description = "The Voidspire, March on Quel'Danas, The Dreamrift, Sporefall"},
 }

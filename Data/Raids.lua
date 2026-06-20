@@ -20,4 +20,5 @@ Data.raids = {
   {seasonID = 17, seasonDisplayID = 1, instanceID = 2912, journalInstanceID = 1307, order = 1, numEncounters = 6, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "VS",   name = "The Voidspire"},
   {seasonID = 17, seasonDisplayID = 1, instanceID = 2913, journalInstanceID = 1308, order = 2, numEncounters = 2, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "MQD",  name = "March on Quel'Danas"},
   {seasonID = 17, seasonDisplayID = 1, instanceID = 2939, journalInstanceID = 1314, order = 3, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "DR",   name = "The Dreamrift"},
+  {seasonID = 17, seasonDisplayID = 1, instanceID = 1592, journalInstanceID = 1305, order = 4, numEncounters = 1, encounters = {}, loot = {}, modifiedInstanceInfo = nil, abbr = "SF",   name = "Sporefall"},
 }
