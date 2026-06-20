@@ -1,0 +1,21 @@
+{
+  "runtime.version": "Lua 5.1",
+  "workspace.ignoreDir": ["Libs/"],
+  "diagnostics.disable": [
+    "deprecated",
+    "duplicate-set-field",
+    "inject-field",
+    "undefined-field"
+  ],
+  "diagnostics.globals": [
+    "ColorPickerFrame",
+    "UISpecialFrames",
+    "ScrollBoxConstants",
+    "CreateScrollBoxLinearView",
+    "ScrollUtil",
+    "SlashCmdList",
+    "ReloadUI",
+    "GameTooltip",
+    "format"
+  ]
+}

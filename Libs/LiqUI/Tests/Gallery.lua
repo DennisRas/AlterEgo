@@ -25,6 +25,17 @@ local galleryWindow
 local galleryTable
 local progressVisible = false
 
+---@param row LiqUI_TableDataRowExtended
+---@param columnIndex integer
+---@return LiqUI_TableDataValue
+local function sortCellValue(row, columnIndex)
+  local cell = row.data[columnIndex]
+  if type(cell) == "table" then
+    return cell.data or ""
+  end
+  return cell or ""
+end
+
 ---@return LiqUI_TableData
 local function galleryData()
   ---@type LiqUI_TableData
@@ -105,7 +116,7 @@ local function ensureGallery()
         sorting = {
           enabled = true,
           compare = function(rowA, rowB)
-            return rowA.data[1].data < rowB.data[1].data
+            return sortCellValue(rowA, 1) < sortCellValue(rowB, 1)
           end,
         },
       },
@@ -116,7 +127,7 @@ local function ensureGallery()
         sorting = {
           enabled = true,
           compare = function(rowA, rowB)
-            return rowA.data[2].data < rowB.data[2].data
+            return sortCellValue(rowA, 2) < sortCellValue(rowB, 2)
           end,
         },
       },
@@ -127,10 +138,10 @@ local function ensureGallery()
         sorting = {
           enabled = true,
           compare = function(rowA, rowB)
-            if rowA.data[3].data ~= rowB.data[3].data then
-              return rowA.data[3].data == "Yes"
+            if sortCellValue(rowA, 3) ~= sortCellValue(rowB, 3) then
+              return sortCellValue(rowA, 3) == "Yes"
             end
-            return rowA.data[1].data < rowB.data[1].data
+            return sortCellValue(rowA, 1) < sortCellValue(rowB, 1)
           end,
         },
       },
@@ -143,7 +154,7 @@ local function ensureGallery()
       enabled = true,
       defaultOrder = "asc",
       defaultCompare = function(rowA, rowB)
-        return rowA.data[1].data < rowB.data[1].data
+        return sortCellValue(rowA, 1) < sortCellValue(rowB, 1)
       end,
     },
   }

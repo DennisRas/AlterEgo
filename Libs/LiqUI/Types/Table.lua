@@ -34,14 +34,14 @@
 ---@field width number
 ---@field align "LEFT"|"CENTER"|"RIGHT"|nil
 ---@field hideable boolean|nil
----@field render fun(cell: LiqUI_TableDataCellExtended|nil, row: LiqUI_TableDataRowExtended, rowIndex: integer): LiqUI_TableDataValue|nil
+---@field render? fun(cell: LiqUI_TableDataCellExtended|nil, row: LiqUI_TableDataRowExtended, rowIndex: integer): LiqUI_TableDataValue|nil
 ---@field sorting LiqUI_TableOptionsColumnSorting|nil
 ---@field onEnter LiqUI_TableHeaderCellHandler|nil
 ---@field onLeave LiqUI_TableHeaderCellHandler|nil
 
 ---@class LiqUI_TableOptionsColumnSorting
 ---@field enabled boolean
----@field compare fun(rowA: LiqUI_TableDataRowExtended, rowB: LiqUI_TableDataRowExtended, rowIndexA: integer, rowIndexB: integer): boolean
+---@field compare? fun(rowA: LiqUI_TableDataRowExtended, rowB: LiqUI_TableDataRowExtended, rowIndexA: integer, rowIndexB: integer): boolean
 
 ---@class LiqUI_TableOptionsHeader
 ---@field enabled boolean?

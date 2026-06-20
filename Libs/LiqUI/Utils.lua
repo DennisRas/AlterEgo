@@ -10,7 +10,7 @@ LiqUI.Utils = Utils
 
 ---Merge defaults with options; ensure parent (default UIParent).
 function Utils.PrepareOptions(defaults, options)
-  local opts = Utils.MergeDeep(defaults or { parent = UIParent }, options or {})
+  local opts = Utils.MergeDeep(defaults or {parent = UIParent}, options or {})
   opts.parent = opts.parent or UIParent
   return opts
 end
@@ -19,8 +19,7 @@ end
 function Utils.CreateLabel(parent, text, anchor)
   local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   if anchor then
-    fs:SetPoint(anchor.point or "LEFT", anchor.relativeTo or parent, anchor.relativePoint or "LEFT", anchor.x or 0,
-      anchor.y or 0)
+    fs:SetPoint(anchor.point or "LEFT", anchor.relativeTo or parent, anchor.relativePoint or "LEFT", anchor.x or 0, anchor.y or 0)
   end
   fs:SetText(text or "")
   fs:SetTextColor(LiqUI.Constants.text.defaultColor:GetRGBA())
@@ -305,7 +304,7 @@ function Utils.TableToggle(tbl, value)
       return v ~= value
     end)
   end
-  return Utils.TableMerge(tbl, { value })
+  return Utils.TableMerge(tbl, {value})
 end
 
 ---Remove duplicates from a table
@@ -612,8 +611,7 @@ function Utils.CreateScrollArea(parent, options)
 
   if horizontal then
     horizontalScrollBox = CreateFrame("Frame", "$parentHorizontalScrollBox", containerFrame, "WowScrollBox")
-    horizontalScrollBar = CreateFrame("EventFrame", "$parentHorizontalScrollBar", containerFrame,
-      "WowTrimHorizontalScrollBar")
+    horizontalScrollBar = CreateFrame("EventFrame", "$parentHorizontalScrollBar", containerFrame, "WowTrimHorizontalScrollBar")
     Utils.StyleHorizontalScrollBar(horizontalScrollBar)
     hideScrollBoxShadows(horizontalScrollBox)
     horizontalView = CreateScrollBoxLinearView()
@@ -639,7 +637,7 @@ function Utils.CreateScrollArea(parent, options)
   end
 
   local defaultPanExtent = vertical and LiqUI.Constants.layout.sizes.row or
-      LiqUI.Constants.layout.sizes.scrollbar.horizontalWheelPanExtent
+    LiqUI.Constants.layout.sizes.scrollbar.horizontalWheelPanExtent
   local wheelPanExtent = (options and options.wheelPanExtent) or defaultPanExtent
 
   ---@type LiqUI_ScrollArea
@@ -777,8 +775,7 @@ function Utils.CreateScrollBox(parent, name, options)
   local barWidth = options.barWidth or 12
 
   if not ScrollUtil or not CreateScrollBoxLinearView then
-    error(
-    "LiqUI.CreateScrollBox requires Blizzard_SharedXML (ScrollUtil, CreateScrollBoxLinearView). Ensure UI is loaded.")
+    error("LiqUI.CreateScrollBox requires Blizzard_SharedXML (ScrollUtil, CreateScrollBoxLinearView). Ensure UI is loaded.")
   end
 
   local scrollBox = CreateFrame("Frame", name, parent, "WowScrollBox")

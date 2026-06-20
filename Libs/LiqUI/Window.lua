@@ -48,7 +48,7 @@ end
 
 ---@param instance LiqUI_Instance
 function Window:Embed(instance)
-  instance.Window = LiqUI.BindManager(instance, self, { instances = {} })
+  instance.Window = LiqUI.BindManager(instance, self, {instances = {}})
 end
 
 ---Create a window frame
@@ -61,11 +61,11 @@ function Window:New(options)
   if not options then
     error("LiqUI Window: options is required", 2)
   end
-  if not options.name or options.name == "" then
+  local windowName = options.name
+  if not windowName or windowName == "" then
     error("LiqUI Window: options.name is required", 2)
   end
 
-  local windowName = options.name
   local frameName = "LiqUIWindow" .. self.name .. windowName
 
   ---@type LiqUI_WindowInstance
@@ -80,7 +80,7 @@ function Window:New(options)
     titlebar = true,
     windowScale = 100,
     windowColor = LiqUI.Constants.layout.defaultWindowColor,
-    point = { "CENTER" },
+    point = {"CENTER"},
   }
   ---@type LiqUI_WindowOptions
   local mergedOptions = {}
@@ -182,10 +182,9 @@ function Window:New(options)
 
     local button
     if buttonConfig.onMenu then
-      local onMenu = buttonConfig.onMenu
       button = CreateFrame("DropdownButton", "$parent" .. buttonName, window.titlebar)
       button.menuGenerator = function(_, rootMenu)
-        onMenu(window, rootMenu)
+        buttonConfig.onMenu(window, rootMenu)
       end
     else
       button = CreateFrame("Button", "$parent" .. buttonName, window.titlebar)
@@ -210,8 +209,7 @@ function Window:New(options)
         GameTooltip:SetOwner(button, "ANCHOR_TOP")
         GameTooltip:SetText(buttonConfig.tooltipTitle, 1, 1, 1, 1, true)
         if buttonConfig.tooltipDescription then
-          GameTooltip:AddLine(buttonConfig.tooltipDescription, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g,
-            NORMAL_FONT_COLOR.b, true)
+          GameTooltip:AddLine(buttonConfig.tooltipDescription, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true)
         end
         GameTooltip:Show()
       end)
@@ -238,7 +236,7 @@ function Window:New(options)
   ---@param buttonName string
   function window:RemoveTitlebarButton(buttonName)
     local button = TableFind(window.titlebarButtons,
-      function(button) return button:GetName() == buttonName end)
+                             function(button) return button:GetName() == buttonName end)
     if not button then
       error("Button with name '" .. buttonName .. "' does not exist")
     end
@@ -247,7 +245,7 @@ function Window:New(options)
     button:Hide()
     button:SetParent(nil)
     window.titlebarButtons = TableFilter(window.titlebarButtons,
-      function(titlebarButton) return titlebarButton:GetName() ~= buttonName end)
+                                         function(titlebarButton) return titlebarButton:GetName() ~= buttonName end)
 
     repositionTitlebarButtons(window)
   end
@@ -346,10 +344,10 @@ function Window:New(options)
     if settings.windowColor then
       window.options.windowColor = settings.windowColor
       SetBackgroundColor(window, settings.windowColor.r, settings.windowColor.g, settings.windowColor.b,
-        settings.windowColor.a)
+                         settings.windowColor.a)
       if window.progressOverlay then
         SetBackgroundColor(window.progressOverlay, settings.windowColor.r, settings.windowColor.g, settings.windowColor
-          .b, settings.windowColor.a)
+                           .b, settings.windowColor.a)
       end
     end
     window.options.windowScale = settings.scale or 100
@@ -371,7 +369,7 @@ function Window:New(options)
     end
     local point, relativeTo, relativePoint, x, y = window:GetPoint()
     if not relativeTo or relativeTo == UIParent then
-      settings.point = { point, relativePoint, x, y }
+      settings.point = {point, relativePoint, x, y}
     end
     settings.scale = math.floor(window:GetScale() * 100 + 0.5)
     if window.options.windowColor then
@@ -472,7 +470,7 @@ function Window:New(options)
     window.border = CreateFrame("Frame", "$parentBorder", window, "BackdropTemplate")
     window.border:SetPoint("TOPLEFT", window, "TOPLEFT", -3, 3)
     window.border:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", 3, -3)
-    window.border:SetBackdrop({ edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = { left = window.options.border, right = window.options.border, top = window.options.border, bottom = window.options.border } })
+    window.border:SetBackdrop({edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, insets = {left = window.options.border, right = window.options.border, top = window.options.border, bottom = window.options.border}})
     window.border:SetBackdropBorderColor(0, 0, 0, .5)
     window.border:Show()
   end
@@ -500,14 +498,14 @@ function Window:New(options)
     end
     window.titlebar.title = window.titlebar:CreateFontString("$parentText", "OVERLAY")
     local titleLeft = window.options.icon and (20 + LiqUI.Constants.layout.sizes.padding) or
-        LiqUI.Constants.layout.sizes.padding
+      LiqUI.Constants.layout.sizes.padding
     window.titlebar.title:SetPoint("LEFT", window.titlebar, "LEFT", titleLeft, 0)
     window.titlebar.title:SetFontObject("SystemFont_Med3")
     window.titlebar.title:SetText(window.options.title or window.options.name)
     window.titlebar.CloseButton = CreateFrame("Button", "$parentCloseButton", window.titlebar)
     window.titlebar.CloseButton:SetPoint("RIGHT", window.titlebar, "RIGHT", 0, 0)
     window.titlebar.CloseButton:SetSize(LiqUI.Constants.layout.sizes.titlebar.height,
-      LiqUI.Constants.layout.sizes.titlebar.height)
+                                        LiqUI.Constants.layout.sizes.titlebar.height)
     window.titlebar.CloseButton:RegisterForClicks("AnyUp")
     window.titlebar.CloseButton:SetScript("OnClick", function()
       window:Hide()
@@ -552,14 +550,14 @@ function Window:New(options)
     window.titlebar.SettingsButton.Icon:SetTexture(LiqUI.Constants.layout.media.iconSettings)
     window.titlebar.SettingsButton.Icon:SetVertexColor(0.7, 0.7, 0.7, 1)
     window.titlebar.SettingsButton:SetSize(LiqUI.Constants.layout.sizes.titlebar.height,
-      LiqUI.Constants.layout.sizes.titlebar.height)
+                                           LiqUI.Constants.layout.sizes.titlebar.height)
     window.titlebar.SettingsButton:SetScript("OnEnter", function()
       window.titlebar.SettingsButton.Icon:SetVertexColor(0.9, 0.9, 0.9, 1)
       SetBackgroundColor(window.titlebar.SettingsButton, 1, 1, 1, 0.05)
       GameTooltip:SetOwner(window.titlebar.SettingsButton, "ANCHOR_TOP")
       GameTooltip:SetText("Settings", 1, 1, 1, 1, true)
       GameTooltip:AddLine("Window scale, color, and border.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g,
-        NORMAL_FONT_COLOR.b, true)
+                          NORMAL_FONT_COLOR.b, true)
       GameTooltip:Show()
     end)
     window.titlebar.SettingsButton:SetScript("OnLeave", function()
@@ -622,7 +620,7 @@ function Window:New(options)
     progressOverlay:EnableMouse(true)
     progressOverlay:Hide()
     SetBackgroundColor(progressOverlay, window.options.windowColor.r, window.options.windowColor.g,
-      window.options.windowColor.b, window.options.windowColor.a)
+                       window.options.windowColor.b, window.options.windowColor.a)
 
     progressOverlay.content = CreateFrame("Frame", "$parentContent", progressOverlay)
     progressOverlay.content:SetSize(320, 48)

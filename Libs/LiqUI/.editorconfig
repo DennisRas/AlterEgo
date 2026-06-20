@@ -1,0 +1,20 @@
+root = true
+
+[*]
+charset = utf-8
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+
+[*.lua]
+align_array_table = true
+align_call_args = true
+align_continuous_rect_table_field = true
+continuation_indent = 2
+indent_size = 2
+max_line_length = unset
+quote_style = double
+space_around_table_field_list = false
+space_before_attribute = false
+trailing_table_separator = smart
+end_statement_with_semicolon = replace_with_newline

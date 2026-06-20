@@ -11,20 +11,24 @@ LiqUI.minor = MINOR
 
 _G.LiqUI = LiqUI
 
----@param instance LiqUI_Instance
+---@param instance LiqUI_Instance?
 ---@param prototype table
 ---@param state table?
 ---@return table
 function LiqUI.BindManager(instance, prototype, state)
   local manager = state or {}
-  manager.embed = instance
+  if instance then
+    manager.embed = instance
+  end
   setmetatable(manager, {
     __index = function(_, key)
       local value = prototype[key]
       if value ~= nil then
         return value
       end
-      return instance[key]
+      if instance then
+        return instance[key]
+      end
     end,
   })
   return manager
@@ -58,17 +62,25 @@ function LiqUI:New(options)
     return existing
   end
 
+  ---@type LiqUI_Window
+  local windowManager = LiqUI.BindManager(nil, LiqUI.Window, { instances = {} })
+  ---@type LiqUI_Table
+  local tableManager = LiqUI.BindManager(nil, LiqUI.Table, { instances = {} })
+  ---@type LiqUI_Logger
+  local loggerManager = LiqUI.BindManager(nil, LiqUI.Logger, { instances = {} })
+
   ---@type LiqUI_Instance
   local instance = {
     name = options.name,
     db = db,
+    Window = windowManager,
+    Table = tableManager,
+    Logger = loggerManager,
   }
 
-  for key, mod in pairs(LiqUI) do
-    if type(mod) == "table" and mod.Embed then
-      mod:Embed(instance)
-    end
-  end
+  windowManager.embed = instance
+  tableManager.embed = instance
+  loggerManager.embed = instance
 
   setmetatable(instance, { __index = LiqUI })
   LiqUI.instances[options.name] = instance

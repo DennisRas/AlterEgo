@@ -1,6 +1,12 @@
 LiqUIDB = LiqUIDB or {}
 LiqUIDB.dev = LiqUIDB.dev or {}
 
+---@class LiqUI
+local LiqUI = LibStub and LibStub("LiqUI-1.0", true)
+if not LiqUI then
+  return
+end
+
 local function devGet(key) return LiqUIDB.dev and LiqUIDB.dev[key] end
 local function devSet(key, val)
   LiqUIDB.dev = LiqUIDB.dev or {}
@@ -375,5 +381,5 @@ end
 
 LiqUI.Settings:Register("LiqUITesting", options, "LiqUI Testing")
 
-SLASH_LIQUI1 = "/liqui"
-SlashCmdList.LIQUI = function() LiqUI.Settings:Toggle() end
+SLASH_LIQUITEST1 = "/liquitest"
+SlashCmdList.LIQUITEST = function() LiqUI.Settings:Toggle() end
