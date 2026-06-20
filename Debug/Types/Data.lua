@@ -27,7 +27,7 @@
 ---@field dbVersion number
 ---@field defaultDB table
 ---@field defaultCharacter AE_Character
----@field inventory table
+---@field inventory AE_Inventory[]
 ---@field affixes table
 ---@field raidDifficulties table
 ---@field vaultTypes table
@@ -40,4 +40,11 @@
 ---@field preyHuntDifficulties AE_PreyHuntDifficulty[]
 ---@field preyHuntQuests AE_PreyHuntQuest[]
 ---@field oldUpgradeLevels table
----@field cache table
+---@field cache AE_Cache
+
+---@class AE_Cache
+---@field seasonID number?
+---@field seasonDisplayID number?
+---@field currentAffixes MythicPlusKeystoneAffix[]
+---@field classes table
+---@field specs table

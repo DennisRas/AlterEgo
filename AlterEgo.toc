@@ -34,7 +34,17 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 Boot.lua
 Constants.lua
 Events.lua
-Database.lua
+Data.lua
+Data\Affixes.lua
+Data\Currencies.lua
+Data\Dungeons.lua
+Data\Inventory.lua
+Data\Keystones.lua
+Data\OldUpgradeLevels.lua
+Data\PreyHunts.lua
+Data\RaidDifficulties.lua
+Data\Raids.lua
+Data\Seasons.lua
 Helpers.lua
 AlterEgo.lua
 
@@ -43,10 +53,10 @@ Modules\WeeklyAffixes.lua
 Modules\Equipment.lua
 
 #@debug@
-Debug\Types\Events.lua
-Debug\Types\Constants.lua
-Debug\Types\GameData.lua
-Debug\Types\Character.lua
-Debug\Types\Database.lua
 Debug\Types\Addon.lua
+Debug\Types\Character.lua
+Debug\Types\Constants.lua
+Debug\Types\Data.lua
+Debug\Types\Events.lua
+Debug\Types\GameData.lua
 #@end-debug@
