@@ -39,7 +39,7 @@ function Module:Render()
         Module:Render()
       end,
     })
-    ---@type LiqUI_Table
+    ---@type LiqUI_TableInstance
     self.table = addon.LiqUI.Table:New({
       name = "Affixes",
       header = {enabled = false},

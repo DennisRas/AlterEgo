@@ -1,5 +1,3 @@
----@alias ColorTable { r: number, g: number, b: number, a: number }
-
 ---@alias AE_CharacterSortingOption "lastUpdate" | "name.asc" | "name.desc" | "realm.asc" | "realm.desc" | "class.asc" | "class.desc" | "ilvl.asc" | "ilvl.desc" | "rating.asc" | "rating.desc" | "custom"
 
 ---@class AE_ConstantsSizes

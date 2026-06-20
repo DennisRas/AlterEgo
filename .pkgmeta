@@ -5,3 +5,35 @@ enable-nolib-creation: no
 manual-changelog:
   filename: CHANGELOG.md
   markup-type: markdown
+
+externals:
+  Libs/TaintLess:
+    url: https://www.townlong-yak.com/addons.git/taintless
+    commit: a4f3eda90db124df9fad439e594c3baa20ea9ca2
+  Libs/LibStub:
+    url: https://repos.wowace.com/wow/libstub/trunk
+    tag: "1.0"
+  Libs/CallbackHandler-1.0:
+    url: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+    tag: "1.0.9"
+  Libs/LibDataBroker-1.1:
+    url: https://github.com/tekkub/libdatabroker-1-1.git
+    commit: 1a63ede0248c11aa1ee415187c1f9c9489ce3e02
+  Libs/LibDBIcon-1.0:
+    url: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+    tag: "v12.0.1"
+  Libs/LiqUI:
+    url: https://github.com/DennisRas/LiqUI.git
+    commit: 113a812c048e49bdb4a4b4b8705abeb9fc19a9fa
+  Libs/AceAddon-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0
+    tag: "Release-r1377"
+  Libs/AceTimer-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
+    tag: "Release-r1377"
+  Libs/AceDB-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceDB-3.0
+    tag: "Release-r1377"
+  Libs/AceConsole-3.0:
+    url: https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0
+    tag: "Release-r1377"
