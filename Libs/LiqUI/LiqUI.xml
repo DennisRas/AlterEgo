@@ -7,23 +7,10 @@
 	<Script file="Types/Scroll.lua" />
 	<Script file="Types/Logger.lua" />
 	<Script file="Types/Database.lua" />
-	<Script file="Types/Settings.lua" />
 	<Script file="Types/Addon.lua" />
 	<Script file="Constants.lua" />
 	<Script file="Utils.lua" />
 	<Script file="Window.lua" />
 	<Script file="Table.lua" />
 	<Script file="Logger.lua" />
-	<Script file="FormRow.lua" />
-	<Script file="Widgets/Base.lua" />
-	<Script file="Widgets/Button.lua" />
-	<Script file="Widgets/CheckBox.lua" />
-	<Script file="Widgets/ColorPicker.lua" />
-	<Script file="Widgets/Description.lua" />
-	<Script file="Widgets/Divider.lua" />
-	<Script file="Widgets/Dropdown.lua" />
-	<Script file="Widgets/EditBox.lua" />
-	<Script file="Widgets/Header.lua" />
-	<Script file="Widgets/MultiSelect.lua" />
-	<Script file="Settings.lua" />
 </Ui>

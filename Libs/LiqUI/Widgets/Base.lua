@@ -1,9 +1,3 @@
----@class LiqUI
-local LiqUI = _G.LiqUI
-if not LiqUI then
-  return
-end
-
 LiqUI.Widgets = LiqUI.Widgets or {}
 
 local C = LiqUI.Constants

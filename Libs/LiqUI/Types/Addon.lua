@@ -16,9 +16,6 @@
 ---@field Window LiqUI_Window
 ---@field Table LiqUI_Table
 ---@field Logger LiqUI_Logger
----@field Settings LiqUI_Settings
----@field Layout LiqUI_Layout
----@field Widgets LiqUI_Widgets
 ---@field instances table<string, LiqUI_Instance>
 ---@field minor number
 

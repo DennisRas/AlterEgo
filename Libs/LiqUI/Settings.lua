@@ -1,9 +1,3 @@
----@class LiqUI
-local LiqUI = _G.LiqUI
-if not LiqUI then
-  return
-end
-
 local C = LiqUI.Constants
 local s = C.settings
 local menuConfig = s.menu

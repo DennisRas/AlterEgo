@@ -12,5 +12,4 @@ LiqUI.xml
 
 #@debug@
 Tests/Gallery.lua
-Tests/TestSettings.lua
 #@end-debug@
