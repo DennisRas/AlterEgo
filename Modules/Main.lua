@@ -807,13 +807,7 @@ function Module:Render()
       onShow = function()
         Module:Render()
       end,
-      titlebarButtons = {
-        {
-          name = "Settings",
-          icon = Constants.media.IconSettings,
-          tooltipTitle = "Settings",
-          tooltipDescription = "Let's customize things a bit.",
-          onMenu = function(window, menu)
+      onSettingsMenu = function(window, menu)
             menu:CreateTitle(CHARACTER)
             menu:CreateCheckbox(
               "Show characters with zero rating",
@@ -1104,10 +1098,8 @@ function Module:Render()
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("No more moving the button around accidentally!", nil, nil, nil, true)
             end)
-            window:AppendWindowOptionsMenu(menu)
           end,
-          iconSize = 12,
-        },
+      titlebarButtons = {
         {
           name = "Characters",
           icon = Constants.media.IconCharacters,

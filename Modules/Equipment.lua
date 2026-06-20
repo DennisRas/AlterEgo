@@ -208,18 +208,6 @@ function Module:Render()
       onShow = function()
         Module:Render()
       end,
-      titlebarButtons = {
-        {
-          name = "Settings",
-          icon = Constants.media.IconSettings,
-          tooltipTitle = "Settings",
-          tooltipDescription = "Window appearance.",
-          onMenu = function(window, rootMenu)
-            window:AppendWindowOptionsMenu(rootMenu)
-          end,
-          iconSize = 12,
-        },
-      },
     })
     self.dataTable = addon.LiqUI.Table:New({
       name = "Equipment",
