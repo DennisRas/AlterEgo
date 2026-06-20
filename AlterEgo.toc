@@ -43,10 +43,10 @@ Modules\WeeklyAffixes.lua
 Modules\Equipment.lua
 
 #@debug@
-Developer\Types\Events.lua
-Developer\Types\Constants.lua
-Developer\Types\GameData.lua
-Developer\Types\Character.lua
-Developer\Types\Database.lua
-Developer\Types\Addon.lua
+Debug\Types\Events.lua
+Debug\Types\Constants.lua
+Debug\Types\GameData.lua
+Debug\Types\Character.lua
+Debug\Types\Database.lua
+Debug\Types\Addon.lua
 #@end-debug@

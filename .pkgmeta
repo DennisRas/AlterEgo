@@ -3,7 +3,7 @@ package-as: AlterEgo
 enable-nolib-creation: no
 
 ignore:
-  - Developer
+  - Debug
 
 manual-changelog:
   filename: CHANGELOG.md
