@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.9 - TBD
+
+- Updated main, equipment, and weekly affix windows to the shared LiqUI window framework.
+- Added per-window options for scale, background color, and border from the titlebar menu.
+- Updated equipment window with sortable sticky column headers.
+
 ## v1.4.8 - 2026-04-26
 
 - Added new Bonus roll currency "Nebulous Voidcore".
