@@ -72,3 +72,10 @@ Constants.sortingOptions = {
   {value = "rating.desc", text = "Rating (Highest)"},
   {value = "custom",      text = "Custom Order",        tooltipTitle = "Choose your own order", tooltipText = "Place your mouse on the character name to change the order"},
 }
+
+---@enum AE_PreyHuntDifficultyId
+Constants.preyHuntDifficulty = {
+  Normal = 1,
+  Hard = 2,
+  Nightmare = 3,
+}

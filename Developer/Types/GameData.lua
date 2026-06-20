@@ -126,17 +126,11 @@
 ---@field encounters AE_SavedInstanceEncounter[]
 
 ---@class AE_PreyHuntDifficulty
----@field id number
+---@field id AE_PreyHuntDifficultyId
 ---@field name string
 ---@field affixes table<string, string> Affixes of the difficulty
 
 ---@class AE_PreyHuntQuest
 ---@field questID number
----@field difficultyID number ID of the difficulty
+---@field difficultyID AE_PreyHuntDifficultyId
 ---@field name string Name of the quest
-
-Enum.AE_PreyHuntDifficulty = {
-  Normal = 1,
-  Hard = 2,
-  Nightmare = 3,
-}
