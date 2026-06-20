@@ -46,7 +46,7 @@ Events.lua
 Database.lua
 Helpers.lua
 
-Core.lua
+AlterEgo.lua
 Modules/Main.lua
 Modules/WeeklyAffixes.lua
 Modules/Equipment.lua
