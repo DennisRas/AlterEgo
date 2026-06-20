@@ -67,6 +67,11 @@
 ---@field itemSlotID number
 ---@field itemSlotName string
 
+---@class AE_EquipmentTableRow : LiqUI_TableDataRowExtended
+---@field item AE_Equipment
+---@field enchantSort string
+---@field gemCount number
+
 ---@class AE_Character
 ---@field GUID WOWGUID
 ---@field lastUpdate number
