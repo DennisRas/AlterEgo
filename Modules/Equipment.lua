@@ -204,7 +204,6 @@ function Module:Render()
     self.window = addon.LiqUI.Window:New({
       name = "Equipment",
       title = "Character",
-      point = {"TOPLEFT", UIParent, "TOPLEFT", 15, -15},
       onShow = function()
         Module:Render()
       end,

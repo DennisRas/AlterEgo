@@ -34,7 +34,6 @@ function Module:Render()
     self.window = addon.LiqUI.Window:New({
       name = "Affixes",
       title = "Weekly Affixes",
-      point = {"TOP", UIParent, "TOP", 0, -15},
       onShow = function()
         Module:Render()
       end,
