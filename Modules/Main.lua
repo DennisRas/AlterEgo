@@ -803,7 +803,8 @@ function Module:Render()
       name = "Main",
       title = addonName,
       icon = Constants.media.LogoTransparent,
-      sidebar = 150,
+      overlayFontObject = "GameFontHighlight_NoShadow",
+      overlayTextColor = {r = 1, g = 0.82, b = 0, a = 1},
       onShow = function()
         Module:Render()
       end,
@@ -1295,6 +1296,20 @@ function Module:Render()
         },
       },
     })
+    local sidebarWidth = Constants.sizes.sidebar.width
+    self.window.body.sidebar = CreateFrame("Frame", "$parentSidebar", self.window.body)
+    self.window.body.sidebar:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
+    self.window.body.sidebar:SetPoint("BOTTOMLEFT", self.window.body, "BOTTOMLEFT")
+    self.window.body.sidebar:SetWidth(sidebarWidth)
+    SetBackgroundColor(self.window.body.sidebar, 0, 0, 0, 0.3)
+    self.window.body.content = CreateFrame("Frame", "$parentContent", self.window.body)
+    self.window.body.content:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPRIGHT")
+    self.window.body.content:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT")
+    self.window.body.content.scrollArea = CreateScrollArea(self.window.body.content, {
+      horizontal = true,
+      name = "$parentCharacterScroll",
+    })
+    self.window.body.content.scrollArea:SetAllPoints()
     self.window.affixes = CreateFrame("Frame", "$parentAffixes", self.window.titlebar)
     self.window.affixes.buttons = {}
   end
@@ -1303,23 +1318,7 @@ function Module:Render()
     return
   end
 
-  -- Zero characters
-  if not self.window.zeroCharacters then
-    self.window.zeroCharacters = self.window:CreateFontString("$parentNoCharacterText", "ARTWORK")
-    self.window.zeroCharacters:SetPoint("TOPLEFT", self.window, "TOPLEFT", 50, -50)
-    self.window.zeroCharacters:SetPoint("BOTTOMRIGHT", self.window, "BOTTOMRIGHT", -50, 50)
-    self.window.zeroCharacters:SetJustifyH("CENTER")
-    self.window.zeroCharacters:SetJustifyV("MIDDLE")
-    self.window.zeroCharacters:SetFontObject("GameFontHighlight_NoShadow")
-    self.window.zeroCharacters:SetVertexColor(1.0, 0.82, 0.0, 1)
-    self.window.zeroCharacters:Hide()
-  end
-
-  if not self.window.body.scrollArea then
-    self.window.body.scrollArea = CreateScrollArea(self.window.body, { horizontal = true, name = "$parentCharacterScroll" })
-    self.window.body.scrollArea:SetAllPoints()
-  end
-  local scrollContent = self.window.body.scrollArea.content
+  local scrollContent = self.window.body.content.scrollArea.content
 
   do -- Titlebar: Affixes
     if numCharacters < 3 then
@@ -1388,23 +1387,23 @@ function Module:Render()
     local rowCount = 0
     local totalHeight = 0
     do -- CharacterInfo Labels
-      self.window.sidebar.infoFrames = self.window.sidebar.infoFrames or {}
-      TableForEach(self.window.sidebar.infoFrames, function(f) f:Hide() end)
+      self.window.body.sidebar.infoFrames = self.window.body.sidebar.infoFrames or {}
+      TableForEach(self.window.body.sidebar.infoFrames, function(f) f:Hide() end)
       TableForEach(characterInfo, function(info, infoIndex)
-        local infoFrame = self.window.sidebar.infoFrames[infoIndex]
+        local infoFrame = self.window.body.sidebar.infoFrames[infoIndex]
         if not infoFrame then
-          infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.sidebar)
+          infoFrame = CreateFrame("Frame", "$parentInfo" .. infoIndex, self.window.body.sidebar)
           infoFrame.text = infoFrame:CreateFontString(infoFrame:GetName() .. "Text", "OVERLAY")
           infoFrame.text:SetPoint("TOPLEFT", infoFrame, "TOPLEFT", Constants.sizes.padding, -3)
           infoFrame.text:SetPoint("BOTTOMRIGHT", infoFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
           infoFrame.text:SetJustifyH("LEFT")
           infoFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           infoFrame.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-          self.window.sidebar.infoFrames[infoIndex] = infoFrame
+          self.window.body.sidebar.infoFrames[infoIndex] = infoFrame
         end
 
-        infoFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-        infoFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        infoFrame:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+        infoFrame:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         infoFrame:SetHeight(Constants.sizes.row)
         infoFrame.text:SetText(info.label)
         infoFrame:Show()
@@ -1414,9 +1413,9 @@ function Module:Render()
     end
 
     do -- Prey Header
-      local label = self.window.sidebar.preyLabel
+      local label = self.window.body.sidebar.preyLabel
       if not label then
-        label = CreateFrame("Frame", "$parentPreyLabel", self.window.sidebar)
+        label = CreateFrame("Frame", "$parentPreyLabel", self.window.body.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
         label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
         label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
@@ -1424,11 +1423,11 @@ function Module:Render()
         label.text:SetJustifyH("LEFT")
         label.text:SetText("Prey Hunts")
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.window.sidebar.preyLabel = label
+        self.window.body.sidebar.preyLabel = label
       end
       if Data.db.global.preyHunts.enabled then
-        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
@@ -1439,21 +1438,21 @@ function Module:Render()
     end
 
     do -- Prey Difficulties
-      self.window.sidebar.preyDifficulties = self.window.sidebar.preyDifficulties or {}
-      TableForEach(self.window.sidebar.preyDifficulties, function(f) f:Hide() end)
+      self.window.body.sidebar.preyDifficulties = self.window.body.sidebar.preyDifficulties or {}
+      TableForEach(self.window.body.sidebar.preyDifficulties, function(f) f:Hide() end)
       TableForEach(Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
         if Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
         if not Data.db.global.preyHunts.enabled then return end
-        local difficultyFrame = self.window.sidebar.preyDifficulties[difficultyIndex]
+        local difficultyFrame = self.window.body.sidebar.preyDifficulties[difficultyIndex]
         if not difficultyFrame then
-          difficultyFrame = CreateFrame("Frame", "$parentPreyDifficulty" .. difficultyIndex, self.window.sidebar)
+          difficultyFrame = CreateFrame("Frame", "$parentPreyDifficulty" .. difficultyIndex, self.window.body.sidebar)
           difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
           difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
           difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
           difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
           difficultyFrame.text:SetJustifyH("LEFT")
           difficultyFrame.text:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-          self.window.sidebar.preyDifficulties[difficultyIndex] = difficultyFrame
+          self.window.body.sidebar.preyDifficulties[difficultyIndex] = difficultyFrame
         end
 
         difficultyFrame:SetScript("OnEnter", function()
@@ -1471,8 +1470,8 @@ function Module:Render()
           GameTooltip:Hide()
         end)
 
-        difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-        difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        difficultyFrame:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+        difficultyFrame:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         difficultyFrame:SetHeight(Constants.sizes.row)
         difficultyFrame.text:SetText(difficulty.name)
         difficultyFrame:Show()
@@ -1482,9 +1481,9 @@ function Module:Render()
     end
 
     do -- MythicPlus Header
-      local label = self.window.sidebar.mpluslabel
+      local label = self.window.body.sidebar.mpluslabel
       if not label then
-        label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.sidebar)
+        label = CreateFrame("Frame", "$parentMythicPlusLabel", self.window.body.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
         label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
         label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
@@ -1492,12 +1491,12 @@ function Module:Render()
         label.text:SetJustifyH("LEFT")
         label.text:SetText(DUNGEONS)
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.window.sidebar.mpluslabel = label
+        self.window.body.sidebar.mpluslabel = label
       end
 
       if Data.db.global.dungeons.enabled then
-        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
@@ -1508,13 +1507,13 @@ function Module:Render()
     end
 
     do -- MythicPlus Labels
-      self.window.sidebar.mpluslabels = self.window.sidebar.mpluslabels or {}
-      TableForEach(self.window.sidebar.mpluslabels, function(f) f:Hide() end)
+      self.window.body.sidebar.mpluslabels = self.window.body.sidebar.mpluslabels or {}
+      TableForEach(self.window.body.sidebar.mpluslabels, function(f) f:Hide() end)
       if Data.db.global.dungeons.enabled then
         TableForEach(dungeons, function(dungeon, dungeonIndex)
-          local dungeonFrame = self.window.sidebar.mpluslabels[dungeonIndex]
+          local dungeonFrame = self.window.body.sidebar.mpluslabels[dungeonIndex]
           if not dungeonFrame then
-            dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.sidebar, "InsecureActionButtonTemplate")
+            dungeonFrame = CreateFrame("Button", "$parentDungeon" .. dungeonIndex, self.window.body.sidebar, "InsecureActionButtonTemplate")
             dungeonFrame:RegisterForClicks("AnyUp", "AnyDown")
             dungeonFrame:EnableMouse(true)
             dungeonFrame.icon = dungeonFrame:CreateTexture(dungeonFrame:GetName() .. "Icon", "ARTWORK")
@@ -1525,7 +1524,7 @@ function Module:Render()
             dungeonFrame.text:SetPoint("BOTTOMRIGHT", dungeonFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             dungeonFrame.text:SetJustifyH("LEFT")
             dungeonFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-            self.window.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
+            self.window.body.sidebar.mpluslabels[dungeonIndex] = dungeonFrame
           end
 
           local knownTeleportSpellID = TableFind(dungeon.teleports or {}, function(spellID)
@@ -1560,8 +1559,8 @@ function Module:Render()
             GameTooltip:Hide()
           end)
 
-          dungeonFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-          dungeonFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+          dungeonFrame:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+          dungeonFrame:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
           dungeonFrame:SetHeight(Constants.sizes.row)
           dungeonFrame.icon:SetTexture(tostring(dungeon.texture))
           dungeonFrame.text:SetText(dungeon.short and dungeon.short or dungeon.name)
@@ -1573,9 +1572,9 @@ function Module:Render()
     end
 
     do -- Raid Header
-      local label = self.window.sidebar.raidHeader
+      local label = self.window.body.sidebar.raidHeader
       if not label then
-        label = CreateFrame("Frame", "$parentRaidHeader", self.window.sidebar)
+        label = CreateFrame("Frame", "$parentRaidHeader", self.window.body.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
         label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
         label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
@@ -1583,12 +1582,12 @@ function Module:Render()
         label.text:SetJustifyH("LEFT")
         label.text:SetText(RAIDS)
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.window.sidebar.raidHeader = label
+        self.window.body.sidebar.raidHeader = label
       end
 
       if Data.db.global.raids.enabled then
-        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
@@ -1599,19 +1598,19 @@ function Module:Render()
     end
 
     do -- Raid Difficulties
-      self.window.sidebar.raidDifficulties = self.window.sidebar.raidDifficulties or {}
-      TableForEach(self.window.sidebar.raidDifficulties, function(f) f:Hide() end)
+      self.window.body.sidebar.raidDifficulties = self.window.body.sidebar.raidDifficulties or {}
+      TableForEach(self.window.body.sidebar.raidDifficulties, function(f) f:Hide() end)
       if Data.db.global.raids.enabled then
         TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
-          local difficultyFrame = self.window.sidebar.raidDifficulties[difficultyIndex]
+          local difficultyFrame = self.window.body.sidebar.raidDifficulties[difficultyIndex]
           if not difficultyFrame then
-            difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, self.window.sidebar)
+            difficultyFrame = CreateFrame("Frame", "$parentRaidDifficulty" .. difficultyIndex, self.window.body.sidebar)
             difficultyFrame.text = difficultyFrame:CreateFontString(difficultyFrame:GetName() .. "Text", "OVERLAY")
             difficultyFrame.text:SetPoint("TOPLEFT", difficultyFrame, "TOPLEFT", Constants.sizes.padding, -3)
             difficultyFrame.text:SetPoint("BOTTOMRIGHT", difficultyFrame, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             difficultyFrame.text:SetJustifyH("LEFT")
             difficultyFrame.text:SetFontObject("GameFontHighlight_NoShadow")
-            self.window.sidebar.raidDifficulties[difficultyIndex] = difficultyFrame
+            self.window.body.sidebar.raidDifficulties[difficultyIndex] = difficultyFrame
           end
 
           difficultyFrame:SetScript("OnEnter", function()
@@ -1623,8 +1622,8 @@ function Module:Render()
             GameTooltip:Hide()
           end)
 
-          difficultyFrame:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-          difficultyFrame:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+          difficultyFrame:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+          difficultyFrame:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
           difficultyFrame:SetHeight(RAIDS_ROW_HEIGHT)
           difficultyFrame.text:SetText(difficulty.short and difficulty.short or difficulty.name)
           difficultyFrame:Show()
@@ -1635,9 +1634,9 @@ function Module:Render()
     end
 
     do -- Currencies Header
-      local label = self.window.sidebar.currencyLabel
+      local label = self.window.body.sidebar.currencyLabel
       if not label then
-        label = CreateFrame("Frame", "$parentCurrencyLabel", self.window.sidebar)
+        label = CreateFrame("Frame", "$parentCurrencyLabel", self.window.body.sidebar)
         label.text = label:CreateFontString(label:GetName() .. "Text", "OVERLAY")
         label.text:SetPoint("TOPLEFT", label, "TOPLEFT", Constants.sizes.padding, 0)
         label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 0)
@@ -1645,12 +1644,12 @@ function Module:Render()
         label.text:SetJustifyH("LEFT")
         label.text:SetText("Currencies")
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
-        self.window.sidebar.currencyLabel = label
+        self.window.body.sidebar.currencyLabel = label
       end
 
       if Data.db.global.currencies.enabled then
-        label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-        label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+        label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+        label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         label:SetHeight(Constants.sizes.row)
         label:Show()
         rowCount = rowCount + 1
@@ -1661,16 +1660,16 @@ function Module:Render()
     end
 
     do -- Currency Labels
-      self.window.sidebar.currencyLabels = self.window.sidebar.currencyLabels or {}
-      TableForEach(self.window.sidebar.currencyLabels, function(f) f:Hide() end)
+      self.window.body.sidebar.currencyLabels = self.window.body.sidebar.currencyLabels or {}
+      TableForEach(self.window.body.sidebar.currencyLabels, function(f) f:Hide() end)
       if Data.db.global.currencies.enabled then
         TableForEach(currencies, function(currency, currencyIndex)
           if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then
             return
           end
-          local label = self.window.sidebar.currencyLabels[currencyIndex]
+          local label = self.window.body.sidebar.currencyLabels[currencyIndex]
           if not label then
-            label = CreateFrame("Frame", "$parentCurrency" .. currencyIndex, self.window.sidebar)
+            label = CreateFrame("Frame", "$parentCurrency" .. currencyIndex, self.window.body.sidebar)
             label.icon = label:CreateTexture(label:GetName() .. "Icon", "ARTWORK")
             label.icon:SetSize(16, 16)
             label.icon:SetPoint("LEFT", label, "LEFT", Constants.sizes.padding, 0)
@@ -1679,7 +1678,7 @@ function Module:Render()
             label.text:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", -Constants.sizes.padding, 3)
             label.text:SetJustifyH("LEFT")
             label.text:SetFontObject("GameFontHighlight_NoShadow")
-            self.window.sidebar.currencyLabels[currencyIndex] = label
+            self.window.body.sidebar.currencyLabels[currencyIndex] = label
           end
 
           local color = ITEM_QUALITY_COLORS[currency.quality]
@@ -1698,8 +1697,8 @@ function Module:Render()
             GameTooltip:Hide()
           end)
 
-          label:SetPoint("TOPLEFT", self.window.sidebar, "TOPLEFT", 0, -totalHeight)
-          label:SetPoint("TOPRIGHT", self.window.sidebar, "TOPRIGHT", 0, -totalHeight)
+          label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
+          label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
           label:SetHeight(Constants.sizes.row)
           label.icon:SetTexture(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
           label.text:SetText(currency.short and currency.short or currency.name)
@@ -2410,24 +2409,20 @@ function Module:Render()
     end)
   end
 
-  self.window:SetBodySize(math.min(windowWidth, windowWidthMax), windowHeight)
-  self.window.body.scrollArea:UpdateLayout(windowWidth, windowHeight)
+  local bodyWidth = math.min(windowWidth, windowWidthMax)
+  if numCharacters > 0 then
+    bodyWidth = bodyWidth + Constants.sizes.sidebar.width
+  end
+  self.window:SetBodySize(bodyWidth, windowHeight)
+  self.window.body.content.scrollArea:UpdateLayout(windowWidth, windowHeight)
 
   local zeroCharactersText = "|cffffffffHi there :-)|r\nEnable a character top right for AlterEgo to show you some goodies!"
   if numCharacters <= 0 then
     if not Data.db.global.showZeroRatedCharacters and TableCount(Data:GetCharacters(true)) > 0 then
       zeroCharactersText = zeroCharactersText .. "\n\n|cff00ee00New Season?|r\nYou are currently hiding characters with zero rating. If this is not your intention then enable the setting |cffffffffShow characters with zero rating|r"
     end
-    self.window.zeroCharacters:Show()
-    self.window.sidebar:Hide()
-    self.window.body:Hide()
+    self.window:ShowOverlay(zeroCharactersText)
   else
-    self.window.zeroCharacters:Hide()
-    self.window.sidebar:Show()
-    self.window.body:Show()
-  end
-
-  if self.window.zeroCharacters then
-    self.window.zeroCharacters:SetText(zeroCharactersText)
+    self.window:HideOverlay()
   end
 end

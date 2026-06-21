@@ -55,13 +55,13 @@ function Module:Render()
   end
 
   if not affixRotation then
-    self.window:ShowBodyPlaceholder(PLACEHOLDER_TEXT)
+    self.window:ShowOverlay(PLACEHOLDER_TEXT)
     self.table:Hide()
     self.window:SetBodySize(PLACEHOLDER_BODY_WIDTH, PLACEHOLDER_BODY_HEIGHT)
     return
   end
 
-  self.window:HideBodyPlaceholder()
+  self.window:HideOverlay()
   self.table:Show()
 
   ---@type LiqUI_TableOptionsColumn[]
