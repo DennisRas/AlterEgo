@@ -1,5 +1,3 @@
----@type string
-local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
@@ -8,7 +6,7 @@ local Events = {}
 addon.Events = Events
 Events.handlers = {}
 Events.runtime = {pendingByEventName = {}}
-Events.frame = CreateFrame("Frame", addonName .. "EventsFrame")
+Events.frame = CreateFrame("Frame", addon.name .. "EventsFrame")
 
 ---@type number
 local BUCKET_INTERVAL_SEC = 2

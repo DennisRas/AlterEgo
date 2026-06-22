@@ -5,6 +5,7 @@
 - Added per-window options for scale, background color, and border from the titlebar menu.
 - Updated main, equipment, and weekly affix windows to the shared LiqUI window framework.
 - Updated equipment window with sortable sticky column headers.
+- Updated primary chat command to `/alterego` with `/ae` as an alias.
 
 ## v1.4.9 - 2026-06-18
 

@@ -1,5 +1,3 @@
----@type string
-local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
@@ -7,18 +5,21 @@ local addon = select(2, ...)
 local Constants = {}
 addon.Constants = Constants
 
-Constants.prefix = format("<%s> ", addonName)
+Constants.prefix = format("<%s> ", addon.name)
+Constants.commands = {
+  "ae",
+}
 Constants.media = {
   WhiteSquare = "Interface/BUTTONS/WHITE8X8",
-  Logo = format("Interface/AddOns/%s/Media/Logo.blp", addonName),
-  LogoTransparent = format("Interface/AddOns/%s/Media/LogoTransparent.blp", addonName),
-  IconClose = format("Interface/AddOns/%s/Media/Icon_Close.blp", addonName),
-  IconSettings = format("Interface/AddOns/%s/Media/Icon_Settings.blp", addonName),
-  IconSorting = format("Interface/AddOns/%s/Media/Icon_Sorting.blp", addonName),
-  IconCharacters = format("Interface/AddOns/%s/Media/Icon_Characters.blp", addonName),
-  IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addonName),
-  IconKeyhole = format("Interface/AddOns/%s/Media/Icon_Keyhole.blp", addonName),
-  IconKill = format("Interface/AddOns/%s/Media/Icon_Skull2.blp", addonName),
+  Logo = format("Interface/AddOns/%s/Media/Logo.blp", addon.name),
+  LogoTransparent = format("Interface/AddOns/%s/Media/LogoTransparent.blp", addon.name),
+  IconClose = format("Interface/AddOns/%s/Media/Icon_Close.blp", addon.name),
+  IconSettings = format("Interface/AddOns/%s/Media/Icon_Settings.blp", addon.name),
+  IconSorting = format("Interface/AddOns/%s/Media/Icon_Sorting.blp", addon.name),
+  IconCharacters = format("Interface/AddOns/%s/Media/Icon_Characters.blp", addon.name),
+  IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addon.name),
+  IconKeyhole = format("Interface/AddOns/%s/Media/Icon_Keyhole.blp", addon.name),
+  IconKill = format("Interface/AddOns/%s/Media/Icon_Skull2.blp", addon.name),
 }
 Constants.colors = {
   -- Primary brand colors

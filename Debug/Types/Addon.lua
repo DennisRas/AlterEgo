@@ -14,6 +14,10 @@
 ---@class AE_Helpers
 
 ---@class AE_Addon
+---@field name string
+---@field title string
+---@field version string
+---@field notes string
 ---@field Core AE_Core
 ---@field Libs AE_Libs
 ---@field LiqUI LiqUI_Instance

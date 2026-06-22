@@ -17,6 +17,7 @@
 
 ---@class AE_Constants
 ---@field prefix string
+---@field commands string[]
 ---@field media table<string, string>
 ---@field colors table<string, ColorTable>
 ---@field sizes AE_ConstantsSizes

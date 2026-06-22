@@ -1,9 +1,8 @@
----@type string
-local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
 local Data = addon.Data
+local Constants = addon.Constants
 local Helpers = addon.Helpers
 local LibAceAddon = addon.Libs.AceAddon
 local LibDataBroker = addon.Libs.LibDataBroker
@@ -13,12 +12,8 @@ local TableCount = LibLiqUI.Utils.TableCount
 local TableForEach = LibLiqUI.Utils.TableForEach
 local TableGet = LibLiqUI.Utils.TableGet
 
---@debug@
-_G[addonName] = addon
---@end-debug@
-
 ---@class AE_Core : AceAddon
-local Core = LibAceAddon:NewAddon(addonName, "AceConsole-3.0", "AceTimer-3.0")
+local Core = LibAceAddon:NewAddon(addon.name, "AceConsole-3.0", "AceTimer-3.0")
 addon.Core = Core
 
 ---Initialize the addon
@@ -29,18 +24,20 @@ function Core:OnInitialize()
   _G["ALTEREGO_TOGGLE_WINDOW"] = self.ToggleWindow
   _G["ALTEREGO_TOGGLE_VAULT"] = self.ToggleVault
   _G["ALTEREGO_TOGGLE_EQUIPMENT"] = self.ToggleEquipment
-  self:RegisterChatCommand("ae", function()
+  self:RegisterChatCommand(addon.name:lower(), function()
     self:ToggleWindow()
   end)
-  self:RegisterChatCommand("alterego", function()
-    self:ToggleWindow()
+  TableForEach(Constants.commands, function(command)
+    self:RegisterChatCommand(command, function()
+      self:ToggleWindow()
+    end)
   end)
   Data:Initialize()
   Data:MigrateDB()
-  addon.LiqUI = LibLiqUI:New({ name = addonName, db = Data.db.global.liqui })
+  addon.LiqUI = LibLiqUI:New({ name = addon.name, db = Data.db.global.liqui })
 
   local libDataObject = {
-    label = addonName,
+    label = addon.title,
     type = "launcher",
     icon = addon.Constants.media.Logo,
     OnClick = function(...)
@@ -59,7 +56,7 @@ function Core:OnInitialize()
       end
     end,
     OnTooltipShow = function(tooltip)
-      tooltip:SetText(addonName, 1, 1, 1)
+      tooltip:SetText(addon.title, 1, 1, 1)
       tooltip:AddLine("|cff00ff00Left click|r to open AlterEgo.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       tooltip:AddLine("|cff00ff00Right click|r to open the Great Vault.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
       tooltip:AddLine("|cff00ff00Shift+Left click|r to open your character equipment.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -71,9 +68,9 @@ function Core:OnInitialize()
     end,
   }
 
-  LibDataBroker:NewDataObject(addonName, libDataObject)
-  LibDBIcon:Register(addonName, libDataObject, Data.db.global.minimap)
-  LibDBIcon:AddButtonToCompartment(addonName)
+  LibDataBroker:NewDataObject(addon.name, libDataObject)
+  LibDBIcon:Register(addon.name, libDataObject, Data.db.global.minimap)
+  LibDBIcon:AddButtonToCompartment(addon.name)
 
   hooksecurefunc("ResetInstances", function()
     self:OnInstanceReset()

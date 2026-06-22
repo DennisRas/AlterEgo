@@ -1,5 +1,3 @@
----@type string
-local addonName = select(1, ...)
 ---@class AE_Addon
 local addon = select(2, ...)
 
@@ -801,7 +799,7 @@ function Module:Render()
   if not self.window then
     self.window = addon.LiqUI.Window:New({
       name = "Main",
-      title = addonName,
+      title = addon.name,
       icon = Constants.media.LogoTransparent,
       overlayFontObject = "GameFontHighlight_NoShadow",
       overlayTextColor = {r = 1, g = 0.82, b = 0, a = 1},
@@ -1082,7 +1080,7 @@ function Module:Render()
               function() return not Data.db.global.minimap.hide end,
               function()
                 Data.db.global.minimap.hide = not Data.db.global.minimap.hide
-                addon.Libs.LibDBIcon:Refresh(addonName, Data.db.global.minimap)
+                addon.Libs.LibDBIcon:Refresh(addon.name, Data.db.global.minimap)
               end
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
@@ -1093,7 +1091,7 @@ function Module:Render()
               function() return Data.db.global.minimap.lock end,
               function()
                 Data.db.global.minimap.lock = not Data.db.global.minimap.lock
-                addon.Libs.LibDBIcon:Refresh(addonName, Data.db.global.minimap)
+                addon.Libs.LibDBIcon:Refresh(addon.name, Data.db.global.minimap)
               end
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
@@ -1689,7 +1687,7 @@ function Module:Render()
             GameTooltip:AddLine(currency.description, nil, nil, nil, true)
             if currency.tooltipNote then
               GameTooltip:AddLine(" ")
-              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addonName .. ":"), currency.tooltipNote), 1, 1, 1, true)
+              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addon.name .. ":"), currency.tooltipNote), 1, 1, 1, true)
             end
             GameTooltip:Show()
           end)
@@ -2385,7 +2383,7 @@ function Module:Render()
             end
             if currency.tooltipNote then
               GameTooltip:AddLine(" ")
-              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addonName .. ":"), currency.tooltipNote), 1, 1, 1, true)
+              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addon.name .. ":"), currency.tooltipNote), 1, 1, 1, true)
             end
             GameTooltip:Show()
             SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
