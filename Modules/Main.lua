@@ -1,7 +1,7 @@
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@type AE_Module_Main|AceModule
+---@class AE_Module_Main
 local Module = addon.Core:NewModule("Main", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Main = Module
 
@@ -130,8 +130,9 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
 
           -- Difficulty name
           if activity.type == Enum.WeeklyRewardChestThresholdType.Raid then
-            local difficultyName = GetDifficultyInfo(activity.level)
-            local dataDifficulty = TableGet(difficulties, "id", activity.level)
+            local raidDifficultyID = GetBaseDifficultyID(activity.level)
+            local difficultyName = GetDifficultyInfo(raidDifficultyID)
+            local dataDifficulty = TableGet(difficulties, "id", raidDifficultyID)
             if dataDifficulty then
               textRight = dataDifficulty.short and dataDifficulty.short or dataDifficulty.name
             elseif difficultyName then
@@ -191,7 +192,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           end)
 
           if encounterInfo and encounterInfo.bestDifficulty then
-            bestDifficulty = TableGet(difficulties, "id", encounterInfo.bestDifficulty)
+            bestDifficulty = TableGet(difficulties, "id", GetBaseDifficultyID(encounterInfo.bestDifficulty))
           end
 
           if bestDifficulty then
@@ -304,7 +305,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       elseif numActivities > 0 then -- All slots unlocked: What's next?
         if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
           local activity = activities[numActivities]
-          local nextDifficultyID = DifficultyUtil.GetNextPrimaryRaidDifficultyID(activity.level)
+          local nextDifficultyID = DifficultyUtil.GetNextPrimaryRaidDifficultyID(GetBaseDifficultyID(activity.level))
           if nextDifficultyID then
             local difficulty = TableGet(difficulties, "id", nextDifficultyID)
             if difficulty then
@@ -361,8 +362,9 @@ local function getVaultProgressValue(character, activityType)
       color = UNCOMMON_GREEN_COLOR
 
       if activityType == Enum.WeeklyRewardChestThresholdType.Raid then
-        local dataDifficulty = TableGet(difficulties, "id", activity.level)
-        local difficultyName = GetDifficultyInfo(activity.level)
+        local raidDifficultyID = GetBaseDifficultyID(activity.level)
+        local dataDifficulty = TableGet(difficulties, "id", raidDifficultyID)
+        local difficultyName = GetDifficultyInfo(raidDifficultyID)
         if difficultyName then
           text = difficultyName
         end
@@ -396,7 +398,6 @@ end
 ---@return AE_CharacterRows[]
 function Module:GetCharacterInfo(unfiltered)
   local dungeons = Data:GetDungeons()
-  local difficulties = Data:GetRaidDifficulties(true)
   local _, seasonDisplayID = Data:GetCurrentSeason()
   local equipmentModule = addon.Core:GetModule("Equipment", true)
 
@@ -421,7 +422,6 @@ function Module:GetCharacterInfo(unfiltered)
       onEnter = function(infoFrame, character)
         local name = "-"
         local nameColor = WHITE_FONT_COLOR
-        local characterCurrencies = {}
         if character.info.name ~= nil then
           name = character.info.name
         end
@@ -781,11 +781,9 @@ end
 ---Render the main window
 function Module:Render()
   local currentAffixes = Data:GetCurrentAffixes()
-  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
   local seasonID = Data:GetCurrentSeason()
   local dungeons = Data:GetDungeons()
   local currencies = Data:GetCurrencies()
-  local affixRotation = Data:GetAffixRotation()
   local raidDifficulties = Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
   local raids = Data:GetRaids()
@@ -2203,8 +2201,8 @@ function Module:Render()
               TableForEach(raid.encounters, function(encounter)
                 local color = LIGHTGRAY_FONT_COLOR
                 if character.raids.savedInstances then
-                  local savedInstance = TableFind(character.raids.savedInstances, function(savedInstance)
-                    return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == raid.instanceID and savedInstance.expires > time()
+                  local savedInstance = TableFind(character.raids.savedInstances, function(instance)
+                    return GetBaseDifficultyID(instance.difficultyID) == difficulty.id and instance.instanceID == raid.instanceID and instance.expires > time()
                   end)
                   if savedInstance then
                     local savedEncounter = TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)
@@ -2247,8 +2245,8 @@ function Module:Render()
             local alpha = 0.08
 
             if character.raids.savedInstances then
-              local savedInstance = TableFind(character.raids.savedInstances, function(savedInstance)
-                return savedInstance.difficultyID == difficulty.id and savedInstance.instanceID == encounter.instanceID and savedInstance.expires > time()
+              local savedInstance = TableFind(character.raids.savedInstances, function(instance)
+                return GetBaseDifficultyID(instance.difficultyID) == difficulty.id and instance.instanceID == encounter.instanceID and instance.expires > time()
               end)
               if savedInstance then
                 local savedEncounter = TableGet(savedInstance.encounters, "instanceEncounterID", encounter.instanceEncounterID)

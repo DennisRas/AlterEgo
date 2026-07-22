@@ -1,12 +1,11 @@
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@type AE_Module_WeeklyAffixes|AceModule
+---@class AE_Module_WeeklyAffixes
 local Module = addon.Core:NewModule("WeeklyAffixes", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_WeeklyAffixes = Module
 
 local Data = addon.Data
-local Constants = addon.Constants
 local LibLiqUI = addon.Libs.LiqUI
 local TableForEach = LibLiqUI.Utils.TableForEach
 local TableGet = LibLiqUI.Utils.TableGet

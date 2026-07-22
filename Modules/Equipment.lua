@@ -1,12 +1,11 @@
 ---@class AE_Addon
 local addon = select(2, ...)
 
----@type AE_Module_Equipment|AceModule
+---@class AE_Module_Equipment
 local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0")
 addon.Module_Equipment = Module
 
 local Data = addon.Data
-local Constants = addon.Constants
 local LibLiqUI = addon.Libs.LiqUI
 local TableCount = LibLiqUI.Utils.TableCount
 local TableForEach = LibLiqUI.Utils.TableForEach

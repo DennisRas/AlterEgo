@@ -3,7 +3,6 @@
 
 ---@class AE_EventPackedVarargs
 ---@field n number
----@field [integer] any
 
 ---@class AE_EventHandlerEntry
 ---@field fn AE_EventCallback

@@ -21,7 +21,7 @@
 ---@field finishedSuccess boolean
 ---@field bestTimedRun MapSeasonBestInfo|nil
 ---@field bestNotTimedRun MapSeasonBestInfo|nil
----@field affixScores AE_CharacterAffixScoreInfo[]
+---@field affixScores MythicPlusAffixScoreInfo[]?
 ---@field bestOverAllScore number
 
 ---@class AE_CharacterMythicPlus

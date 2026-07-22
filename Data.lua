@@ -333,7 +333,7 @@ function Data:GetAffixRotation()
 end
 
 ---Get the index of the active affix week
----@param currentAffixes MythicPlusKeystoneAffix|nil
+---@param currentAffixes MythicPlusKeystoneAffix[]|nil
 ---@return number
 function Data:GetActiveAffixRotation(currentAffixes)
   local affixRotation = self:GetAffixRotation()
@@ -947,8 +947,10 @@ function Data:UpdateCurrencies()
   character.currencies = wipe(character.currencies or {})
 
   TableForEach(self.currencies or {}, function(dataCurrency)
-    local currency = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-    if not currency then return end
+    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+    if not currencyInfo then return end
+    ---@type AE_CharacterCurrency
+    local currency = currencyInfo
     currency.id = dataCurrency.id
     currency.currencyType = dataCurrency.currencyType
     if dataCurrency.itemID then
@@ -1200,8 +1202,8 @@ function Data:UpdateMythicPlus()
     }
 
     if ratingSummary then
-      local run = TableFind(ratingSummary.runs or {}, function(run)
-        return run.challengeModeID == dataDungeon.challengeModeID
+      local run = TableFind(ratingSummary.runs or {}, function(ratingRun)
+        return ratingRun.challengeModeID == dataDungeon.challengeModeID
       end)
       if run then
         dungeon.rating = run.mapScore

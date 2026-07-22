@@ -5,7 +5,7 @@ local name, title, notes = C_AddOns.GetAddOnInfo(select(1, ...))
 addon.name = name
 addon.title = title
 addon.notes = notes
-addon.version = C_AddOns.GetAddOnMetadata(name, "Version")
+addon.version = C_AddOns.GetAddOnMetadata(name, "Version") or ""
 
 addon.Libs = addon.Libs or {}
 addon.Libs.LibDataBroker = LibStub("LibDataBroker-1.1")
