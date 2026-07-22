@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.5.0 - TBD
+## v1.5.0 - 2026-07-22
 
 - Added per-window options for scale, background color, and border from the titlebar menu.
 - Updated main, equipment, and weekly affix windows to the shared LiqUI window framework.
