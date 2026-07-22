@@ -6,7 +6,7 @@
 - Updated main, equipment, and weekly affix windows to the shared LiqUI window framework.
 - Updated equipment window with sortable sticky column headers.
 - Updated primary chat command to `/alterego` with `/ae` as an alias.
-- Fixed flexible Mythic raid lockouts so Sporefall and other flexible Mythic clears count toward raid progress and vault display. Fixes #257.
+- Fixed flexible Mythic raid lockouts so Sporefall, Rotmire, and other flexible Mythic clears count toward raid progress and vault display. Fixes #257, #258, #260.
 
 ## v1.4.9 - 2026-06-18
 
