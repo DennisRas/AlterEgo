@@ -702,13 +702,29 @@ function Module:GetCharacterInfo(unfiltered)
         return currentKeystone
       end,
       onEnter = function(infoFrame, character)
-        if character.mythicplus.keystone ~= nil and type(character.mythicplus.keystone.itemLink) == "string" and character.mythicplus.keystone.itemLink ~= "" then
+        if character.mythicplus.keystone == nil then return end
+        local itemLink = character.mythicplus.keystone.itemLink
+        if type(itemLink) == "string" and itemLink ~= "" then
           GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
-          GameTooltip:SetHyperlink(character.mythicplus.keystone.itemLink)
+          GameTooltip:SetHyperlink(itemLink)
           GameTooltip:AddLine(" ")
           GameTooltip:AddLine("<Shift Click to Link to Chat>", GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
           GameTooltip:Show()
+          return
         end
+        local dungeon
+        if type(character.mythicplus.keystone.challengeModeID) == "number" and character.mythicplus.keystone.challengeModeID > 0 then
+          dungeon = TableGet(dungeons, "challengeModeID", character.mythicplus.keystone.challengeModeID)
+        elseif type(character.mythicplus.keystone.mapId) == "number" and character.mythicplus.keystone.mapId > 0 then
+          dungeon = TableGet(dungeons, "mapId", character.mythicplus.keystone.mapId)
+        end
+        if dungeon == nil then return end
+        GameTooltip:SetOwner(infoFrame, "ANCHOR_RIGHT")
+        GameTooltip:SetText(dungeon.name, 1, 1, 1)
+        if type(character.mythicplus.keystone.level) == "number" and character.mythicplus.keystone.level > 0 then
+          GameTooltip:AddLine(format("Mythic Keystone Level %d", character.mythicplus.keystone.level), 1, 1, 1)
+        end
+        GameTooltip:Show()
       end,
       onLeave = function()
         GameTooltip:Hide()

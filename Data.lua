@@ -1036,26 +1036,31 @@ function Data:UpdateKeystoneItem()
   local character = self:GetCharacter()
   if not character then return end
   local dungeons = self:GetDungeons()
-  local keystoneItemID = self:GetKeystoneItemID()
+  local seasonKeystoneItemID = self:GetKeystoneItemID()
   local characterKeystoneMapID = character.mythicplus.keystone.mapId
   local characterKeystoneLevel = character.mythicplus.keystone.level
 
   do -- Base keystone data
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
     local keyStoneLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+    local keyStoneChallengeModeID = C_MythicPlus.GetOwnedKeystoneChallengeMapID()
     if keyStoneMapID ~= nil then character.mythicplus.keystone.mapId = tonumber(keyStoneMapID) or 0 end
     if keyStoneLevel ~= nil then character.mythicplus.keystone.level = tonumber(keyStoneLevel) or 0 end
+    if keyStoneChallengeModeID ~= nil then character.mythicplus.keystone.challengeModeID = tonumber(keyStoneChallengeModeID) or 0 end
   end
 
-  if not keystoneItemID then return addon.Core:Render() end
-
+  local keystoneItemID = nil
   local keystoneItemLink = nil
   for bagID = 0, NUM_BAG_SLOTS do
     for slotID = 1, C_Container.GetContainerNumSlots(bagID) do
       local containerItemId = C_Container.GetContainerItemID(bagID, slotID)
-      if containerItemId and containerItemId == keystoneItemID then
-        keystoneItemLink = C_Container.GetContainerItemLink(bagID, slotID)
-        break
+      if containerItemId then
+        local isSeasonKeystone = seasonKeystoneItemID and containerItemId == seasonKeystoneItemID
+        if isSeasonKeystone or C_Item.IsItemKeystoneByID(containerItemId) then
+          keystoneItemLink = C_Container.GetContainerItemLink(bagID, slotID)
+          keystoneItemID = containerItemId
+          break
+        end
       end
     end
     if keystoneItemLink then
@@ -1098,7 +1103,7 @@ function Data:UpdateKeystoneItem()
     mapId = dungeonMapId,
     level = keystoneLevel,
     color = keystoneColor,
-    itemId = keystoneItemID,
+    itemId = keystoneItemID or seasonKeystoneItemID or 0,
     itemLink = keystoneItemLink,
   }
 
