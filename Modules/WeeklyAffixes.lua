@@ -27,17 +27,21 @@ function Module:Render()
   local rowHeight = 28
 
   if not self.window then
+    local windows = Data.db.global.liqui.windows
+    local tables = Data.db.global.liqui.tables
     ---@type LiqUI_WindowInstance
-    self.window = addon.LiqUI.Window:New({
-      name = "Affixes",
+    self.window = LibLiqUI:NewElement("Window", {
+      name = addon.name .. "Affixes",
+      storage = windows.Affixes,
       title = "Weekly Affixes",
       onShow = function()
         Module:Render()
       end,
     })
     ---@type LiqUI_TableInstance
-    self.table = addon.LiqUI.Table:New({
-      name = "Affixes",
+    self.table = LibLiqUI:NewElement("Table", {
+      name = addon.name .. "Affixes",
+      storage = tables.Affixes,
       header = {enabled = false},
       rowStyle = {height = rowHeight, striped = true},
     })

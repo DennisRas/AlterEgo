@@ -198,15 +198,19 @@ function Module:Render()
   local rowHeight = 22
 
   if not self.window then
-    self.window = addon.LiqUI.Window:New({
-      name = "Equipment",
+    local windows = Data.db.global.liqui.windows
+    local tables = Data.db.global.liqui.tables
+    self.window = LibLiqUI:NewElement("Window", {
+      name = addon.name .. "Equipment",
+      storage = windows.Equipment,
       title = "Character",
       onShow = function()
         Module:Render()
       end,
     })
-    self.dataTable = addon.LiqUI.Table:New({
-      name = "Equipment",
+    self.dataTable = LibLiqUI:NewElement("Table", {
+      name = addon.name .. "Equipment",
+      storage = tables.Equipment,
       header = {enabled = true, sticky = true, height = EQUIPMENT_HEADER_HEIGHT},
       columns = {
         {id = "slot", headerText = "Slot", width = 100, sorting = {enabled = true, compare = compareEquipmentSlotColumn}},

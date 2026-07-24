@@ -806,13 +806,15 @@ function Module:Render()
   local characters = Data:GetCharacters()
   local numCharacters = TableCount(characters)
   local affixes = Data:GetAffixes(true)
-  local windowWidthMax = addon.LiqUI.Window:GetMaxWindowWidth()
+  local windowWidthMax = LibLiqUI.Utils.GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
   if not self.window then
-    self.window = addon.LiqUI.Window:New({
-      name = "Main",
+    local windows = Data.db.global.liqui.windows
+    self.window = LibLiqUI:NewElement("Window", {
+      name = addon.name .. "Main",
+      storage = windows.Main,
       title = addon.name,
       icon = Constants.media.LogoTransparent,
       overlayFontObject = "GameFontHighlight_NoShadow",
@@ -1377,7 +1379,10 @@ function Module:Render()
         end)
         affixFrame:SetScript("OnClick", function()
           if not weeklyAffixesModule then return end
-          addon.LiqUI.Window:ToggleWindow("Affixes")
+          local affixesWindow = LibLiqUI:GetElement("Window", addon.name .. "Affixes")
+          if affixesWindow then
+            affixesWindow:Toggle()
+          end
         end)
 
         if affixIndex == 1 then

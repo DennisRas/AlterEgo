@@ -20,7 +20,6 @@
 ---@field notes string
 ---@field Core AE_Core
 ---@field Libs AE_Libs
----@field LiqUI LiqUI_Instance
 ---@field Constants AE_Constants
 ---@field Helpers AE_Helpers
 ---@field Events AE_Events
