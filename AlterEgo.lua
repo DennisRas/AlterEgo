@@ -34,7 +34,6 @@ function Core:OnInitialize()
   end)
   Data:Initialize()
   Data:MigrateDB()
-  addon.LiqUI = LibLiqUI:New({ name = addon.name, db = Data.db.global.liqui })
 
   local libDataObject = {
     label = addon.title,
@@ -80,7 +79,7 @@ end
 
 ---Toggle the main window
 function Core:ToggleWindow()
-  local window = addon.LiqUI.Window:GetWindow("Main")
+  local window = LibLiqUI:GetElement("Window", addon.name .. "Main")
   if not window then return end
   window:Toggle()
 end

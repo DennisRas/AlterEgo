@@ -13,13 +13,18 @@ Constants.media = {
   WhiteSquare = "Interface/BUTTONS/WHITE8X8",
   Logo = format("Interface/AddOns/%s/Media/Logo.blp", addon.name),
   LogoTransparent = format("Interface/AddOns/%s/Media/LogoTransparent.blp", addon.name),
-  IconClose = format("Interface/AddOns/%s/Media/Icon_Close.blp", addon.name),
-  IconSettings = format("Interface/AddOns/%s/Media/Icon_Settings.blp", addon.name),
   IconSorting = format("Interface/AddOns/%s/Media/Icon_Sorting.blp", addon.name),
   IconCharacters = format("Interface/AddOns/%s/Media/Icon_Characters.blp", addon.name),
   IconAnnounce = format("Interface/AddOns/%s/Media/Icon_Announce.blp", addon.name),
   IconKeyhole = format("Interface/AddOns/%s/Media/Icon_Keyhole.blp", addon.name),
-  IconKill = format("Interface/AddOns/%s/Media/Icon_Skull2.blp", addon.name),
+  IconKillSkull = format("Interface/AddOns/%s/Media/Icon_Skull.blp", addon.name),
+  IconKillDiamond = format("Interface/AddOns/%s/Media/Icon_Diamond.blp", addon.name),
+}
+
+---@type AE_RaidKillIcon[]
+Constants.raidKillIcons = {
+  {id = "skull",   label = "Skull",   texture = Constants.media.IconKillSkull,   scale = 1},
+  {id = "diamond", label = "Diamond", texture = Constants.media.IconKillDiamond, scale = 1.2},
 }
 Constants.colors = {
   -- Primary brand colors
@@ -37,8 +42,6 @@ Constants.colors = {
   striped = {r = 1, g = 1, b = 1, a = 0.01},
   stripedAlt = {r = 1, g = 1, b = 1, a = 0.02},
   -- Interactive elements
-  closeButton = {r = 1, g = 0, b = 0, a = 0.2},
-  closeButtonHover = {r = 1, g = 0, b = 0, a = 0.4},
   buttonHover = {r = 1, g = 1, b = 1, a = 0.05},
   -- Transparent
   transparent = {r = 0, g = 0, b = 0, a = 0},
@@ -74,9 +77,3 @@ Constants.sortingOptions = {
   {value = "custom",      text = "Custom Order",        tooltipTitle = "Choose your own order", tooltipText = "Place your mouse on the character name to change the order"},
 }
 
----@enum AE_PreyHuntDifficultyId
-Constants.preyHuntDifficulty = {
-  Normal = 1,
-  Hard = 2,
-  Nightmare = 3,
-}

@@ -13,8 +13,8 @@
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
 ---@field vault { raids: boolean, dungeons: boolean, world: boolean }
----@field preyHunts { enabled: boolean, hiddenDifficulties: table<number, boolean> }
----@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, boxes: boolean, modifiedInstanceOnly: boolean }
+---@field prey { enabled: boolean, hiddenDifficulties: table<number, boolean> }
+---@field raids { enabled: boolean, colors: boolean, currentTierOnly: boolean, hiddenDifficulties: table<number, boolean>, killIcon: string, modifiedInstanceOnly: boolean }
 ---@field dungeons { enabled: boolean }
 ---@field world { enabled: boolean }
 ---@field currencies { enabled: boolean, hiddenCurrencies: table<number, boolean>, showIcons: boolean, showMaxEarned: boolean, alignCenter: boolean }
@@ -37,9 +37,10 @@
 ---@field raids AE_Raid[]
 ---@field currencies AE_Currency[]
 ---@field seasons AE_Season[]
----@field preyHuntDifficulties AE_PreyHuntDifficulty[]
----@field preyHuntQuests AE_PreyHuntQuest[]
----@field oldUpgradeLevels table
+---@field preyAffixes AE_PreyAffix[]
+---@field preyDifficulties AE_PreyDifficulty[]
+---@field preyQuests AE_PreyQuest[]
+---@field upgradeTracks AE_UpgradeSeason[]
 ---@field cache AE_Cache
 
 ---@class AE_Cache

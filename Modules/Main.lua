@@ -486,8 +486,12 @@ function Module:GetCharacterInfo(unfiltered)
         if character.info.guild == nil then
           guildColor = LIGHTGRAY_FONT_COLOR
         elseif character.info.guild.isInGuild then
-          guild = character.info.guild.name
-          guildColor = NECROLORD_GREEN_COLOR
+          if character.info.guild.name ~= nil and character.info.guild.name ~= "" then
+            guild = character.info.guild.name
+            guildColor = NECROLORD_GREEN_COLOR
+          else
+            guildColor = LIGHTGRAY_FONT_COLOR
+          end
         end
         return guildColor:WrapTextInColorCode(guild)
       end,
@@ -806,13 +810,15 @@ function Module:Render()
   local characters = Data:GetCharacters()
   local numCharacters = TableCount(characters)
   local affixes = Data:GetAffixes(true)
-  local windowWidthMax = addon.LiqUI.Window:GetMaxWindowWidth()
+  local windowWidthMax = LibLiqUI.Utils.GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
   if not self.window then
-    self.window = addon.LiqUI.Window:New({
-      name = "Main",
+    local windows = Data.db.global.liqui.windows
+    self.window = LibLiqUI:NewElement("Window", {
+      name = addon.name .. "Main",
+      storage = windows.Main,
       title = addon.name,
       icon = Constants.media.LogoTransparent,
       overlayFontObject = "GameFontHighlight_NoShadow",
@@ -909,25 +915,25 @@ function Module:Render()
             menu:CreateTitle("Prey Hunts")
             menu:CreateCheckbox(
               "Enable Prey Hunts",
-              function() return Data.db.global.preyHunts.enabled end,
+              function() return Data.db.global.prey.enabled end,
               function()
-                Data.db.global.preyHunts.enabled = not Data.db.global.preyHunts.enabled
+                Data.db.global.prey.enabled = not Data.db.global.prey.enabled
                 self:Render()
               end
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Let's go for a hunt!", nil, nil, nil, true)
             end)
-            local preyHuntsDifficultiesSetting = menu:CreateButton(
+            local preyDifficultiesSetting = menu:CreateButton(
               "Difficulties"
             )
-            TableForEach(Data:GetPreyHuntDifficulties(true), function(difficulty)
-              local hiddenDifficulties = Data.db.global.preyHunts.hiddenDifficulties or {}
-              preyHuntsDifficultiesSetting:CreateCheckbox(
+            TableForEach(Data:GetPreyDifficulties(true), function(difficulty)
+              local hiddenDifficulties = Data.db.global.prey.hiddenDifficulties or {}
+              preyDifficultiesSetting:CreateCheckbox(
                 difficulty.name,
                 function(difficultyID) return not hiddenDifficulties[difficultyID] end,
                 function(difficultyID)
-                  Data.db.global.preyHunts.hiddenDifficulties[difficultyID] = not hiddenDifficulties[difficultyID]
+                  Data.db.global.prey.hiddenDifficulties[difficultyID] = not hiddenDifficulties[difficultyID]
                   self:Render()
                 end,
                 difficulty.id
@@ -1000,6 +1006,18 @@ function Module:Render()
             ):SetTooltip(function(tooltip, elm)
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Argharhggh! So much greeeen!", nil, nil, nil, true)
+            end)
+            local raidKillIconSetting = menu:CreateButton("Kill icon")
+            TableForEach(Constants.raidKillIcons, function(icon)
+              raidKillIconSetting:CreateRadio(
+                icon.label,
+                function(id) return (Data.db.global.raids.killIcon or "skull") == id end,
+                function(id)
+                  Data.db.global.raids.killIcon = id
+                  self:Render()
+                end,
+                icon.id
+              )
             end)
             local raidDifficultiesSetting = menu:CreateButton(
               "Difficulties"
@@ -1377,7 +1395,10 @@ function Module:Render()
         end)
         affixFrame:SetScript("OnClick", function()
           if not weeklyAffixesModule then return end
-          addon.LiqUI.Window:ToggleWindow("Affixes")
+          local affixesWindow = LibLiqUI:GetElement("Window", addon.name .. "Affixes")
+          if affixesWindow then
+            affixesWindow:Toggle()
+          end
         end)
 
         if affixIndex == 1 then
@@ -1437,7 +1458,7 @@ function Module:Render()
         label.text:SetVertexColor(1.0, 0.82, 0.0, 1)
         self.window.body.sidebar.preyLabel = label
       end
-      if Data.db.global.preyHunts.enabled then
+      if Data.db.global.prey.enabled then
         label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
         label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
         label:SetHeight(Constants.sizes.row)
@@ -1452,9 +1473,8 @@ function Module:Render()
     do -- Prey Difficulties
       self.window.body.sidebar.preyDifficulties = self.window.body.sidebar.preyDifficulties or {}
       TableForEach(self.window.body.sidebar.preyDifficulties, function(f) f:Hide() end)
-      TableForEach(Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
-        if Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
-        if not Data.db.global.preyHunts.enabled then return end
+      TableForEach(Data:GetPreyDifficulties(), function(difficulty, difficultyIndex)
+        if not Data.db.global.prey.enabled then return end
         local difficultyFrame = self.window.body.sidebar.preyDifficulties[difficultyIndex]
         if not difficultyFrame then
           difficultyFrame = CreateFrame("Frame", "$parentPreyDifficulty" .. difficultyIndex, self.window.body.sidebar)
@@ -1471,10 +1491,12 @@ function Module:Render()
           GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
           GameTooltip:SetText(difficulty.name, 1, 1, 1)
           GameTooltip:AddLine("With each difficulty level, new affixes are added, leading to more challenging encounters.", nil, nil, nil, true)
-          TableForEach(difficulty.affixes, function(affix, affixName)
+          TableForEach(difficulty.affixes, function(affixID)
+            local affix = TableGet(Data.preyAffixes, "id", affixID)
+            if not affix then return end
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(format("%s:", affixName), nil, nil, nil, true)
-            GameTooltip:AddLine(affix, 1, 1, 1, true)
+            GameTooltip:AddLine(format("%s:", affix.name), nil, nil, nil, true)
+            GameTooltip:AddLine(affix.description, 1, 1, 1, true)
           end)
           GameTooltip:Show()
         end)
@@ -1902,7 +1924,7 @@ function Module:Render()
       end
 
       do -- Prey Header
-        if Data.db.global.preyHunts.enabled then
+        if Data.db.global.prey.enabled then
           characterFrame.preyHeader:SetPoint("TOPLEFT", characterFrame, "TOPLEFT", 0, -totalHeight)
           characterFrame.preyHeader:SetPoint("TOPRIGHT", characterFrame, "TOPRIGHT", 0, -totalHeight)
           characterFrame.preyHeader:SetHeight(Constants.sizes.row)
@@ -1918,9 +1940,8 @@ function Module:Render()
       do -- Prey Progress
         characterFrame.preyProgress = characterFrame.preyProgress or {}
         TableForEach(characterFrame.preyProgress, function(f) f:Hide() end)
-        TableForEach(Data.preyHuntDifficulties, function(difficulty, difficultyIndex)
-          if Data.db.global.preyHunts.hiddenDifficulties[difficulty.id] then return end
-          if not Data.db.global.preyHunts.enabled then return end
+        TableForEach(Data:GetPreyDifficulties(), function(difficulty, difficultyIndex)
+          if not Data.db.global.prey.enabled then return end
           local difficultyFrame = characterFrame.preyProgress[difficultyIndex]
           if not difficultyFrame then
             difficultyFrame = CreateFrame("Frame", "$parentPreyProgress" .. difficultyIndex, characterFrame)
@@ -1936,9 +1957,9 @@ function Module:Render()
           local textColor = LIGHTGRAY_FONT_COLOR
           local numQuestsCompleted = 0
           local maxQuests = 4
-          local characterQuestsCompleted = character.preyHunts and character.preyHunts.questsCompleted or {}
+          local characterQuestsCompleted = character.prey and character.prey.questsCompleted or {}
 
-          local quests = TableFilter(Data.preyHuntQuests, function(quest)
+          local quests = TableFilter(Data.preyQuests, function(quest)
             return quest.difficultyID == difficulty.id
           end)
           local questsCompleted = TableFilter(quests, function(quest)
@@ -1958,7 +1979,7 @@ function Module:Render()
             GameTooltip:SetOwner(difficultyFrame, "ANCHOR_RIGHT")
             GameTooltip:SetText("Prey Hunt Progress", 1, 1, 1)
             GameTooltip:AddDoubleLine("Difficulty:", difficulty.name, nil, nil, nil, 1, 1, 1)
-            if character.preyHunts == nil or character.preyHunts.questsCompleted == nil then
+            if character.prey == nil or character.prey.questsCompleted == nil then
               GameTooltip:AddLine(" ")
               GameTooltip:AddLine("No Data")
               GameTooltip:AddLine("Log your character to update.", 1, 1, 1, true)
@@ -2246,13 +2267,14 @@ function Module:Render()
           local gapWidthTotal = gapCount * gapWidth
           local iconSize = (CHARACTER_WIDTH - gapWidthTotal) / (halfEncounters + (numEncounters % 2 == 0 and 0.5 or 0))
           local iconSizeMax = RAIDS_ROW_HEIGHT * 0.5
+          local killIcon = TableGet(Constants.raidKillIcons, "id", Data.db.global.raids.killIcon or "skull") or Constants.raidKillIcons[1]
+          local killIconScale = killIcon.scale or 1
           TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
           TableForEach(encounters or {}, function(encounter, encounterIndex)
             local iconFrame = difficultyFrame.iconFrames[encounterIndex]
             if not iconFrame then
               iconFrame = CreateFrame("Frame", "$parentEncounter" .. encounterIndex, difficultyFrame)
               iconFrame.Background = iconFrame:CreateTexture("Background", "BACKGROUND")
-              iconFrame.Background:SetTexture(Constants.media.IconKill)
               iconFrame.Background:SetAllPoints()
               difficultyFrame.iconFrames[encounterIndex] = iconFrame
             end
@@ -2276,9 +2298,10 @@ function Module:Render()
               end
             end
 
+            iconFrame.Background:SetTexture(killIcon.texture)
             iconFrame.Background:SetVertexColor(color.r, color.g, color.b, alpha)
 
-            local iconHeight = math.min(iconSize, iconSizeMax)
+            local iconHeight = math.min(iconSize, iconSizeMax) * killIconScale
             local heightGap = (RAIDS_ROW_HEIGHT - iconHeight * 2) / 2
             local encounterY = heightGap
             encounterX = encounterX + gapWidth / 2 + (iconSize / 2)

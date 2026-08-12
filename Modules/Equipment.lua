@@ -198,15 +198,19 @@ function Module:Render()
   local rowHeight = 22
 
   if not self.window then
-    self.window = addon.LiqUI.Window:New({
-      name = "Equipment",
+    local windows = Data.db.global.liqui.windows
+    local tables = Data.db.global.liqui.tables
+    self.window = LibLiqUI:NewElement("Window", {
+      name = addon.name .. "Equipment",
+      storage = windows.Equipment,
       title = "Character",
       onShow = function()
         Module:Render()
       end,
     })
-    self.dataTable = addon.LiqUI.Table:New({
-      name = "Equipment",
+    self.dataTable = LibLiqUI:NewElement("Table", {
+      name = addon.name .. "Equipment",
+      storage = tables.Equipment,
       header = {enabled = true, sticky = true, height = EQUIPMENT_HEADER_HEIGHT},
       columns = {
         {id = "slot", headerText = "Slot", width = 100, sorting = {enabled = true, compare = compareEquipmentSlotColumn}},
@@ -254,55 +258,29 @@ function Module:Render()
       end
     end
 
-    ---Detect old season items as Blizz no longer adds old Upgrade Levels to the tooltip
-    local itemPayload = string.match(item.itemLink, "item:([%-?%d:]+)")
-    if itemPayload then
-      local itemPayloadSplit = {strsplit(":", itemPayload)}
-      local numBonuses = tonumber(itemPayloadSplit[13])
-      if numBonuses ~= nil and numBonuses > 0 then
-        for i = 14, 13 + numBonuses do
-          local bonusId = tonumber(itemPayloadSplit[i])
-          if bonusId ~= nil then
-            for _, tracks in pairs(addon.Data.oldUpgradeLevels) do
-              for trackName, ids in pairs(tracks) do
-                for idx, id in pairs(ids) do
-                  if id == bonusId then
-                    upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(format("%s %d/%d", trackName, idx, #ids))
-                  end
-                end
-              end
+    --- Fallback when Blizzard omits upgrade track text on previous-season gear
+    if upgradeLevel == "" then
+      local itemPayload = string.match(item.itemLink, "item:([%-?%d:]+)")
+      if itemPayload then
+        local itemPayloadSplit = {strsplit(":", itemPayload)}
+        local numBonuses = tonumber(itemPayloadSplit[13])
+        if numBonuses ~= nil and numBonuses > 0 then
+          for bonusIndex = 14, 13 + numBonuses do
+            local bonusId = tonumber(itemPayloadSplit[bonusIndex])
+            if bonusId ~= nil then
+              TableForEach(Data.upgradeTracks, function(season)
+                TableForEach(season.tracks, function(track)
+                  TableForEach(track.bonusIDs, function(id, trackLevel)
+                    if id == bonusId then
+                      upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(format("%s %d/%d", track.name, trackLevel, #track.bonusIDs))
+                    end
+                  end)
+                end)
+              end)
             end
           end
         end
       end
-    end
-
-    ---TWW Season 2 Item: D.I.S.C.
-    if itemID == 245966 or itemID == 245964 or itemID == 245965 or itemID == 242664 then
-      local DISCLevels = {691, 694, 697, 701}
-      local numDISCLevels = TableCount(DISCLevels)
-      TableForEach(DISCLevels, function(DISCLevel, i)
-        if item.itemLevel == DISCLevel then
-          upgradeLevel = format("D.I.S.C. %d/%d", i, numDISCLevels)
-          if i == numDISCLevels then
-            upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-          end
-        end
-      end)
-    end
-
-    ---TWW Season 3 Item: Reshii Wraps
-    if itemID == 235499 then
-      local ItemLevels = {694, 701, 707, 714, 720, 730}
-      local numItemLevels = TableCount(ItemLevels)
-      TableForEach(ItemLevels, function(ItemLevel, i)
-        if item.itemLevel == ItemLevel then
-          upgradeLevel = format("%s %d/%d", RANK, i, numItemLevels)
-          if i == numItemLevels then
-            upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-          end
-        end
-      end)
     end
 
     local enchantText, enchantTooltip, enchantColor = "", "", GREEN_FONT_COLOR

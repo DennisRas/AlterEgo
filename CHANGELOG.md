@@ -1,8 +1,22 @@
 # Changelog
 
+## v1.6.0 - 2026-08-12
+
+- Updated TOC number to support patch 12.1.
+- Added Midnight Season 2 dungeon pool: Altar of Fangs, Murder Row, Den of Nalorakk, The Blinding Vale, Voidscar Arena, Kings' Rest, Temple of Sethraliss, and Ruby Life Pools.
+- Added Midnight Season 2 raids: The Tidebound Grotto and The Venomous Abyss.
+- Added Midnight Season 2 currencies: Mistcrests, Venomblight Manaflux, Tidal Spark Dust, and the Season 2 Nebulous Voidcore.
+- Updated Prey hunt difficulty affixes for Midnight Season 2.
+- Added Mythic+ weekly affix schedules for Midnight Season 2.
+- Added Lindormi's Guidance as the +2 column in the Weekly Affixes window.
+- Added a raid kill icon option (skull or diamond) under Raids in the settings.
+- Fixed close and settings titlebar icons. Fixes #262. Thank you @MOSS099.
+- Fixed equipment window upgrade track display for Midnight gear.
+- Fixed a guild name error when switching characters. Fixes #263. Thank you @jardragon901.
+
 ## v1.5.0 - 2026-07-22
 
-- Added per-window options for scale, background color, and border from the titlebar menu.
+- Added per-window options for scale, background color, and border from the settings.
 - Updated main, equipment, and weekly affix windows to the shared LiqUI window framework.
 - Updated equipment window with sortable sticky column headers.
 - Updated primary chat command to `/alterego` with `/ae` as an alias.

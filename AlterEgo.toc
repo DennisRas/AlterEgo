@@ -1,4 +1,4 @@
-## Interface: 120007
+## Interface: 120100
 ## Title: AlterEgo
 ## Notes: Mythic Plus tracker for all of your characters
 ## Version: @project-version@
@@ -35,16 +35,14 @@ Boot.lua
 Constants.lua
 Events.lua
 Data.lua
-Data\Affixes.lua
 Data\Currencies.lua
-Data\Dungeons.lua
 Data\Inventory.lua
-Data\Keystones.lua
-Data\OldUpgradeLevels.lua
-Data\PreyHunts.lua
-Data\RaidDifficulties.lua
+Data\MythicPlus.lua
+Data\Prey.lua
 Data\Raids.lua
 Data\Seasons.lua
+Data\UpgradeTracks.lua
+Data\Vault.lua
 Helpers.lua
 AlterEgo.lua
 
@@ -56,7 +54,7 @@ Modules\Equipment.lua
 Debug\Types\Addon.lua
 Debug\Types\Character.lua
 Debug\Types\Constants.lua
-Debug\Types\Data.lua
 Debug\Types\Events.lua
 Debug\Types\GameData.lua
+Debug\Types\Data.lua
 #@end-debug@
