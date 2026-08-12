@@ -10,6 +10,7 @@
 ---@field class {name: string, file: string, id: number}
 ---@field factionGroup {english: string, localized: string}
 ---@field ilvl {level: number, equipped: number, pvp: number, color: string}
+---@field guild {isInGuild: boolean, name: string, rankName: string, rankIndex: number, realm: string}
 
 ---@class AE_CharacterAffixScoreInfo : MythicPlusAffixScoreInfo
 ---@field id number
@@ -76,12 +77,13 @@
 ---@field GUID WOWGUID
 ---@field lastUpdate number
 ---@field currentSeason number
+---@field enabled boolean
 ---@field order number
 ---@field info AE_CharacterInfo
 ---@field equipment AE_Equipment[]
 ---@field money number
 ---@field currencies AE_CharacterCurrency[]
----@field preyHunts { questsCompleted: table<number, boolean> }
+---@field prey { questsCompleted: table<number, boolean> }
 ---@field raids { savedInstances: AE_SavedInstance[] }
 ---@field mythicplus AE_CharacterMythicPlus
 ---@field vault AE_CharacterVault

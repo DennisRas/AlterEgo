@@ -125,12 +125,28 @@
 ---@field expires number
 ---@field encounters AE_SavedInstanceEncounter[]
 
----@class AE_PreyHuntDifficulty
----@field id AE_PreyHuntDifficultyId
+---@class AE_PreyAffix
+---@field id number
 ---@field name string
----@field affixes table<string, string> Affixes of the difficulty
+---@field description string
 
----@class AE_PreyHuntQuest
+---@class AE_PreyDifficulty
+---@field seasonID number
+---@field seasonDisplayID number
+---@field id number
+---@field name string
+---@field affixes number[]
+
+---@class AE_PreyQuest
 ---@field questID number
----@field difficultyID AE_PreyHuntDifficultyId
----@field name string Name of the quest
+---@field difficultyID number
+---@field name string
+
+---@class AE_UpgradeTrack
+---@field name string
+---@field bonusIDs number[]
+
+---@class AE_UpgradeSeason
+---@field seasonID number
+---@field seasonDisplayID number
+---@field tracks AE_UpgradeTrack[]

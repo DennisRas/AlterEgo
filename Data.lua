@@ -13,7 +13,7 @@ local TableFind = addon.Libs.LiqUI.Utils.TableFind
 local TableForEach = addon.Libs.LiqUI.Utils.TableForEach
 local TableGet = addon.Libs.LiqUI.Utils.TableGet
 
-Data.dbVersion = 35
+Data.dbVersion = 36
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -45,7 +45,7 @@ Data.defaultDB = {
       dungeons = true,
       world = true,
     },
-    preyHunts = {
+    prey = {
       enabled = true,
       hiddenDifficulties = {},
     },
@@ -54,7 +54,7 @@ Data.defaultDB = {
       colors = true,
       currentTierOnly = true,
       hiddenDifficulties = {},
-      boxes = false,
+      killIcon = "skull",
       modifiedInstanceOnly = true,
     },
     dungeons = {
@@ -76,9 +76,15 @@ Data.defaultDB = {
       windowColor = {r = 0.11372549019, g = 0.14117647058, b = 0.16470588235, a = 1},
     },
     liqui = {
-      windows = {},
-      tables = {},
-      loggers = {},
+      windows = {
+        Main = {},
+        Affixes = {},
+        Equipment = {},
+      },
+      tables = {
+        Affixes = { hiddenColumns = {} },
+        Equipment = { hiddenColumns = {} },
+      },
     },
     useRIOScoreColor = false,
   },
@@ -126,7 +132,7 @@ Data.defaultCharacter = {
   equipment = {},
   money = 0,
   currencies = {},
-  preyHunts = {
+  prey = {
     questsCompleted = {},
   },
   raids = {
@@ -188,10 +194,10 @@ function Data:GetCurrentSeason()
     self.cache.seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
   end
 
-  if self.cache.seasonID and self.cache.seasonID > 0 then
+  local currentExpansionLevel = GetExpansionLevel()
+  if currentExpansionLevel then
     local season = TableGet(self.seasons, "seasonID", self.cache.seasonID)
-    local currentExpansionLevel = GetExpansionLevel()
-    if season and currentExpansionLevel and season.expansionID < currentExpansionLevel then
+    if not season or season.expansionID < currentExpansionLevel then
       local nextSeason = TableGet(self.seasons, "expansionID", currentExpansionLevel)
       if nextSeason then
         self.cache.seasonID = nextSeason.seasonID
@@ -252,26 +258,42 @@ function Data:DeleteCharacter(characterOrGUID)
   self.db.global.characters[GUID] = nil
 end
 
----Get all of the prey hunt difficulties in the current season
+---Get prey difficulties for the current season
 ---@param unfiltered boolean?
----@return AE_PreyHuntDifficulty[]
-function Data:GetPreyHuntDifficulties(unfiltered)
+---@return AE_PreyDifficulty[]
+function Data:GetPreyDifficulties(unfiltered)
+  local seasonID = self:GetCurrentSeason()
   local result = {}
-  for _, difficulty in pairs(self.preyHuntDifficulties) do
-    table.insert(result, difficulty)
+  for _, difficulty in pairs(self.preyDifficulties) do
+    if difficulty.seasonID == seasonID then
+      table.insert(result, difficulty)
+    end
   end
+
   table.sort(result, function(a, b)
     return a.id < b.id
   end)
-  return result
+
+  if unfiltered then
+    return result
+  end
+
+  local filtered = {}
+  for _, difficulty in ipairs(result) do
+    if self.db.global.prey.hiddenDifficulties and not self.db.global.prey.hiddenDifficulties[difficulty.id] then
+      table.insert(filtered, difficulty)
+    end
+  end
+
+  return filtered
 end
 
----Get all of the prey hunt quests in the current season
+---Get prey quests
 ---@param unfiltered boolean?
----@return AE_PreyHuntQuest[]
-function Data:GetPreyHuntQuests(unfiltered)
+---@return AE_PreyQuest[]
+function Data:GetPreyQuests(unfiltered)
   local result = {}
-  for _, quest in pairs(self.preyHuntQuests) do
+  for _, quest in pairs(self.preyQuests) do
     table.insert(result, quest)
   end
   return result
@@ -394,16 +416,6 @@ function Data:GetRaids(unfiltered)
   table.sort(raids, function(a, b)
     return a.order < b.order
   end)
-
-  if unfiltered then
-    return raids
-  end
-
-  if self.db.global.raids.modifiedInstanceOnly and seasonID == 12 then
-    raids = TableFilter(raids, function(raid)
-      return raid.modifiedInstanceInfo ~= nil
-    end)
-  end
 
   return raids
 end
@@ -585,11 +597,11 @@ function Data:MigrateDB()
         end
       end
     end
-    -- Add new prey hunt object if it doesn't exist
+    -- Add prey progress slice if missing
     if self.db.global.dbVersion == 33 then
       for _, character in pairs(self.db.global.characters) do
-        if character.preyHunts == nil or character.preyHunts.questsCompleted == nil then
-          character.preyHunts = {
+        if character.prey == nil or character.prey.questsCompleted == nil then
+          character.prey = {
             questsCompleted = {},
           }
         end
@@ -616,6 +628,20 @@ function Data:MigrateDB()
       end
       self.db.global.liqui = liqui
     end
+    if self.db.global.dbVersion == 35 then
+      if self.db.global.preyHunts ~= nil then
+        self.db.global.prey = self.db.global.preyHunts
+        self.db.global.preyHunts = nil
+      end
+      for _, character in pairs(self.db.global.characters) do
+        if character.preyHunts ~= nil then
+          character.prey = character.preyHunts
+          character.preyHunts = nil
+        end
+      end
+      self.db.global.raids.killIcon = "skull"
+      self.db.global.raids.boxes = nil
+    end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
@@ -636,7 +662,7 @@ function Data:TaskWeeklyReset()
         run.thisWeek = false
       end)
       -- Reset Prey Hunts
-      character.preyHunts.questsCompleted = wipe(character.preyHunts.questsCompleted or {})
+      character.prey.questsCompleted = wipe(character.prey.questsCompleted or {})
       character.vault.activityEncounterInfo = wipe(character.vault.activityEncounterInfo or {})
       character.vault.slots = wipe(character.vault.slots or {})
       character.mythicplus.keystone = wipe(character.mythicplus.keystone or {})
@@ -876,10 +902,10 @@ end
 function Data:UpdatePreyProgress()
   local character = self:GetCharacter()
   if not character then return end
-  character.preyHunts = character.preyHunts or {}
-  character.preyHunts.questsCompleted = wipe(character.preyHunts.questsCompleted or {})
-  TableForEach(self.preyHuntQuests, function(quest)
-    character.preyHunts.questsCompleted[quest.questID] = C_QuestLog.IsQuestFlaggedCompleted(quest.questID)
+  character.prey = character.prey or {}
+  character.prey.questsCompleted = wipe(character.prey.questsCompleted or {})
+  TableForEach(self.preyQuests, function(quest)
+    character.prey.questsCompleted[quest.questID] = C_QuestLog.IsQuestFlaggedCompleted(quest.questID)
   end)
 end
 
