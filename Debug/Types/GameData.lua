@@ -142,6 +142,10 @@
 ---@field difficultyID number
 ---@field name string
 
+---@class AE_UpgradeBonusLabel
+---@field name string
+---@field seasonID number
+
 ---@class AE_UpgradeTrack
 ---@field name string
 ---@field bonusIDs number[]

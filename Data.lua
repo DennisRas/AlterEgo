@@ -1008,24 +1008,35 @@ function Data:UpdateEquipment()
     expansionID, setID, isCraftingReagent = C_Item.GetItemInfo(inventoryItemLink)
     if itemName == nil then return end
 
+    local upgradeInfo = C_Item.GetItemUpgradeInfo(inventoryItemLink)
+    if upgradeInfo and upgradeInfo.trackString and upgradeInfo.trackString ~= "" and upgradeInfo.currentLevel > 0 and upgradeInfo.maxLevel > 0 then
+      itemUpgradeTrack = upgradeInfo.trackString
+      itemUpgradeLevel = upgradeInfo.currentLevel
+      itemUpgradeMax = upgradeInfo.maxLevel
+    end
+
     local tooltipData = C_TooltipInfo.GetInventoryItem("player", slot.id)
-    TableForEach(tooltipData.lines, function(line)
-      if not line.leftText then return end
-      local match, _, uTrack, uLevel, uMax = line.leftText:find(upgradePattern)
-      if not match then return end
-      if uTrack then
-        itemUpgradeTrack = uTrack
-      end
-      if uLevel then
-        itemUpgradeLevel = tonumber(uLevel) or itemUpgradeLevel
-      end
-      if uMax then
-        itemUpgradeMax = tonumber(uMax) or itemUpgradeMax
-      end
-      if line.leftColor then
-        itemUpgradeColor = line.leftColor:GenerateHexColor()
-      end
-    end)
+    if tooltipData and tooltipData.lines then
+      TableForEach(tooltipData.lines, function(line)
+        if not line.leftText then return end
+        local match, _, uTrack, uLevel, uMax = line.leftText:find(upgradePattern)
+        if not match then return end
+        if itemUpgradeTrack == "" then
+          if uTrack then
+            itemUpgradeTrack = uTrack
+          end
+          if uLevel then
+            itemUpgradeLevel = tonumber(uLevel) or itemUpgradeLevel
+          end
+          if uMax then
+            itemUpgradeMax = tonumber(uMax) or itemUpgradeMax
+          end
+        end
+        if line.leftColor then
+          itemUpgradeColor = line.leftColor:GenerateHexColor()
+        end
+      end)
+    end
 
     ---@type AE_Equipment
     local equipment = {

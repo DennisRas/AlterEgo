@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.1 - TBD
+
+- Fixed equipment window Upgrade Level for Sporefused, Ascendant Voidforged, and crafted items.
+
 ## v1.6.0 - 2026-08-12
 
 - Added Midnight Season 2 dungeon pool: Altar of Fangs, Murder Row, Den of Nalorakk, The Blinding Vale, Voidscar Arena, Kings' Rest, Temple of Sethraliss, and Ruby Life Pools.

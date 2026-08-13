@@ -70,6 +70,7 @@
 
 ---@class AE_EquipmentTableRow : LiqUI_TableDataRowExtended
 ---@field item AE_Equipment
+---@field upgradeSort string
 ---@field enchantSort string
 ---@field gemCount number
 

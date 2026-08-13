@@ -16,7 +16,6 @@ Data.upgradeTracks = {
       {name = "Champion",   bonusIDs = {12785, 12786, 12787, 12788, 12789, 12790}},
       {name = "Hero",       bonusIDs = {12793, 12794, 12795, 12796, 12797, 12798}},
       {name = "Myth",       bonusIDs = {12801, 12802, 12803, 12804, 12805, 12806}},
-      {name = "Crafted",    bonusIDs = {9401, 9402, 9403, 9404, 9405, 9623, 9624, 9625, 9626, 9627}},
     },
   },
   {
@@ -28,7 +27,47 @@ Data.upgradeTracks = {
       {name = "Champion",   bonusIDs = {12833, 12834, 12835, 12836, 12837, 12838}},
       {name = "Hero",       bonusIDs = {12841, 12842, 12843, 12844, 12845, 12846}},
       {name = "Myth",       bonusIDs = {12849, 12850, 12851, 12852, 12853, 12854}},
-      {name = "Crafted",    bonusIDs = {9401, 9402, 9403, 9404, 9405, 9623, 9624, 9625, 9626, 9627}},
     },
   },
+}
+
+---@type table<number, AE_UpgradeBonusLabel>
+Data.upgradeBonusLabels = {
+  [13789] = {name = "Sporefused: Veteran", seasonID = 17},
+  [13788] = {name = "Sporefused: Champion", seasonID = 17},
+  [13787] = {name = "Sporefused: Hero", seasonID = 17},
+  [13786] = {name = "Sporefused: Myth", seasonID = 17},
+  [13653] = {name = "Ascendant Voidforged: Hero", seasonID = 17},
+  [13654] = {name = "Ascendant Voidforged: Myth", seasonID = 17},
+  [13655] = {name = "Ascendant Voidforged", seasonID = 17},
+}
+
+---@type table<number, number>
+Data.craftedQualityBonusIDs = {
+  [9401] = 1,
+  [9402] = 2,
+  [9403] = 3,
+  [9404] = 4,
+  [9405] = 5,
+  [9623] = 1,
+  [9624] = 2,
+  [9625] = 3,
+  [9626] = 4,
+  [9627] = 5,
+  [12493] = 1,
+  [12494] = 2,
+  [12495] = 3,
+  [12496] = 4,
+  [12497] = 5,
+  [12498] = 1,
+  [12499] = 2,
+  [12500] = 3,
+  [12501] = 4,
+  [12502] = 5,
+}
+
+---@type table<number, number>
+Data.craftedSeasonBonusIDs = {
+  [13622] = 17,
+  [13751] = 18,
 }
