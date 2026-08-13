@@ -187,26 +187,29 @@ end
 ---Get the current Season IDs
 ---@return number, number
 function Data:GetCurrentSeason()
-  if not self.cache.seasonID or self.cache.seasonID == -1 then
-    self.cache.seasonID = C_MythicPlus.GetCurrentSeason()
-  end
-  if not self.cache.seasonDisplayID or self.cache.seasonDisplayID == -1 then
-    self.cache.seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason()
+  if self.cache.seasonID and self.cache.seasonID > 0 and self.cache.seasonDisplayID and self.cache.seasonDisplayID > 0 then
+    return self.cache.seasonID, self.cache.seasonDisplayID
   end
 
+  local seasonID = C_MythicPlus.GetCurrentSeason() or -1
+  local seasonDisplayID = C_MythicPlus.GetCurrentUIDisplaySeason() or -1
+  if seasonID <= 0 or seasonDisplayID <= 0 then
+    return -1, -1
+  end
+
+  local season = TableGet(self.seasons, "seasonID", seasonID)
   local currentExpansionLevel = GetExpansionLevel()
-  if currentExpansionLevel then
-    local season = TableGet(self.seasons, "seasonID", self.cache.seasonID)
-    if not season or season.expansionID < currentExpansionLevel then
-      local nextSeason = TableGet(self.seasons, "expansionID", currentExpansionLevel)
-      if nextSeason then
-        self.cache.seasonID = nextSeason.seasonID
-        self.cache.seasonDisplayID = nextSeason.seasonDisplayID
-      end
+  if season and currentExpansionLevel and season.expansionID < currentExpansionLevel then
+    local nextSeason = TableGet(self.seasons, "expansionID", currentExpansionLevel)
+    if nextSeason then
+      seasonID = nextSeason.seasonID
+      seasonDisplayID = nextSeason.seasonDisplayID
     end
   end
 
-  return self.cache.seasonID or -1, self.cache.seasonDisplayID or -1
+  self.cache.seasonID = seasonID
+  self.cache.seasonDisplayID = seasonDisplayID
+  return seasonID, seasonDisplayID
 end
 
 ---Get the currencies of the current season enriched with C_CurrencyInfo data

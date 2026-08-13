@@ -2,7 +2,9 @@
 
 ## v1.6.1 - TBD
 
+- Updated the Season 2 Nebulous Voidcore tooltip to note that the count may be wrong until the season starts. Ref. #264. Thank you @Artoliz.
 - Fixed equipment window Upgrade Level for Sporefused, Ascendant Voidforged, and crafted items.
+- Fixed Season 1 currencies and content showing until reload after login. Fixes #265. Thank you @Artoliz.
 
 ## v1.6.0 - 2026-08-12
 
