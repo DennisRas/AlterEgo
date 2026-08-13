@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.1 - 2026-08-14
+
+- Updated the Season 2 Nebulous Voidcore tooltip to note that the count may be wrong until the season starts. Ref. #264. Thank you @Artoliz.
+- Fixed equipment window Upgrade Level for Sporefused, Ascendant Voidforged, and crafted items.
+- Fixed Season 1 currencies and content showing until reload after login. Fixes #265. Thank you @Artoliz.
+
 ## v1.6.0 - 2026-08-12
 
 - Added Midnight Season 2 dungeon pool: Altar of Fangs, Murder Row, Den of Nalorakk, The Blinding Vale, Voidscar Arena, Kings' Rest, Temple of Sethraliss, and Ruby Life Pools.

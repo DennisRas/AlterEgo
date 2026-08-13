@@ -27,5 +27,5 @@ Data.currencies = {
   {seasonID = 18, seasonDisplayID = 2, id = 3310, useTotalEarnedForMaxQty = false, currencyType = "delve"},                                                                                                                                           -- Coffer Key Shards
   {seasonID = 18, seasonDisplayID = 2, id = 3028, useTotalEarnedForMaxQty = false, currencyType = "delve"},                                                                                                                                           -- Restored Coffer key
   {seasonID = 18, seasonDisplayID = 2, id = 3356, useTotalEarnedForMaxQty = false, currencyType = "delve"},                                                                                                                                           -- Untainted Mana-Crystals
-  {seasonID = 18, seasonDisplayID = 2, id = 3513, useTotalEarnedForMaxQty = true,  currencyType = "bonusroll", tooltipNote = "Earned from the Great Vault."},                                                                                         -- Nebulous Voidcore
+  {seasonID = 18, seasonDisplayID = 2, id = 3513, useTotalEarnedForMaxQty = true,  currencyType = "bonusroll", tooltipNote = "Earned from the Great Vault. The count may be wrong until Season 2 starts and Voidcores are available."},             -- Nebulous Voidcore
 }

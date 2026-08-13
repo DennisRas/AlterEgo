@@ -41,6 +41,9 @@
 ---@field preyDifficulties AE_PreyDifficulty[]
 ---@field preyQuests AE_PreyQuest[]
 ---@field upgradeTracks AE_UpgradeSeason[]
+---@field upgradeBonusLabels table<number, AE_UpgradeBonusLabel>
+---@field craftedQualityBonusIDs table<number, number>
+---@field craftedSeasonBonusIDs table<number, number>
 ---@field cache AE_Cache
 
 ---@class AE_Cache

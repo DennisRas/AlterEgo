@@ -33,6 +33,131 @@ local Slots = {
 }
 
 local EQUIPMENT_HEADER_HEIGHT = 30
+local CRAFTED_QUALITY_MAX = 5
+
+---@param itemLink string
+---@return number[]
+local function getItemLinkBonusIDs(itemLink)
+  ---@type number[]
+  local bonusIDs = {}
+  local itemPayload = string.match(itemLink, "item:([%-?%d:]+)")
+  if not itemPayload then
+    return bonusIDs
+  end
+  local itemPayloadSplit = {strsplit(":", itemPayload)}
+  local numBonuses = tonumber(itemPayloadSplit[13])
+  if numBonuses == nil or numBonuses < 1 then
+    return bonusIDs
+  end
+  for bonusIndex = 14, 13 + numBonuses do
+    local bonusId = tonumber(itemPayloadSplit[bonusIndex])
+    if bonusId ~= nil then
+      table.insert(bonusIDs, bonusId)
+    end
+  end
+  return bonusIDs
+end
+
+---@param text string
+---@param complete boolean
+---@param muted boolean
+---@return string
+local function colorUpgradeLevelText(text, complete, muted)
+  if muted then
+    return DISABLED_FONT_COLOR:WrapTextInColorCode(text)
+  end
+  if complete then
+    return GREEN_FONT_COLOR:WrapTextInColorCode(text)
+  end
+  return text
+end
+
+---@param seasonID number?
+---@return boolean
+local function isUpgradeFromPreviousSeason(seasonID)
+  if not seasonID or seasonID < 1 then
+    return false
+  end
+  local currentSeason = Data:GetCurrentSeason()
+  if not currentSeason or currentSeason < 1 then
+    return false
+  end
+  return seasonID ~= currentSeason
+end
+
+---@param item AE_Equipment
+---@return string, string
+local function resolveEquipmentUpgradeLevel(item)
+  ---@type string[]
+  local displayParts = {}
+  ---@type string[]
+  local sortParts = {}
+
+  local function appendLabel(text, complete, muted)
+    table.insert(sortParts, text)
+    table.insert(displayParts, colorUpgradeLevelText(text, complete, muted))
+  end
+
+  local upgradeLevel = item.itemUpgradeLevel or 0
+  local upgradeMax = item.itemUpgradeMax or 0
+  if item.itemUpgradeTrack and item.itemUpgradeTrack ~= "" and upgradeLevel > 0 and upgradeMax > 0 then
+    local muted = item.itemUpgradeColor ~= nil and item.itemUpgradeColor == DISABLED_FONT_COLOR:GenerateHexColor()
+    appendLabel(format("%s %d/%d", item.itemUpgradeTrack, upgradeLevel, upgradeMax), upgradeLevel == upgradeMax, muted)
+  end
+
+  local bonusIDs = getItemLinkBonusIDs(item.itemLink)
+
+  if #displayParts == 0 then
+    local fallbackTrack
+    local fallbackLevel = 0
+    local fallbackMax = 0
+    TableForEach(bonusIDs, function(bonusId)
+      TableForEach(Data.upgradeTracks, function(season)
+        TableForEach(season.tracks, function(track)
+          TableForEach(track.bonusIDs, function(id, trackLevel)
+            if id == bonusId then
+              fallbackTrack = track.name
+              fallbackLevel = trackLevel
+              fallbackMax = #track.bonusIDs
+            end
+          end)
+        end)
+      end)
+    end)
+    if fallbackTrack then
+      appendLabel(format("%s %d/%d", fallbackTrack, fallbackLevel, fallbackMax), fallbackLevel == fallbackMax, true)
+    end
+  end
+
+  TableForEach(bonusIDs, function(bonusId)
+    local label = Data.upgradeBonusLabels[bonusId]
+    if label then
+      appendLabel(label.name, true, isUpgradeFromPreviousSeason(label.seasonID))
+    end
+  end)
+
+  local craftedQuality = C_TradeSkillUI.GetItemCraftedQualityByItemInfo(item.itemLink)
+  if not craftedQuality then
+    TableForEach(bonusIDs, function(bonusId)
+      local quality = Data.craftedQualityBonusIDs[bonusId]
+      if quality then
+        craftedQuality = quality
+      end
+    end)
+  end
+  if craftedQuality then
+    local craftedSeason
+    TableForEach(bonusIDs, function(bonusId)
+      local seasonID = Data.craftedSeasonBonusIDs[bonusId]
+      if seasonID and (not craftedSeason or seasonID > craftedSeason) then
+        craftedSeason = seasonID
+      end
+    end)
+    appendLabel(format("Crafted %d/%d", craftedQuality, CRAFTED_QUALITY_MAX), craftedQuality == CRAFTED_QUALITY_MAX, isUpgradeFromPreviousSeason(craftedSeason))
+  end
+
+  return table.concat(displayParts, " / "), table.concat(sortParts, " / ")
+end
 
 ---@param item AE_Equipment
 ---@return string
@@ -121,22 +246,7 @@ end
 ---@param rowB AE_EquipmentTableRow
 ---@return boolean
 local function compareEquipmentUpgradeColumn(rowA, rowB)
-  local itemA = rowA.item
-  local itemB = rowB.item
-  if not itemA or not itemB then
-    return false
-  end
-  local trackA = itemA.itemUpgradeTrack or ""
-  local trackB = itemB.itemUpgradeTrack or ""
-  if trackA ~= trackB then
-    return compareEquipmentPrimaryThenSlot(rowA, rowB, trackA, trackB)
-  end
-  local levelA = itemA.itemUpgradeLevel or 0
-  local levelB = itemB.itemUpgradeLevel or 0
-  if levelA ~= levelB then
-    return compareEquipmentPrimaryThenSlot(rowA, rowB, levelA, levelB)
-  end
-  return compareEquipmentTiebreak(rowA, rowB)
+  return compareEquipmentPrimaryThenSlot(rowA, rowB, rowA.upgradeSort, rowB.upgradeSort)
 end
 
 ---@param rowA AE_EquipmentTableRow
@@ -216,7 +326,7 @@ function Module:Render()
         {id = "slot", headerText = "Slot", width = 100, sorting = {enabled = true, compare = compareEquipmentSlotColumn}},
         {id = "item", headerText = "Item", width = 280, sorting = {enabled = true, compare = compareEquipmentItemColumn}},
         {id = "ilevel", headerText = "iLevel", width = 80, align = "CENTER", sorting = {enabled = true, compare = compareEquipmentILvlColumn}},
-        {id = "upgrade", headerText = "Upgrade Level", width = 150, sorting = {enabled = true, compare = compareEquipmentUpgradeColumn}},
+        {id = "upgrade", headerText = "Upgrade Level", width = 190, sorting = {enabled = true, compare = compareEquipmentUpgradeColumn}},
         {id = "enchant", headerText = "Enchant", width = 180, sorting = {enabled = true, compare = compareEquipmentEnchantColumn}},
         {id = "gems", headerText = "Gems", width = 80, sorting = {enabled = true, compare = compareEquipmentGemsColumn}},
       },
@@ -248,40 +358,7 @@ function Module:Render()
   TableForEach(character.equipment, function(item)
     local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
 
-    local upgradeLevel = ""
-    if item.itemUpgradeTrack ~= "" then
-      upgradeLevel = format("%s %d/%d", item.itemUpgradeTrack, item.itemUpgradeLevel, item.itemUpgradeMax)
-      if item.itemUpgradeColor and item.itemUpgradeColor == DISABLED_FONT_COLOR:GenerateHexColor() then
-        upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-      elseif item.itemUpgradeLevel == item.itemUpgradeMax then
-        upgradeLevel = GREEN_FONT_COLOR:WrapTextInColorCode(upgradeLevel)
-      end
-    end
-
-    --- Fallback when Blizzard omits upgrade track text on previous-season gear
-    if upgradeLevel == "" then
-      local itemPayload = string.match(item.itemLink, "item:([%-?%d:]+)")
-      if itemPayload then
-        local itemPayloadSplit = {strsplit(":", itemPayload)}
-        local numBonuses = tonumber(itemPayloadSplit[13])
-        if numBonuses ~= nil and numBonuses > 0 then
-          for bonusIndex = 14, 13 + numBonuses do
-            local bonusId = tonumber(itemPayloadSplit[bonusIndex])
-            if bonusId ~= nil then
-              TableForEach(Data.upgradeTracks, function(season)
-                TableForEach(season.tracks, function(track)
-                  TableForEach(track.bonusIDs, function(id, trackLevel)
-                    if id == bonusId then
-                      upgradeLevel = DISABLED_FONT_COLOR:WrapTextInColorCode(format("%s %d/%d", track.name, trackLevel, #track.bonusIDs))
-                    end
-                  end)
-                end)
-              end)
-            end
-          end
-        end
-      end
-    end
+    local upgradeLevel, upgradeSort = resolveEquipmentUpgradeLevel(item)
 
     local enchantText, enchantTooltip, enchantColor = "", "", GREEN_FONT_COLOR
     ---@type string[]
@@ -344,6 +421,7 @@ function Module:Render()
     ---@type AE_EquipmentTableRow
     local row = {
       item = item,
+      upgradeSort = upgradeSort,
       enchantSort = enchantSort,
       gemCount = gemCount,
       data = {
