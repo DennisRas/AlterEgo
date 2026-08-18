@@ -38,6 +38,7 @@
 ---@field hasAvailableRewards boolean
 ---@field slots AE_CharacterVaultSlot[]
 ---@field activityEncounterInfo AE_WeeklyRewardActivityEncounterInfo[]
+---@field worldActivityProgress WeeklyRewardActivityTierProgress[]
 
 ---@class AE_CharacterVaultSlot : WeeklyRewardActivityInfo
 ---@field exampleRewardLink string

@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.2 - TBD
+
+- Added top World activities this week to the Great Vault World tooltip.
+- Updated Great Vault World progress text to include Prey and Ritual Sites.
+
 ## v1.6.1 - 2026-08-14
 
 - Updated the Season 2 Nebulous Voidcore tooltip to note that the count may be wrong until the season starts. Ref. #264. Thank you @Artoliz.

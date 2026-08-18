@@ -68,10 +68,10 @@ local vaultTooltipTexts = {
   },
   [Enum.WeeklyRewardChestThresholdType.World] = {
     ["objective"] = "|4activity:activities;",
-    ["default"] = "Complete delves or world activities this week to unlock your first Great Vault reward.",
-    ["firstSlotStart"] = "Complete %1$d |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
-    ["firstSlotMore"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock your first Great Vault reward.",
-    ["nextSlotMore"] = "Complete %1$d more |4delve or world activity:delves or world activities; this week to unlock another Great Vault reward.",
+    ["default"] = "Complete delves, world activities, Prey, or Ritual Sites this week to unlock your first Great Vault reward.",
+    ["firstSlotStart"] = "Complete %1$d |4activity:activities; this week (delves, world activities, Prey, or Ritual Sites) to unlock your first Great Vault reward.",
+    ["firstSlotMore"] = "Complete %1$d more |4activity:activities; this week (delves, world activities, Prey, or Ritual Sites) to unlock your first Great Vault reward.",
+    ["nextSlotMore"] = "Complete %1$d more |4activity:activities; this week (delves, world activities, Prey, or Ritual Sites) to unlock another Great Vault reward.",
     ["rewardsImprove"] = "Complete delves on tier %d or higher to improve your Great Vault rewards.",
     ["rewardsMaxed"] = "Good job - You are done! There are no more rewards to improve.",
   },
@@ -277,6 +277,44 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           GameTooltip:AddLine(WEEKLY_REWARDS_HEROIC, 1, 1, 1)
           countHeroic = countHeroic - 1
           missingRuns = missingRuns - 1
+        end
+      end
+    end
+  end
+
+  do -- World activities
+    if activityType == Enum.WeeklyRewardChestThresholdType.World then
+      local worldActivityProgress = character.vault.worldActivityProgress or {}
+      local desiredRuns = vaultMaxLevelRewardWorld
+      local lastActivity = activities[numActivities]
+      if lastActivity then
+        desiredRuns = lastActivity.threshold
+      end
+
+      local hasProgress = false
+      TableForEach(worldActivityProgress, function(tierProgress)
+        if tierProgress.numPoints and tierProgress.numPoints > 0 then
+          hasProgress = true
+        end
+      end)
+
+      if hasProgress and desiredRuns > 0 then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(WEEKLY_REWARDS_WORLD_TOP_ACTIVITIES:format(desiredRuns))
+        for _, tierProgress in ipairs(worldActivityProgress) do
+          if desiredRuns <= 0 then
+            break
+          end
+          local numRuns = math.min(tierProgress.numPoints, desiredRuns)
+          if numRuns <= 0 then
+            break
+          end
+          desiredRuns = desiredRuns - numRuns
+          if tierProgress.difficulty > 1 then
+            GameTooltip:AddLine(WEEKLY_REWARDS_DELVE_TIER_INFO:format(tierProgress.difficulty, numRuns), 1, 1, 1)
+          else
+            GameTooltip:AddLine(WEEKLY_REWARDS_DELVE_TIER_AND_WORLD_INFO:format(tierProgress.difficulty, numRuns), 1, 1, 1)
+          end
         end
       end
     end
