@@ -233,6 +233,19 @@ function Core:OnEnable()
     end,
     true
   )
+  addon.Events:RegisterEvent(
+    {
+      "ADDON_RESTRICTION_STATE_CHANGED",
+      "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
+    },
+    function(_, event, _, state)
+      if event == "ADDON_RESTRICTION_STATE_CHANGED" and state ~= Enum.AddOnRestrictionState.Inactive then
+        return
+      end
+      Data:FlushPendingKeystoneAnnounce()
+    end,
+    true
+  )
   self:CheckGameData()
 end
 

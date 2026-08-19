@@ -13,7 +13,7 @@ local TableFind = addon.Libs.LiqUI.Utils.TableFind
 local TableForEach = addon.Libs.LiqUI.Utils.TableForEach
 local TableGet = addon.Libs.LiqUI.Utils.TableGet
 
-Data.dbVersion = 36
+Data.dbVersion = 37
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -33,6 +33,7 @@ Data.defaultDB = {
     showZeroRatedCharacters = true,
     showRealms = true,
     showGuildInformation = false,
+    currentCharacterMarker = "dot",
     announceKeystones = {
       autoParty = true,
       autoGuild = false,
@@ -646,6 +647,9 @@ function Data:MigrateDB()
       self.db.global.raids.killIcon = "skull"
       self.db.global.raids.boxes = nil
     end
+    if self.db.global.dbVersion == 36 then
+      self.db.global.currentCharacterMarker = "dot"
+    end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
@@ -1073,6 +1077,39 @@ function Data:UpdateEquipment()
   end)
 end
 
+---@param itemLink string
+local function sendNewKeystoneAnnounce(itemLink)
+  if C_ChatInfo.InChatMessagingLockdown()
+    or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
+    or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards) then
+    Data.cache.pendingKeystoneAnnounce = true
+    return
+  end
+  Data.cache.pendingKeystoneAnnounce = nil
+  if IsInGroup() and Data.db.global.announceKeystones.autoParty then
+    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
+  end
+  if IsInGuild() and Data.db.global.announceKeystones.autoGuild then
+    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
+  end
+end
+
+---Send a queued new-keystone announce once chat is unrestricted
+function Data:FlushPendingKeystoneAnnounce()
+  if not self.cache.pendingKeystoneAnnounce then
+    return
+  end
+  local character = self:GetCharacter()
+  if not character then
+    return
+  end
+  local itemLink = character.mythicplus.keystone.itemLink
+  if itemLink == "" then
+    return
+  end
+  sendNewKeystoneAnnounce(itemLink)
+end
+
 ---Refresh keystone item from bags
 function Data:UpdateKeystoneItem()
   local character = self:GetCharacter()
@@ -1150,12 +1187,7 @@ function Data:UpdateKeystoneItem()
   }
 
   if newKeystone then
-    if IsInGroup() and self.db.global.announceKeystones.autoParty then
-      SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. keystoneItemLink, "PARTY")
-    end
-    if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-      SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. keystoneItemLink, "GUILD")
-    end
+    sendNewKeystoneAnnounce(keystoneItemLink)
   end
 
   addon.Core:Render()

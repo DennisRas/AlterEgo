@@ -1,6 +1,12 @@
 ---@alias AE_CharacterSortingOption "lastUpdate" | "name.asc" | "name.desc" | "realm.asc" | "realm.desc" | "class.asc" | "class.desc" | "ilvl.asc" | "ilvl.desc" | "rating.asc" | "rating.desc" | "custom"
 
+---@alias AE_CurrentCharacterMarkerId "none" | "brackets" | "parentheses" | "dot" | "border"
+
 ---@alias AE_RaidKillIconId "skull" | "diamond"
+
+---@class AE_CurrentCharacterMarker
+---@field id AE_CurrentCharacterMarkerId
+---@field label string
 
 ---@class AE_RaidKillIcon
 ---@field id AE_RaidKillIconId
@@ -27,6 +33,8 @@
 ---@field prefix string
 ---@field commands string[]
 ---@field media table<string, string>
+---@field currentCharacterNameMarker string
+---@field currentCharacterMarkers AE_CurrentCharacterMarker[]
 ---@field raidKillIcons AE_RaidKillIcon[]
 ---@field colors table<string, ColorTable>
 ---@field sizes AE_ConstantsSizes

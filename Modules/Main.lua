@@ -455,7 +455,21 @@ function Module:GetCharacterInfo(unfiltered)
             nameColor = classColor.GenerateHexColor(classColor)
           end
         end
-        return "|c" .. nameColor .. name .. "|r"
+        local coloredName = "|c" .. nameColor .. name .. "|r"
+        if character.GUID ~= UnitGUID("player") then
+          return coloredName
+        end
+        local marker = Data.db.global.currentCharacterMarker
+        if marker == "brackets" then
+          return GREEN_FONT_COLOR:WrapTextInColorCode("[") .. " " .. coloredName .. " " .. GREEN_FONT_COLOR:WrapTextInColorCode("]")
+        end
+        if marker == "parentheses" then
+          return GREEN_FONT_COLOR:WrapTextInColorCode("(") .. " " .. coloredName .. " " .. GREEN_FONT_COLOR:WrapTextInColorCode(")")
+        end
+        if marker == "dot" then
+          return coloredName .. " " .. Constants.currentCharacterNameMarker
+        end
+        return coloredName
       end,
       onEnter = function(infoFrame, character)
         local name = "-"
@@ -866,6 +880,22 @@ function Module:Render()
       end,
       onSettingsMenu = function(window, menu)
             menu:CreateTitle(CHARACTER)
+            local currentCharacterMarkerSetting = menu:CreateButton("Current character")
+            TableForEach(Constants.currentCharacterMarkers, function(marker)
+              currentCharacterMarkerSetting:CreateRadio(
+                marker.label,
+                function(id) return Data.db.global.currentCharacterMarker == id end,
+                function(id)
+                  Data.db.global.currentCharacterMarker = id
+                  self:Render()
+                end,
+                marker.id
+              )
+            end)
+            currentCharacterMarkerSetting:SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Mark the character you are playing in the grid.", nil, nil, nil, true)
+            end)
             menu:CreateCheckbox(
               "Show characters with zero rating",
               function() return Data.db.global.showZeroRatedCharacters end,
@@ -1809,6 +1839,38 @@ function Module:Render()
       characterFrame:SetWidth(CHARACTER_WIDTH)
       SetBackgroundColor(characterFrame, 1, 1, 1, characterIndex % 2 == 0 and 0.01 or 0)
       characterFrame:Show()
+
+      do -- Current character overlay
+        local overlay = characterFrame.currentCharacterOverlay
+        if not overlay then
+          overlay = CreateFrame("Frame", "$parentCurrentCharacterOverlay", characterFrame)
+          overlay:SetAllPoints()
+          overlay:EnableMouse(false)
+          local greenR = DIM_GREEN_FONT_COLOR.r
+          local greenG = DIM_GREEN_FONT_COLOR.g
+          local greenB = DIM_GREEN_FONT_COLOR.b
+          overlay.background = overlay:CreateTexture(nil, "BACKGROUND")
+          overlay.background:SetAllPoints()
+          overlay.background:SetColorTexture(greenR, greenG, greenB, 0.04)
+          overlay.left = overlay:CreateTexture(nil, "ARTWORK")
+          overlay.left:SetWidth(2)
+          overlay.left:SetPoint("TOPLEFT")
+          overlay.left:SetPoint("BOTTOMLEFT")
+          overlay.left:SetColorTexture(greenR, greenG, greenB, 0.15)
+          overlay.right = overlay:CreateTexture(nil, "ARTWORK")
+          overlay.right:SetWidth(2)
+          overlay.right:SetPoint("TOPRIGHT")
+          overlay.right:SetPoint("BOTTOMRIGHT")
+          overlay.right:SetColorTexture(greenR, greenG, greenB, 0.15)
+          characterFrame.currentCharacterOverlay = overlay
+        end
+        overlay:SetFrameLevel(characterFrame:GetFrameLevel() + 50)
+        if character.GUID == UnitGUID("player") and Data.db.global.currentCharacterMarker == "border" then
+          overlay:Show()
+        else
+          overlay:Hide()
+        end
+      end
 
       do -- Info
         TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)

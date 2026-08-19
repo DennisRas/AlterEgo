@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.3 - 2026-08-20
+
+- Added an indicator for the current character in the grid. Fixes #97. Thank you @Antorinia.
+- Updated the abbreviations for Voidscar Arena (VSA) and The Blinding Vale (BV).
+- Fixed an error when auto-announcing a new keystone from the Great Vault.
+
 ## v1.6.2 - 2026-08-19
 
 - Added top World activities this week to the Great Vault World tooltip.
