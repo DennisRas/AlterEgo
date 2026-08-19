@@ -460,14 +460,15 @@ function Module:GetCharacterInfo(unfiltered)
           return coloredName
         end
         local marker = Data.db.global.currentCharacterMarker
+        local currentColor = GREEN_FONT_COLOR
         if marker == "brackets" then
-          return GREEN_FONT_COLOR:WrapTextInColorCode("[") .. " " .. coloredName .. " " .. GREEN_FONT_COLOR:WrapTextInColorCode("]")
+          return currentColor:WrapTextInColorCode("[ ") .. coloredName .. currentColor:WrapTextInColorCode(" ]")
         end
         if marker == "parentheses" then
-          return GREEN_FONT_COLOR:WrapTextInColorCode("(") .. " " .. coloredName .. " " .. GREEN_FONT_COLOR:WrapTextInColorCode(")")
+          return currentColor:WrapTextInColorCode("( ") .. coloredName .. currentColor:WrapTextInColorCode(" )")
         end
         if marker == "dot" then
-          return coloredName .. " " .. Constants.currentCharacterNameMarker
+          return coloredName .. Constants.currentCharacterNameMarker
         end
         return coloredName
       end,
@@ -1846,22 +1847,20 @@ function Module:Render()
           overlay = CreateFrame("Frame", "$parentCurrentCharacterOverlay", characterFrame)
           overlay:SetAllPoints()
           overlay:EnableMouse(false)
-          local greenR = DIM_GREEN_FONT_COLOR.r
-          local greenG = DIM_GREEN_FONT_COLOR.g
-          local greenB = DIM_GREEN_FONT_COLOR.b
+          local color = DIM_GREEN_FONT_COLOR
           overlay.background = overlay:CreateTexture(nil, "BACKGROUND")
           overlay.background:SetAllPoints()
-          overlay.background:SetColorTexture(greenR, greenG, greenB, 0.04)
+          overlay.background:SetColorTexture(color.r, color.g, color.b, 0.04)
           overlay.left = overlay:CreateTexture(nil, "ARTWORK")
           overlay.left:SetWidth(2)
           overlay.left:SetPoint("TOPLEFT")
           overlay.left:SetPoint("BOTTOMLEFT")
-          overlay.left:SetColorTexture(greenR, greenG, greenB, 0.15)
+          overlay.left:SetColorTexture(color.r, color.g, color.b, 0.15)
           overlay.right = overlay:CreateTexture(nil, "ARTWORK")
           overlay.right:SetWidth(2)
           overlay.right:SetPoint("TOPRIGHT")
           overlay.right:SetPoint("BOTTOMRIGHT")
-          overlay.right:SetColorTexture(greenR, greenG, greenB, 0.15)
+          overlay.right:SetColorTexture(color.r, color.g, color.b, 0.15)
           characterFrame.currentCharacterOverlay = overlay
         end
         overlay:SetFrameLevel(characterFrame:GetFrameLevel() + 50)
