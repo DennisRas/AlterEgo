@@ -1,28 +1,20 @@
-Are you a Mythic+ enthusiast with multiple characters and alts to manage?  
-AlterEgo helps you keep track of Mythic+ and raid progress across all your characters at a glance.
+Too many alts to remember who has a key, who still needs vault, and who is actually ready this week?
 
-See your highest keys, rating, raid boss kills, item levels, equipment, currencies, and Great Vault status per character so you always know who is ready for what.
-A range of customization options lets you control which data is shown and how it looks, so AlterEgo fits your UI instead of fighting it.
-
-Download AlterEgo today and take control of your gaming experience like never before!
+AlterEgo puts Mythic+, raid, and Great Vault progress for all your characters in one grid.
 
 ## Features
 
-- Track data for all of your characters across realms and factions.
-- Track all of your Mythic+ ratings and season bests.
-- Track all of your Mythic+ levels for each affix.
-- Track all of your Mythic+ keystone items.
-- Track all of your Raid lockouts and kills.
-- Track Prey Hunt progress across difficulties.
-- Track all of your seasonal currencies, such as crests and sparks.
-- Track your Great Vault progress and get notified of available Great Vault rewards.
-- Track equipped items, upgrade tracks, enchants, and gems in the Character Equipment window.
-- Get a fantastic overview of everything in a big datagrid.
-- Customize the grid with filters, sorting, colors and other options.
-- Show the weekly Affix schedule for the entire season.
-- Teleport to the dungeons by clicking the dungeon names.
-- Announce instance resets to your party/raid.
-- Announce your keystones to your party/guild.
+- Characters across realms and factions in one view.
+- Mythic+ ratings, season bests, affix levels, and current keystones.
+- Raid lockouts and boss kills.
+- Prey Hunt progress across difficulties.
+- Seasonal currencies such as crests and sparks.
+- Great Vault progress, with a reminder when rewards are ready to claim.
+- Character Equipment window for equipped items, upgrade tracks, enchants, and gems.
+- Weekly Affixes window for the season schedule.
+- Teleport to a dungeon from its name in the grid.
+- Announce instance resets and send your keystones to party or guild chat.
+- Keybinds and minimap shortcuts for the main window, Great Vault, and Character Equipment window.
 
 ## Slash Commands
 
@@ -34,12 +26,15 @@ Download AlterEgo today and take control of your gaming experience like never be
 Your feedback is invaluable and instrumental in making AlterEgo the best it can be.  
 If you come across any bugs or have suggestions for improvements, please don't hesitate to reach out.
 
-To keep feedback in one place and make it much easier for me to fix bugs, ship improvements, and keep AlterEgo healthy long term, I am moving all support to the issue tracker instead of the comments. This helps make sure nothing gets lost, lets me track progress clearly, and gives your ideas a much better chance of turning into real features.
+**Report bugs, suggest features, or ask questions on the [AlterEgo GitHub repository](https://github.com/DennisRas/AlterEgo/issues)**
 
-**Report bugs, suggest new features, or ask questions on the [AlterEgo GitHub repository](https://github.com/DennisRas/AlterEgo/issues)**
+## Contributors and Acknowledgements
 
-## Video Spotlight
+AlterEgo is better because of players who report bugs, send data, and test changes.
 
-Here's an addon spotlight published by Sunshade on YouTube:
+Special thanks to:
 
-[![YouTube Thumbnail](https://i3.ytimg.com/vi/KN9U9jYVH7g/maxresdefault.jpg)](https://www.youtube.com/watch?v=KN9U9jYVH7g)
+- The [No Pressure Discord](https://www.no-pressure.eu/) - Many players involved in the feedback and testing
+- The [WoWUIDev Discord](https://discord.gg/txUg39Vhc6) - Many awesome addon developers with the assist!
+- [Sunshade](https://www.youtube.com/watch?v=KN9U9jYVH7g) - addon spotlight
+- Many others helping out on the [AlterEgo GitHub repository](https://github.com/DennisRas/AlterEgo)
