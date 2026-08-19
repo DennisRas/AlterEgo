@@ -2,7 +2,7 @@
 
 ## v1.6.3 - TBD
 
-- Removed automatic party and guild announcements when you loot a new keystone.
+- Fixed an error when auto-announcing a new keystone from the Great Vault.
 
 ## v1.6.2 - 2026-08-19
 

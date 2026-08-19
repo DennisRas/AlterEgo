@@ -1327,6 +1327,28 @@ function Module:Render()
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Let others in your group know when you've reset the instances.", nil, nil, nil, true)
             end)
+            menu:CreateCheckbox(
+              "Announce new keystones (Party)",
+              function() return Data.db.global.announceKeystones.autoParty end,
+              function()
+                Data.db.global.announceKeystones.autoParty = not Data.db.global.announceKeystones.autoParty
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Announce to your party when you loot a new keystone.", nil, nil, nil, true)
+            end)
+            menu:CreateCheckbox(
+              "Announce new keystones (Guild)",
+              function() return Data.db.global.announceKeystones.autoGuild end,
+              function()
+                Data.db.global.announceKeystones.autoGuild = not Data.db.global.announceKeystones.autoGuild
+                self:Render()
+              end
+            ):SetTooltip(function(tooltip, elm)
+              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
+              tooltip:AddLine("Announce to your guild when you loot a new keystone.", nil, nil, nil, true)
+            end)
           end,
           iconSize = 12,
         },

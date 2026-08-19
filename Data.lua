@@ -34,6 +34,8 @@ Data.defaultDB = {
     showRealms = true,
     showGuildInformation = false,
     announceKeystones = {
+      autoParty = true,
+      autoGuild = false,
       multiline = false,
       multilineNames = false,
     },
@@ -1071,12 +1073,40 @@ function Data:UpdateEquipment()
   end)
 end
 
+---@param itemLink string
+local function sendNewKeystoneAnnounce(itemLink)
+  if C_ChatInfo.InChatMessagingLockdown()
+    or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
+    or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards) then
+    Data.cache.pendingKeystoneItemLink = itemLink
+    return
+  end
+  Data.cache.pendingKeystoneItemLink = nil
+  if IsInGroup() and Data.db.global.announceKeystones.autoParty then
+    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
+  end
+  if IsInGuild() and Data.db.global.announceKeystones.autoGuild then
+    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
+  end
+end
+
+---Send a queued new-keystone announce once chat is unrestricted
+function Data:FlushPendingKeystoneAnnounce()
+  local itemLink = self.cache.pendingKeystoneItemLink
+  if not itemLink then
+    return
+  end
+  sendNewKeystoneAnnounce(itemLink)
+end
+
 ---Refresh keystone item from bags
 function Data:UpdateKeystoneItem()
   local character = self:GetCharacter()
   if not character then return end
   local dungeons = self:GetDungeons()
   local seasonKeystoneItemID = self:GetKeystoneItemID()
+  local characterKeystoneMapID = character.mythicplus.keystone.mapId
+  local characterKeystoneLevel = character.mythicplus.keystone.level
 
   do -- Base keystone data
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
@@ -1121,6 +1151,15 @@ function Data:UpdateKeystoneItem()
   if not dungeon then return addon.Core:Render() end
   local dungeonMapId = tonumber(dungeon.mapId) or 0
 
+  local newKeystone = false
+  if characterKeystoneMapID and characterKeystoneLevel then
+    if characterKeystoneMapID ~= dungeonMapId or characterKeystoneLevel < keystoneLevel then
+      newKeystone = true
+    end
+  elseif dungeonMapId and keystoneLevel then
+    newKeystone = true
+  end
+
   local keystoneColor = "ffffffff"
   local color = C_ChallengeMode.GetKeystoneLevelRarityColor(keystoneLevel)
   if color then
@@ -1135,6 +1174,10 @@ function Data:UpdateKeystoneItem()
     itemId = keystoneItemID or seasonKeystoneItemID or 0,
     itemLink = keystoneItemLink,
   }
+
+  if newKeystone then
+    sendNewKeystoneAnnounce(keystoneItemLink)
+  end
 
   addon.Core:Render()
 end
