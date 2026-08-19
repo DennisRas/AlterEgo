@@ -13,11 +13,12 @@ Download AlterEgo today and take control of your gaming experience like never be
 - Track all of your Mythic+ levels for each affix.
 - Track all of your Mythic+ keystone items.
 - Track all of your Raid lockouts and kills.
+- Track Prey Hunt progress across difficulties.
 - Track all of your seasonal currencies, such as crests and sparks.
 - Track your Great Vault progress and get notified of available Great Vault rewards.
-- Track and view equipped items on all of your characters.
+- Track equipped items, upgrade tracks, enchants, and gems in the Character Equipment window.
 - Get a fantastic overview of everything in a big datagrid.
-- Customize the grid with filters, sorting, colors and other settings.
+- Customize the grid with filters, sorting, colors and other options.
 - Show the weekly Affix schedule for the entire season.
 - Teleport to the dungeons by clicking the dungeon names.
 - Announce instance resets to your party/raid.
@@ -26,8 +27,7 @@ Download AlterEgo today and take control of your gaming experience like never be
 ## Slash Commands
 
 - **/alterego** - toggles the main window
-
-You can also use the short command **/ae**
+- **/ae** - same as /alterego
 
 ## Bugs and Feedback
 
