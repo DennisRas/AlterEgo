@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.6.2 - TBD
+## v1.6.2 - 2026-08-19
 
 - Added top World activities this week to the Great Vault World tooltip.
 - Updated Great Vault World progress text to include Prey and Ritual Sites.
