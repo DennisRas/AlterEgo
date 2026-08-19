@@ -162,6 +162,7 @@ Data.defaultCharacter = {
     hasAvailableRewards = false,
     slots = {},
     activityEncounterInfo = {},
+    worldActivityProgress = {},
   },
 }
 
@@ -668,6 +669,7 @@ function Data:TaskWeeklyReset()
       character.prey.questsCompleted = wipe(character.prey.questsCompleted or {})
       character.vault.activityEncounterInfo = wipe(character.vault.activityEncounterInfo or {})
       character.vault.slots = wipe(character.vault.slots or {})
+      character.vault.worldActivityProgress = wipe(character.vault.worldActivityProgress or {})
       character.mythicplus.keystone = wipe(character.mythicplus.keystone or {})
       character.mythicplus.numCompletedDungeonRuns = wipe(character.mythicplus.numCompletedDungeonRuns or {})
       -- Reset quantityEarnedThisWeek if maxWeeklyQuantity is set
@@ -1166,6 +1168,7 @@ function Data:UpdateVault()
 
   character.vault.activityEncounterInfo = wipe(character.vault.activityEncounterInfo or {})
   character.vault.slots = wipe(character.vault.slots or {})
+  character.vault.worldActivityProgress = wipe(character.vault.worldActivityProgress or {})
 
   TableForEach(self.vaultTypes or {}, function(vaultType)
     for index = 1, 3 do
@@ -1192,6 +1195,19 @@ function Data:UpdateVault()
     end
     table.insert(character.vault.slots, activity)
   end)
+
+  local worldActivityProgress = C_WeeklyRewards.GetSortedProgressForActivity(Enum.WeeklyRewardChestThresholdType.World, true)
+  if worldActivityProgress then
+    TableForEach(worldActivityProgress, function(tierProgress)
+      ---@type WeeklyRewardActivityTierProgress
+      local row = {
+        activityTierID = tierProgress.activityTierID,
+        difficulty = tierProgress.difficulty,
+        numPoints = tierProgress.numPoints,
+      }
+      table.insert(character.vault.worldActivityProgress, row)
+    end)
+  end
 
   character.vault.hasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() == true
   addon.Core:Render()
