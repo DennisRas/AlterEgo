@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.3 - TBD
+
+- Removed automatic party and guild announcements when you loot a new keystone.
+
 ## v1.6.2 - 2026-08-19
 
 - Added top World activities this week to the Great Vault World tooltip.

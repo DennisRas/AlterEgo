@@ -22,7 +22,6 @@ Download AlterEgo today and take control of your gaming experience like never be
 - Teleport to the dungeons by clicking the dungeon names.
 - Announce instance resets to your party/raid.
 - Announce your keystones to your party/guild.
-- Automatically announce newly looted keystones to your party.
 
 ## Slash Commands
 

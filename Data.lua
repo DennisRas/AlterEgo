@@ -34,8 +34,6 @@ Data.defaultDB = {
     showRealms = true,
     showGuildInformation = false,
     announceKeystones = {
-      autoParty = true,
-      autoGuild = false,
       multiline = false,
       multilineNames = false,
     },
@@ -1079,8 +1077,6 @@ function Data:UpdateKeystoneItem()
   if not character then return end
   local dungeons = self:GetDungeons()
   local seasonKeystoneItemID = self:GetKeystoneItemID()
-  local characterKeystoneMapID = character.mythicplus.keystone.mapId
-  local characterKeystoneLevel = character.mythicplus.keystone.level
 
   do -- Base keystone data
     local keyStoneMapID = C_MythicPlus.GetOwnedKeystoneMapID()
@@ -1125,15 +1121,6 @@ function Data:UpdateKeystoneItem()
   if not dungeon then return addon.Core:Render() end
   local dungeonMapId = tonumber(dungeon.mapId) or 0
 
-  local newKeystone = false
-  if characterKeystoneMapID and characterKeystoneLevel then
-    if characterKeystoneMapID ~= dungeonMapId or characterKeystoneLevel < keystoneLevel then
-      newKeystone = true
-    end
-  elseif dungeonMapId and keystoneLevel then
-    newKeystone = true
-  end
-
   local keystoneColor = "ffffffff"
   local color = C_ChallengeMode.GetKeystoneLevelRarityColor(keystoneLevel)
   if color then
@@ -1148,15 +1135,6 @@ function Data:UpdateKeystoneItem()
     itemId = keystoneItemID or seasonKeystoneItemID or 0,
     itemLink = keystoneItemLink,
   }
-
-  if newKeystone then
-    if IsInGroup() and self.db.global.announceKeystones.autoParty then
-      SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. keystoneItemLink, "PARTY")
-    end
-    if IsInGuild() and self.db.global.announceKeystones.autoGuild then
-      SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. keystoneItemLink, "GUILD")
-    end
-  end
 
   addon.Core:Render()
 end
