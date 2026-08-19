@@ -13,7 +13,7 @@ local TableFind = addon.Libs.LiqUI.Utils.TableFind
 local TableForEach = addon.Libs.LiqUI.Utils.TableForEach
 local TableGet = addon.Libs.LiqUI.Utils.TableGet
 
-Data.dbVersion = 36
+Data.dbVersion = 37
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -33,6 +33,7 @@ Data.defaultDB = {
     showZeroRatedCharacters = true,
     showRealms = true,
     showGuildInformation = false,
+    currentCharacterMarker = "dot",
     announceKeystones = {
       autoParty = true,
       autoGuild = false,
@@ -645,6 +646,9 @@ function Data:MigrateDB()
       end
       self.db.global.raids.killIcon = "skull"
       self.db.global.raids.boxes = nil
+    end
+    if self.db.global.dbVersion == 36 then
+      self.db.global.currentCharacterMarker = "dot"
     end
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()

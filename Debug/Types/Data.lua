@@ -10,6 +10,7 @@
 ---@field showZeroRatedCharacters boolean
 ---@field showRealms boolean
 ---@field showGuildInformation boolean
+---@field currentCharacterMarker AE_CurrentCharacterMarkerId
 ---@field announceKeystones { autoParty: boolean, autoGuild: boolean, multiline: boolean, multilineNames: boolean}
 ---@field announceResets boolean
 ---@field vault { raids: boolean, dungeons: boolean, world: boolean }
