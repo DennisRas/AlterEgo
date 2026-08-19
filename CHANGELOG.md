@@ -2,6 +2,7 @@
 
 ## v1.6.3 - TBD
 
+- Updated the abbreviations for Voidscar Arena (VSA) and The Blinding Vale (BV).
 - Fixed an error when auto-announcing a new keystone from the Great Vault.
 
 ## v1.6.2 - 2026-08-19
