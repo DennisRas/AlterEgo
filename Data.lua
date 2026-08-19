@@ -1078,10 +1078,10 @@ local function sendNewKeystoneAnnounce(itemLink)
   if C_ChatInfo.InChatMessagingLockdown()
     or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
     or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards) then
-    Data.cache.pendingKeystoneItemLink = itemLink
+    Data.cache.pendingKeystoneAnnounce = true
     return
   end
-  Data.cache.pendingKeystoneItemLink = nil
+  Data.cache.pendingKeystoneAnnounce = nil
   if IsInGroup() and Data.db.global.announceKeystones.autoParty then
     SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
   end
@@ -1092,8 +1092,15 @@ end
 
 ---Send a queued new-keystone announce once chat is unrestricted
 function Data:FlushPendingKeystoneAnnounce()
-  local itemLink = self.cache.pendingKeystoneItemLink
-  if not itemLink then
+  if not self.cache.pendingKeystoneAnnounce then
+    return
+  end
+  local character = self:GetCharacter()
+  if not character then
+    return
+  end
+  local itemLink = character.mythicplus.keystone.itemLink
+  if itemLink == "" then
     return
   end
   sendNewKeystoneAnnounce(itemLink)

@@ -52,4 +52,4 @@
 ---@field currentAffixes MythicPlusKeystoneAffix[]
 ---@field classes table
 ---@field specs table
----@field pendingKeystoneItemLink string?
+---@field pendingKeystoneAnnounce boolean?
