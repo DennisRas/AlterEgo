@@ -2,6 +2,7 @@
 
 ## v1.6.4 - TBD
 
+- Fixed automatic keystone announcements when the new key could not be linked in chat.
 - Fixed Great Vault dungeon tooltip item levels. Thank you Blizzard for the bug /s
 - Fixed Season 2 Prey hunt tracking. Fixes #267. Thank you @sudoalias.
 

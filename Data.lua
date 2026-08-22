@@ -5,6 +5,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
+local Constants = addon.Constants
 local LibAceDB = addon.Libs.AceDB
 local TableCopy = addon.Libs.LiqUI.Utils.TableCopy
 local TableCount = addon.Libs.LiqUI.Utils.TableCount
@@ -1077,20 +1078,36 @@ function Data:UpdateEquipment()
   end)
 end
 
----@param itemLink string
-local function sendNewKeystoneAnnounce(itemLink)
+---@param itemLink string?
+---@param dungeon AE_Dungeon?
+---@param keystoneLevel number?
+local function sendNewKeystoneAnnounce(itemLink, dungeon, keystoneLevel)
   if C_ChatInfo.InChatMessagingLockdown()
     or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
     or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards) then
     Data.cache.pendingKeystoneAnnounce = true
     return
   end
+  local announceText
+  if itemLink and not issecretvalue(itemLink) and itemLink ~= "" then
+    announceText = itemLink
+  elseif dungeon and type(keystoneLevel) == "number" and keystoneLevel > 0 then
+    local name = dungeon.abbr or dungeon.short or dungeon.name
+    if type(name) == "string" and name ~= "" then
+      announceText = name .. " +" .. tostring(keystoneLevel)
+    end
+  end
+  if not announceText then
+    Data.cache.pendingKeystoneAnnounce = true
+    return
+  end
   Data.cache.pendingKeystoneAnnounce = nil
+  local message = Constants.prefix .. "New Keystone: " .. announceText
   if IsInGroup() and Data.db.global.announceKeystones.autoParty then
-    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
+    SendChatMessage(message, "PARTY")
   end
   if IsInGuild() and Data.db.global.announceKeystones.autoGuild then
-    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
+    SendChatMessage(message, "GUILD")
   end
 end
 
@@ -1103,11 +1120,10 @@ function Data:FlushPendingKeystoneAnnounce()
   if not character then
     return
   end
-  local itemLink = character.mythicplus.keystone.itemLink
-  if itemLink == "" then
-    return
-  end
-  sendNewKeystoneAnnounce(itemLink)
+  local keystone = character.mythicplus.keystone
+  local dungeons = self:GetDungeons()
+  local dungeon = TableGet(dungeons, "challengeModeID", keystone.challengeModeID) or TableGet(dungeons, "mapId", keystone.mapId)
+  sendNewKeystoneAnnounce(keystone.itemLink, dungeon, keystone.level)
 end
 
 ---Refresh keystone item from bags
@@ -1177,17 +1193,22 @@ function Data:UpdateKeystoneItem()
     keystoneColor = color:GenerateHexColor()
   end
 
+  local storedItemLink = keystoneItemLink
+  if issecretvalue(storedItemLink) then
+    storedItemLink = ""
+  end
+
   character.mythicplus.keystone = {
     challengeModeID = keystoneChallengeModeID,
     mapId = dungeonMapId,
     level = keystoneLevel,
     color = keystoneColor,
     itemId = keystoneItemID or seasonKeystoneItemID or 0,
-    itemLink = keystoneItemLink,
+    itemLink = storedItemLink,
   }
 
   if newKeystone then
-    sendNewKeystoneAnnounce(keystoneItemLink)
+    sendNewKeystoneAnnounce(keystoneItemLink, dungeon, keystoneLevel)
   end
 
   addon.Core:Render()

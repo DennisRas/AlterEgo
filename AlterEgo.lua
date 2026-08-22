@@ -237,6 +237,7 @@ function Core:OnEnable()
     {
       "ADDON_RESTRICTION_STATE_CHANGED",
       "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
+      "PLAYER_REGEN_ENABLED",
     },
     function(_, event, _, state)
       if event == "ADDON_RESTRICTION_STATE_CHANGED" and state ~= Enum.AddOnRestrictionState.Inactive then

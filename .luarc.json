@@ -129,6 +129,7 @@
       "INVSLOT_WAIST",
       "INVSLOT_WRIST",
       "ipairs",
+      "issecretvalue",
       "IsInGroup",
       "IsInGuild",
       "IsInInstance",
