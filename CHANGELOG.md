@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.4 - TBD
+
+- Fixed Season 2 Prey hunt tracking. Fixes #267. Thank you @sudoalias.
+
 ## v1.6.3 - 2026-08-20
 
 - Added an indicator for the current character in the grid. Fixes #97. Thank you @Antorinia.

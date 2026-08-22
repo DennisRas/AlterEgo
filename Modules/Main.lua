@@ -46,6 +46,7 @@ local dungeonPortalUnlockLevel = 10
 local vaultMaxLevelRewardMythic = 10
 local vaultMaxLevelRewardWorld = 8
 local vaultMaxNumRunsMythic = 8
+local preyWeeklyHuntCap = 5
 local vaultSlotOneIndex = 1
 local vaultTooltipTexts = {
   [Enum.WeeklyRewardChestThresholdType.Raid] = {
@@ -2055,7 +2056,6 @@ function Module:Render()
           local textValue = "-"
           local textColor = LIGHTGRAY_FONT_COLOR
           local numQuestsCompleted = 0
-          local maxQuests = 4
           local characterQuestsCompleted = character.prey and character.prey.questsCompleted or {}
 
           local quests = TableFilter(Data.preyQuests, function(quest)
@@ -2066,11 +2066,11 @@ function Module:Render()
           end)
           numQuestsCompleted = TableCount(questsCompleted)
 
-          if numQuestsCompleted >= maxQuests then
-            textValue = format("%d / %d", numQuestsCompleted, maxQuests)
+          if numQuestsCompleted >= preyWeeklyHuntCap then
+            textValue = format("%d / %d", numQuestsCompleted, preyWeeklyHuntCap)
             textColor = GREEN_FONT_COLOR
           elseif numQuestsCompleted > 0 then
-            textValue = format("%d / %d", numQuestsCompleted, maxQuests)
+            textValue = format("%d / %d", numQuestsCompleted, preyWeeklyHuntCap)
             textColor = WHITE_FONT_COLOR
           end
 
@@ -2083,7 +2083,7 @@ function Module:Render()
               GameTooltip:AddLine("No Data")
               GameTooltip:AddLine("Log your character to update.", 1, 1, 1, true)
             else
-              GameTooltip:AddDoubleLine("Hunts Completed:", format("%d / %d", numQuestsCompleted, maxQuests), nil, nil, nil, textColor.r, textColor.g, textColor.b)
+              GameTooltip:AddDoubleLine("Hunts Completed:", format("%d / %d", numQuestsCompleted, preyWeeklyHuntCap), nil, nil, nil, textColor.r, textColor.g, textColor.b)
             end
             if numQuestsCompleted > 0 then
               GameTooltip:AddLine(" ")
