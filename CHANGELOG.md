@@ -2,6 +2,7 @@
 
 ## v1.6.4 - TBD
 
+- Fixed Great Vault dungeon tooltip item levels. Thank you Blizzard for the bug /s
 - Fixed Season 2 Prey hunt tracking. Fixes #267. Thank you @sudoalias.
 
 ## v1.6.3 - 2026-08-20

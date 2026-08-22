@@ -32,6 +32,7 @@
 ---@field affixes table
 ---@field raidDifficulties table
 ---@field vaultTypes table
+---@field mythicPlusVaultItemLevels table<number, table<number, number>>
 ---@field affixRotations table
 ---@field keystones table
 ---@field dungeons AE_Dungeon[]

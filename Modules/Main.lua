@@ -43,6 +43,7 @@ end
 local CHARACTER_WIDTH = 130
 local RAIDS_ROW_HEIGHT = 48
 local dungeonPortalUnlockLevel = 10
+local vaultMythicPlusMinLevel = 2
 local vaultMaxLevelRewardMythic = 10
 local vaultMaxLevelRewardWorld = 8
 local vaultMaxNumRunsMythic = 8
@@ -86,6 +87,28 @@ local function isCompletedAtHeroicLevel(activityTierID)
   return difficultyID == DifficultyUtil.ID.DungeonHeroic
 end
 
+---Great Vault item level for a Mythic+ keystone level
+---@param keystoneLevel number
+---@return integer?
+local function getMythicPlusVaultItemLevel(keystoneLevel)
+  if type(keystoneLevel) ~= "number" or keystoneLevel < vaultMythicPlusMinLevel then
+    return nil
+  end
+  local seasonID = Data:GetCurrentSeason()
+  local levels = Data.mythicPlusVaultItemLevels[seasonID]
+  if not levels then
+    return nil
+  end
+  local itemLevel = levels[keystoneLevel]
+  if itemLevel then
+    return itemLevel
+  end
+  if keystoneLevel > vaultMaxLevelRewardMythic then
+    return levels[vaultMaxLevelRewardMythic]
+  end
+  return nil
+end
+
 ---Print vault progress to tooltip
 ---@param infoFrame Frame
 ---@param character AE_Character
@@ -120,7 +143,6 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       local textLeft = format("Vault Slot %d:", i)
       local textRight = "Locked"
       local color = LIGHTGRAY_FONT_COLOR
-      local rewardItemLevel = "?"
 
       local activity = TableGet(activities, "index", i)
       if activity then
@@ -149,15 +171,12 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
             textRight = GREAT_VAULT_WORLD_TIER:format(activity.level)
           end
 
-          -- Reward iLvl
           if activity.exampleRewardLink ~= nil and activity.exampleRewardLink ~= "" then
-            local detailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo(activity.exampleRewardLink)
-            if detailedItemLevelInfo then
-              rewardItemLevel = tostring(detailedItemLevelInfo)
+            local itemLevel = C_Item.GetDetailedItemLevelInfo(activity.exampleRewardLink)
+            if itemLevel then
+              textRight = format("%s (%d+)", textRight, itemLevel)
             end
           end
-
-          textRight = format("%s (%d+)", textRight, rewardItemLevel)
         else
           textRight = format("Locked (%d/%d)", activity.progress, activity.threshold)
         end
@@ -249,7 +268,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       if numRunsThisWeek > 0 then
         TableForEach(runsThisWeek, function(run, i)
           if i > numMaxRuns then return end
-          local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
+          local rewardLevel = getMythicPlusVaultItemLevel(run.level)
           local dungeon = TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
           local dungeonName = "Mythic+"
           local color = WHITE_FONT_COLOR
@@ -262,7 +281,11 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           if dungeon then
             dungeonName = dungeon.short and dungeon.short or dungeon.name
           end
-          GameTooltip:AddDoubleLine(dungeonName, string.format("+%d (%d)", run.level, rewardLevel), 1, 1, 1, color.r, color.g, color.b)
+          local rightText = string.format("+%d", run.level)
+          if rewardLevel then
+            rightText = string.format("+%d (%d)", run.level, rewardLevel)
+          end
+          GameTooltip:AddDoubleLine(dungeonName, rightText, 1, 1, 1, color.r, color.g, color.b)
         end)
       end
 
