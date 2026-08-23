@@ -181,6 +181,9 @@ function Core:OnEnable()
     }, function()
       Data:UpdateKeystoneItem()
       Data:UpdateCurrencies()
+      C_Timer.After(2, function()
+        Data:FlushPendingKeystoneAnnounce()
+      end)
     end
   )
   addon.Events:RegisterEvent(

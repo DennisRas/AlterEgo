@@ -60,8 +60,7 @@
 ---@field currencyType AE_CurrencyType
 ---@field name string?
 ---@field questID number?
----@field itemIDs number[]?
----@field spellIDs number[]?
+---@field spellID number?
 ---@field tooltipNote string|nil
 
 ---@class AE_CurrencyInfo

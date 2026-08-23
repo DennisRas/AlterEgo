@@ -1393,17 +1393,6 @@ function Module:Render()
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Announce to your party when you loot a new keystone.", nil, nil, nil, true)
             end)
-            menu:CreateCheckbox(
-              "Announce new keystones (Guild)",
-              function() return Data.db.global.announceKeystones.autoGuild end,
-              function()
-                Data.db.global.announceKeystones.autoGuild = not Data.db.global.announceKeystones.autoGuild
-                self:Render()
-              end
-            ):SetTooltip(function(tooltip, elm)
-              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-              tooltip:AddLine("Announce to your guild when you loot a new keystone.", nil, nil, nil, true)
-            end)
           end,
           iconSize = 12,
         },
@@ -2482,15 +2471,15 @@ function Module:Render()
             local statusValue = "-"
             local cellText = GRAY_FONT_COLOR:WrapTextInColorCode("-")
             if characterCurrency then
-              if characterCurrency.questCompleted then
-                statusValue = "Completed"
-                cellText = CreateAtlasMarkup("common-icon-checkmark", 16, 16)
-              elseif characterCurrency.hasBuff then
+              if characterCurrency.hasBuff then
                 statusValue = "Active"
-                cellText = CreateAtlasMarkup("SideInProgressquesticon", 16, 16)
+                cellText = CreateAtlasMarkup("QuestTurnin", 16, 16)
               elseif (characterCurrency.bagCount or 0) > 0 then
                 statusValue = "In bags"
-                cellText = CreateAtlasMarkup("SideInProgressquesticon", 16, 16)
+                cellText = CreateAtlasMarkup("QuestTurnin", 16, 16)
+              elseif characterCurrency.questCompleted then
+                statusValue = "Completed"
+                cellText = CreateAtlasMarkup("common-icon-checkmark", 16, 16)
               else
                 statusValue = "Available"
                 cellText = CreateAtlasMarkup("Recurringavailablequesticon", 16, 16)
@@ -2603,9 +2592,6 @@ function Module:Render()
           rowCount = rowCount + 1
           totalHeight = totalHeight + Constants.sizes.row
         end)
-        if characterFrame.delversBountyFrame then
-          characterFrame.delversBountyFrame:Hide()
-        end
       end
 
       windowWidth = windowWidth + CHARACTER_WIDTH

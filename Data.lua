@@ -14,7 +14,7 @@ local TableFind = addon.Libs.LiqUI.Utils.TableFind
 local TableForEach = addon.Libs.LiqUI.Utils.TableForEach
 local TableGet = addon.Libs.LiqUI.Utils.TableGet
 
-Data.dbVersion = 37
+Data.dbVersion = 38
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -37,7 +37,6 @@ Data.defaultDB = {
     currentCharacterMarker = "dot",
     announceKeystones = {
       autoParty = true,
-      autoGuild = false,
       multiline = false,
       multilineNames = false,
     },
@@ -225,13 +224,12 @@ function Data:GetCurrencies()
       return
     end
     if currency.currencyType == "delveMap" then
-      local primaryItemID = currency.itemIDs and currency.itemIDs[1]
       ---@type AE_CurrencyInfo
       local currencyInfo = {
         id = currency.id,
-        name = currency.name or "Delver's Bounty",
-        description = "Weekly Delver's Bounty map status.",
-        iconFileID = primaryItemID and C_Item.GetItemIconByID(primaryItemID) or 0,
+        name = currency.name or "Trovehunter's Bounty",
+        description = "Weekly Trovehunter's Bounty map status.",
+        iconFileID = C_Item.GetItemIconByID(currency.id) or 0,
         quality = Enum.ItemQuality.Rare,
         currencyType = currency.currencyType,
         useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty,
@@ -1003,32 +1001,30 @@ end
 function Data:UpdateCurrencies()
   local character = self:GetCharacter()
   if not character then return end
+  local seasonID = self:GetCurrentSeason()
 
   character.currencies = wipe(character.currencies or {})
 
   TableForEach(self.currencies or {}, function(dataCurrency)
+    if dataCurrency.seasonID ~= seasonID then
+      return
+    end
     if dataCurrency.currencyType == "delveMap" then
-      local bagCount = 0
-      TableForEach(dataCurrency.itemIDs or {}, function(itemID)
-        bagCount = bagCount + (C_Item.GetItemCount(itemID, true) or 0)
-      end)
-
+      local bagCount = C_Item.GetItemCount(dataCurrency.id, true) or 0
       local hasBuff = false
-      TableForEach(dataCurrency.spellIDs or {}, function(spellID)
-        if hasBuff then return end
-        local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+      if dataCurrency.spellID then
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(dataCurrency.spellID)
         if aura ~= nil and not issecretvalue(aura) then
           hasBuff = true
         end
-      end)
+      end
 
-      local primaryItemID = dataCurrency.itemIDs and dataCurrency.itemIDs[1]
       ---@type AE_CharacterCurrency
       local delveMapCurrency = {
         id = dataCurrency.id,
         currencyType = dataCurrency.currencyType,
-        name = dataCurrency.name or "Delver's Bounty",
-        iconFileID = primaryItemID and C_Item.GetItemIconByID(primaryItemID) or 0,
+        name = dataCurrency.name or "Trovehunter's Bounty",
+        iconFileID = C_Item.GetItemIconByID(dataCurrency.id) or 0,
         quantity = bagCount,
         bagCount = bagCount,
         hasBuff = hasBuff,
@@ -1133,13 +1129,18 @@ function Data:UpdateEquipment()
   end)
 end
 
+local function isKeystoneAnnounceBlocked()
+  return InCombatLockdown()
+    or C_ChatInfo.InChatMessagingLockdown()
+    or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
+    or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards)
+end
+
 ---@param itemLink string?
 ---@param dungeon AE_Dungeon?
 ---@param keystoneLevel number?
 local function sendNewKeystoneAnnounce(itemLink, dungeon, keystoneLevel)
-  if C_ChatInfo.InChatMessagingLockdown()
-    or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
-    or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards) then
+  if isKeystoneAnnounceBlocked() then
     Data.cache.pendingKeystoneAnnounce = true
     return
   end
@@ -1156,13 +1157,15 @@ local function sendNewKeystoneAnnounce(itemLink, dungeon, keystoneLevel)
     Data.cache.pendingKeystoneAnnounce = true
     return
   end
-  Data.cache.pendingKeystoneAnnounce = nil
   local message = Constants.prefix .. "New Keystone: " .. announceText
-  if IsInGroup() and Data.db.global.announceKeystones.autoParty then
-    SendChatMessage(message, "PARTY")
+  if not (IsInGroup() and Data.db.global.announceKeystones.autoParty) then
+    Data.cache.pendingKeystoneAnnounce = nil
+    return
   end
-  if IsInGuild() and Data.db.global.announceKeystones.autoGuild then
-    SendChatMessage(message, "GUILD")
+  if pcall(SendChatMessage, message, "PARTY") then
+    Data.cache.pendingKeystoneAnnounce = nil
+  else
+    Data.cache.pendingKeystoneAnnounce = true
   end
 end
 
