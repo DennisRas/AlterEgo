@@ -127,6 +127,8 @@ function Core:OnEnable()
       "QUEST_LOG_UPDATE",
     }, function()
       Data:UpdatePreyProgress()
+      Data:UpdateCurrencies()
+      self:Render()
     end
   )
   addon.Events:RegisterEvent(
@@ -178,6 +180,7 @@ function Core:OnEnable()
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
       Data:UpdateKeystoneItem()
+      Data:UpdateCurrencies()
     end
   )
   addon.Events:RegisterEvent(

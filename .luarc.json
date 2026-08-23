@@ -41,6 +41,7 @@
       "CreateColor",
       "CreateColorFromHexString",
       "CreateFrame",
+      "CreateAtlasMarkup",
       "CreateSimpleTextureMarkup",
       "CURRENCY",
       "DASH_WITH_TEXT",

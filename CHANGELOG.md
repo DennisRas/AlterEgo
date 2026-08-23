@@ -2,8 +2,10 @@
 
 ## v1.6.4 - TBD
 
+- Added Delver's Bounty map status to the currencies section. Fixes #266. Thank you @Antorinia.
 - Fixed automatic keystone announcements when the new key could not be linked in chat.
 - Fixed Great Vault dungeon tooltip item levels. Thank you Blizzard for the bug /s
+- Fixed Coffer Key Shards staying gray at 0 when the weekly maximum is already earned. Fixes #266. Thank you @Antorinia.
 - Fixed Season 2 Prey hunt tracking. Fixes #267. Thank you @sudoalias.
 
 ## v1.6.3 - 2026-08-20

@@ -224,6 +224,27 @@ function Data:GetCurrencies()
     if currency.seasonID ~= seasonID then
       return
     end
+    if currency.currencyType == "delveMap" then
+      local primaryItemID = currency.itemIDs and currency.itemIDs[1]
+      ---@type AE_CurrencyInfo
+      local currencyInfo = {
+        id = currency.id,
+        name = currency.name or "Delver's Bounty",
+        description = "Weekly Delver's Bounty map status.",
+        iconFileID = primaryItemID and C_Item.GetItemIconByID(primaryItemID) or 0,
+        quality = Enum.ItemQuality.Rare,
+        currencyType = currency.currencyType,
+        useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty,
+        tooltipNote = currency.tooltipNote,
+        maxQuantity = 0,
+        maxWeeklyQuantity = 0,
+        quantity = 0,
+        totalEarned = 0,
+        quantityEarnedThisWeek = 0,
+      }
+      table.insert(currencies, currencyInfo)
+      return
+    end
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
     if currencyInfo then
       currencyInfo.id = currency.id
@@ -682,6 +703,9 @@ function Data:TaskWeeklyReset()
         if characterCurrency.maxWeeklyQuantity and characterCurrency.maxWeeklyQuantity > 0 then
           characterCurrency.quantityEarnedThisWeek = 0
         end
+        if characterCurrency.currencyType == "delveMap" then
+          characterCurrency.questCompleted = false
+        end
       end)
     end)
   end
@@ -983,6 +1007,37 @@ function Data:UpdateCurrencies()
   character.currencies = wipe(character.currencies or {})
 
   TableForEach(self.currencies or {}, function(dataCurrency)
+    if dataCurrency.currencyType == "delveMap" then
+      local bagCount = 0
+      TableForEach(dataCurrency.itemIDs or {}, function(itemID)
+        bagCount = bagCount + (C_Item.GetItemCount(itemID, true) or 0)
+      end)
+
+      local hasBuff = false
+      TableForEach(dataCurrency.spellIDs or {}, function(spellID)
+        if hasBuff then return end
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+        if aura ~= nil and not issecretvalue(aura) then
+          hasBuff = true
+        end
+      end)
+
+      local primaryItemID = dataCurrency.itemIDs and dataCurrency.itemIDs[1]
+      ---@type AE_CharacterCurrency
+      local delveMapCurrency = {
+        id = dataCurrency.id,
+        currencyType = dataCurrency.currencyType,
+        name = dataCurrency.name or "Delver's Bounty",
+        iconFileID = primaryItemID and C_Item.GetItemIconByID(primaryItemID) or 0,
+        quantity = bagCount,
+        bagCount = bagCount,
+        hasBuff = hasBuff,
+        questCompleted = dataCurrency.questID ~= nil and C_QuestLog.IsQuestFlaggedCompleted(dataCurrency.questID) == true,
+      }
+      table.insert(character.currencies, delveMapCurrency)
+      return
+    end
+
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
     if not currencyInfo then return end
     ---@type AE_CharacterCurrency
