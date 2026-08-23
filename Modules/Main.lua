@@ -43,9 +43,11 @@ end
 local CHARACTER_WIDTH = 130
 local RAIDS_ROW_HEIGHT = 48
 local dungeonPortalUnlockLevel = 10
+local vaultMythicPlusMinLevel = 2
 local vaultMaxLevelRewardMythic = 10
 local vaultMaxLevelRewardWorld = 8
 local vaultMaxNumRunsMythic = 8
+local preyWeeklyHuntCap = 5
 local vaultSlotOneIndex = 1
 local vaultTooltipTexts = {
   [Enum.WeeklyRewardChestThresholdType.Raid] = {
@@ -85,6 +87,28 @@ local function isCompletedAtHeroicLevel(activityTierID)
   return difficultyID == DifficultyUtil.ID.DungeonHeroic
 end
 
+---Great Vault item level for a Mythic+ keystone level
+---@param keystoneLevel number
+---@return integer?
+local function getMythicPlusVaultItemLevel(keystoneLevel)
+  if type(keystoneLevel) ~= "number" or keystoneLevel < vaultMythicPlusMinLevel then
+    return nil
+  end
+  local seasonID = Data:GetCurrentSeason()
+  local levels = Data.mythicPlusVaultItemLevels[seasonID]
+  if not levels then
+    return nil
+  end
+  local itemLevel = levels[keystoneLevel]
+  if itemLevel then
+    return itemLevel
+  end
+  if keystoneLevel > vaultMaxLevelRewardMythic then
+    return levels[vaultMaxLevelRewardMythic]
+  end
+  return nil
+end
+
 ---Print vault progress to tooltip
 ---@param infoFrame Frame
 ---@param character AE_Character
@@ -119,7 +143,6 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       local textLeft = format("Vault Slot %d:", i)
       local textRight = "Locked"
       local color = LIGHTGRAY_FONT_COLOR
-      local rewardItemLevel = "?"
 
       local activity = TableGet(activities, "index", i)
       if activity then
@@ -148,15 +171,12 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
             textRight = GREAT_VAULT_WORLD_TIER:format(activity.level)
           end
 
-          -- Reward iLvl
           if activity.exampleRewardLink ~= nil and activity.exampleRewardLink ~= "" then
-            local detailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo(activity.exampleRewardLink)
-            if detailedItemLevelInfo then
-              rewardItemLevel = tostring(detailedItemLevelInfo)
+            local itemLevel = C_Item.GetDetailedItemLevelInfo(activity.exampleRewardLink)
+            if itemLevel then
+              textRight = format("%s (%d+)", textRight, itemLevel)
             end
           end
-
-          textRight = format("%s (%d+)", textRight, rewardItemLevel)
         else
           textRight = format("Locked (%d/%d)", activity.progress, activity.threshold)
         end
@@ -248,7 +268,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
       if numRunsThisWeek > 0 then
         TableForEach(runsThisWeek, function(run, i)
           if i > numMaxRuns then return end
-          local rewardLevel = C_MythicPlus.GetRewardLevelFromKeystoneLevel(run.level)
+          local rewardLevel = getMythicPlusVaultItemLevel(run.level)
           local dungeon = TableGet(dungeons, "challengeModeID", run.mapChallengeModeID)
           local dungeonName = "Mythic+"
           local color = WHITE_FONT_COLOR
@@ -261,7 +281,11 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
           if dungeon then
             dungeonName = dungeon.short and dungeon.short or dungeon.name
           end
-          GameTooltip:AddDoubleLine(dungeonName, string.format("+%d (%d)", run.level, rewardLevel), 1, 1, 1, color.r, color.g, color.b)
+          local rightText = string.format("+%d", run.level)
+          if rewardLevel then
+            rightText = string.format("+%d (%d)", run.level, rewardLevel)
+          end
+          GameTooltip:AddDoubleLine(dungeonName, rightText, 1, 1, 1, color.r, color.g, color.b)
         end)
       end
 
@@ -460,14 +484,15 @@ function Module:GetCharacterInfo(unfiltered)
           return coloredName
         end
         local marker = Data.db.global.currentCharacterMarker
+        local currentColor = GREEN_FONT_COLOR
         if marker == "brackets" then
-          return GREEN_FONT_COLOR:WrapTextInColorCode("[") .. " " .. coloredName .. " " .. GREEN_FONT_COLOR:WrapTextInColorCode("]")
+          return currentColor:WrapTextInColorCode("[ ") .. coloredName .. currentColor:WrapTextInColorCode(" ]")
         end
         if marker == "parentheses" then
-          return GREEN_FONT_COLOR:WrapTextInColorCode("(") .. " " .. coloredName .. " " .. GREEN_FONT_COLOR:WrapTextInColorCode(")")
+          return currentColor:WrapTextInColorCode("( ") .. coloredName .. currentColor:WrapTextInColorCode(" )")
         end
         if marker == "dot" then
-          return coloredName .. " " .. Constants.currentCharacterNameMarker
+          return coloredName .. Constants.currentCharacterNameMarker
         end
         return coloredName
       end,
@@ -1368,17 +1393,6 @@ function Module:Render()
               tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
               tooltip:AddLine("Announce to your party when you loot a new keystone.", nil, nil, nil, true)
             end)
-            menu:CreateCheckbox(
-              "Announce new keystones (Guild)",
-              function() return Data.db.global.announceKeystones.autoGuild end,
-              function()
-                Data.db.global.announceKeystones.autoGuild = not Data.db.global.announceKeystones.autoGuild
-                self:Render()
-              end
-            ):SetTooltip(function(tooltip, elm)
-              tooltip:AddLine(MenuUtil.GetElementText(elm), 1, 1, 1, true)
-              tooltip:AddLine("Announce to your guild when you loot a new keystone.", nil, nil, nil, true)
-            end)
           end,
           iconSize = 12,
         },
@@ -1783,12 +1797,14 @@ function Module:Render()
             self.window.body.sidebar.currencyLabels[currencyIndex] = label
           end
 
-          local color = ITEM_QUALITY_COLORS[currency.quality]
+          local color = ITEM_QUALITY_COLORS[currency.quality or Enum.ItemQuality.Common]
 
           label:SetScript("OnEnter", function()
             GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
             GameTooltip:SetText(currency.name, color.r, color.g, color.b)
-            GameTooltip:AddLine(currency.description, nil, nil, nil, true)
+            if currency.description then
+              GameTooltip:AddLine(currency.description, nil, nil, nil, true)
+            end
             if currency.tooltipNote then
               GameTooltip:AddLine(" ")
               GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addon.name .. ":"), currency.tooltipNote), 1, 1, 1, true)
@@ -1846,22 +1862,20 @@ function Module:Render()
           overlay = CreateFrame("Frame", "$parentCurrentCharacterOverlay", characterFrame)
           overlay:SetAllPoints()
           overlay:EnableMouse(false)
-          local greenR = DIM_GREEN_FONT_COLOR.r
-          local greenG = DIM_GREEN_FONT_COLOR.g
-          local greenB = DIM_GREEN_FONT_COLOR.b
+          local color = DIM_GREEN_FONT_COLOR
           overlay.background = overlay:CreateTexture(nil, "BACKGROUND")
           overlay.background:SetAllPoints()
-          overlay.background:SetColorTexture(greenR, greenG, greenB, 0.04)
+          overlay.background:SetColorTexture(color.r, color.g, color.b, 0.04)
           overlay.left = overlay:CreateTexture(nil, "ARTWORK")
           overlay.left:SetWidth(2)
           overlay.left:SetPoint("TOPLEFT")
           overlay.left:SetPoint("BOTTOMLEFT")
-          overlay.left:SetColorTexture(greenR, greenG, greenB, 0.15)
+          overlay.left:SetColorTexture(color.r, color.g, color.b, 0.15)
           overlay.right = overlay:CreateTexture(nil, "ARTWORK")
           overlay.right:SetWidth(2)
           overlay.right:SetPoint("TOPRIGHT")
           overlay.right:SetPoint("BOTTOMRIGHT")
-          overlay.right:SetColorTexture(greenR, greenG, greenB, 0.15)
+          overlay.right:SetColorTexture(color.r, color.g, color.b, 0.15)
           characterFrame.currentCharacterOverlay = overlay
         end
         overlay:SetFrameLevel(characterFrame:GetFrameLevel() + 50)
@@ -2056,7 +2070,6 @@ function Module:Render()
           local textValue = "-"
           local textColor = LIGHTGRAY_FONT_COLOR
           local numQuestsCompleted = 0
-          local maxQuests = 4
           local characterQuestsCompleted = character.prey and character.prey.questsCompleted or {}
 
           local quests = TableFilter(Data.preyQuests, function(quest)
@@ -2067,11 +2080,11 @@ function Module:Render()
           end)
           numQuestsCompleted = TableCount(questsCompleted)
 
-          if numQuestsCompleted >= maxQuests then
-            textValue = format("%d / %d", numQuestsCompleted, maxQuests)
+          if numQuestsCompleted >= preyWeeklyHuntCap then
+            textValue = format("%d / %d", numQuestsCompleted, preyWeeklyHuntCap)
             textColor = GREEN_FONT_COLOR
           elseif numQuestsCompleted > 0 then
-            textValue = format("%d / %d", numQuestsCompleted, maxQuests)
+            textValue = format("%d / %d", numQuestsCompleted, preyWeeklyHuntCap)
             textColor = WHITE_FONT_COLOR
           end
 
@@ -2084,7 +2097,7 @@ function Module:Render()
               GameTooltip:AddLine("No Data")
               GameTooltip:AddLine("Log your character to update.", 1, 1, 1, true)
             else
-              GameTooltip:AddDoubleLine("Hunts Completed:", format("%d / %d", numQuestsCompleted, maxQuests), nil, nil, nil, textColor.r, textColor.g, textColor.b)
+              GameTooltip:AddDoubleLine("Hunts Completed:", format("%d / %d", numQuestsCompleted, preyWeeklyHuntCap), nil, nil, nil, textColor.r, textColor.g, textColor.b)
             end
             if numQuestsCompleted > 0 then
               GameTooltip:AddLine(" ")
@@ -2449,82 +2462,123 @@ function Module:Render()
             characterFrame.currencyFrames[currencyIndex] = currencyFrame
           end
 
-          local infoMaxQuantity = currency.maxQuantity or 0
-          local infoMaxWeeklyQuantity = currency.maxWeeklyQuantity or 0
-          local infoIcon = CreateSimpleTextureMarkup(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
-          local charQuantity = 0
-          local charTotalEarned = 0
-          local charEarnedThisWeek = 0
-          local hasEarnedMax = false
+          local characterCurrency = TableGet(character.currencies, "id", currency.id)
           local cellColor = CAMPAIGN_COMPLETE_COLOR
           local cellValue = "0"
+          local infoIcon = CreateSimpleTextureMarkup(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
 
-          local characterCurrency = TableGet(character.currencies, "id", currency.id)
-          if characterCurrency then
-            charQuantity = characterCurrency.quantity or 0
-            charTotalEarned = characterCurrency.totalEarned or 0
-            charEarnedThisWeek = characterCurrency.quantityEarnedThisWeek or 0
-          end
-
-          if infoMaxQuantity > 0 then
-            hasEarnedMax = charQuantity >= infoMaxQuantity
-            if currency.useTotalEarnedForMaxQty then
-              hasEarnedMax = charTotalEarned >= infoMaxQuantity
+          if currency.currencyType == "delveMap" then
+            local statusValue = "-"
+            local cellText = GRAY_FONT_COLOR:WrapTextInColorCode("-")
+            if characterCurrency then
+              if characterCurrency.hasBuff then
+                statusValue = "Active"
+                cellText = CreateAtlasMarkup("QuestTurnin", 16, 16)
+              elseif (characterCurrency.bagCount or 0) > 0 then
+                statusValue = "In bags"
+                cellText = CreateAtlasMarkup("QuestTurnin", 16, 16)
+              elseif characterCurrency.questCompleted then
+                statusValue = "Completed"
+                cellText = CreateAtlasMarkup("common-icon-checkmark", 16, 16)
+              else
+                statusValue = "Available"
+                cellText = CreateAtlasMarkup("Recurringavailablequesticon", 16, 16)
+              end
             end
-          end
-          if infoMaxWeeklyQuantity > 0 and charEarnedThisWeek >= infoMaxWeeklyQuantity then
-            hasEarnedMax = true
-          end
 
-          cellValue = tostring(charQuantity)
-          if Data.db.global.currencies.showIcons then
-            cellValue = format("%s %s", infoIcon, cellValue)
-          end
+            currencyFrame.Text:SetText(cellText)
+            currencyFrame.Text:SetJustifyH(Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
+            currencyFrame:SetScript("OnEnter", function()
+              GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetText(currency.name, 1, 1, 1)
+              if not characterCurrency then
+                GameTooltip:AddDoubleLine("Status:", "No Data", nil, nil, nil, 1, 1, 1)
+                GameTooltip:AddLine("Log your character to update.", 1, 1, 1, true)
+              else
+                GameTooltip:AddDoubleLine("Status:", statusValue, nil, nil, nil, 1, 1, 1)
+                GameTooltip:AddDoubleLine("In bags:", tostring(characterCurrency.bagCount or 0), nil, nil, nil, 1, 1, 1)
+                GameTooltip:AddDoubleLine("Buff active:", characterCurrency.hasBuff and "Yes" or "No", nil, nil, nil, 1, 1, 1)
+              end
+              if currency.tooltipNote then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addon.name .. ":"), currency.tooltipNote), 1, 1, 1, true)
+              end
+              GameTooltip:Show()
+              SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
+            end)
+          else
+            local infoMaxQuantity = currency.maxQuantity or 0
+            local infoMaxWeeklyQuantity = currency.maxWeeklyQuantity or 0
+            local charQuantity = 0
+            local charTotalEarned = 0
+            local charEarnedThisWeek = 0
+            local hasEarnedMax = false
 
-          if Data.db.global.currencies.showMaxEarned and hasEarnedMax then
-            cellColor = DULL_RED_FONT_COLOR
-          end
-
-          if charQuantity == 0 then
-            cellColor = GRAY_FONT_COLOR
-            if currency.currencyType == "crest" and charTotalEarned == 0 then
-              cellValue = "-"
+            if characterCurrency then
+              charQuantity = characterCurrency.quantity or 0
+              charTotalEarned = characterCurrency.totalEarned or 0
+              charEarnedThisWeek = characterCurrency.quantityEarnedThisWeek or 0
             end
-          end
 
-          currencyFrame.Text:SetText(cellColor:WrapTextInColorCode(cellValue))
-          currencyFrame.Text:SetJustifyH(Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
-          currencyFrame:SetScript("OnEnter", function()
-            GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Currency Progress", 1, 1, 1)
-            GameTooltip:AddDoubleLine("Owned:", tostring(charQuantity), nil, nil, nil, 1, 1, 1)
-            if infoMaxWeeklyQuantity > 0 then
-              GameTooltip:AddDoubleLine("Weekly Maximum:", format("%d/%d", charEarnedThisWeek, infoMaxWeeklyQuantity), nil, nil, nil, 1, 1, 1)
+            if infoMaxQuantity > 0 then
+              hasEarnedMax = charQuantity >= infoMaxQuantity
+              if currency.useTotalEarnedForMaxQty then
+                hasEarnedMax = charTotalEarned >= infoMaxQuantity
+              end
             end
-            if currency.useTotalEarnedForMaxQty then
-              if infoMaxQuantity > 0 then
-                GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", charTotalEarned, infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+            if infoMaxWeeklyQuantity > 0 and charEarnedThisWeek >= infoMaxWeeklyQuantity then
+              hasEarnedMax = true
+            end
+
+            cellValue = tostring(charQuantity)
+            if Data.db.global.currencies.showIcons then
+              cellValue = format("%s %s", infoIcon, cellValue)
+            end
+
+            if Data.db.global.currencies.showMaxEarned and hasEarnedMax then
+              cellColor = DULL_RED_FONT_COLOR
+            elseif charQuantity == 0 then
+              cellColor = GRAY_FONT_COLOR
+              if currency.currencyType == "crest" and charTotalEarned == 0 then
+                cellValue = "-"
+              end
+            end
+
+            currencyFrame.Text:SetText(cellColor:WrapTextInColorCode(cellValue))
+            currencyFrame.Text:SetJustifyH(Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
+            currencyFrame:SetScript("OnEnter", function()
+              GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
+              GameTooltip:SetText("Currency Progress", 1, 1, 1)
+              GameTooltip:AddDoubleLine("Owned:", tostring(charQuantity), nil, nil, nil, 1, 1, 1)
+              if infoMaxWeeklyQuantity > 0 then
+                GameTooltip:AddDoubleLine("Weekly Maximum:", format("%d/%d", charEarnedThisWeek, infoMaxWeeklyQuantity), nil, nil, nil, 1, 1, 1)
+              end
+              if currency.useTotalEarnedForMaxQty then
+                if infoMaxQuantity > 0 then
+                  GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", charTotalEarned, infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+                else
+                  if charTotalEarned > 0 then
+                    GameTooltip:AddDoubleLine("Season Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
+                  end
+                  GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
+                end
               else
                 if charTotalEarned > 0 then
-                  GameTooltip:AddDoubleLine("Season Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
+                  GameTooltip:AddDoubleLine("Total Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
                 end
-                GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
+                if infoMaxQuantity > 0 then
+                  GameTooltip:AddDoubleLine("Total Maximum:", tostring(infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+                end
               end
-            else
-              if charTotalEarned > 0 then
-                GameTooltip:AddDoubleLine("Total Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
+              if currency.tooltipNote then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addon.name .. ":"), currency.tooltipNote), 1, 1, 1, true)
               end
-              if infoMaxQuantity > 0 then
-                GameTooltip:AddDoubleLine("Total Maximum:", tostring(infoMaxQuantity), nil, nil, nil, 1, 1, 1)
-              end
-            end
-            if currency.tooltipNote then
-              GameTooltip:AddLine(" ")
-              GameTooltip:AddLine(format("%s %s", RARE_BLUE_COLOR:WrapTextInColorCode(addon.name .. ":"), currency.tooltipNote), 1, 1, 1, true)
-            end
-            GameTooltip:Show()
-            SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
-          end)
+              GameTooltip:Show()
+              SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
+            end)
+          end
+
           currencyFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
             SetHighlightColor(currencyFrame, 1, 1, 1, 0)

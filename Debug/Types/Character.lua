@@ -1,6 +1,15 @@
----@class AE_CharacterCurrency : CurrencyInfo
+---@class AE_CharacterCurrency
 ---@field id number
 ---@field currencyType AE_CurrencyType
+---@field name string?
+---@field iconFileID number?
+---@field quantity number?
+---@field totalEarned number?
+---@field quantityEarnedThisWeek number?
+---@field maxWeeklyQuantity number?
+---@field questCompleted boolean?
+---@field bagCount number?
+---@field hasBuff boolean?
 
 ---@class AE_CharacterInfo
 ---@field name string

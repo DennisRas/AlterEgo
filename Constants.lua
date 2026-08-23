@@ -21,7 +21,7 @@ Constants.media = {
   IconKillDiamond = format("Interface/AddOns/%s/Media/Icon_Diamond.blp", addon.name),
 }
 
-Constants.currentCharacterNameMarker = "|TInterface\\FriendsFrame\\StatusIcon-Online:12:12:-2:-2|t"
+Constants.currentCharacterNameMarker = "|TInterface\\FriendsFrame\\StatusIcon-Online:12:12:1:-2|t"
 
 ---@type AE_CurrentCharacterMarker[]
 Constants.currentCharacterMarkers = {

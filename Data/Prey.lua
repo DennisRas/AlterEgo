@@ -133,4 +133,8 @@ Data.preyQuests = {
   {questID = 91267, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Thorn-Witch Liset (Nightmare)"},
   {questID = 91268, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Grothoz, the Burning Shadow (Nightmare)"},
   {questID = 91269, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Dengzag, the Darkened Blaze (Nightmare)"},
+  {questID = 95021, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Janoa the Fang (Nightmare)"},
+  {questID = 95022, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Kursak the Coiled (Nightmare)"},
+  {questID = 95023, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Batani the Scaled (Nightmare)"},
+  {questID = 95024, difficultyID = PREY_DIFFICULTY_NIGHTMARE, name = "Prey: Kadani the Claw (Nightmare)"},
 }

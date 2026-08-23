@@ -127,6 +127,8 @@ function Core:OnEnable()
       "QUEST_LOG_UPDATE",
     }, function()
       Data:UpdatePreyProgress()
+      Data:UpdateCurrencies()
+      self:Render()
     end
   )
   addon.Events:RegisterEvent(
@@ -178,6 +180,10 @@ function Core:OnEnable()
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
       Data:UpdateKeystoneItem()
+      Data:UpdateCurrencies()
+      C_Timer.After(2, function()
+        Data:FlushPendingKeystoneAnnounce()
+      end)
     end
   )
   addon.Events:RegisterEvent(
@@ -237,6 +243,7 @@ function Core:OnEnable()
     {
       "ADDON_RESTRICTION_STATE_CHANGED",
       "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
+      "PLAYER_REGEN_ENABLED",
     },
     function(_, event, _, state)
       if event == "ADDON_RESTRICTION_STATE_CHANGED" and state ~= Enum.AddOnRestrictionState.Inactive then

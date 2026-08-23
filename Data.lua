@@ -5,6 +5,7 @@ local addon = select(2, ...)
 local Data = {}
 addon.Data = Data
 
+local Constants = addon.Constants
 local LibAceDB = addon.Libs.AceDB
 local TableCopy = addon.Libs.LiqUI.Utils.TableCopy
 local TableCount = addon.Libs.LiqUI.Utils.TableCount
@@ -13,7 +14,7 @@ local TableFind = addon.Libs.LiqUI.Utils.TableFind
 local TableForEach = addon.Libs.LiqUI.Utils.TableForEach
 local TableGet = addon.Libs.LiqUI.Utils.TableGet
 
-Data.dbVersion = 37
+Data.dbVersion = 38
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -36,7 +37,6 @@ Data.defaultDB = {
     currentCharacterMarker = "dot",
     announceKeystones = {
       autoParty = true,
-      autoGuild = false,
       multiline = false,
       multilineNames = false,
     },
@@ -221,6 +221,26 @@ function Data:GetCurrencies()
   local seasonID = self:GetCurrentSeason()
   TableForEach(self.currencies, function(currency)
     if currency.seasonID ~= seasonID then
+      return
+    end
+    if currency.currencyType == "delveMap" then
+      ---@type AE_CurrencyInfo
+      local currencyInfo = {
+        id = currency.id,
+        name = currency.name or "Trovehunter's Bounty",
+        description = "Weekly Trovehunter's Bounty map status.",
+        iconFileID = C_Item.GetItemIconByID(currency.id) or 0,
+        quality = Enum.ItemQuality.Rare,
+        currencyType = currency.currencyType,
+        useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty,
+        tooltipNote = currency.tooltipNote,
+        maxQuantity = 0,
+        maxWeeklyQuantity = 0,
+        quantity = 0,
+        totalEarned = 0,
+        quantityEarnedThisWeek = 0,
+      }
+      table.insert(currencies, currencyInfo)
       return
     end
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
@@ -681,6 +701,9 @@ function Data:TaskWeeklyReset()
         if characterCurrency.maxWeeklyQuantity and characterCurrency.maxWeeklyQuantity > 0 then
           characterCurrency.quantityEarnedThisWeek = 0
         end
+        if characterCurrency.currencyType == "delveMap" then
+          characterCurrency.questCompleted = false
+        end
       end)
     end)
   end
@@ -978,10 +1001,39 @@ end
 function Data:UpdateCurrencies()
   local character = self:GetCharacter()
   if not character then return end
+  local seasonID = self:GetCurrentSeason()
 
   character.currencies = wipe(character.currencies or {})
 
   TableForEach(self.currencies or {}, function(dataCurrency)
+    if dataCurrency.seasonID ~= seasonID then
+      return
+    end
+    if dataCurrency.currencyType == "delveMap" then
+      local bagCount = C_Item.GetItemCount(dataCurrency.id, true) or 0
+      local hasBuff = false
+      if dataCurrency.spellID then
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(dataCurrency.spellID)
+        if aura ~= nil and not issecretvalue(aura) then
+          hasBuff = true
+        end
+      end
+
+      ---@type AE_CharacterCurrency
+      local delveMapCurrency = {
+        id = dataCurrency.id,
+        currencyType = dataCurrency.currencyType,
+        name = dataCurrency.name or "Trovehunter's Bounty",
+        iconFileID = C_Item.GetItemIconByID(dataCurrency.id) or 0,
+        quantity = bagCount,
+        bagCount = bagCount,
+        hasBuff = hasBuff,
+        questCompleted = dataCurrency.questID ~= nil and C_QuestLog.IsQuestFlaggedCompleted(dataCurrency.questID) == true,
+      }
+      table.insert(character.currencies, delveMapCurrency)
+      return
+    end
+
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
     if not currencyInfo then return end
     ---@type AE_CharacterCurrency
@@ -1077,20 +1129,43 @@ function Data:UpdateEquipment()
   end)
 end
 
----@param itemLink string
-local function sendNewKeystoneAnnounce(itemLink)
-  if C_ChatInfo.InChatMessagingLockdown()
+local function isKeystoneAnnounceBlocked()
+  return InCombatLockdown()
+    or C_ChatInfo.InChatMessagingLockdown()
     or C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)
-    or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards) then
+    or C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.WeeklyRewards)
+end
+
+---@param itemLink string?
+---@param dungeon AE_Dungeon?
+---@param keystoneLevel number?
+local function sendNewKeystoneAnnounce(itemLink, dungeon, keystoneLevel)
+  if isKeystoneAnnounceBlocked() then
     Data.cache.pendingKeystoneAnnounce = true
     return
   end
-  Data.cache.pendingKeystoneAnnounce = nil
-  if IsInGroup() and Data.db.global.announceKeystones.autoParty then
-    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "PARTY")
+  local announceText
+  if itemLink and not issecretvalue(itemLink) and itemLink ~= "" then
+    announceText = itemLink
+  elseif dungeon and type(keystoneLevel) == "number" and keystoneLevel > 0 then
+    local name = dungeon.abbr or dungeon.short or dungeon.name
+    if type(name) == "string" and name ~= "" then
+      announceText = name .. " +" .. tostring(keystoneLevel)
+    end
   end
-  if IsInGuild() and Data.db.global.announceKeystones.autoGuild then
-    SendChatMessage(addon.Constants.prefix .. "New Keystone: " .. itemLink, "GUILD")
+  if not announceText then
+    Data.cache.pendingKeystoneAnnounce = true
+    return
+  end
+  local message = Constants.prefix .. "New Keystone: " .. announceText
+  if not (IsInGroup() and Data.db.global.announceKeystones.autoParty) then
+    Data.cache.pendingKeystoneAnnounce = nil
+    return
+  end
+  if pcall(SendChatMessage, message, "PARTY") then
+    Data.cache.pendingKeystoneAnnounce = nil
+  else
+    Data.cache.pendingKeystoneAnnounce = true
   end
 end
 
@@ -1103,11 +1178,10 @@ function Data:FlushPendingKeystoneAnnounce()
   if not character then
     return
   end
-  local itemLink = character.mythicplus.keystone.itemLink
-  if itemLink == "" then
-    return
-  end
-  sendNewKeystoneAnnounce(itemLink)
+  local keystone = character.mythicplus.keystone
+  local dungeons = self:GetDungeons()
+  local dungeon = TableGet(dungeons, "challengeModeID", keystone.challengeModeID) or TableGet(dungeons, "mapId", keystone.mapId)
+  sendNewKeystoneAnnounce(keystone.itemLink, dungeon, keystone.level)
 end
 
 ---Refresh keystone item from bags
@@ -1177,17 +1251,22 @@ function Data:UpdateKeystoneItem()
     keystoneColor = color:GenerateHexColor()
   end
 
+  local storedItemLink = keystoneItemLink
+  if issecretvalue(storedItemLink) then
+    storedItemLink = ""
+  end
+
   character.mythicplus.keystone = {
     challengeModeID = keystoneChallengeModeID,
     mapId = dungeonMapId,
     level = keystoneLevel,
     color = keystoneColor,
     itemId = keystoneItemID or seasonKeystoneItemID or 0,
-    itemLink = keystoneItemLink,
+    itemLink = storedItemLink,
   }
 
   if newKeystone then
-    sendNewKeystoneAnnounce(keystoneItemLink)
+    sendNewKeystoneAnnounce(keystoneItemLink, dungeon, keystoneLevel)
   end
 
   addon.Core:Render()

@@ -1,4 +1,4 @@
----@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "spark" | "cloak" | "bonusroll"
+---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "delveMap" | "spark" | "cloak" | "bonusroll"
 
 ---@class AE_Inventory
 ---@field id number
@@ -58,12 +58,26 @@
 ---@field seasonDisplayID number
 ---@field useTotalEarnedForMaxQty boolean
 ---@field currencyType AE_CurrencyType
+---@field name string?
+---@field questID number?
+---@field spellID number?
 ---@field tooltipNote string|nil
 
----@class AE_CurrencyInfo : CurrencyInfo
+---@class AE_CurrencyInfo
 ---@field id number
+---@field name string
+---@field description string?
+---@field iconFileID number?
+---@field quality Enum.ItemQuality|number?
 ---@field currencyType AE_CurrencyType
+---@field useTotalEarnedForMaxQty boolean?
 ---@field tooltipNote string|nil
+---@field maxQuantity number?
+---@field maxWeeklyQuantity number?
+---@field quantity number?
+---@field totalEarned number?
+---@field quantityEarnedThisWeek number?
+---@field short string?
 
 ---@class AE_Affix
 ---@field id number
