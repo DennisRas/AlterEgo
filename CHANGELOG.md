@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.5 - 2026-09-02
+
+- Fixed Season 2 Nebulous Voidcore showing the previous season's count. Requires relogging characters. Fixes #264. Thank you @Artoliz and @shighman.
+
 ## v1.6.4 - 2026-08-23
 
 - Added Trovehunter's Bounty map status to the currencies section. Fixes #266. Thank you @Antorinia.
