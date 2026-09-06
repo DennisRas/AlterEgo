@@ -412,6 +412,8 @@ function Module:Render()
 
     local enchantSort = enchantTooltip ~= "" and enchantTooltip or enchantText
     local gemCount = TableCount(socketTexts)
+    local qualityColorData = ITEM_QUALITY_COLORS[item.itemQuality]
+    local itemLevelColor = qualityColorData and qualityColorData.color or WHITE_FONT_COLOR
 
     ---@type AE_EquipmentTableRow
     local row = {
@@ -441,7 +443,7 @@ function Module:Render()
             end
           end,
         },
-        {data = (ITEM_QUALITY_COLORS[item.itemQuality] or WHITE_FONT_COLOR):WrapTextInColorCode(tostring(floor(item.itemLevel)))},
+        {data = itemLevelColor:WrapTextInColorCode(tostring(floor(item.itemLevel)))},
         {data = upgradeLevel},
         {
           data = enchantColor:WrapTextInColorCode(enchantText),
