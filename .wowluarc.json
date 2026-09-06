@@ -1,8 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/TradeSkillMaster/wowlua-ls/main/editors/vscode/wowluarc.schema.json",
   "addonRoot": true,
-  "flavors": ["retail"],
-  "library": ["Libs/"],
+  "flavors": [
+    "retail"
+  ],
+  "library": [
+    "Libs/"
+  ],
   "inference": {
     "implicitProtectedPrefix": true
   },

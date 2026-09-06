@@ -1,0 +1,21 @@
+{
+  "printWidth": 160,
+  "proseWrap": "preserve",
+  "overrides": [
+    {
+      "files": "*.mdc",
+      "options": {
+        "parser": "markdown"
+      }
+    },
+    {
+      "files": [
+        "*.json",
+        "*.jsonc"
+      ],
+      "options": {
+        "printWidth": 20
+      }
+    }
+  ]
+}
