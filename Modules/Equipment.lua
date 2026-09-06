@@ -6,31 +6,9 @@ local Module = addon.Core:NewModule("Equipment", "AceConsole-3.0", "AceTimer-3.0
 addon.Module_Equipment = Module
 
 local Data = addon.Data
-local LibLiqUI = addon.Libs.LiqUI
-local TableCount = LibLiqUI.Utils.TableCount
-local TableForEach = LibLiqUI.Utils.TableForEach
-
-local Slots = {
-  [1] = {id = 1, side = "LEFT", name = "Head", canEnchant = true, canSocket = true},
-  [2] = {id = 2, side = "LEFT", name = "Neck", canEnchant = false, canSocket = false},
-  [3] = {id = 3, side = "LEFT", name = "Shoulder", canEnchant = true, canSocket = false},
-  [4] = {id = 4, side = "LEFT", name = "Shirt", canEnchant = false, canSocket = false},
-  [5] = {id = 5, side = "LEFT", name = "Chest", canEnchant = true, canSocket = false},
-  [6] = {id = 6, side = "RIGHT", name = "Waist", canEnchant = false, canSocket = true},
-  [7] = {id = 7, side = "RIGHT", name = "Legs", canEnchant = true, canSocket = false},
-  [8] = {id = 8, side = "RIGHT", name = "Feet", canEnchant = true, canSocket = false},
-  [9] = {id = 9, side = "LEFT", name = "Wrist", canEnchant = false, canSocket = true},
-  [10] = {id = 10, side = "RIGHT", name = "Hands", canEnchant = false, canSocket = false},
-  [11] = {id = 11, side = "RIGHT", name = "Finger0", canEnchant = true, canSocket = false},
-  [12] = {id = 12, side = "RIGHT", name = "Finger1", canEnchant = true, canSocket = false},
-  [13] = {id = 13, side = "RIGHT", name = "Trinket0", canEnchant = false, canSocket = false},
-  [14] = {id = 14, side = "RIGHT", name = "Trinket1", canEnchant = false, canSocket = false},
-  [15] = {id = 15, side = "LEFT", name = "Back", canEnchant = false, canSocket = false},
-  [16] = {id = 16, side = "RIGHT", name = "MainHand", canEnchant = true, canSocket = false},
-  [17] = {id = 17, side = "LEFT", name = "SecondaryHand", canEnchant = true, canSocket = false},
-  --    [18] = {id = 18, side = "LEFT", name = "Ranged", canEnchant = false},
-  --    [19] = {id = 19, side = "LEFT", name = "Tabard", canEnchant = false}
-}
+local LiqUI = addon.Libs.LiqUI
+local TableCount = LiqUI.Utils.TableCount
+local TableForEach = LiqUI.Utils.TableForEach
 
 local EQUIPMENT_HEADER_HEIGHT = 30
 local CRAFTED_QUALITY_MAX = 5
@@ -78,7 +56,7 @@ local function isUpgradeFromPreviousSeason(seasonID)
   if not seasonID or seasonID < 1 then
     return false
   end
-  local currentSeason = Data:GetCurrentSeason()
+  local currentSeason = LiqUI.Data:GetCurrentSeason()
   if not currentSeason or currentSeason < 1 then
     return false
   end
@@ -112,17 +90,12 @@ local function resolveEquipmentUpgradeLevel(item)
     local fallbackLevel = 0
     local fallbackMax = 0
     TableForEach(bonusIDs, function(bonusId)
-      TableForEach(Data.upgradeTracks, function(season)
-        TableForEach(season.tracks, function(track)
-          TableForEach(track.bonusIDs, function(id, trackLevel)
-            if id == bonusId then
-              fallbackTrack = track.name
-              fallbackLevel = trackLevel
-              fallbackMax = #track.bonusIDs
-            end
-          end)
-        end)
-      end)
+      local track, _, bonusIndex = LiqUI.Data:GetUpgradeTrackForBonusID(bonusId)
+      if track and track.kind == "crest" and bonusIndex then
+        fallbackTrack = track.name
+        fallbackLevel = bonusIndex
+        fallbackMax = #track.bonusIDs
+      end
     end)
     if fallbackTrack then
       appendLabel(format("%s %d/%d", fallbackTrack, fallbackLevel, fallbackMax), fallbackLevel == fallbackMax, true)
@@ -130,16 +103,16 @@ local function resolveEquipmentUpgradeLevel(item)
   end
 
   TableForEach(bonusIDs, function(bonusId)
-    local label = Data.upgradeBonusLabels[bonusId]
-    if label then
-      appendLabel(label.name, true, isUpgradeFromPreviousSeason(label.seasonID))
+    local track, season = LiqUI.Data:GetUpgradeTrackForBonusID(bonusId)
+    if track and track.kind == "label" then
+      appendLabel(track.name, true, isUpgradeFromPreviousSeason(season and season.seasonID))
     end
   end)
 
   local craftedQuality = C_TradeSkillUI.GetItemCraftedQualityByItemInfo(item.itemLink)
   if not craftedQuality then
     TableForEach(bonusIDs, function(bonusId)
-      local quality = Data.craftedQualityBonusIDs[bonusId]
+      local quality = LiqUI.Data:GetCraftedQuality(bonusId)
       if quality then
         craftedQuality = quality
       end
@@ -148,11 +121,22 @@ local function resolveEquipmentUpgradeLevel(item)
   if craftedQuality then
     local craftedSeason
     TableForEach(bonusIDs, function(bonusId)
-      local seasonID = Data.craftedSeasonBonusIDs[bonusId]
+      if LiqUI.Data:GetCraftedQuality(bonusId) then
+        return
+      end
+      local seasonID = LiqUI.Data:GetCraftedSeason(bonusId)
       if seasonID and (not craftedSeason or seasonID > craftedSeason) then
         craftedSeason = seasonID
       end
     end)
+    if not craftedSeason then
+      TableForEach(bonusIDs, function(bonusId)
+        local seasonID = LiqUI.Data:GetCraftedSeason(bonusId)
+        if seasonID and (not craftedSeason or seasonID > craftedSeason) then
+          craftedSeason = seasonID
+        end
+      end)
+    end
     appendLabel(format("Crafted %d/%d", craftedQuality, CRAFTED_QUALITY_MAX), craftedQuality == CRAFTED_QUALITY_MAX, isUpgradeFromPreviousSeason(craftedSeason))
   end
 
@@ -310,7 +294,7 @@ function Module:Render()
   if not self.window then
     local windows = Data.db.global.liqui.windows
     local tables = Data.db.global.liqui.tables
-    self.window = LibLiqUI:NewElement("Window", {
+    self.window = LiqUI:NewElement("Window", {
       name = addon.name .. "Equipment",
       storage = windows.Equipment,
       title = "Character",
@@ -318,7 +302,7 @@ function Module:Render()
         Module:Render()
       end,
     })
-    self.dataTable = LibLiqUI:NewElement("Table", {
+    self.dataTable = LiqUI:NewElement("Table", {
       name = addon.name .. "Equipment",
       storage = tables.Equipment,
       header = {enabled = true, sticky = true, height = EQUIPMENT_HEADER_HEIGHT},
@@ -406,12 +390,14 @@ function Module:Render()
       end
     end
 
-    if enchantText == "" and Slots[item.itemSlotID] and Slots[item.itemSlotID].canEnchant then
+    local inventorySlot = LiqUI.Data:GetInventorySlotByID(item.itemSlotID)
+
+    if enchantText == "" and inventorySlot and inventorySlot.canEnchant then
       enchantText = "Missing"
       enchantColor = DIM_RED_FONT_COLOR
     end
 
-    if TableCount(socketTexts) == 0 and Slots[item.itemSlotID] and Slots[item.itemSlotID].canSocket then
+    if TableCount(socketTexts) == 0 and inventorySlot and inventorySlot.canSocket then
       table.insert(socketTexts, DIM_RED_FONT_COLOR:WrapTextInColorCode("Missing"))
     end
 

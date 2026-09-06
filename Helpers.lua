@@ -5,8 +5,8 @@ local addon = select(2, ...)
 local Helpers = {}
 addon.Helpers = Helpers
 
-local LibLiqUI = addon.Libs.LiqUI
-local TableFilter = LibLiqUI.Utils.TableFilter
+local LiqUI = addon.Libs.LiqUI
+local TableFilter = LiqUI.Utils.TableFilter
 
 ---Calculate the dungeon timer
 ---@param time number

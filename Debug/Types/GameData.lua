@@ -1,49 +1,5 @@
 ---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "delveMap" | "spark" | "cloak" | "bonusroll"
 
----@class AE_Inventory
----@field id number
----@field name string
-
----@class AE_Season
----@field seasonID number
----@field seasonDisplayID number
----@field expansionID Enum.ExpansionLevel
----@field name string
----@field description string
-
----@class AE_Encounter
----@field index number
----@field name string|nil
----@field description string|nil
----@field journalEncounterID number|nil
----@field journalEncounterSectionID number|nil
----@field journalLink string|nil
----@field journalInstanceID number|nil
----@field instanceEncounterID number|nil
----@field instanceID number|nil
-
----@class AE_Raid
----@field seasonID number
----@field seasonDisplayID number
----@field journalInstanceID number
----@field instanceID number
----@field order number
----@field numEncounters number
----@field encounters AE_Encounter[]
----@field modifiedInstanceInfo table|nil
----@field abbr string
----@field name string
----@field short string?
----@field loot table
-
----@class AE_RaidDifficulty
----@field id number
----@field color colorRGBA
----@field order number
----@field abbr string
----@field name string
----@field short string?
-
 ---@class AE_VaultType
 ---@field id Enum.WeeklyRewardChestThresholdType
 ---@field name string
@@ -97,27 +53,6 @@
 ---@field seasonDisplayID number
 ---@field itemID number
 
----@class AE_Dungeon
----@field seasonID number
----@field seasonDisplayID number
----@field challengeModeID number
----@field journalInstanceID number
----@field mapId number
----@field teleports number[]
----@field time number
----@field encounters AE_Encounter[]
----@field abbr string
----@field name string
----@field short string?
----@field loot table
-
----@class AE_SavedInstanceEncounter
----@field index number
----@field instanceEncounterID number
----@field bossName string
----@field fileDataID number|nil
----@field isKilled boolean
-
 ---@class AE_SavedInstance
 ---@field index number
 ---@field id number
@@ -139,6 +74,13 @@
 ---@field expires number
 ---@field encounters AE_SavedInstanceEncounter[]
 
+---@class AE_SavedInstanceEncounter
+---@field index number
+---@field instanceEncounterID number
+---@field bossName string
+---@field fileDataID number|nil
+---@field isKilled boolean
+
 ---@class AE_PreyAffix
 ---@field id number
 ---@field name string
@@ -155,16 +97,3 @@
 ---@field questID number
 ---@field difficultyID number
 ---@field name string
-
----@class AE_UpgradeBonusLabel
----@field name string
----@field seasonID number
-
----@class AE_UpgradeTrack
----@field name string
----@field bonusIDs number[]
-
----@class AE_UpgradeSeason
----@field seasonID number
----@field seasonDisplayID number
----@field tracks AE_UpgradeTrack[]

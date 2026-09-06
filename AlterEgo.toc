@@ -36,12 +36,8 @@ Constants.lua
 Events.lua
 Data.lua
 Data\Currencies.lua
-Data\Inventory.lua
 Data\MythicPlus.lua
 Data\Prey.lua
-Data\Raids.lua
-Data\Seasons.lua
-Data\UpgradeTracks.lua
 Data\Vault.lua
 Helpers.lua
 AlterEgo.lua

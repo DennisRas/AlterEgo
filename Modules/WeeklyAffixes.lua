@@ -6,9 +6,9 @@ local Module = addon.Core:NewModule("WeeklyAffixes", "AceConsole-3.0", "AceTimer
 addon.Module_WeeklyAffixes = Module
 
 local Data = addon.Data
-local LibLiqUI = addon.Libs.LiqUI
-local TableForEach = LibLiqUI.Utils.TableForEach
-local TableGet = LibLiqUI.Utils.TableGet
+local LiqUI = addon.Libs.LiqUI
+local TableForEach = LiqUI.Utils.TableForEach
+local TableGet = LiqUI.Utils.TableGet
 
 local PLACEHOLDER_BODY_WIDTH = 500
 local PLACEHOLDER_BODY_HEIGHT = 80
@@ -30,7 +30,7 @@ function Module:Render()
     local windows = Data.db.global.liqui.windows
     local tables = Data.db.global.liqui.tables
     ---@type LiqUI_WindowInstance
-    self.window = LibLiqUI:NewElement("Window", {
+    self.window = LiqUI:NewElement("Window", {
       name = addon.name .. "Affixes",
       storage = windows.Affixes,
       title = "Weekly Affixes",
@@ -39,7 +39,7 @@ function Module:Render()
       end,
     })
     ---@type LiqUI_TableInstance
-    self.table = LibLiqUI:NewElement("Table", {
+    self.table = LiqUI:NewElement("Table", {
       name = addon.name .. "Affixes",
       storage = tables.Affixes,
       header = {enabled = false},

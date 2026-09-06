@@ -8,15 +8,15 @@ addon.Module_Main = Module
 local Data = addon.Data
 local Helpers = addon.Helpers
 local Constants = addon.Constants
-local LibLiqUI = addon.Libs.LiqUI
-local SetBackgroundColor = LibLiqUI.Utils.SetBackgroundColor
-local SetHighlightColor = LibLiqUI.Utils.SetHighlightColor
-local TableCount = LibLiqUI.Utils.TableCount
-local TableFilter = LibLiqUI.Utils.TableFilter
-local TableFind = LibLiqUI.Utils.TableFind
-local TableForEach = LibLiqUI.Utils.TableForEach
-local TableGet = LibLiqUI.Utils.TableGet
-local CreateScrollArea = LibLiqUI.Utils.CreateScrollArea
+local LiqUI = addon.Libs.LiqUI
+local SetBackgroundColor = LiqUI.Utils.SetBackgroundColor
+local SetHighlightColor = LiqUI.Utils.SetHighlightColor
+local TableCount = LiqUI.Utils.TableCount
+local TableFilter = LiqUI.Utils.TableFilter
+local TableFind = LiqUI.Utils.TableFind
+local TableForEach = LiqUI.Utils.TableForEach
+local TableGet = LiqUI.Utils.TableGet
+local CreateScrollArea = LiqUI.Utils.CreateScrollArea
 
 function Module:OnInitialize()
   self:Render()
@@ -94,7 +94,7 @@ local function getMythicPlusVaultItemLevel(keystoneLevel)
   if type(keystoneLevel) ~= "number" or keystoneLevel < vaultMythicPlusMinLevel then
     return nil
   end
-  local seasonID = Data:GetCurrentSeason()
+  local seasonID = LiqUI.Data:GetCurrentSeason()
   local levels = Data.mythicPlusVaultItemLevels[seasonID]
   if not levels then
     return nil
@@ -116,8 +116,8 @@ end
 local function getVaultProgressTooltip(infoFrame, character, activityType)
   local loggedCharacter = Data:GetCharacter()
   local difficulties = Data:GetRaidDifficulties(true)
-  local dungeons = Data:GetDungeons()
-  local raids = Data:GetRaids()
+  local dungeons = LiqUI.Data:GetDungeons()
+  local raids = LiqUI.Data:GetRaids()
   local activities = TableFilter(character.vault.slots or {}, function(activity) return activity.type and activity.type == activityType end)
   local numActivities = TableCount(activities)
   local activitiesInProgress = TableFilter(activities, function(slot) return slot.progress < slot.threshold end)
@@ -459,8 +459,8 @@ end
 ---@param unfiltered boolean?
 ---@return AE_CharacterRows[]
 function Module:GetCharacterInfo(unfiltered)
-  local dungeons = Data:GetDungeons()
-  local _, seasonDisplayID = Data:GetCurrentSeason()
+  local dungeons = LiqUI.Data:GetDungeons()
+  local _, seasonDisplayID = LiqUI.Data:GetCurrentSeason()
   local equipmentModule = addon.Core:GetModule("Equipment", true)
 
   ---@type AE_CharacterRows[]
@@ -878,22 +878,22 @@ end
 ---Render the main window
 function Module:Render()
   local currentAffixes = Data:GetCurrentAffixes()
-  local seasonID = Data:GetCurrentSeason()
-  local dungeons = Data:GetDungeons()
+  local seasonID = LiqUI.Data:GetCurrentSeason()
+  local dungeons = LiqUI.Data:GetDungeons()
   local currencies = Data:GetCurrencies()
   local raidDifficulties = Data:GetRaidDifficulties()
   local characterInfo = self:GetCharacterInfo()
-  local raids = Data:GetRaids()
+  local raids = LiqUI.Data:GetRaids()
   local characters = Data:GetCharacters()
   local numCharacters = TableCount(characters)
   local affixes = Data:GetAffixes(true)
-  local windowWidthMax = LibLiqUI.Utils.GetMaxWindowWidth()
+  local windowWidthMax = LiqUI.Utils.GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
   if not self.window then
     local windows = Data.db.global.liqui.windows
-    self.window = LibLiqUI:NewElement("Window", {
+    self.window = LiqUI:NewElement("Window", {
       name = addon.name .. "Main",
       storage = windows.Main,
       title = addon.name,
@@ -1477,7 +1477,7 @@ function Module:Render()
         end)
         affixFrame:SetScript("OnClick", function()
           if not weeklyAffixesModule then return end
-          local affixesWindow = LibLiqUI:GetElement("Window", addon.name .. "Affixes")
+          local affixesWindow = LiqUI:GetElement("Window", addon.name .. "Affixes")
           if affixesWindow then
             affixesWindow:Toggle()
           end
@@ -2331,7 +2331,7 @@ function Module:Render()
           totalHeight = totalHeight + RAIDS_ROW_HEIGHT
 
           -- Get all raid encounters
-          ---@type AE_Encounter[]
+          ---@type LiqUI_Encounter[]
           local encounters = {}
           local numEncounters = 0
           TableForEach(raids or {}, function(raid, raidIndex)

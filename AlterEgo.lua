@@ -7,10 +7,10 @@ local Helpers = addon.Helpers
 local LibAceAddon = addon.Libs.AceAddon
 local LibDataBroker = addon.Libs.LibDataBroker
 local LibDBIcon = addon.Libs.LibDBIcon
-local LibLiqUI = addon.Libs.LiqUI
-local TableCount = LibLiqUI.Utils.TableCount
-local TableForEach = LibLiqUI.Utils.TableForEach
-local TableGet = LibLiqUI.Utils.TableGet
+local LiqUI = addon.Libs.LiqUI
+local TableCount = LiqUI.Utils.TableCount
+local TableForEach = LiqUI.Utils.TableForEach
+local TableGet = LiqUI.Utils.TableGet
 
 ---@class AE_Core : AceAddon
 local Core = LibAceAddon:NewAddon(addon.name, "AceConsole-3.0", "AceTimer-3.0")
@@ -79,7 +79,7 @@ end
 
 ---Toggle the main window
 function Core:ToggleWindow()
-  local window = LibLiqUI:GetElement("Window", addon.name .. "Main")
+  local window = LiqUI:GetElement("Window", addon.name .. "Main")
   if not window then return end
   window:Toggle()
 end
@@ -266,7 +266,7 @@ end
 
 ---Check if game data is loaded
 function Core:CheckGameData()
-  local seasonID, seasonDisplayID = Data:GetCurrentSeason()
+  local seasonID, seasonDisplayID = LiqUI.Data:GetCurrentSeason()
   if seasonID < 0 or seasonDisplayID < 0 then
     self:RequestGameData()
     self:ScheduleTimer("CheckGameData", 3)
@@ -309,7 +309,7 @@ end
 ---@param chatType string
 function Core:AnnounceKeystones(chatType)
   local characters = Data:GetCharacters()
-  local dungeons = Data:GetDungeons()
+  local dungeons = LiqUI.Data:GetDungeons()
   local multiline = Data.db.global.announceKeystones.multiline
   local multilineNames = Data.db.global.announceKeystones.multilineNames
   local keystones = {}
