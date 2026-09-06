@@ -326,13 +326,22 @@ function Module:Render()
     self.dataTable:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
   end
 
-  if not self.window:IsVisible() then
+  local window = self.window
+  local dataTable = self.dataTable
+  if not window then
+    return
+  end
+  if not dataTable then
+    return
+  end
+
+  if not window:IsVisible() then
     return
   end
 
   local character = self.equipmentCharacter
   if not character or type(character.equipment) ~= "table" then
-    self.window:Hide()
+    window:Hide()
     return
   end
 
@@ -432,7 +441,7 @@ function Module:Render()
             end
           end,
         },
-        {data = WrapTextInColorCode(tostring(floor(item.itemLevel)), select(4, GetItemQualityColor(item.itemQuality)))},
+        {data = (ITEM_QUALITY_COLORS[item.itemQuality] or WHITE_FONT_COLOR):WrapTextInColorCode(tostring(floor(item.itemLevel)))},
         {data = upgradeLevel},
         {
           data = enchantColor:WrapTextInColorCode(enchantText),
@@ -477,8 +486,8 @@ function Module:Render()
     end
   end
 
-  self.window:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
-  self.dataTable:SetData(rows)
-  local bodyWidth, bodyHeight = self.dataTable:GetSize()
-  self.window:SetBodySize(bodyWidth > 0 and bodyWidth or tableWidth, bodyHeight)
+  window:SetTitle(format("%s (%s)", nameColor:WrapTextInColorCode(character.info.name), character.info.realm))
+  dataTable:SetData(rows)
+  local bodyWidth, bodyHeight = dataTable:GetSize()
+  window:SetBodySize(bodyWidth > 0 and bodyWidth or tableWidth, bodyHeight)
 end

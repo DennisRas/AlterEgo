@@ -475,6 +475,7 @@ end
 
 ---Run database migrations when dbVersion changes
 function Data:MigrateDB()
+  ---@diagnostic disable: undefined-field, inject-field
   if type(self.db.global.dbVersion) ~= "number" then
     self.db.global.dbVersion = self.dbVersion
   end
@@ -599,6 +600,7 @@ function Data:MigrateDB()
     self.db.global.dbVersion = self.db.global.dbVersion + 1
     self:MigrateDB()
   end
+  ---@diagnostic enable: undefined-field, inject-field
 end
 
 ---Perform weekly reset tasks (e.g., vault, weekly-earn currency progress for offline alts)
@@ -959,7 +961,7 @@ local function sendNewKeystoneAnnounce(itemLink, dungeon, keystoneLevel)
     Data.cache.pendingKeystoneAnnounce = nil
     return
   end
-  if pcall(SendChatMessage, message, "PARTY") then
+  if pcall(C_ChatInfo.SendChatMessage, message, "PARTY") then
     Data.cache.pendingKeystoneAnnounce = nil
   else
     Data.cache.pendingKeystoneAnnounce = true

@@ -1,15 +1,20 @@
 ---@class AE_Libs
----@field AceAddon AceAddon
+---@field AceAddon AceAddon-3.0
 ---@field AceDB AceDB-3.0
 ---@field LibDBIcon unknown
 ---@field LibDataBroker unknown
 ---@field LiqUI LiqUI
 
----@class AE_Core : AceAddon
+---@class AE_Core : AceAddon, AceConsole-3.0, AceTimer-3.0
 
 ---@class AE_Module_Main : AceModule
+---@field window LiqUI_WindowInstance|nil
 ---@class AE_Module_Equipment : AceModule
+---@field window LiqUI_WindowInstance|nil
+---@field dataTable LiqUI_TableInstance|nil
 ---@class AE_Module_WeeklyAffixes : AceModule
+---@field window LiqUI_WindowInstance|nil
+---@field table LiqUI_TableInstance|nil
 
 ---@class AE_Helpers
 

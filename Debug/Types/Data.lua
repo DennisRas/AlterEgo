@@ -24,7 +24,7 @@
 ---@field useRIOScoreColor boolean
 
 ---@class AE_Data
----@field db { global: AE_Global }|nil
+---@field db { global: AE_Global }
 ---@field dbVersion number
 ---@field defaultDB table
 ---@field defaultCharacter AE_Character

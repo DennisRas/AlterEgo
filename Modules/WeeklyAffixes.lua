@@ -50,19 +50,28 @@ function Module:Render()
     self.table:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
   end
 
-  if not self.window:IsVisible() then
+  local window = self.window
+  local affixTable = self.table
+  if not window then
+    return
+  end
+  if not affixTable then
+    return
+  end
+
+  if not window:IsVisible() then
     return
   end
 
   if not affixRotation then
-    self.window:ShowOverlay(PLACEHOLDER_TEXT)
-    self.table:Hide()
-    self.window:SetBodySize(PLACEHOLDER_BODY_WIDTH, PLACEHOLDER_BODY_HEIGHT)
+    window:ShowOverlay(PLACEHOLDER_TEXT)
+    affixTable:Hide()
+    window:SetBodySize(PLACEHOLDER_BODY_WIDTH, PLACEHOLDER_BODY_HEIGHT)
     return
   end
 
-  self.window:HideOverlay()
-  self.table:Show()
+  window:HideOverlay()
+  affixTable:Show()
 
   ---@type LiqUI_TableOptionsColumn[]
   local columns = {}
@@ -127,8 +136,8 @@ function Module:Render()
     table.insert(rows, row)
   end)
 
-  self.table:SetColumns(columns)
-  self.table:SetData(rows)
-  local bodyWidth, bodyHeight = self.table:GetSize()
-  self.window:SetBodySize(bodyWidth, bodyHeight)
+  affixTable:SetColumns(columns)
+  affixTable:SetData(rows)
+  local bodyWidth, bodyHeight = affixTable:GetSize()
+  window:SetBodySize(bodyWidth, bodyHeight)
 end

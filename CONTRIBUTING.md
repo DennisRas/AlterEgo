@@ -17,5 +17,5 @@ When updating library versions, bump the `tag` or `commit` on the matching `exte
 
 ## Code
 
-- Lua 5.1 — follow `.editorconfig` and `.luarc.json`
+- Lua 5.1 — follow `.editorconfig` and `.wowluarc.json`
 - Open issues and pull requests on GitHub

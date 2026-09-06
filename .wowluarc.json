@@ -2,24 +2,17 @@
   "$schema": "https://raw.githubusercontent.com/TradeSkillMaster/wowlua-ls/main/editors/vscode/wowluarc.schema.json",
   "addonRoot": true,
   "flavors": ["retail"],
-  "ignore": ["Libs/LiqUI/"],
-  "library": [
-    "Libs/AceAddon-3.0/",
-    "Libs/AceConsole-3.0/",
-    "Libs/AceDB-3.0/",
-    "Libs/AceTimer-3.0/",
-    "Libs/CallbackHandler-1.0/",
-    "Libs/LibDataBroker-1.1/",
-    "Libs/LibDBIcon-1.0/",
-    "Libs/LibStub/",
-    "Libs/TaintLess/"
-  ],
+  "library": ["Libs/"],
+  "inference": {
+    "implicitProtectedPrefix": true
+  },
   "diagnostics": {
-    "disable": [
-      "deprecated",
-      "duplicate-set-field",
-      "inject-field",
-      "undefined-field"
+    "enable": [
+      "need-check-nil",
+      "unknown-param-type",
+      "unknown-return-type",
+      "unknown-local-type",
+      "unknown-field-type"
     ]
   }
 }

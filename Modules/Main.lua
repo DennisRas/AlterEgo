@@ -461,6 +461,7 @@ end
 function Module:GetCharacterInfo(unfiltered)
   local dungeons = LiqUI.Data:GetDungeons()
   local _, seasonDisplayID = LiqUI.Data:GetCurrentSeason()
+  ---@type AE_Module_Equipment|nil
   local equipmentModule = addon.Core:GetModule("Equipment", true)
 
   ---@type AE_CharacterRows[]
@@ -889,6 +890,7 @@ function Module:Render()
   local affixes = Data:GetAffixes(true)
   local windowWidthMax = LiqUI.Utils.GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
+  ---@type AE_Module_WeeklyAffixes|nil
   local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
 
   if not self.window then
