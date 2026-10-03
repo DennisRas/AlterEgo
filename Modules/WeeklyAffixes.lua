@@ -19,10 +19,6 @@ function Module:OnInitialize()
 end
 
 function Module:Render()
-  local affixes = Data:GetAffixes()
-  local affixRotation = Data:GetAffixRotation()
-  local currentAffixes = Data:GetCurrentAffixes()
-  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
   local columnWidth = 140
   local rowHeight = 28
 
@@ -53,6 +49,11 @@ function Module:Render()
   if not self.window:IsVisible() then
     return
   end
+
+  local affixes = Data:GetAffixes()
+  local affixRotation = Data:GetAffixRotation()
+  local currentAffixes = Data:GetCurrentAffixes()
+  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
 
   if not affixRotation then
     self.window:ShowOverlay(PLACEHOLDER_TEXT)

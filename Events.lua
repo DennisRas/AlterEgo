@@ -1,6 +1,8 @@
 ---@class AE_Addon
 local addon = select(2, ...)
 
+local Profiler = addon.Profiler
+
 ---@class AE_Events
 local Events = {}
 addon.Events = Events
@@ -10,6 +12,11 @@ Events.frame = CreateFrame("Frame", addon.name .. "EventsFrame")
 
 ---@type number
 local BUCKET_INTERVAL_SEC = 2
+
+---Events that fire for every unit but only matter for the player
+local PLAYER_ONLY_EVENTS = {
+  UNIT_INVENTORY_CHANGED = true,
+}
 
 ---@param ... any
 ---@return AE_EventPackedVarargs
@@ -43,7 +50,9 @@ Events.frame:SetScript("OnEvent", function(frame, event, ...)
   for i = 1, #list do
     local entry = list[i]
     if entry.runsImmediately then
+      local start = Profiler.Start()
       entry.fn(frame, event, unpackEventVarargs(packedVarargs))
+      Profiler.Stop("event " .. event, start)
     end
   end
 
@@ -74,7 +83,9 @@ Events.frame:SetScript("OnEvent", function(frame, event, ...)
       for j = 1, #currentList do
         local entry = currentList[j]
         if not entry.runsImmediately then
+          local start = Profiler.Start()
           entry.fn(frame, event, unpackEventVarargs(snapshot))
+          Profiler.Stop("event " .. event .. " (bucketed)", start)
         end
       end
     end)
@@ -97,7 +108,16 @@ function Events:RegisterEvent(event, callback, runsImmediately)
   if not list then
     list = {}
     self.handlers[event] = list
-    self.frame:RegisterEvent(event)
+    if PLAYER_ONLY_EVENTS[event] then
+      self.frame:RegisterUnitEvent(event, "player")
+    else
+      self.frame:RegisterEvent(event)
+    end
+  end
+  for i = 1, #list do
+    if list[i].fn == callback then
+      return
+    end
   end
   list[#list + 1] = {fn = callback, runsImmediately = runsImmediately == true}
 end

@@ -6,6 +6,7 @@ local Data = {}
 addon.Data = Data
 
 local Constants = addon.Constants
+local Profiler = addon.Profiler
 local LibAceDB = addon.Libs.AceDB
 local TableCopy = addon.Libs.LiqUI.Utils.TableCopy
 local TableCount = addon.Libs.LiqUI.Utils.TableCount
@@ -727,136 +728,57 @@ function Data:TaskSeasonReset()
   end
 end
 
----Load static game data (dungeons, raids, affix rotations)
-function Data:loadGameData()
+---Read all encounters of a raid or dungeon from the Encounter Journal
+---@param entry AE_Raid|AE_Dungeon
+local function loadEncounters(entry)
+  local journalInstanceID = entry.journalInstanceID
+  EJ_SelectInstance(journalInstanceID)
+  local encounterIndex = 1
+  while true do
+    local name, description, journalEncounterID, journalEncounterSectionID, journalLink, encounterJournalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, journalInstanceID)
+    if not journalEncounterID then
+      break
+    end
+    ---@type AE_Encounter
+    entry.encounters[encounterIndex] = {
+      index = encounterIndex,
+      name = name,
+      description = description,
+      journalInstanceID = encounterJournalInstanceID,
+      journalEncounterID = journalEncounterID,
+      journalEncounterSectionID = journalEncounterSectionID,
+      journalLink = journalLink,
+      instanceID = instanceID,
+      instanceEncounterID = instanceEncounterID,
+    }
+    encounterIndex = encounterIndex + 1
+  end
+end
+
+---Load static game data (dungeons, raids, affix rotations).
+---Cheap lookups run immediately; Encounter Journal scans are spread over several frames
+---to avoid a long hitch on login. `onComplete` is called once everything is loaded.
+---@param onComplete fun()?
+function Data:loadGameData(onComplete)
+  local profileStart = Profiler.Start()
   local seasonID = self:GetCurrentSeason()
+  local pending = {}
 
   for _, raid in pairs(self.raids) do
-    -- if raid.seasonID == seasonID then
-    --   EJ_ClearSearch()
-    --   EJ_ResetLootFilter()
-    --   EJ_SelectInstance(raid.journalInstanceID)
-
-    --   for classID = 1, GetNumClasses() do
-    --     for specIndex = 1, GetNumSpecializationsForClassID(classID) do
-    --       local specID = GetSpecializationInfoForClassID(classID, specIndex)
-    --       if specID then
-    --         EJ_SetLootFilter(classID, specID)
-    --         for i = 1, EJ_GetNumLoot() do
-    --           local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
-    --           if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
-    --             local item = raid.loot[lootInfo.itemID]
-    --             if not item then
-    --               item = lootInfo
-    --               item.stats = C_Item.GetItemStats(lootInfo.link)
-    --               item.classes = {}
-    --               item.specs = {}
-    --               raid.loot[lootInfo.itemID] = item
-    --             end
-    --             item.classes[classID] = true
-    --             item.specs[specID] = true
-    --             -- table.insert(item.classes, classID)
-    --             -- table.insert(item.specs, specID)
-    --             -- TODO: Make above arrays unique
-    --           end
-    --         end
-    --       end
-    --     end
-    --   end
-    --   EJ_ResetLootFilter()
-    -- end
-
     if raid.seasonID == seasonID then
-      local encounterIndex = 1
-      EJ_SelectInstance(raid.journalInstanceID)
-      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-      while bossID do
-        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-        ---@type AE_Encounter
-        local encounter = {
-          index = encounterIndex,
-          name = name,
-          description = description,
-          journalInstanceID = journalInstanceID,
-          journalEncounterID = journalEncounterID,
-          journalEncounterSectionID = journalEncounterSectionID,
-          journalLink = journalLink,
-          instanceID = instanceID,
-          instanceEncounterID = instanceEncounterID,
-        }
-        raid.encounters[encounterIndex] = encounter
-        encounterIndex = encounterIndex + 1
-        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, raid.journalInstanceID)
-      end
       raid.modifiedInstanceInfo = C_ModifiedInstance.GetModifiedInstanceInfoFromMapID(raid.instanceID)
+      pending[#pending + 1] = raid
     end
   end
 
   for _, dungeon in pairs(self.dungeons) do
-    -- if dungeon.seasonID == seasonID then
-    --   EJ_ClearSearch()
-    --   EJ_ResetLootFilter()
-    --   EJ_SelectInstance(dungeon.journalInstanceID)
-
-    --   local count = 0
-    --   for classID = 1, GetNumClasses() do
-    --     for specIndex = 1, GetNumSpecializationsForClassID(classID) do
-    --       local specID = GetSpecializationInfoForClassID(classID, specIndex)
-    --       if specID then
-    --         EJ_SetLootFilter(classID, specID)
-    --         for i = 1, EJ_GetNumLoot() do
-    --           local lootInfo = C_EncounterJournal.GetLootInfoByIndex(i)
-    --           if lootInfo.name ~= nil and lootInfo.slot ~= nil and lootInfo.slot ~= "" then
-    --             local item = dungeon.loot[lootInfo.itemID]
-    --             if not item then
-    --               item = lootInfo
-    --               item.stats = C_Item.GetItemStats(lootInfo.link)
-    --               item.classes = {}
-    --               item.specs = {}
-    --               dungeon.loot[lootInfo.itemID] = item
-    --               count = count + 1
-    --             end
-    --             item.classes[classID] = true
-    --             item.specs[specID] = true
-    --             -- table.insert(item.classes, classID)
-    --             -- table.insert(item.specs, specID)
-    --             -- TODO: Make above arrays unique
-    --           end
-    --         end
-    --       end
-    --     end
-    --   end
-    --   EJ_ResetLootFilter()
-    -- end
-
     if dungeon.seasonID == seasonID then
       -- TODO: Get and store more dungeon data for m+
       local dungeonName, _, dungeonTimeLimit, dungeonTexture = C_ChallengeMode.GetMapUIInfo(dungeon.challengeModeID)
       dungeon.name = dungeonName
       dungeon.time = dungeonTimeLimit
       dungeon.texture = dungeon.texture ~= 0 and dungeonTexture or "Interface/Icons/achievement_bg_wineos_underxminutes"
-
-      local encounterIndex = 1
-      EJ_SelectInstance(dungeon.journalInstanceID)
-      local _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-      while bossID do
-        local name, description, journalEncounterID, journalEncounterSectionID, journalLink, journalInstanceID, instanceEncounterID, instanceID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-        ---@type AE_Encounter
-        local encounter = {
-          index = encounterIndex,
-          name = name,
-          description = description,
-          journalEncounterID = journalEncounterID,
-          journalEncounterSectionID = journalEncounterSectionID,
-          journalLink = journalLink,
-          journalInstanceID = journalInstanceID,
-          instanceEncounterID = instanceEncounterID,
-          instanceID = instanceID,
-        }
-        dungeon.encounters[encounterIndex] = encounter
-        encounterIndex = encounterIndex + 1
-        _, _, bossID = EJ_GetEncounterInfoByIndex(encounterIndex, dungeon.journalInstanceID)
-      end
+      pending[#pending + 1] = dungeon
     end
   end
 
@@ -866,6 +788,23 @@ function Data:loadGameData()
     affix.description = description
     affix.fileDataID = fileDataID
   end
+
+  Profiler.Stop("loadGameData (sync)", profileStart)
+
+  local index = 0
+  local function loadNext()
+    index = index + 1
+    local entry = pending[index]
+    if not entry then
+      if onComplete then onComplete() end
+      return
+    end
+    local start = Profiler.Start()
+    loadEncounters(entry)
+    Profiler.Stop("EJ scan " .. tostring(entry.journalInstanceID), start)
+    C_Timer.After(0, loadNext)
+  end
+  loadNext()
 end
 
 ---Refresh saved raid instances from the API
