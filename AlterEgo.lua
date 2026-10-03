@@ -74,7 +74,7 @@ function Core:OnInitialize()
   hooksecurefunc("ResetInstances", function()
     self:OnInstanceReset()
   end)
-  self:Render()
+  self:RenderNow()
 end
 
 ---Toggle the main window
@@ -102,12 +102,86 @@ function Core:ToggleEquipment()
   module:OpenCharacter(character)
 end
 
----Render all modules
-function Core:Render()
-  for _, module in addon.Core:IterateModules() do
+---Render all modules immediately
+function Core:RenderNow()
+  for _, module in self:IterateModules() do
     if module.Render ~= nil then
       module:Render()
     end
+  end
+end
+
+---Request a render of all modules. Requests made within the same frame are coalesced into one.
+function Core:Render()
+  if self.renderQueued then return end
+  self.renderQueued = true
+  C_Timer.After(0, function()
+    self.renderQueued = false
+    self:RenderNow()
+  end)
+end
+
+---Updaters that can be queued by name through Core:QueueUpdate
+---@type table<string, fun()>
+local updaters = {
+  UpdateEquipment = function()
+    Data:UpdateEquipment()
+    local equipment = addon.Core:GetModule("Equipment", true)
+    if equipment then
+      equipment:Render()
+    end
+  end,
+  UpdatePreyProgress = function() Data:UpdatePreyProgress() end,
+  UpdateCharacterInfo = function() Data:UpdateCharacterInfo() end,
+  UpdateMoney = function() Data:UpdateMoney() end,
+  UpdateCurrencies = function() Data:UpdateCurrencies() end,
+  UpdateKeystoneItem = function() Data:UpdateKeystoneItem() end,
+  UpdateRaidInstances = function() Data:UpdateRaidInstances() end,
+  UpdateVault = function() Data:UpdateVault() end,
+  UpdateMythicPlus = function() Data:UpdateMythicPlus() end,
+}
+
+local updateQueue, updateQueued, updateQueueRunning = {}, {}, false
+
+local function processUpdateQueue()
+  local name = table.remove(updateQueue, 1)
+  if name then
+    updateQueued[name] = nil
+    updaters[name]()
+  end
+  if #updateQueue > 0 then
+    C_Timer.After(0, processUpdateQueue)
+  else
+    updateQueueRunning = false
+  end
+end
+
+---Queue a data update. Duplicates are dropped and queued updates run one per frame to avoid frame spikes.
+---@param name string
+function Core:QueueUpdate(name)
+  if updateQueued[name] then return end
+  updateQueued[name] = true
+  updateQueue[#updateQueue + 1] = name
+  if not updateQueueRunning then
+    updateQueueRunning = true
+    C_Timer.After(0, processUpdateQueue)
+  end
+end
+
+---Queue every data update, in dependency order
+function Core:QueueAllUpdates()
+  for _, name in ipairs({
+    "UpdateCharacterInfo",
+    "UpdatePreyProgress",
+    "UpdateEquipment",
+    "UpdateMoney",
+    "UpdateCurrencies",
+    "UpdateKeystoneItem",
+    "UpdateRaidInstances",
+    "UpdateVault",
+    "UpdateMythicPlus",
+  }) do
+    self:QueueUpdate(name)
   end
 end
 
@@ -118,25 +192,24 @@ function Core:OnEnable()
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
     }, function()
-      Data:UpdateCharacterInfo()
-      Data:UpdateEquipment()
+      self:QueueUpdate("UpdateCharacterInfo")
+      self:QueueUpdate("UpdateEquipment")
     end
   )
   addon.Events:RegisterEvent(
     {
       "QUEST_LOG_UPDATE",
     }, function()
-      Data:UpdatePreyProgress()
-      Data:UpdateCurrencies()
-      self:Render()
+      self:QueueUpdate("UpdatePreyProgress")
+      self:QueueUpdate("UpdateCurrencies")
     end
   )
   addon.Events:RegisterEvent(
     {
       "GUILD_ROSTER_UPDATE",
       "PLAYER_GUILD_UPDATE",
-    }, function(...)
-      Data:UpdateCharacterInfo()
+    }, function()
+      self:QueueUpdate("UpdateCharacterInfo")
     end
   )
   addon.Events:RegisterEvent(
@@ -155,7 +228,7 @@ function Core:OnEnable()
       "CHALLENGE_MODE_MAPS_UPDATE",
       "WEEKLY_REWARDS_UPDATE",
     }, function()
-      Data:UpdateVault()
+      self:QueueUpdate("UpdateVault")
     end
   )
   addon.Events:RegisterEvent(
@@ -163,24 +236,20 @@ function Core:OnEnable()
       "LFG_UPDATE_RANDOM_INFO",
       "UPDATE_INSTANCE_INFO",
     }, function()
-      Data:UpdateRaidInstances()
+      self:QueueUpdate("UpdateRaidInstances")
     end
   )
   addon.Events:RegisterEvent(
     {
       "BAG_UPDATE_DELAYED",
       "CHALLENGE_MODE_COMPLETED",
-      "CHALLENGE_MODE_COMPLETED",
       "CHALLENGE_MODE_MAPS_UPDATE",
-      "CHALLENGE_MODE_MAPS_UPDATE",
-      "CHALLENGE_MODE_RESET",
       "CHALLENGE_MODE_RESET",
       "ITEM_CHANGED",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
-      "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
-      Data:UpdateKeystoneItem()
-      Data:UpdateCurrencies()
+      self:QueueUpdate("UpdateKeystoneItem")
+      self:QueueUpdate("UpdateCurrencies")
       C_Timer.After(2, function()
         Data:FlushPendingKeystoneAnnounce()
       end)
@@ -193,7 +262,7 @@ function Core:OnEnable()
       "CHALLENGE_MODE_RESET",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
-      Data:UpdateMythicPlus()
+      self:QueueUpdate("UpdateMythicPlus")
     end
   )
   addon.Events:RegisterEvent(
@@ -208,14 +277,14 @@ function Core:OnEnable()
       "TRADE_CURRENCY_CHANGED",
       "TRADE_SKILL_CURRENCY_REWARD_RESULT",
     }, function()
-      Data:UpdateCurrencies()
+      self:QueueUpdate("UpdateCurrencies")
     end
   )
   addon.Events:RegisterEvent(
     {
       "PLAYER_MONEY",
     }, function()
-      Data:UpdateMoney()
+      self:QueueUpdate("UpdateMoney")
     end
   )
   addon.Events:RegisterEvent(
@@ -273,11 +342,12 @@ function Core:CheckGameData()
     return
   end
 
-  Data:loadGameData()
-  Data:TaskWeeklyReset()
-  Data:TaskSeasonReset()
-  Data:UpdateDB()
-  self:Render()
+  Data:loadGameData(function()
+    Data:TaskWeeklyReset()
+    Data:TaskSeasonReset()
+    self:QueueAllUpdates()
+    self:Render()
+  end)
 end
 
 ---Handle instance reset
