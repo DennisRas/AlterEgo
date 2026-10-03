@@ -8,7 +8,6 @@ local LibAceAddon = addon.Libs.AceAddon
 local LibDataBroker = addon.Libs.LibDataBroker
 local LibDBIcon = addon.Libs.LibDBIcon
 local LibLiqUI = addon.Libs.LiqUI
-local Profiler = addon.Profiler
 local TableCount = LibLiqUI.Utils.TableCount
 local TableForEach = LibLiqUI.Utils.TableForEach
 local TableGet = LibLiqUI.Utils.TableGet
@@ -19,7 +18,6 @@ addon.Core = Core
 
 ---Initialize the addon
 function Core:OnInitialize()
-  local profileStart = Profiler.Start()
   _G["BINDING_NAME_ALTEREGO"] = "Toggle AlterEgo window"
   _G["BINDING_NAME_ALTEREGOVAULT"] = "Toggle Great Vault window"
   _G["BINDING_NAME_ALTEREGOEQUIPMENT"] = "Toggle Character Equipment window"
@@ -77,7 +75,6 @@ function Core:OnInitialize()
     self:OnInstanceReset()
   end)
   self:RenderNow()
-  Profiler.Stop("Core:OnInitialize", profileStart)
 end
 
 ---Toggle the main window
@@ -107,11 +104,9 @@ end
 
 ---Render all modules immediately
 function Core:RenderNow()
-  for name, module in self:IterateModules() do
+  for _, module in self:IterateModules() do
     if module.Render ~= nil then
-      local start = Profiler.Start()
       module:Render()
-      Profiler.Stop("render " .. name, start)
     end
   end
 end
@@ -152,9 +147,7 @@ local function processUpdateQueue()
   local name = table.remove(updateQueue, 1)
   if name then
     updateQueued[name] = nil
-    local start = Profiler.Start()
     updaters[name]()
-    Profiler.Stop("update " .. name, start)
   end
   if #updateQueue > 0 then
     C_Timer.After(0, processUpdateQueue)
@@ -194,7 +187,6 @@ end
 
 ---Register event handlers for game data updates
 function Core:OnEnable()
-  local profileStart = Profiler.Start()
   addon.Events:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
@@ -331,7 +323,6 @@ function Core:OnEnable()
     true
   )
   self:CheckGameData()
-  Profiler.Stop("Core:OnEnable", profileStart)
 end
 
 ---Request game data from the API

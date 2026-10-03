@@ -6,7 +6,6 @@ local Data = {}
 addon.Data = Data
 
 local Constants = addon.Constants
-local Profiler = addon.Profiler
 local LibAceDB = addon.Libs.AceDB
 local TableCopy = addon.Libs.LiqUI.Utils.TableCopy
 local TableCount = addon.Libs.LiqUI.Utils.TableCount
@@ -760,7 +759,6 @@ end
 ---to avoid a long hitch on login. `onComplete` is called once everything is loaded.
 ---@param onComplete fun()?
 function Data:loadGameData(onComplete)
-  local profileStart = Profiler.Start()
   local seasonID = self:GetCurrentSeason()
   local pending = {}
 
@@ -789,8 +787,6 @@ function Data:loadGameData(onComplete)
     affix.fileDataID = fileDataID
   end
 
-  Profiler.Stop("loadGameData (sync)", profileStart)
-
   local index = 0
   local function loadNext()
     index = index + 1
@@ -799,9 +795,7 @@ function Data:loadGameData(onComplete)
       if onComplete then onComplete() end
       return
     end
-    local start = Profiler.Start()
     loadEncounters(entry)
-    Profiler.Stop("EJ scan " .. tostring(entry.journalInstanceID), start)
     C_Timer.After(0, loadNext)
   end
   loadNext()

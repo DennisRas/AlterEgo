@@ -1,8 +1,6 @@
 ---@class AE_Addon
 local addon = select(2, ...)
 
-local Profiler = addon.Profiler
-
 ---@class AE_Events
 local Events = {}
 addon.Events = Events
@@ -50,9 +48,7 @@ Events.frame:SetScript("OnEvent", function(frame, event, ...)
   for i = 1, #list do
     local entry = list[i]
     if entry.runsImmediately then
-      local start = Profiler.Start()
       entry.fn(frame, event, unpackEventVarargs(packedVarargs))
-      Profiler.Stop("event " .. event, start)
     end
   end
 
@@ -83,9 +79,7 @@ Events.frame:SetScript("OnEvent", function(frame, event, ...)
       for j = 1, #currentList do
         local entry = currentList[j]
         if not entry.runsImmediately then
-          local start = Profiler.Start()
           entry.fn(frame, event, unpackEventVarargs(snapshot))
-          Profiler.Stop("event " .. event .. " (bucketed)", start)
         end
       end
     end)
