@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.6 - 2026-10-15
+
+- Added The Unbinding of Kith'ix to Season 2 raid progress.
+- Updated TOC number to support patch 12.1.5.
+- Fixed the Equipment window showing no gear after patch 12.1.5. Fixes #280. Thank you @horizonjugi and @koukuko.
+
 ## v1.6.5 - 2026-09-02
 
 - Fixed Season 2 Nebulous Voidcore showing the previous season's count. Requires relogging characters. Fixes #264. Thank you @Artoliz and @shighman.

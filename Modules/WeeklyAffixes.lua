@@ -6,9 +6,9 @@ local Module = addon.Core:NewModule("WeeklyAffixes", "AceConsole-3.0", "AceTimer
 addon.Module_WeeklyAffixes = Module
 
 local Data = addon.Data
-local LibLiqUI = addon.Libs.LiqUI
-local TableForEach = LibLiqUI.Utils.TableForEach
-local TableGet = LibLiqUI.Utils.TableGet
+local LiqUI = addon.Libs.LiqUI
+local TableForEach = LiqUI.Utils.TableForEach
+local TableGet = LiqUI.Utils.TableGet
 
 local PLACEHOLDER_BODY_WIDTH = 500
 local PLACEHOLDER_BODY_HEIGHT = 80
@@ -30,7 +30,7 @@ function Module:Render()
     local windows = Data.db.global.liqui.windows
     local tables = Data.db.global.liqui.tables
     ---@type LiqUI_WindowInstance
-    self.window = LibLiqUI:NewElement("Window", {
+    self.window = LiqUI:NewElement("Window", {
       name = addon.name .. "Affixes",
       storage = windows.Affixes,
       title = "Weekly Affixes",
@@ -39,7 +39,7 @@ function Module:Render()
       end,
     })
     ---@type LiqUI_TableInstance
-    self.table = LibLiqUI:NewElement("Table", {
+    self.table = LiqUI:NewElement("Table", {
       name = addon.name .. "Affixes",
       storage = tables.Affixes,
       header = {enabled = false},
@@ -50,19 +50,28 @@ function Module:Render()
     self.table:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
   end
 
-  if not self.window:IsVisible() then
+  local window = self.window
+  local affixTable = self.table
+  if not window then
+    return
+  end
+  if not affixTable then
+    return
+  end
+
+  if not window:IsVisible() then
     return
   end
 
   if not affixRotation then
-    self.window:ShowOverlay(PLACEHOLDER_TEXT)
-    self.table:Hide()
-    self.window:SetBodySize(PLACEHOLDER_BODY_WIDTH, PLACEHOLDER_BODY_HEIGHT)
+    window:ShowOverlay(PLACEHOLDER_TEXT)
+    affixTable:Hide()
+    window:SetBodySize(PLACEHOLDER_BODY_WIDTH, PLACEHOLDER_BODY_HEIGHT)
     return
   end
 
-  self.window:HideOverlay()
-  self.table:Show()
+  window:HideOverlay()
+  affixTable:Show()
 
   ---@type LiqUI_TableOptionsColumn[]
   local columns = {}
@@ -127,8 +136,8 @@ function Module:Render()
     table.insert(rows, row)
   end)
 
-  self.table:SetColumns(columns)
-  self.table:SetData(rows)
-  local bodyWidth, bodyHeight = self.table:GetSize()
-  self.window:SetBodySize(bodyWidth, bodyHeight)
+  affixTable:SetColumns(columns)
+  affixTable:SetData(rows)
+  local bodyWidth, bodyHeight = affixTable:GetSize()
+  window:SetBodySize(bodyWidth, bodyHeight)
 end

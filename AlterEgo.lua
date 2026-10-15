@@ -7,12 +7,12 @@ local Helpers = addon.Helpers
 local LibAceAddon = addon.Libs.AceAddon
 local LibDataBroker = addon.Libs.LibDataBroker
 local LibDBIcon = addon.Libs.LibDBIcon
-local LibLiqUI = addon.Libs.LiqUI
-local TableCount = LibLiqUI.Utils.TableCount
-local TableForEach = LibLiqUI.Utils.TableForEach
-local TableGet = LibLiqUI.Utils.TableGet
+local LiqUI = addon.Libs.LiqUI
+local TableCount = LiqUI.Utils.TableCount
+local TableForEach = LiqUI.Utils.TableForEach
+local TableGet = LiqUI.Utils.TableGet
 
----@class AE_Core : AceAddon
+---@class AE_Core
 local Core = LibAceAddon:NewAddon(addon.name, "AceConsole-3.0", "AceTimer-3.0")
 addon.Core = Core
 
@@ -79,7 +79,7 @@ end
 
 ---Toggle the main window
 function Core:ToggleWindow()
-  local window = LibLiqUI:GetElement("Window", addon.name .. "Main")
+  local window = LiqUI:GetElement("Window", addon.name .. "Main")
   if not window then return end
   window:Toggle()
 end
@@ -95,6 +95,7 @@ end
 
 ---Toggle the equipment window
 function Core:ToggleEquipment()
+  ---@type AE_Module_Equipment|nil
   local module = addon.Core:GetModule("Equipment", true)
   if not module then return end
   local character = Data:GetCharacter()
@@ -266,7 +267,7 @@ end
 
 ---Check if game data is loaded
 function Core:CheckGameData()
-  local seasonID, seasonDisplayID = Data:GetCurrentSeason()
+  local seasonID, seasonDisplayID = LiqUI.Data:GetCurrentSeason()
   if seasonID < 0 or seasonDisplayID < 0 then
     self:RequestGameData()
     self:ScheduleTimer("CheckGameData", 3)
@@ -286,7 +287,7 @@ function Core:OnInstanceReset()
   if not groupChannel or not Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
     return
   end
-  SendChatMessage(addon.Constants.prefix .. "Resetting instances...", groupChannel)
+  C_ChatInfo.SendChatMessage(addon.Constants.prefix .. "Resetting instances...", groupChannel)
 end
 
 ---Handle chat message system
@@ -300,7 +301,7 @@ function Core:OnChatMessageSystem(_, msg)
   local resetPatterns = {INSTANCE_RESET_SUCCESS, INSTANCE_RESET_FAILED, INSTANCE_RESET_FAILED_OFFLINE, INSTANCE_RESET_FAILED_ZONING}
   TableForEach(resetPatterns, function(resetPattern)
     if msg:match("^" .. resetPattern:gsub("%%s", ".+") .. "$") then
-      SendChatMessage(addon.Constants.prefix .. msg, groupChannel)
+      C_ChatInfo.SendChatMessage(addon.Constants.prefix .. msg, groupChannel)
     end
   end)
 end
@@ -309,7 +310,7 @@ end
 ---@param chatType string
 function Core:AnnounceKeystones(chatType)
   local characters = Data:GetCharacters()
-  local dungeons = Data:GetDungeons()
+  local dungeons = LiqUI.Data:GetDungeons()
   local multiline = Data.db.global.announceKeystones.multiline
   local multilineNames = Data.db.global.announceKeystones.multilineNames
   local keystones = {}
@@ -353,16 +354,16 @@ function Core:AnnounceKeystones(chatType)
   end
 
   if multiline then
-    SendChatMessage(addon.Constants.prefix .. "My keystones:", chatType)
+    C_ChatInfo.SendChatMessage(addon.Constants.prefix .. "My keystones:", chatType)
     TableForEach(keystones, function(keystone)
       local chatMessage = keystone.itemLink and keystone.itemLink or keystone.text
       if multilineNames == true then
         chatMessage = keystone.characterName .. ": " .. chatMessage
       end
-      SendChatMessage(chatMessage, chatType)
+      C_ChatInfo.SendChatMessage(chatMessage, chatType)
     end)
     return
   end
 
-  SendChatMessage(addon.Constants.prefix .. "My keystones: " .. table.concat(keystonesCompact, " || "), chatType)
+  C_ChatInfo.SendChatMessage(addon.Constants.prefix .. "My keystones: " .. table.concat(keystonesCompact, " || "), chatType)
 end
