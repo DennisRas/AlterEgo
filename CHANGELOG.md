@@ -2,6 +2,7 @@
 
 ## v1.6.6 - TBD
 
+- Added The Unbinding of Kith'ix to Season 2 raid progress.
 - Updated TOC number to support patch 12.1.5.
 
 ## v1.6.5 - 2026-09-02
