@@ -4,6 +4,7 @@
 
 - Added The Unbinding of Kith'ix to Season 2 raid progress.
 - Updated TOC number to support patch 12.1.5.
+- Fixed the Equipment window showing no gear after patch 12.1.5. Fixes #280. Thank you @horizonjugi and @koukuko.
 
 ## v1.6.5 - 2026-09-02
 
