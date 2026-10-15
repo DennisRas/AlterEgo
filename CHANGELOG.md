@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.6 - TBD
+
+- Updated TOC number to support patch 12.1.5.
+
 ## v1.6.5 - 2026-09-02
 
 - Fixed Season 2 Nebulous Voidcore showing the previous season's count. Requires relogging characters. Fixes #264. Thank you @Artoliz and @shighman.
