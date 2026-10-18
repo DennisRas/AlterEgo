@@ -121,6 +121,7 @@ function Core:OnEnable()
     }, function()
       Data:UpdateCharacterInfo()
       Data:UpdateEquipment()
+      self:Render()
     end
   )
   addon.Events:RegisterEvent(
@@ -171,13 +172,9 @@ function Core:OnEnable()
     {
       "BAG_UPDATE_DELAYED",
       "CHALLENGE_MODE_COMPLETED",
-      "CHALLENGE_MODE_COMPLETED",
       "CHALLENGE_MODE_MAPS_UPDATE",
-      "CHALLENGE_MODE_MAPS_UPDATE",
-      "CHALLENGE_MODE_RESET",
       "CHALLENGE_MODE_RESET",
       "ITEM_CHANGED",
-      "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
       "MYTHIC_PLUS_NEW_WEEKLY_RECORD",
     }, function()
       Data:UpdateKeystoneItem()

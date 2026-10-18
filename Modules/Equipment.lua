@@ -261,19 +261,6 @@ function Module:OnInitialize()
   self:Render()
 end
 
-function Module:OnEnable()
-  addon.Events:RegisterEvent(
-    {
-      "PLAYER_EQUIPMENT_CHANGED",
-      "UNIT_INVENTORY_CHANGED",
-    }, function()
-      -- addon.Data:UpdateCharacterInfo()
-      Data:UpdateEquipment()
-      self:Render()
-    end
-  )
-end
-
 ---Opens a new equipment window
 ---@param character AE_Character
 function Module:OpenCharacter(character)
