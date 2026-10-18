@@ -1,5 +1,5 @@
 ---@alias AE_EventCallback fun(frame: Frame, event: string, ...: any)
----@alias AE_EventBucketStateByName table<string, AE_EventBucketPending>
+---@alias AE_EventBucketStateByCallback table<AE_EventCallback, AE_EventBucketPending>
 
 ---@class AE_EventPackedVarargs
 ---@field n number
@@ -10,10 +10,11 @@
 
 ---@class AE_EventBucketPending
 ---@field timer { Cancel: fun(self) }?
+---@field event string
 ---@field packedVarargs AE_EventPackedVarargs
 
 ---@class AE_EventRuntime
----@field pendingByEventName AE_EventBucketStateByName
+---@field pendingByCallback AE_EventBucketStateByCallback
 
 ---@class AE_Events
 ---@field handlers table<string, AE_EventHandlerEntry[]>
