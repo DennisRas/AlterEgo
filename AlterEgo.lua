@@ -212,6 +212,20 @@ function Core:OnEnable()
       Data:UpdateCurrencies()
     end
   )
+  addon.Events:RegisterEvent("GET_ITEM_INFO_RECEIVED", function(_, _, itemID, success)
+    if not success then
+      return
+    end
+    local seasonID = LiqUI.Data:GetCurrentSeason()
+    local match = LiqUI.Utils.TableFind(Data.currencies, function(currency)
+      return currency.seasonID == seasonID and currency.id == itemID and (currency.currencyType == "item" or currency.currencyType == "delveMap")
+    end)
+    if not match then
+      return
+    end
+    Data:UpdateCurrencies()
+    self:Render()
+  end)
   addon.Events:RegisterEvent(
     {
       "PLAYER_MONEY",

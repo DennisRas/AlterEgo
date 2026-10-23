@@ -183,44 +183,31 @@ function Data:Initialize()
   )
 end
 
----Get the currencies of the current season enriched with C_CurrencyInfo data
----@return AE_CurrencyInfo[]
+---@param itemID number
+---@return string|nil name
+---@return number|nil iconFileID
+---@return Enum.ItemQuality|nil quality
+---@return number bagCount
+---@return number quantity
+local function fetchBagItem(itemID)
+  local name = C_Item.GetItemNameByID(itemID)
+  local iconFileID = C_Item.GetItemIconByID(itemID)
+  local quality = C_Item.GetItemQualityByID(itemID)
+  if name == nil or iconFileID == nil or quality == nil then
+    C_Item.RequestLoadItemDataByID(itemID)
+  end
+  local bagCount = C_Item.GetItemCount(itemID)
+  local quantity = C_Item.GetItemCount(itemID, true)
+  return name, iconFileID, quality, bagCount, quantity
+end
+
+---Current season currencies from the catalog.
+---@return AE_Currency[]
 function Data:GetCurrencies()
-  local currencies = {}
   local seasonID = LiqUI.Data:GetCurrentSeason()
-  TableForEach(self.currencies, function(currency)
-    if currency.seasonID ~= seasonID then
-      return
-    end
-    if currency.currencyType == "delveMap" then
-      ---@type AE_CurrencyInfo
-      local currencyInfo = {
-        id = currency.id,
-        name = currency.name or "Trovehunter's Bounty",
-        description = "Weekly Trovehunter's Bounty map status.",
-        iconFileID = C_Item.GetItemIconByID(currency.id) or 0,
-        quality = Enum.ItemQuality.Rare,
-        currencyType = currency.currencyType,
-        useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty,
-        tooltipNote = currency.tooltipNote,
-        maxQuantity = 0,
-        maxWeeklyQuantity = 0,
-        quantity = 0,
-        totalEarned = 0,
-        quantityEarnedThisWeek = 0,
-      }
-      table.insert(currencies, currencyInfo)
-      return
-    end
-    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
-    if currencyInfo then
-      currencyInfo.id = currency.id
-      currencyInfo.currencyType = currency.currencyType
-      currencyInfo.tooltipNote = currency.tooltipNote
-      table.insert(currencies, currencyInfo)
-    end
+  return TableFilter(self.currencies, function(currency)
+    return currency.seasonID == seasonID
   end)
-  return currencies
 end
 
 ---Get stored character by GUID
@@ -808,41 +795,56 @@ function Data:UpdateCurrencies()
     if dataCurrency.seasonID ~= seasonID then
       return
     end
+
+    local isBagItem = dataCurrency.currencyType == "item" or dataCurrency.currencyType == "delveMap"
+    local currencyInfo = nil
+    if not isBagItem then
+      currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+      if not currencyInfo then return end
+    end
+
+    ---@type AE_CharacterCurrency
+    local currency = {
+      id = dataCurrency.id,
+      currencyType = dataCurrency.currencyType,
+      quantity = 0,
+    }
+    if currencyInfo then
+      TableForEach(currencyInfo, function(value, key)
+        currency[key] = value
+      end)
+      currency.id = dataCurrency.id
+      currency.currencyType = dataCurrency.currencyType
+    end
+
+    local itemID = isBagItem and dataCurrency.id or dataCurrency.itemID
+    if itemID then
+      local itemName, iconFileID, quality, bagCount, quantity = fetchBagItem(itemID)
+      currency.quantity = quantity
+      currency.bagCount = bagCount
+      if iconFileID ~= nil then
+        currency.iconFileID = iconFileID
+      end
+      if quality ~= nil then
+        currency.quality = quality
+      end
+      if dataCurrency.currencyType == "item" then
+        currency.name = itemName or dataCurrency.name
+      end
+    end
+
     if dataCurrency.currencyType == "delveMap" then
-      local bagCount = C_Item.GetItemCount(dataCurrency.id, true) or 0
-      local hasBuff = false
+      currency.name = dataCurrency.name or "Trovehunter's Bounty"
+      currency.hasBuff = false
       if dataCurrency.spellID then
         local aura = C_UnitAuras.GetPlayerAuraBySpellID(dataCurrency.spellID)
         if aura ~= nil and not issecretvalue(aura) then
-          hasBuff = true
+          currency.hasBuff = true
         end
       end
-
-      ---@type AE_CharacterCurrency
-      local delveMapCurrency = {
-        id = dataCurrency.id,
-        currencyType = dataCurrency.currencyType,
-        name = dataCurrency.name or "Trovehunter's Bounty",
-        iconFileID = C_Item.GetItemIconByID(dataCurrency.id) or 0,
-        quantity = bagCount,
-        bagCount = bagCount,
-        hasBuff = hasBuff,
-        questCompleted = dataCurrency.questID ~= nil and C_QuestLog.IsQuestFlaggedCompleted(dataCurrency.questID) == true,
-      }
-      table.insert(character.currencies, delveMapCurrency)
-      return
+      currency.questCompleted = dataCurrency.questID ~= nil and C_QuestLog.IsQuestFlaggedCompleted(dataCurrency.questID) == true
     end
 
-    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-    if not currencyInfo then return end
-    ---@type AE_CharacterCurrency
-    local currency = currencyInfo
-    currency.id = dataCurrency.id
-    currency.currencyType = dataCurrency.currencyType
-    if dataCurrency.itemID then
-      currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
-      currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
-    end
     table.insert(character.currencies, currency)
   end)
 end
