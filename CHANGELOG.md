@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.8 - TBD
+
+- Updated performance.
+
 ## v1.6.7 - 2026-10-24
 
 - Added "Ascendant Venomstone" bag and bank counts to the currencies section. Fixes #282. Thank you @j-reher.

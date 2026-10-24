@@ -124,7 +124,7 @@
 ---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
 ---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
 ---@field onClick fun(infoFrame: Frame, character: AE_Character)?
----@field backgroundColor ColorTable?
+---@field backgroundColor ColorRGBAData?
 ---@field enabled boolean
 ---@field tooltip boolean?
 
