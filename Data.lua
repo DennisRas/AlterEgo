@@ -16,7 +16,7 @@ local TableForEach = LiqUI.Utils.TableForEach
 local TableGet = LiqUI.Utils.TableGet
 local MergeDeep = LiqUI.Utils.MergeDeep
 
-Data.dbVersion = 38
+Data.dbVersion = 39
 
 Data.defaultDB = {
   ---@type AE_Global
