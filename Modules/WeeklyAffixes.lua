@@ -111,19 +111,19 @@ function Module:Render()
         local affix = TableGet(affixes, "id", affixValue)
         if affix then
           local name = weekIndex < activeWeek and LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(affix.name) or affix.name
+          ---@param cellFrame LiqUI_TableCellFrame
+          local function showWeeklyAffixTooltip(cellFrame)
+            GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)
+            GameTooltip:AddLine(affix.description, nil, nil, nil, true)
+            GameTooltip:Show()
+          end
           ---@type LiqUI_TableDataCellExtended
           local cell = {
             data = affix.fileDataID and "|T" .. affix.fileDataID .. ":0|t " .. name or name,
             backgroundColor = row.backgroundColor,
-            onEnter = function(cellFrame)
-              GameTooltip:SetOwner(cellFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText(affix.name, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1, true)
-              GameTooltip:AddLine(affix.description, nil, nil, nil, true)
-              GameTooltip:Show()
-            end,
-            onLeave = function()
-              GameTooltip:Hide()
-            end,
+            onEnter = showWeeklyAffixTooltip,
+            onLeave = GameTooltip_Hide,
           }
           table.insert(row.data, cell)
         end

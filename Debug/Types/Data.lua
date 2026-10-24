@@ -19,7 +19,7 @@
 ---@field dungeons { enabled: boolean }
 ---@field world { enabled: boolean }
 ---@field currencies { enabled: boolean, hiddenCurrencies: table<number, boolean>, showIcons: boolean, showMaxEarned: boolean, alignCenter: boolean }
----@field interface { windowScale: number, windowColor: ColorTable}
+---@field interface { windowScale: number, windowColor: ColorRGBAData}
 ---@field liqui LiqUI_DB
 ---@field useRIOScoreColor boolean
 

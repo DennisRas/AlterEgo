@@ -1,25 +1,3 @@
----@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "delveMap" | "spark" | "cloak" | "bonusroll"
-
----@class AE_VaultType
----@field id Enum.WeeklyRewardChestThresholdType
----@field name string
-
----@class AE_WeeklyRewardActivityEncounterInfo : WeeklyRewardActivityEncounterInfo
----@field type Enum.WeeklyRewardChestThresholdType
----@field index number
-
----@class AE_Currency
----@field id number
----@field seasonID number
----@field seasonDisplayID number
----@field useTotalEarnedForMaxQty boolean
----@field currencyType AE_CurrencyType
----@field name string?
----@field itemID number?
----@field questID number?
----@field spellID number?
----@field tooltipNote string|nil
-
 ---@class AE_Affix
 ---@field id number
 ---@field base 0 | 1
@@ -33,6 +11,27 @@
 ---@field activation number[]
 ---@field affixes table<number, number[]>
 
+---@class AE_Currency
+---@field id number
+---@field seasonID number
+---@field seasonDisplayID number
+---@field useTotalEarnedForMaxQty boolean
+---@field currencyType AE_CurrencyType
+---@field name string?
+---@field itemID number?
+---@field questID number?
+---@field spellID number?
+---@field tooltipNote string|nil
+
+---@alias AE_CurrencyType "crest" | "upgrade" | "catalyst" | "item" | "dinar" | "delve" | "delveMap" | "spark" | "cloak" | "bonusroll"
+
+---@class AE_ItemQualityColor
+---@field r number
+---@field g number
+---@field b number
+---@field hex string
+---@field color colorRGBA
+
 ---@class AE_Keystone
 ---@field seasonID number
 ---@field seasonDisplayID number
@@ -42,6 +41,23 @@
 ---@field text string
 ---@field itemLink string
 ---@field characterName string
+
+---@class AE_PreyAffix
+---@field id number
+---@field name string
+---@field description string
+
+---@class AE_PreyDifficulty
+---@field seasonID number
+---@field seasonDisplayID number
+---@field id number
+---@field name string
+---@field affixes number[]
+
+---@class AE_PreyQuest
+---@field questID number
+---@field difficultyID number
+---@field name string
 
 ---@class AE_SavedInstance
 ---@field index number
@@ -71,19 +87,10 @@
 ---@field fileDataID number|nil
 ---@field isKilled boolean
 
----@class AE_PreyAffix
----@field id number
+---@class AE_VaultType
+---@field id Enum.WeeklyRewardChestThresholdType
 ---@field name string
----@field description string
 
----@class AE_PreyDifficulty
----@field seasonID number
----@field seasonDisplayID number
----@field id number
----@field name string
----@field affixes number[]
-
----@class AE_PreyQuest
----@field questID number
----@field difficultyID number
----@field name string
+---@class AE_WeeklyRewardActivityEncounterInfo : WeeklyRewardActivityEncounterInfo
+---@field type Enum.WeeklyRewardChestThresholdType
+---@field index number

@@ -36,6 +36,6 @@
 ---@field currentCharacterNameMarker string
 ---@field currentCharacterMarkers AE_CurrentCharacterMarker[]
 ---@field raidKillIcons AE_RaidKillIcon[]
----@field colors table<string, ColorTable>
+---@field colors table<string, ColorRGBAData>
 ---@field sizes AE_ConstantsSizes
 ---@field sortingOptions AE_ConstantsCharacterSortingOption[]

@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.8 - 2026-10-24
+
+- Updated performance.
+- Fixed errors and missed updates after login when Weekly Knowledge is also installed. Fixes #283. Thank you @mfgcarlos.
+
 ## v1.6.7 - 2026-10-24
 
 - Added "Ascendant Venomstone" bag and bank counts to the currencies section. Fixes #282. Thank you @j-reher.

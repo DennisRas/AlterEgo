@@ -41,4 +41,5 @@ Debug\Types\Character.lua
 Debug\Types\Constants.lua
 Debug\Types\GameData.lua
 Debug\Types\Data.lua
+Debug\Types\Main.lua
 #@end-debug@
