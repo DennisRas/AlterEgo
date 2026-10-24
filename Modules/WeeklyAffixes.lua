@@ -19,32 +19,30 @@ function Module:OnInitialize()
 end
 
 function Module:Render()
-  local affixes = Data:GetAffixes()
-  local affixRotation = Data:GetAffixRotation()
-  local currentAffixes = Data:GetCurrentAffixes()
-  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
   local columnWidth = 140
   local rowHeight = 28
 
   if not self.window then
     local windows = Data.db.global.liqui.windows
     local tables = Data.db.global.liqui.tables
-    ---@type LiqUI_WindowInstance
-    self.window = LiqUI:NewElement("Window", {
+    ---@type LiqUI_WindowOptions
+    local windowOptions = {
       name = addon.name .. "Affixes",
       storage = windows.Affixes,
       title = "Weekly Affixes",
       onShow = function()
         Module:Render()
       end,
-    })
-    ---@type LiqUI_TableInstance
-    self.table = LiqUI:NewElement("Table", {
+    }
+    self.window = LiqUI:NewElement("Window", windowOptions)
+    ---@type LiqUI_TableOptions
+    local tableOptions = {
       name = addon.name .. "Affixes",
       storage = tables.Affixes,
       header = {enabled = false},
       rowStyle = {height = rowHeight, striped = true},
-    })
+    }
+    self.table = LiqUI:NewElement("Table", tableOptions)
     self.table:SetParent(self.window.body)
     self.table:SetPoint("TOPLEFT", self.window.body, "TOPLEFT", 0, 0)
     self.table:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
@@ -62,6 +60,11 @@ function Module:Render()
   if not window:IsVisible() then
     return
   end
+
+  local affixes = Data:GetAffixes()
+  local affixRotation = Data:GetAffixRotation()
+  local currentAffixes = Data:GetCurrentAffixes()
+  local activeWeek = Data:GetActiveAffixRotation(currentAffixes)
 
   if not affixRotation then
     window:ShowOverlay(PLACEHOLDER_TEXT)

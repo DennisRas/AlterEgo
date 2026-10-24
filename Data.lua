@@ -14,8 +14,9 @@ local TableFilter = LiqUI.Utils.TableFilter
 local TableFind = LiqUI.Utils.TableFind
 local TableForEach = LiqUI.Utils.TableForEach
 local TableGet = LiqUI.Utils.TableGet
+local MergeDeep = LiqUI.Utils.MergeDeep
 
-Data.dbVersion = 38
+Data.dbVersion = 39
 
 Data.defaultDB = {
   ---@type AE_Global
@@ -183,44 +184,31 @@ function Data:Initialize()
   )
 end
 
----Get the currencies of the current season enriched with C_CurrencyInfo data
----@return AE_CurrencyInfo[]
+---@param itemID number
+---@return string|nil name
+---@return number|nil iconFileID
+---@return Enum.ItemQuality|nil quality
+---@return number bagCount
+---@return number quantity
+local function fetchBagItem(itemID)
+  local name = C_Item.GetItemNameByID(itemID)
+  local iconFileID = C_Item.GetItemIconByID(itemID)
+  local quality = C_Item.GetItemQualityByID(itemID)
+  if name == nil or iconFileID == nil or quality == nil then
+    C_Item.RequestLoadItemDataByID(itemID)
+  end
+  local bagCount = C_Item.GetItemCount(itemID)
+  local quantity = C_Item.GetItemCount(itemID, true)
+  return name, iconFileID, quality, bagCount, quantity
+end
+
+---Current season currencies from the catalog.
+---@return AE_Currency[]
 function Data:GetCurrencies()
-  local currencies = {}
   local seasonID = LiqUI.Data:GetCurrentSeason()
-  TableForEach(self.currencies, function(currency)
-    if currency.seasonID ~= seasonID then
-      return
-    end
-    if currency.currencyType == "delveMap" then
-      ---@type AE_CurrencyInfo
-      local currencyInfo = {
-        id = currency.id,
-        name = currency.name or "Trovehunter's Bounty",
-        description = "Weekly Trovehunter's Bounty map status.",
-        iconFileID = C_Item.GetItemIconByID(currency.id) or 0,
-        quality = Enum.ItemQuality.Rare,
-        currencyType = currency.currencyType,
-        useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty,
-        tooltipNote = currency.tooltipNote,
-        maxQuantity = 0,
-        maxWeeklyQuantity = 0,
-        quantity = 0,
-        totalEarned = 0,
-        quantityEarnedThisWeek = 0,
-      }
-      table.insert(currencies, currencyInfo)
-      return
-    end
-    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
-    if currencyInfo then
-      currencyInfo.id = currency.id
-      currencyInfo.currencyType = currency.currencyType
-      currencyInfo.tooltipNote = currency.tooltipNote
-      table.insert(currencies, currencyInfo)
-    end
+  return TableFilter(self.currencies, function(currency)
+    return currency.seasonID == seasonID
   end)
-  return currencies
 end
 
 ---Get stored character by GUID
@@ -649,7 +637,6 @@ function Data:TaskSeasonReset()
         wipe(character.currencies or {})
         character.mythicplus.rating = 0
         character.currentSeason = seasonID
-        character.currentSeasonID = seasonID
       end
     end)
   end
@@ -708,10 +695,10 @@ function Data:UpdateRaidInstances()
     for encounterIndex = 1, numEncounters do
       local bossName, fileDataID, isKilled = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
       local instanceEncounterID = 0
-      if raid then
+      if raid and bossName then
         TableForEach(raid.encounters, function(encounter)
-          if string.lower(encounter.name) == string.lower(bossName) then
-            instanceEncounterID = encounter.instanceEncounterID
+          if encounter.name and string.lower(encounter.name) == string.lower(bossName) then
+            instanceEncounterID = encounter.instanceEncounterID or 0
           end
         end)
       end
@@ -808,41 +795,54 @@ function Data:UpdateCurrencies()
     if dataCurrency.seasonID ~= seasonID then
       return
     end
+
+    local isBagItem = dataCurrency.currencyType == "item" or dataCurrency.currencyType == "delveMap"
+    local currencyInfo = nil
+    if not isBagItem then
+      currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
+      if not currencyInfo then return end
+    end
+
+    ---@type AE_CharacterCurrency
+    local currency = {
+      id = dataCurrency.id,
+      currencyType = dataCurrency.currencyType,
+      quantity = 0,
+    }
+    if currencyInfo then
+      currency = MergeDeep(currency, currencyInfo)
+      currency.id = dataCurrency.id
+      currency.currencyType = dataCurrency.currencyType
+    end
+
+    local itemID = isBagItem and dataCurrency.id or dataCurrency.itemID
+    if itemID then
+      local itemName, iconFileID, quality, bagCount, quantity = fetchBagItem(itemID)
+      currency.quantity = quantity
+      currency.bagCount = bagCount
+      if iconFileID ~= nil then
+        currency.iconFileID = iconFileID
+      end
+      if quality ~= nil then
+        currency.quality = quality
+      end
+      if dataCurrency.currencyType == "item" then
+        currency.name = itemName or dataCurrency.name
+      end
+    end
+
     if dataCurrency.currencyType == "delveMap" then
-      local bagCount = C_Item.GetItemCount(dataCurrency.id, true) or 0
-      local hasBuff = false
+      currency.name = dataCurrency.name or "Trovehunter's Bounty"
+      currency.hasBuff = false
       if dataCurrency.spellID then
         local aura = C_UnitAuras.GetPlayerAuraBySpellID(dataCurrency.spellID)
         if aura ~= nil and not issecretvalue(aura) then
-          hasBuff = true
+          currency.hasBuff = true
         end
       end
-
-      ---@type AE_CharacterCurrency
-      local delveMapCurrency = {
-        id = dataCurrency.id,
-        currencyType = dataCurrency.currencyType,
-        name = dataCurrency.name or "Trovehunter's Bounty",
-        iconFileID = C_Item.GetItemIconByID(dataCurrency.id) or 0,
-        quantity = bagCount,
-        bagCount = bagCount,
-        hasBuff = hasBuff,
-        questCompleted = dataCurrency.questID ~= nil and C_QuestLog.IsQuestFlaggedCompleted(dataCurrency.questID) == true,
-      }
-      table.insert(character.currencies, delveMapCurrency)
-      return
+      currency.questCompleted = dataCurrency.questID ~= nil and C_QuestLog.IsQuestFlaggedCompleted(dataCurrency.questID) == true
     end
 
-    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(dataCurrency.id)
-    if not currencyInfo then return end
-    ---@type AE_CharacterCurrency
-    local currency = currencyInfo
-    currency.id = dataCurrency.id
-    currency.currencyType = dataCurrency.currencyType
-    if dataCurrency.itemID then
-      currency.quantity = C_Item.GetItemCount(dataCurrency.itemID, true)
-      currency.iconFileID = C_Item.GetItemIconByID(dataCurrency.itemID) or 0
-    end
     table.insert(character.currencies, currency)
   end)
 end
@@ -879,17 +879,15 @@ function Data:UpdateEquipment()
     if tooltipData and tooltipData.lines then
       TableForEach(tooltipData.lines, function(line)
         if not line.leftText then return end
-        local match, _, uTrack, uLevel, uMax = line.leftText:find(upgradePattern)
-        if not match then return end
+        local trackCapture, levelCapture, maxCapture = line.leftText:match(upgradePattern)
+        if not trackCapture then return end
         if itemUpgradeTrack == "" then
-          if uTrack then
-            itemUpgradeTrack = uTrack
+          itemUpgradeTrack = trackCapture
+          if levelCapture then
+            itemUpgradeLevel = tonumber(levelCapture) or itemUpgradeLevel
           end
-          if uLevel then
-            itemUpgradeLevel = tonumber(uLevel) or itemUpgradeLevel
-          end
-          if uMax then
-            itemUpgradeMax = tonumber(uMax) or itemUpgradeMax
+          if maxCapture then
+            itemUpgradeMax = tonumber(maxCapture) or itemUpgradeMax
           end
         end
         if line.leftColor then
@@ -1086,9 +1084,11 @@ function Data:UpdateVault()
       if encounters then
         TableForEach(encounters, function(encounter)
           if not encounter then return end
-          encounter.type = vaultType.id
-          encounter.index = index
-          table.insert(character.vault.activityEncounterInfo, encounter)
+          ---@type AE_WeeklyRewardActivityEncounterInfo
+          local activityEncounter = TableCopy(encounter)
+          activityEncounter.type = vaultType.id
+          activityEncounter.index = index
+          table.insert(character.vault.activityEncounterInfo, activityEncounter)
         end)
       end
     end
@@ -1096,14 +1096,16 @@ function Data:UpdateVault()
 
   local activities = C_WeeklyRewards.GetActivities()
   TableForEach(activities, function(activity)
-    activity.exampleRewardLink = ""
-    activity.exampleRewardUpgradeLink = ""
+    ---@type AE_CharacterVaultSlot
+    local slot = TableCopy(activity)
+    slot.exampleRewardLink = ""
+    slot.exampleRewardUpgradeLink = ""
     if activity.progress >= activity.threshold then
       local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(activity.id)
-      activity.exampleRewardLink = itemLink
-      activity.exampleRewardUpgradeLink = upgradeItemLink
+      slot.exampleRewardLink = itemLink or ""
+      slot.exampleRewardUpgradeLink = upgradeItemLink or ""
     end
-    table.insert(character.vault.slots, activity)
+    table.insert(character.vault.slots, slot)
   end)
 
   local worldActivityProgress = C_WeeklyRewards.GetSortedProgressForActivity(Enum.WeeklyRewardChestThresholdType.World, true)
@@ -1153,10 +1155,16 @@ function Data:UpdateMythicPlus()
     local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID)
     local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
 
+    ---@type AE_CharacterAffixScoreInfo[]|nil
+    local characterAffixScores = nil
     if affixScores then
+      characterAffixScores = {}
       TableForEach(affixScores, function(affixScore)
         local affix = TableGet(affixes, "name", affixScore.name)
-        affixScore.id = affix and affix.id or 0
+        ---@type AE_CharacterAffixScoreInfo
+        local characterAffixScore = TableCopy(affixScore)
+        characterAffixScore.id = affix and affix.id or 0
+        table.insert(characterAffixScores, characterAffixScore)
       end)
     end
 
@@ -1168,7 +1176,7 @@ function Data:UpdateMythicPlus()
       finishedSuccess = false,
       bestTimedRun = bestTimedRun,
       bestNotTimedRun = bestNotTimedRun,
-      affixScores = affixScores,
+      affixScores = characterAffixScores,
       bestOverAllScore = bestOverAllScore,
     }
 

@@ -2,14 +2,33 @@
 ---@field id number
 ---@field currencyType AE_CurrencyType
 ---@field name string?
+---@field description string?
 ---@field iconFileID number?
----@field quantity number?
----@field totalEarned number?
----@field quantityEarnedThisWeek number?
----@field maxWeeklyQuantity number?
----@field questCompleted boolean?
+---@field quality Enum.ItemQuality?
+---@field quantity number
 ---@field bagCount number?
 ---@field hasBuff boolean?
+---@field questCompleted boolean?
+---@field currencyID number?
+---@field isHeader boolean?
+---@field isHeaderExpanded boolean?
+---@field currencyListDepth number?
+---@field isTypeUnused boolean?
+---@field isShowInBackpack boolean?
+---@field trackedQuantity number?
+---@field maxQuantity number?
+---@field canEarnPerWeek boolean?
+---@field quantityEarnedThisWeek number?
+---@field isTradeable boolean?
+---@field maxWeeklyQuantity number?
+---@field totalEarned number?
+---@field discovered boolean?
+---@field useTotalEarnedForMaxQty boolean?
+---@field isAccountWide boolean?
+---@field isAccountTransferable boolean?
+---@field transferPercentage number?
+---@field rechargingCycleDurationMS number?
+---@field rechargingAmountPerCycle number?
 
 ---@class AE_CharacterInfo
 ---@field name string
@@ -31,7 +50,7 @@
 ---@field finishedSuccess boolean
 ---@field bestTimedRun MapSeasonBestInfo|nil
 ---@field bestNotTimedRun MapSeasonBestInfo|nil
----@field affixScores MythicPlusAffixScoreInfo[]?
+---@field affixScores AE_CharacterAffixScoreInfo[]?
 ---@field bestOverAllScore number
 
 ---@class AE_CharacterMythicPlus
@@ -101,9 +120,19 @@
 
 ---@class AE_CharacterRows
 ---@field label string
----@field value function
+---@field value fun(character: AE_Character): string
 ---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
 ---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
 ---@field onClick fun(infoFrame: Frame, character: AE_Character)?
 ---@field backgroundColor ColorTable?
 ---@field enabled boolean
+---@field tooltip boolean?
+
+---@class AE_DeleteCharacterStaticPopupDialog
+---@field text string
+---@field button1 string
+---@field button2 string
+---@field OnAccept fun(dialog: Frame, character: AE_Character)
+---@field timeout number
+---@field whileDead number
+---@field hideOnEscape number

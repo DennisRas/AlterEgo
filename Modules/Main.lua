@@ -17,6 +17,7 @@ local TableFind = LiqUI.Utils.TableFind
 local TableForEach = LiqUI.Utils.TableForEach
 local TableGet = LiqUI.Utils.TableGet
 local CreateScrollArea = LiqUI.Utils.CreateScrollArea
+local GetMaxWindowWidth = LiqUI.Utils.GetMaxWindowWidth
 
 function Module:OnInitialize()
   self:Render()
@@ -24,7 +25,8 @@ end
 
 do
   local dialogName = "ALTEREGO_DELETE_CHARACTER"
-  StaticPopupDialogs[dialogName] = {
+  ---@type AE_DeleteCharacterStaticPopupDialog
+  local dialog = {
     text = "Remove %s?\n\nThis cannot be undone.\nTo add this character again, log in on them.",
     button1 = YES,
     button2 = CANCEL,
@@ -38,6 +40,7 @@ do
     whileDead = 1,
     hideOnEscape = 1,
   }
+  StaticPopupDialogs[dialogName] = dialog
 end
 
 local CHARACTER_WIDTH = 130
@@ -220,7 +223,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
             difficultyName = bestDifficulty.short and bestDifficulty.short or bestDifficulty.name
           end
 
-          GameTooltip:AddDoubleLine(encounter.name, difficultyName, color.r, color.g, color.b, color.r, color.g, color.b)
+          GameTooltip:AddDoubleLine(encounter.name or "", difficultyName, color.r, color.g, color.b, color.r, color.g, color.b)
         end)
 
         raidInstanceID = raid.instanceID
@@ -461,8 +464,7 @@ end
 function Module:GetCharacterInfo(unfiltered)
   local dungeons = LiqUI.Data:GetDungeons()
   local _, seasonDisplayID = LiqUI.Data:GetCurrentSeason()
-  ---@type AE_Module_Equipment|nil
-  local equipmentModule = addon.Core:GetModule("Equipment", true)
+  local equipmentModule = addon.Module_Equipment
 
   ---@type AE_CharacterRows[]
   local rows = {
@@ -876,26 +878,47 @@ function Module:GetCharacterInfo(unfiltered)
   end)
 end
 
+---@param bagCount number
+---@param quantity number
+local function addBagAndBankLines(bagCount, quantity)
+  GameTooltip:AddDoubleLine("In bags:", tostring(bagCount), nil, nil, nil, 1, 1, 1)
+  GameTooltip:AddDoubleLine("In bank:", tostring(quantity - bagCount), nil, nil, nil, 1, 1, 1)
+end
+
+---Sidebar and tooltip title from the catalog and live game data. Not from any character save.
+---@param currency AE_Currency
+---@return string name
+---@return number|nil iconFileID
+---@return Enum.ItemQuality|nil quality
+---@return string|nil description
+local function getCurrencyLabel(currency)
+  if currency.currencyType == "item" or currency.currencyType == "delveMap" then
+    local name = C_Item.GetItemNameByID(currency.id)
+    local iconFileID = C_Item.GetItemIconByID(currency.id)
+    local quality = C_Item.GetItemQualityByID(currency.id)
+    if name == nil or iconFileID == nil or quality == nil then
+      C_Item.RequestLoadItemDataByID(currency.id)
+    end
+    local description = nil
+    if currency.currencyType == "delveMap" then
+      description = "Weekly Trovehunter's Bounty map status."
+    end
+    return name or currency.name or "", iconFileID, quality, description
+  end
+
+  local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currency.id)
+  if currencyInfo then
+    return currencyInfo.name, currencyInfo.iconFileID, currencyInfo.quality, currencyInfo.description
+  end
+  return currency.name or "", nil, nil, nil
+end
+
 ---Render the main window
 function Module:Render()
-  local currentAffixes = Data:GetCurrentAffixes()
-  local seasonID = LiqUI.Data:GetCurrentSeason()
-  local dungeons = LiqUI.Data:GetDungeons()
-  local currencies = Data:GetCurrencies()
-  local raidDifficulties = Data:GetRaidDifficulties()
-  local characterInfo = self:GetCharacterInfo()
-  local raids = LiqUI.Data:GetRaids()
-  local characters = Data:GetCharacters()
-  local numCharacters = TableCount(characters)
-  local affixes = Data:GetAffixes(true)
-  local windowWidthMax = LiqUI.Utils.GetMaxWindowWidth()
-  local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
-  ---@type AE_Module_WeeklyAffixes|nil
-  local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
-
   if not self.window then
     local windows = Data.db.global.liqui.windows
-    self.window = LiqUI:NewElement("Window", {
+    ---@type LiqUI_WindowOptions
+    local windowOptions = {
       name = addon.name .. "Main",
       storage = windows.Main,
       title = addon.name,
@@ -1179,8 +1202,9 @@ function Module:Render()
             )
             TableForEach(Data:GetCurrencies(), function(currency)
               local hiddenCurrencies = Data.db.global.currencies.hiddenCurrencies or {}
+              local currencyName = getCurrencyLabel(currency)
               enabledCurrenciesOption:CreateCheckbox(
-                currency.name,
+                currencyName,
                 function(id) return not hiddenCurrencies[id] end,
                 function(id)
                   Data.db.global.currencies.hiddenCurrencies[id] = not hiddenCurrencies[id]
@@ -1342,6 +1366,7 @@ function Module:Render()
               end
             end)
             menu:CreateTitle(OPTIONS)
+            ---@type ElementMenuDescriptionProxy
             local withCharacterNames
             local withMultipleMessages = menu:CreateCheckbox(
               "Multiple chat messages",
@@ -1409,7 +1434,8 @@ function Module:Render()
           iconSize = 13,
         },
       },
-    })
+    }
+    self.window = LiqUI:NewElement("Window", windowOptions)
     local sidebarWidth = Constants.sizes.sidebar.width
     self.window.body.sidebar = CreateFrame("Frame", "$parentSidebar", self.window.body)
     self.window.body.sidebar:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
@@ -1431,6 +1457,20 @@ function Module:Render()
   if not self.window:IsVisible() then
     return
   end
+
+  local currentAffixes = Data:GetCurrentAffixes()
+  local seasonID = LiqUI.Data:GetCurrentSeason()
+  local dungeons = LiqUI.Data:GetDungeons()
+  local currencies = Data:GetCurrencies()
+  local raidDifficulties = Data:GetRaidDifficulties()
+  local characterInfo = self:GetCharacterInfo()
+  local raids = LiqUI.Data:GetRaids()
+  local characters = Data:GetCharacters()
+  local numCharacters = TableCount(characters)
+  local affixes = Data:GetAffixes(true)
+  local windowWidthMax = GetMaxWindowWidth()
+  local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
+  local weeklyAffixesModule = addon.Module_WeeklyAffixes
 
   local scrollContent = self.window.body.content.scrollArea.content
 
@@ -1505,7 +1545,7 @@ function Module:Render()
     local totalHeight = 0
     do -- CharacterInfo Labels
       self.window.body.sidebar.infoFrames = self.window.body.sidebar.infoFrames or {}
-      TableForEach(self.window.body.sidebar.infoFrames, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.infoFrames, function(frame) frame:Hide() end)
       TableForEach(characterInfo, function(info, infoIndex)
         local infoFrame = self.window.body.sidebar.infoFrames[infoIndex]
         if not infoFrame then
@@ -1556,7 +1596,7 @@ function Module:Render()
 
     do -- Prey Difficulties
       self.window.body.sidebar.preyDifficulties = self.window.body.sidebar.preyDifficulties or {}
-      TableForEach(self.window.body.sidebar.preyDifficulties, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.preyDifficulties, function(frame) frame:Hide() end)
       TableForEach(Data:GetPreyDifficulties(), function(difficulty, difficultyIndex)
         if not Data.db.global.prey.enabled then return end
         local difficultyFrame = self.window.body.sidebar.preyDifficulties[difficultyIndex]
@@ -1626,7 +1666,7 @@ function Module:Render()
 
     do -- MythicPlus Labels
       self.window.body.sidebar.mpluslabels = self.window.body.sidebar.mpluslabels or {}
-      TableForEach(self.window.body.sidebar.mpluslabels, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.mpluslabels, function(frame) frame:Hide() end)
       if Data.db.global.dungeons.enabled then
         TableForEach(dungeons, function(dungeon, dungeonIndex)
           local dungeonFrame = self.window.body.sidebar.mpluslabels[dungeonIndex]
@@ -1717,7 +1757,7 @@ function Module:Render()
 
     do -- Raid Difficulties
       self.window.body.sidebar.raidDifficulties = self.window.body.sidebar.raidDifficulties or {}
-      TableForEach(self.window.body.sidebar.raidDifficulties, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.raidDifficulties, function(frame) frame:Hide() end)
       if Data.db.global.raids.enabled then
         TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
           local difficultyFrame = self.window.body.sidebar.raidDifficulties[difficultyIndex]
@@ -1779,7 +1819,7 @@ function Module:Render()
 
     do -- Currency Labels
       self.window.body.sidebar.currencyLabels = self.window.body.sidebar.currencyLabels or {}
-      TableForEach(self.window.body.sidebar.currencyLabels, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.currencyLabels, function(frame) frame:Hide() end)
       if Data.db.global.currencies.enabled then
         TableForEach(currencies, function(currency, currencyIndex)
           if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then
@@ -1799,13 +1839,18 @@ function Module:Render()
             self.window.body.sidebar.currencyLabels[currencyIndex] = label
           end
 
-          local color = ITEM_QUALITY_COLORS[currency.quality or Enum.ItemQuality.Common]
+          local currencyName, currencyIconFileID, currencyQuality, currencyDescription = getCurrencyLabel(currency)
+          local color = ITEM_QUALITY_COLORS[currencyQuality or Enum.ItemQuality.Common]
 
           label:SetScript("OnEnter", function()
             GameTooltip:SetOwner(label, "ANCHOR_RIGHT")
-            GameTooltip:SetText(currency.name, color.r, color.g, color.b)
-            if currency.description then
-              GameTooltip:AddLine(currency.description, nil, nil, nil, true)
+            if currency.currencyType == "item" then
+              GameTooltip:SetItemByID(currency.id)
+            else
+              GameTooltip:SetText(currencyName, color.r, color.g, color.b)
+              if currencyDescription then
+                GameTooltip:AddLine(currencyDescription, nil, nil, nil, true)
+              end
             end
             if currency.tooltipNote then
               GameTooltip:AddLine(" ")
@@ -1820,8 +1865,8 @@ function Module:Render()
           label:SetPoint("TOPLEFT", self.window.body.sidebar, "TOPLEFT", 0, -totalHeight)
           label:SetPoint("TOPRIGHT", self.window.body.sidebar, "TOPRIGHT", 0, -totalHeight)
           label:SetHeight(Constants.sizes.row)
-          label.icon:SetTexture(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
-          label.text:SetText(currency.short and currency.short or currency.name)
+          label.icon:SetTexture(currencyIconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+          label.text:SetText(currencyName)
           label.text:SetTextColor(color.r, color.g, color.b)
           label:Show()
           rowCount = rowCount + 1
@@ -1835,7 +1880,7 @@ function Module:Render()
 
   do -- Character Columns
     self.window.characterFrames = self.window.characterFrames or {}
-    TableForEach(self.window.characterFrames, function(f) f:Hide() end)
+    TableForEach(self.window.characterFrames, function(frame) frame:Hide() end)
     TableForEach(characters, function(character, characterIndex)
       local rowCount = 0
       local totalHeight = 0
@@ -1889,7 +1934,7 @@ function Module:Render()
       end
 
       do -- Info
-        TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.infoFrames, function(frame) frame:Hide() end)
         TableForEach(characterInfo, function(info, infoIndex)
           local infoFrame = characterFrame.infoFrames[infoIndex]
           if not infoFrame then
@@ -2055,7 +2100,7 @@ function Module:Render()
 
       do -- Prey Progress
         characterFrame.preyProgress = characterFrame.preyProgress or {}
-        TableForEach(characterFrame.preyProgress, function(f) f:Hide() end)
+        TableForEach(characterFrame.preyProgress, function(frame) frame:Hide() end)
         TableForEach(Data:GetPreyDifficulties(), function(difficulty, difficultyIndex)
           if not Data.db.global.prey.enabled then return end
           local difficultyFrame = characterFrame.preyProgress[difficultyIndex]
@@ -2143,7 +2188,7 @@ function Module:Render()
 
       do -- Dungeons
         characterFrame.dungeonFrames = characterFrame.dungeonFrames or {}
-        TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.dungeonFrames, function(frame) frame:Hide() end)
         TableForEach(dungeons, function(dungeon, dungeonIndex)
           if not Data.db.global.dungeons.enabled then return end
           local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
@@ -2187,9 +2232,10 @@ function Module:Render()
             end
 
             if affixScores then
-              ---@type AE_CharacterAffixScoreInfo
-              bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
-                return affixScore.score
+              TableForEach(affixScores, function(affixScore)
+                if not bestAffixScore or affixScore.score > bestAffixScore.score then
+                  bestAffixScore = affixScore
+                end
               end)
 
               if bestAffixScore then
@@ -2312,7 +2358,7 @@ function Module:Render()
 
       do -- Raids
         characterFrame.difficultyFrames = characterFrame.difficultyFrames or {}
-        TableForEach(characterFrame.difficultyFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.difficultyFrames, function(frame) frame:Hide() end)
         TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
           if not Data.db.global.raids.enabled then return end
           local difficultyFrame = characterFrame.difficultyFrames[difficultyIndex]
@@ -2363,7 +2409,7 @@ function Module:Render()
                     end
                   end
                 end
-                GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
+                GameTooltip:AddLine(encounter.name or "", color.r, color.g, color.b)
               end)
             end)
             GameTooltip:Show()
@@ -2384,7 +2430,7 @@ function Module:Render()
           local iconSizeMax = RAIDS_ROW_HEIGHT * 0.5
           local killIcon = TableGet(Constants.raidKillIcons, "id", Data.db.global.raids.killIcon or "skull") or Constants.raidKillIcons[1]
           local killIconScale = killIcon.scale or 1
-          TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
+          TableForEach(difficultyFrame.iconFrames, function(frame) frame:Hide() end)
           TableForEach(encounters or {}, function(encounter, encounterIndex)
             local iconFrame = difficultyFrame.iconFrames[encounterIndex]
             if not iconFrame then
@@ -2448,7 +2494,7 @@ function Module:Render()
 
       do -- Currencies
         characterFrame.currencyFrames = characterFrame.currencyFrames or {}
-        TableForEach(characterFrame.currencyFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.currencyFrames, function(frame) frame:Hide() end)
         TableForEach(currencies, function(currency, currencyIndex)
           if not Data.db.global.currencies.enabled then return end
           if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then return end
@@ -2465,9 +2511,11 @@ function Module:Render()
           end
 
           local characterCurrency = TableGet(character.currencies, "id", currency.id)
+          local currencyName, currencyIconFileID, currencyQuality = getCurrencyLabel(currency)
+          local qualityColor = ITEM_QUALITY_COLORS[currencyQuality or Enum.ItemQuality.Common]
           local cellColor = CAMPAIGN_COMPLETE_COLOR
           local cellValue = "0"
-          local infoIcon = CreateSimpleTextureMarkup(currency.iconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
+          local infoIcon = CreateSimpleTextureMarkup(currencyIconFileID or [[Interface\Icons\INV_Misc_QuestionMark]])
 
           if currency.currencyType == "delveMap" then
             local statusValue = "-"
@@ -2476,8 +2524,9 @@ function Module:Render()
               if characterCurrency.hasBuff then
                 statusValue = "Active"
                 cellText = CreateAtlasMarkup("QuestTurnin", 16, 16)
-              elseif (characterCurrency.bagCount or 0) > 0 then
-                statusValue = "In bags"
+              elseif (characterCurrency.quantity or characterCurrency.bagCount or 0) > 0 then
+                local bags = characterCurrency.bagCount or 0
+                statusValue = bags > 0 and "In bags" or "In bank"
                 cellText = CreateAtlasMarkup("QuestTurnin", 16, 16)
               elseif characterCurrency.questCompleted then
                 statusValue = "Completed"
@@ -2492,13 +2541,15 @@ function Module:Render()
             currencyFrame.Text:SetJustifyH(Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
             currencyFrame:SetScript("OnEnter", function()
               GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText(currency.name, 1, 1, 1)
+              GameTooltip:SetText(currencyName, qualityColor.r, qualityColor.g, qualityColor.b)
               if not characterCurrency then
                 GameTooltip:AddDoubleLine("Status:", "No Data", nil, nil, nil, 1, 1, 1)
                 GameTooltip:AddLine("Log your character to update.", 1, 1, 1, true)
               else
+                local bags = characterCurrency.bagCount or 0
+                local owned = characterCurrency.quantity or bags
                 GameTooltip:AddDoubleLine("Status:", statusValue, nil, nil, nil, 1, 1, 1)
-                GameTooltip:AddDoubleLine("In bags:", tostring(characterCurrency.bagCount or 0), nil, nil, nil, 1, 1, 1)
+                addBagAndBankLines(bags, owned)
                 GameTooltip:AddDoubleLine("Buff active:", characterCurrency.hasBuff and "Yes" or "No", nil, nil, nil, 1, 1, 1)
               end
               if currency.tooltipNote then
@@ -2509,8 +2560,8 @@ function Module:Render()
               SetHighlightColor(currencyFrame, 1, 1, 1, 0.05)
             end)
           else
-            local infoMaxQuantity = currency.maxQuantity or 0
-            local infoMaxWeeklyQuantity = currency.maxWeeklyQuantity or 0
+            local infoMaxQuantity = 0
+            local infoMaxWeeklyQuantity = 0
             local charQuantity = 0
             local charTotalEarned = 0
             local charEarnedThisWeek = 0
@@ -2520,6 +2571,8 @@ function Module:Render()
               charQuantity = characterCurrency.quantity or 0
               charTotalEarned = characterCurrency.totalEarned or 0
               charEarnedThisWeek = characterCurrency.quantityEarnedThisWeek or 0
+              infoMaxQuantity = characterCurrency.maxQuantity or 0
+              infoMaxWeeklyQuantity = characterCurrency.maxWeeklyQuantity or 0
             end
 
             if infoMaxQuantity > 0 then
@@ -2550,26 +2603,34 @@ function Module:Render()
             currencyFrame.Text:SetJustifyH(Data.db.global.currencies.alignCenter and "CENTER" or "LEFT")
             currencyFrame:SetScript("OnEnter", function()
               GameTooltip:SetOwner(currencyFrame, "ANCHOR_RIGHT")
-              GameTooltip:SetText("Currency Progress", 1, 1, 1)
-              GameTooltip:AddDoubleLine("Owned:", tostring(charQuantity), nil, nil, nil, 1, 1, 1)
-              if infoMaxWeeklyQuantity > 0 then
-                GameTooltip:AddDoubleLine("Weekly Maximum:", format("%d/%d", charEarnedThisWeek, infoMaxWeeklyQuantity), nil, nil, nil, 1, 1, 1)
-              end
-              if currency.useTotalEarnedForMaxQty then
-                if infoMaxQuantity > 0 then
-                  GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", charTotalEarned, infoMaxQuantity), nil, nil, nil, 1, 1, 1)
-                else
-                  if charTotalEarned > 0 then
-                    GameTooltip:AddDoubleLine("Season Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
-                  end
-                  GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
+              if currency.currencyType == "item" then
+                GameTooltip:SetText(currencyName, qualityColor.r, qualityColor.g, qualityColor.b)
+                GameTooltip:AddDoubleLine("Owned:", tostring(charQuantity), nil, nil, nil, 1, 1, 1)
+                if characterCurrency and characterCurrency.bagCount ~= nil then
+                  addBagAndBankLines(characterCurrency.bagCount, charQuantity)
                 end
               else
-                if charTotalEarned > 0 then
-                  GameTooltip:AddDoubleLine("Total Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
+                GameTooltip:SetText("Currency Progress", 1, 1, 1)
+                GameTooltip:AddDoubleLine("Owned:", tostring(charQuantity), nil, nil, nil, 1, 1, 1)
+                if infoMaxWeeklyQuantity > 0 then
+                  GameTooltip:AddDoubleLine("Weekly Maximum:", format("%d/%d", charEarnedThisWeek, infoMaxWeeklyQuantity), nil, nil, nil, 1, 1, 1)
                 end
-                if infoMaxQuantity > 0 then
-                  GameTooltip:AddDoubleLine("Total Maximum:", tostring(infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+                if currency.useTotalEarnedForMaxQty then
+                  if infoMaxQuantity > 0 then
+                    GameTooltip:AddDoubleLine("Season Maximum:", format("%d/%d", charTotalEarned, infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+                  else
+                    if charTotalEarned > 0 then
+                      GameTooltip:AddDoubleLine("Season Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
+                    end
+                    GameTooltip:AddDoubleLine("Season Maximum:", "No limit", nil, nil, nil, 1, 1, 1)
+                  end
+                else
+                  if charTotalEarned > 0 then
+                    GameTooltip:AddDoubleLine("Total Earned:", tostring(charTotalEarned), nil, nil, nil, 1, 1, 1)
+                  end
+                  if infoMaxQuantity > 0 then
+                    GameTooltip:AddDoubleLine("Total Maximum:", tostring(infoMaxQuantity), nil, nil, nil, 1, 1, 1)
+                  end
                 end
               end
               if currency.tooltipNote then

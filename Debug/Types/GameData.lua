@@ -15,25 +15,10 @@
 ---@field useTotalEarnedForMaxQty boolean
 ---@field currencyType AE_CurrencyType
 ---@field name string?
+---@field itemID number?
 ---@field questID number?
 ---@field spellID number?
 ---@field tooltipNote string|nil
-
----@class AE_CurrencyInfo
----@field id number
----@field name string
----@field description string?
----@field iconFileID number?
----@field quality Enum.ItemQuality|number?
----@field currencyType AE_CurrencyType
----@field useTotalEarnedForMaxQty boolean?
----@field tooltipNote string|nil
----@field maxQuantity number?
----@field maxWeeklyQuantity number?
----@field quantity number?
----@field totalEarned number?
----@field quantityEarnedThisWeek number?
----@field short string?
 
 ---@class AE_Affix
 ---@field id number
@@ -52,6 +37,11 @@
 ---@field seasonID number
 ---@field seasonDisplayID number
 ---@field itemID number
+
+---@class AE_KeystoneAnnounceLine
+---@field text string
+---@field itemLink string
+---@field characterName string
 
 ---@class AE_SavedInstance
 ---@field index number
@@ -77,7 +67,7 @@
 ---@class AE_SavedInstanceEncounter
 ---@field index number
 ---@field instanceEncounterID number
----@field bossName string
+---@field bossName string|nil
 ---@field fileDataID number|nil
 ---@field isKilled boolean
 
