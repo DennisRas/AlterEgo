@@ -915,20 +915,6 @@ end
 
 ---Render the main window
 function Module:Render()
-  local currentAffixes = Data:GetCurrentAffixes()
-  local seasonID = LiqUI.Data:GetCurrentSeason()
-  local dungeons = LiqUI.Data:GetDungeons()
-  local currencies = Data:GetCurrencies()
-  local raidDifficulties = Data:GetRaidDifficulties()
-  local characterInfo = self:GetCharacterInfo()
-  local raids = LiqUI.Data:GetRaids()
-  local characters = Data:GetCharacters()
-  local numCharacters = TableCount(characters)
-  local affixes = Data:GetAffixes(true)
-  local windowWidthMax = GetMaxWindowWidth()
-  local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
-  local weeklyAffixesModule = addon.Module_WeeklyAffixes
-
   if not self.window then
     local windows = Data.db.global.liqui.windows
     ---@type LiqUI_WindowOptions
@@ -1471,6 +1457,20 @@ function Module:Render()
   if not self.window:IsVisible() then
     return
   end
+
+  local currentAffixes = Data:GetCurrentAffixes()
+  local seasonID = LiqUI.Data:GetCurrentSeason()
+  local dungeons = LiqUI.Data:GetDungeons()
+  local currencies = Data:GetCurrencies()
+  local raidDifficulties = Data:GetRaidDifficulties()
+  local characterInfo = self:GetCharacterInfo()
+  local raids = LiqUI.Data:GetRaids()
+  local characters = Data:GetCharacters()
+  local numCharacters = TableCount(characters)
+  local affixes = Data:GetAffixes(true)
+  local windowWidthMax = GetMaxWindowWidth()
+  local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
+  local weeklyAffixesModule = addon.Module_WeeklyAffixes
 
   local scrollContent = self.window.body.content.scrollArea.content
 

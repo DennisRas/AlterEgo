@@ -4,6 +4,7 @@
 
 - Added "Ascendant Venomstone" bag and bank counts to the currencies section. Fixes #282. Thank you @j-reher.
 - Updated item count and Trovehunter's Bounty tooltips to color the item name by its quality and list bags and bank separately.
+- Updated event handling and window updates so gear and keystone bursts do less repeated work, inventory scans ignore other players, and closed windows skip building their tables. Ref. #281. Thank you @KurtzPT.
 
 ## v1.6.6 - 2026-10-15
 

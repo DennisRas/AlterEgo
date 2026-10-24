@@ -12,6 +12,7 @@
 ---@field GetScoreColor fun(score: number, isPreviousSeason: boolean): number, number, number
 
 ---@class AE_Core : AceAddon, AceConsole-3.0, AceTimer-3.0
+---@field renderQueued boolean?
 
 ---@class AE_Module_Main : AceModule
 ---@field window LiqUI_WindowInstance|nil

@@ -7,7 +7,6 @@ addon.Module_Equipment = Module
 
 local Data = addon.Data
 local LiqUI = addon.Libs.LiqUI
-local Events = LiqUI.Events
 local TableCount = LiqUI.Utils.TableCount
 local TableForEach = LiqUI.Utils.TableForEach
 
@@ -263,19 +262,6 @@ end
 
 function Module:OnInitialize()
   self:Render()
-end
-
-function Module:OnEnable()
-  Events:RegisterEvent(
-    {
-      "PLAYER_EQUIPMENT_CHANGED",
-      "UNIT_INVENTORY_CHANGED",
-    }, function()
-      -- addon.Data:UpdateCharacterInfo()
-      Data:UpdateEquipment()
-      self:Render()
-    end
-  )
 end
 
 ---Opens a new equipment window
