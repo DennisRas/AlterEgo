@@ -14,6 +14,7 @@ local TableFilter = LiqUI.Utils.TableFilter
 local TableFind = LiqUI.Utils.TableFind
 local TableForEach = LiqUI.Utils.TableForEach
 local TableGet = LiqUI.Utils.TableGet
+local MergeDeep = LiqUI.Utils.MergeDeep
 
 Data.dbVersion = 38
 
@@ -636,7 +637,6 @@ function Data:TaskSeasonReset()
         wipe(character.currencies or {})
         character.mythicplus.rating = 0
         character.currentSeason = seasonID
-        character.currentSeasonID = seasonID
       end
     end)
   end
@@ -695,10 +695,10 @@ function Data:UpdateRaidInstances()
     for encounterIndex = 1, numEncounters do
       local bossName, fileDataID, isKilled = GetSavedInstanceEncounterInfo(savedInstanceIndex, encounterIndex)
       local instanceEncounterID = 0
-      if raid then
+      if raid and bossName then
         TableForEach(raid.encounters, function(encounter)
-          if string.lower(encounter.name) == string.lower(bossName) then
-            instanceEncounterID = encounter.instanceEncounterID
+          if encounter.name and string.lower(encounter.name) == string.lower(bossName) then
+            instanceEncounterID = encounter.instanceEncounterID or 0
           end
         end)
       end
@@ -810,9 +810,7 @@ function Data:UpdateCurrencies()
       quantity = 0,
     }
     if currencyInfo then
-      TableForEach(currencyInfo, function(value, key)
-        currency[key] = value
-      end)
+      currency = MergeDeep(currency, currencyInfo)
       currency.id = dataCurrency.id
       currency.currencyType = dataCurrency.currencyType
     end
@@ -881,17 +879,15 @@ function Data:UpdateEquipment()
     if tooltipData and tooltipData.lines then
       TableForEach(tooltipData.lines, function(line)
         if not line.leftText then return end
-        local match, _, uTrack, uLevel, uMax = line.leftText:find(upgradePattern)
-        if not match then return end
+        local trackCapture, levelCapture, maxCapture = line.leftText:match(upgradePattern)
+        if not trackCapture then return end
         if itemUpgradeTrack == "" then
-          if uTrack then
-            itemUpgradeTrack = uTrack
+          itemUpgradeTrack = trackCapture
+          if levelCapture then
+            itemUpgradeLevel = tonumber(levelCapture) or itemUpgradeLevel
           end
-          if uLevel then
-            itemUpgradeLevel = tonumber(uLevel) or itemUpgradeLevel
-          end
-          if uMax then
-            itemUpgradeMax = tonumber(uMax) or itemUpgradeMax
+          if maxCapture then
+            itemUpgradeMax = tonumber(maxCapture) or itemUpgradeMax
           end
         end
         if line.leftColor then
@@ -1088,9 +1084,11 @@ function Data:UpdateVault()
       if encounters then
         TableForEach(encounters, function(encounter)
           if not encounter then return end
-          encounter.type = vaultType.id
-          encounter.index = index
-          table.insert(character.vault.activityEncounterInfo, encounter)
+          ---@type AE_WeeklyRewardActivityEncounterInfo
+          local activityEncounter = TableCopy(encounter)
+          activityEncounter.type = vaultType.id
+          activityEncounter.index = index
+          table.insert(character.vault.activityEncounterInfo, activityEncounter)
         end)
       end
     end
@@ -1098,14 +1096,16 @@ function Data:UpdateVault()
 
   local activities = C_WeeklyRewards.GetActivities()
   TableForEach(activities, function(activity)
-    activity.exampleRewardLink = ""
-    activity.exampleRewardUpgradeLink = ""
+    ---@type AE_CharacterVaultSlot
+    local slot = TableCopy(activity)
+    slot.exampleRewardLink = ""
+    slot.exampleRewardUpgradeLink = ""
     if activity.progress >= activity.threshold then
       local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(activity.id)
-      activity.exampleRewardLink = itemLink
-      activity.exampleRewardUpgradeLink = upgradeItemLink
+      slot.exampleRewardLink = itemLink or ""
+      slot.exampleRewardUpgradeLink = upgradeItemLink or ""
     end
-    table.insert(character.vault.slots, activity)
+    table.insert(character.vault.slots, slot)
   end)
 
   local worldActivityProgress = C_WeeklyRewards.GetSortedProgressForActivity(Enum.WeeklyRewardChestThresholdType.World, true)
@@ -1155,10 +1155,16 @@ function Data:UpdateMythicPlus()
     local bestTimedRun, bestNotTimedRun = C_MythicPlus.GetSeasonBestForMap(dataDungeon.challengeModeID)
     local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(dataDungeon.challengeModeID)
 
+    ---@type AE_CharacterAffixScoreInfo[]|nil
+    local characterAffixScores = nil
     if affixScores then
+      characterAffixScores = {}
       TableForEach(affixScores, function(affixScore)
         local affix = TableGet(affixes, "name", affixScore.name)
-        affixScore.id = affix and affix.id or 0
+        ---@type AE_CharacterAffixScoreInfo
+        local characterAffixScore = TableCopy(affixScore)
+        characterAffixScore.id = affix and affix.id or 0
+        table.insert(characterAffixScores, characterAffixScore)
       end)
     end
 
@@ -1170,7 +1176,7 @@ function Data:UpdateMythicPlus()
       finishedSuccess = false,
       bestTimedRun = bestTimedRun,
       bestNotTimedRun = bestNotTimedRun,
-      affixScores = affixScores,
+      affixScores = characterAffixScores,
       bestOverAllScore = bestOverAllScore,
     }
 

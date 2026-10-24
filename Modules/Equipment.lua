@@ -7,6 +7,7 @@ addon.Module_Equipment = Module
 
 local Data = addon.Data
 local LiqUI = addon.Libs.LiqUI
+local Events = LiqUI.Events
 local TableCount = LiqUI.Utils.TableCount
 local TableForEach = LiqUI.Utils.TableForEach
 
@@ -180,7 +181,10 @@ end
 ---@return boolean
 local function compareEquipmentPrimaryThenSlot(rowA, rowB, primaryA, primaryB)
   if primaryA ~= primaryB then
-    return primaryA < primaryB
+    if type(primaryA) == "number" and type(primaryB) == "number" then
+      return primaryA < primaryB
+    end
+    return tostring(primaryA) < tostring(primaryB)
   end
   return compareEquipmentTiebreak(rowA, rowB)
 end
@@ -262,7 +266,7 @@ function Module:OnInitialize()
 end
 
 function Module:OnEnable()
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
@@ -294,15 +298,18 @@ function Module:Render()
   if not self.window then
     local windows = Data.db.global.liqui.windows
     local tables = Data.db.global.liqui.tables
-    self.window = LiqUI:NewElement("Window", {
+    ---@type LiqUI_WindowOptions
+    local windowOptions = {
       name = addon.name .. "Equipment",
       storage = windows.Equipment,
       title = "Character",
       onShow = function()
         Module:Render()
       end,
-    })
-    self.dataTable = LiqUI:NewElement("Table", {
+    }
+    self.window = LiqUI:NewElement("Window", windowOptions)
+    ---@type LiqUI_TableOptions
+    local tableOptions = {
       name = addon.name .. "Equipment",
       storage = tables.Equipment,
       header = {enabled = true, sticky = true, height = EQUIPMENT_HEADER_HEIGHT},
@@ -320,7 +327,8 @@ function Module:Render()
         defaultOrder = "asc",
         defaultCompare = compareEquipmentSlotColumn,
       },
-    })
+    }
+    self.dataTable = LiqUI:NewElement("Table", tableOptions)
     self.dataTable:SetParent(self.window.body)
     self.dataTable:SetPoint("TOPLEFT", self.window.body, "TOPLEFT", 0, 0)
     self.dataTable:SetPoint("BOTTOMRIGHT", self.window.body, "BOTTOMRIGHT", 0, 0)
@@ -349,8 +357,6 @@ function Module:Render()
   local rows = {}
 
   TableForEach(character.equipment, function(item)
-    local itemID = C_Item.GetItemIDForItemInfo(item.itemLink)
-
     local upgradeLevel, upgradeSort = resolveEquipmentUpgradeLevel(item)
 
     local enchantText, enchantTooltip, enchantColor = "", "", GREEN_FONT_COLOR

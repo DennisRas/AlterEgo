@@ -50,7 +50,7 @@
 ---@field finishedSuccess boolean
 ---@field bestTimedRun MapSeasonBestInfo|nil
 ---@field bestNotTimedRun MapSeasonBestInfo|nil
----@field affixScores MythicPlusAffixScoreInfo[]?
+---@field affixScores AE_CharacterAffixScoreInfo[]?
 ---@field bestOverAllScore number
 
 ---@class AE_CharacterMythicPlus
@@ -120,9 +120,19 @@
 
 ---@class AE_CharacterRows
 ---@field label string
----@field value function
+---@field value fun(character: AE_Character): string
 ---@field onEnter fun(infoFrame: Frame, character: AE_Character)?
 ---@field onLeave fun(infoFrame: Frame, character: AE_Character)?
 ---@field onClick fun(infoFrame: Frame, character: AE_Character)?
 ---@field backgroundColor ColorTable?
 ---@field enabled boolean
+---@field tooltip boolean?
+
+---@class AE_DeleteCharacterStaticPopupDialog
+---@field text string
+---@field button1 string
+---@field button2 string
+---@field OnAccept fun(dialog: Frame, character: AE_Character)
+---@field timeout number
+---@field whileDead number
+---@field hideOnEscape number

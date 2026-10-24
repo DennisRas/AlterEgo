@@ -8,7 +8,9 @@ local LibAceAddon = addon.Libs.AceAddon
 local LibDataBroker = addon.Libs.LibDataBroker
 local LibDBIcon = addon.Libs.LibDBIcon
 local LiqUI = addon.Libs.LiqUI
+local Events = LiqUI.Events
 local TableCount = LiqUI.Utils.TableCount
+local TableFind = LiqUI.Utils.TableFind
 local TableForEach = LiqUI.Utils.TableForEach
 local TableGet = LiqUI.Utils.TableGet
 
@@ -35,12 +37,12 @@ function Core:OnInitialize()
   Data:Initialize()
   Data:MigrateDB()
 
+  ---@type AE_LibDataBrokerLauncher
   local libDataObject = {
     label = addon.title,
     type = "launcher",
     icon = addon.Constants.media.Logo,
-    OnClick = function(...)
-      local mouseButton = select(2, ...)
+    OnClick = function(_, mouseButton)
       local isShiftKeyDown = IsLeftShiftKeyDown() or IsRightShiftKeyDown()
       if mouseButton then
         if mouseButton == "LeftButton" and isShiftKeyDown then
@@ -79,7 +81,7 @@ end
 
 ---Toggle the main window
 function Core:ToggleWindow()
-  local window = LiqUI:GetElement("Window", addon.name .. "Main")
+  local window = addon.Module_Main.window
   if not window then return end
   window:Toggle()
 end
@@ -95,9 +97,7 @@ end
 
 ---Toggle the equipment window
 function Core:ToggleEquipment()
-  ---@type AE_Module_Equipment|nil
-  local module = addon.Core:GetModule("Equipment", true)
-  if not module then return end
+  local module = addon.Module_Equipment
   local character = Data:GetCharacter()
   if not character then return end
   module:OpenCharacter(character)
@@ -114,7 +114,7 @@ end
 
 ---Register event handlers for game data updates
 function Core:OnEnable()
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "PLAYER_EQUIPMENT_CHANGED",
       "UNIT_INVENTORY_CHANGED",
@@ -123,7 +123,7 @@ function Core:OnEnable()
       Data:UpdateEquipment()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "QUEST_LOG_UPDATE",
     }, function()
@@ -132,7 +132,7 @@ function Core:OnEnable()
       self:Render()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "GUILD_ROSTER_UPDATE",
       "PLAYER_GUILD_UPDATE",
@@ -140,7 +140,7 @@ function Core:OnEnable()
       Data:UpdateCharacterInfo()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "BOSS_KILL",
       "CHALLENGE_MODE_COMPLETED",
@@ -151,7 +151,7 @@ function Core:OnEnable()
       self:RequestGameData()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "CHALLENGE_MODE_MAPS_UPDATE",
       "WEEKLY_REWARDS_UPDATE",
@@ -159,7 +159,7 @@ function Core:OnEnable()
       Data:UpdateVault()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "LFG_UPDATE_RANDOM_INFO",
       "UPDATE_INSTANCE_INFO",
@@ -167,7 +167,7 @@ function Core:OnEnable()
       Data:UpdateRaidInstances()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "BAG_UPDATE_DELAYED",
       "CHALLENGE_MODE_COMPLETED",
@@ -187,7 +187,7 @@ function Core:OnEnable()
       end)
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "CHALLENGE_MODE_COMPLETED",
       "CHALLENGE_MODE_MAPS_UPDATE",
@@ -197,7 +197,7 @@ function Core:OnEnable()
       Data:UpdateMythicPlus()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "BONUS_ROLL_RESULT",
       "CHAT_MSG_CURRENCY",
@@ -212,63 +212,75 @@ function Core:OnEnable()
       Data:UpdateCurrencies()
     end
   )
-  addon.Events:RegisterEvent("GET_ITEM_INFO_RECEIVED", function(_, _, itemID, success)
-    if not success then
-      return
-    end
-    local seasonID = LiqUI.Data:GetCurrentSeason()
-    local match = LiqUI.Utils.TableFind(Data.currencies, function(currency)
-      return currency.seasonID == seasonID and currency.id == itemID and (currency.currencyType == "item" or currency.currencyType == "delveMap")
-    end)
-    if not match then
-      return
-    end
-    Data:UpdateCurrencies()
-    self:Render()
+  Events:RegisterEvent("GET_ITEM_INFO_RECEIVED", function(_, _, ...)
+    self:OnGetItemInfoReceived(...)
   end)
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "PLAYER_MONEY",
     }, function()
       Data:UpdateMoney()
     end
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
     function()
       self:Render()
     end,
     true
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     "CHAT_MSG_SYSTEM",
-    function(...)
-      self:OnChatMessageSystem(...)
+    function(frame, _, ...)
+      self:OnChatMessageSystem(frame, ...)
     end,
     true
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     "PLAYER_LEVEL_UP",
     function()
       Data:UpdateDB()
     end,
     true
   )
-  addon.Events:RegisterEvent(
+  Events:RegisterEvent(
     {
       "ADDON_RESTRICTION_STATE_CHANGED",
       "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
       "PLAYER_REGEN_ENABLED",
     },
-    function(_, event, _, state)
-      if event == "ADDON_RESTRICTION_STATE_CHANGED" and state ~= Enum.AddOnRestrictionState.Inactive then
-        return
-      end
-      Data:FlushPendingKeystoneAnnounce()
+    function(_, event, ...)
+      self:OnPendingKeystoneAnnounceEvent(event, select(2, ...))
     end,
     true
   )
   self:CheckGameData()
+end
+
+---@param itemID number|nil
+---@param success boolean|nil
+function Core:OnGetItemInfoReceived(itemID, success)
+  if success ~= true or type(itemID) ~= "number" then
+    return
+  end
+  local seasonID = LiqUI.Data:GetCurrentSeason()
+  local match = TableFind(Data.currencies, function(currency)
+    return currency.seasonID == seasonID and currency.id == itemID and (currency.currencyType == "item" or currency.currencyType == "delveMap")
+  end)
+  if not match then
+    return
+  end
+  Data:UpdateCurrencies()
+  self:Render()
+end
+
+---@param event string
+---@param state Enum.AddOnRestrictionState|nil
+function Core:OnPendingKeystoneAnnounceEvent(event, state)
+  if event == "ADDON_RESTRICTION_STATE_CHANGED" and state ~= Enum.AddOnRestrictionState.Inactive then
+    return
+  end
+  Data:FlushPendingKeystoneAnnounce()
 end
 
 ---Request game data from the API
@@ -305,9 +317,12 @@ function Core:OnInstanceReset()
 end
 
 ---Handle chat message system
----@param _ any
----@param msg string
+---@param _ Frame
+---@param msg string|nil
 function Core:OnChatMessageSystem(_, msg)
+  if type(msg) ~= "string" then
+    return
+  end
   local groupChannel = Helpers:GetGroupChannel()
   if not groupChannel or not Data.db.global.announceResets or IsInInstance() or not UnitIsGroupLeader("player") then
     return
@@ -327,7 +342,9 @@ function Core:AnnounceKeystones(chatType)
   local dungeons = LiqUI.Data:GetDungeons()
   local multiline = Data.db.global.announceKeystones.multiline
   local multilineNames = Data.db.global.announceKeystones.multilineNames
+  ---@type AE_KeystoneAnnounceLine[]
   local keystones = {}
+  ---@type string[]
   local keystonesCompact = {}
 
   if TableCount(characters) < 1 then
@@ -370,7 +387,7 @@ function Core:AnnounceKeystones(chatType)
   if multiline then
     C_ChatInfo.SendChatMessage(addon.Constants.prefix .. "My keystones:", chatType)
     TableForEach(keystones, function(keystone)
-      local chatMessage = keystone.itemLink and keystone.itemLink or keystone.text
+      local chatMessage = keystone.itemLink ~= "" and keystone.itemLink or keystone.text
       if multilineNames == true then
         chatMessage = keystone.characterName .. ": " .. chatMessage
       end

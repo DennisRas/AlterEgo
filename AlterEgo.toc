@@ -23,7 +23,6 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 
 Boot.lua
 Constants.lua
-Events.lua
 Data.lua
 Data\Currencies.lua
 Data\MythicPlus.lua
@@ -40,7 +39,6 @@ Modules\Equipment.lua
 Debug\Types\Addon.lua
 Debug\Types\Character.lua
 Debug\Types\Constants.lua
-Debug\Types\Events.lua
 Debug\Types\GameData.lua
 Debug\Types\Data.lua
 #@end-debug@

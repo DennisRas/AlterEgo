@@ -94,6 +94,7 @@ end
 ---@return ColorMixin
 function Helpers:GetRatingColor(rating, useRIOScoreColor, isPreviousSeason)
   local color
+  ---@type AE_RaiderIO|nil
   local RIO = _G["RaiderIO"]
   if useRIOScoreColor and RIO then
     color = CreateColor(RIO.GetScoreColor(rating, isPreviousSeason or false))

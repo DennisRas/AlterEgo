@@ -17,6 +17,7 @@ local TableFind = LiqUI.Utils.TableFind
 local TableForEach = LiqUI.Utils.TableForEach
 local TableGet = LiqUI.Utils.TableGet
 local CreateScrollArea = LiqUI.Utils.CreateScrollArea
+local GetMaxWindowWidth = LiqUI.Utils.GetMaxWindowWidth
 
 function Module:OnInitialize()
   self:Render()
@@ -24,7 +25,8 @@ end
 
 do
   local dialogName = "ALTEREGO_DELETE_CHARACTER"
-  StaticPopupDialogs[dialogName] = {
+  ---@type AE_DeleteCharacterStaticPopupDialog
+  local dialog = {
     text = "Remove %s?\n\nThis cannot be undone.\nTo add this character again, log in on them.",
     button1 = YES,
     button2 = CANCEL,
@@ -38,6 +40,7 @@ do
     whileDead = 1,
     hideOnEscape = 1,
   }
+  StaticPopupDialogs[dialogName] = dialog
 end
 
 local CHARACTER_WIDTH = 130
@@ -220,7 +223,7 @@ local function getVaultProgressTooltip(infoFrame, character, activityType)
             difficultyName = bestDifficulty.short and bestDifficulty.short or bestDifficulty.name
           end
 
-          GameTooltip:AddDoubleLine(encounter.name, difficultyName, color.r, color.g, color.b, color.r, color.g, color.b)
+          GameTooltip:AddDoubleLine(encounter.name or "", difficultyName, color.r, color.g, color.b, color.r, color.g, color.b)
         end)
 
         raidInstanceID = raid.instanceID
@@ -461,8 +464,7 @@ end
 function Module:GetCharacterInfo(unfiltered)
   local dungeons = LiqUI.Data:GetDungeons()
   local _, seasonDisplayID = LiqUI.Data:GetCurrentSeason()
-  ---@type AE_Module_Equipment|nil
-  local equipmentModule = addon.Core:GetModule("Equipment", true)
+  local equipmentModule = addon.Module_Equipment
 
   ---@type AE_CharacterRows[]
   local rows = {
@@ -923,14 +925,14 @@ function Module:Render()
   local characters = Data:GetCharacters()
   local numCharacters = TableCount(characters)
   local affixes = Data:GetAffixes(true)
-  local windowWidthMax = LiqUI.Utils.GetMaxWindowWidth()
+  local windowWidthMax = GetMaxWindowWidth()
   local windowWidth, windowHeight = numCharacters == 0 and 500 or 0, 0
-  ---@type AE_Module_WeeklyAffixes|nil
-  local weeklyAffixesModule = addon.Core:GetModule("WeeklyAffixes", true)
+  local weeklyAffixesModule = addon.Module_WeeklyAffixes
 
   if not self.window then
     local windows = Data.db.global.liqui.windows
-    self.window = LiqUI:NewElement("Window", {
+    ---@type LiqUI_WindowOptions
+    local windowOptions = {
       name = addon.name .. "Main",
       storage = windows.Main,
       title = addon.name,
@@ -1378,6 +1380,7 @@ function Module:Render()
               end
             end)
             menu:CreateTitle(OPTIONS)
+            ---@type ElementMenuDescriptionProxy
             local withCharacterNames
             local withMultipleMessages = menu:CreateCheckbox(
               "Multiple chat messages",
@@ -1445,7 +1448,8 @@ function Module:Render()
           iconSize = 13,
         },
       },
-    })
+    }
+    self.window = LiqUI:NewElement("Window", windowOptions)
     local sidebarWidth = Constants.sizes.sidebar.width
     self.window.body.sidebar = CreateFrame("Frame", "$parentSidebar", self.window.body)
     self.window.body.sidebar:SetPoint("TOPLEFT", self.window.body, "TOPLEFT")
@@ -1541,7 +1545,7 @@ function Module:Render()
     local totalHeight = 0
     do -- CharacterInfo Labels
       self.window.body.sidebar.infoFrames = self.window.body.sidebar.infoFrames or {}
-      TableForEach(self.window.body.sidebar.infoFrames, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.infoFrames, function(frame) frame:Hide() end)
       TableForEach(characterInfo, function(info, infoIndex)
         local infoFrame = self.window.body.sidebar.infoFrames[infoIndex]
         if not infoFrame then
@@ -1592,7 +1596,7 @@ function Module:Render()
 
     do -- Prey Difficulties
       self.window.body.sidebar.preyDifficulties = self.window.body.sidebar.preyDifficulties or {}
-      TableForEach(self.window.body.sidebar.preyDifficulties, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.preyDifficulties, function(frame) frame:Hide() end)
       TableForEach(Data:GetPreyDifficulties(), function(difficulty, difficultyIndex)
         if not Data.db.global.prey.enabled then return end
         local difficultyFrame = self.window.body.sidebar.preyDifficulties[difficultyIndex]
@@ -1662,7 +1666,7 @@ function Module:Render()
 
     do -- MythicPlus Labels
       self.window.body.sidebar.mpluslabels = self.window.body.sidebar.mpluslabels or {}
-      TableForEach(self.window.body.sidebar.mpluslabels, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.mpluslabels, function(frame) frame:Hide() end)
       if Data.db.global.dungeons.enabled then
         TableForEach(dungeons, function(dungeon, dungeonIndex)
           local dungeonFrame = self.window.body.sidebar.mpluslabels[dungeonIndex]
@@ -1753,7 +1757,7 @@ function Module:Render()
 
     do -- Raid Difficulties
       self.window.body.sidebar.raidDifficulties = self.window.body.sidebar.raidDifficulties or {}
-      TableForEach(self.window.body.sidebar.raidDifficulties, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.raidDifficulties, function(frame) frame:Hide() end)
       if Data.db.global.raids.enabled then
         TableForEach(raidDifficulties, function(difficulty, difficultyIndex)
           local difficultyFrame = self.window.body.sidebar.raidDifficulties[difficultyIndex]
@@ -1815,7 +1819,7 @@ function Module:Render()
 
     do -- Currency Labels
       self.window.body.sidebar.currencyLabels = self.window.body.sidebar.currencyLabels or {}
-      TableForEach(self.window.body.sidebar.currencyLabels, function(f) f:Hide() end)
+      TableForEach(self.window.body.sidebar.currencyLabels, function(frame) frame:Hide() end)
       if Data.db.global.currencies.enabled then
         TableForEach(currencies, function(currency, currencyIndex)
           if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then
@@ -1876,7 +1880,7 @@ function Module:Render()
 
   do -- Character Columns
     self.window.characterFrames = self.window.characterFrames or {}
-    TableForEach(self.window.characterFrames, function(f) f:Hide() end)
+    TableForEach(self.window.characterFrames, function(frame) frame:Hide() end)
     TableForEach(characters, function(character, characterIndex)
       local rowCount = 0
       local totalHeight = 0
@@ -1930,7 +1934,7 @@ function Module:Render()
       end
 
       do -- Info
-        TableForEach(characterFrame.infoFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.infoFrames, function(frame) frame:Hide() end)
         TableForEach(characterInfo, function(info, infoIndex)
           local infoFrame = characterFrame.infoFrames[infoIndex]
           if not infoFrame then
@@ -2096,7 +2100,7 @@ function Module:Render()
 
       do -- Prey Progress
         characterFrame.preyProgress = characterFrame.preyProgress or {}
-        TableForEach(characterFrame.preyProgress, function(f) f:Hide() end)
+        TableForEach(characterFrame.preyProgress, function(frame) frame:Hide() end)
         TableForEach(Data:GetPreyDifficulties(), function(difficulty, difficultyIndex)
           if not Data.db.global.prey.enabled then return end
           local difficultyFrame = characterFrame.preyProgress[difficultyIndex]
@@ -2184,7 +2188,7 @@ function Module:Render()
 
       do -- Dungeons
         characterFrame.dungeonFrames = characterFrame.dungeonFrames or {}
-        TableForEach(characterFrame.dungeonFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.dungeonFrames, function(frame) frame:Hide() end)
         TableForEach(dungeons, function(dungeon, dungeonIndex)
           if not Data.db.global.dungeons.enabled then return end
           local dungeonFrame = characterFrame.dungeonFrames[dungeonIndex]
@@ -2228,9 +2232,10 @@ function Module:Render()
             end
 
             if affixScores then
-              ---@type AE_CharacterAffixScoreInfo
-              bestAffixScore = TableUtil.FindMax(affixScores, function(affixScore)
-                return affixScore.score
+              TableForEach(affixScores, function(affixScore)
+                if not bestAffixScore or affixScore.score > bestAffixScore.score then
+                  bestAffixScore = affixScore
+                end
               end)
 
               if bestAffixScore then
@@ -2353,7 +2358,7 @@ function Module:Render()
 
       do -- Raids
         characterFrame.difficultyFrames = characterFrame.difficultyFrames or {}
-        TableForEach(characterFrame.difficultyFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.difficultyFrames, function(frame) frame:Hide() end)
         TableForEach(raidDifficulties or {}, function(difficulty, difficultyIndex)
           if not Data.db.global.raids.enabled then return end
           local difficultyFrame = characterFrame.difficultyFrames[difficultyIndex]
@@ -2404,7 +2409,7 @@ function Module:Render()
                     end
                   end
                 end
-                GameTooltip:AddLine(encounter.name, color.r, color.g, color.b)
+                GameTooltip:AddLine(encounter.name or "", color.r, color.g, color.b)
               end)
             end)
             GameTooltip:Show()
@@ -2425,7 +2430,7 @@ function Module:Render()
           local iconSizeMax = RAIDS_ROW_HEIGHT * 0.5
           local killIcon = TableGet(Constants.raidKillIcons, "id", Data.db.global.raids.killIcon or "skull") or Constants.raidKillIcons[1]
           local killIconScale = killIcon.scale or 1
-          TableForEach(difficultyFrame.iconFrames, function(f) f:Hide() end)
+          TableForEach(difficultyFrame.iconFrames, function(frame) frame:Hide() end)
           TableForEach(encounters or {}, function(encounter, encounterIndex)
             local iconFrame = difficultyFrame.iconFrames[encounterIndex]
             if not iconFrame then
@@ -2489,7 +2494,7 @@ function Module:Render()
 
       do -- Currencies
         characterFrame.currencyFrames = characterFrame.currencyFrames or {}
-        TableForEach(characterFrame.currencyFrames, function(f) f:Hide() end)
+        TableForEach(characterFrame.currencyFrames, function(frame) frame:Hide() end)
         TableForEach(currencies, function(currency, currencyIndex)
           if not Data.db.global.currencies.enabled then return end
           if Data.db.global.currencies.hiddenCurrencies and Data.db.global.currencies.hiddenCurrencies[currency.id] then return end
