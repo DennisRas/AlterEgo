@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.9 - 2026-10-28
+
+- Updated tables.
+
 ## v1.6.8 - 2026-10-24
 
 - Updated performance.
